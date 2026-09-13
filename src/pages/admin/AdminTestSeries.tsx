@@ -2,35 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
-  FolderTree,
+  ListOrdered,
   Plus,
   Edit2,
   Trash2,
   CheckCircle2,
   XCircle,
   Search,
-  Layers,
+  Lock,
   Filter,
   X
 } from 'lucide-react';
-import type { Chapter, Subject, Exam } from '@/types';
+import type { TestSeries, Exam } from '@/types';
 
-export const AdminChapters: React.FC = () => {
-  const [chapters, setChapters] = useState<Chapter[]>([]);
+export const AdminTestSeries: React.FC = () => {
+  const [seriesList, setSeriesList] = useState<TestSeries[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedExamId, setSelectedExamId] = useState<string>('');
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
+  const [editingSeries, setEditingSeries] = useState<TestSeries | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Form State
-  const [subjectId, setSubjectId] = useState('');
-  const [name, setName] = useState('');
+  const [examId, setExamId] = useState('');
+  const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
+  const [isPremium, setIsPremium] = useState(false);
   const [orderIndex, setOrderIndex] = useState(1);
   const [isActive, setIsActive] = useState(true);
   const [formError, setFormError] = useState('');
@@ -38,16 +37,14 @@ export const AdminChapters: React.FC = () => {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [allExams, allSubjects, allChapters] = await Promise.all([
+      const [allExams, allSeries] = await Promise.all([
         api.getAllAdminExams(),
-        api.getAllAdminSubjects(),
-        api.getAllAdminChapters(selectedSubjectId || undefined),
+        api.getTestSeries(selectedExamId || undefined),
       ]);
       setExams(allExams);
-      setSubjects(allSubjects);
-      setChapters(allChapters);
+      setSeriesList(allSeries);
     } catch (err) {
-      console.error('Error loading chapters:', err);
+      console.error('Error loading test series:', err);
     } finally {
       setIsLoading(false);
     }
@@ -55,41 +52,37 @@ export const AdminChapters: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedSubjectId]);
-
-  // When exam filter changes, auto-filter subjects
-  const availableSubjects = selectedExamId
-    ? subjects.filter(s => s.examId === selectedExamId)
-    : subjects;
+  }, [selectedExamId]);
 
   const openCreateModal = () => {
-    setEditingChapter(null);
-    const initialSubjectId = selectedSubjectId || availableSubjects[0]?.id || '';
-    setSubjectId(initialSubjectId);
-    setName('');
+    setEditingSeries(null);
+    setExamId(selectedExamId || exams[0]?.id || '');
+    setTitle('');
     setSlug('');
     setDescription('');
-    setOrderIndex(chapters.length + 1);
+    setIsPremium(false);
+    setOrderIndex(seriesList.length + 1);
     setIsActive(true);
     setFormError('');
     setIsModalOpen(true);
   };
 
-  const openEditModal = (chapter: Chapter) => {
-    setEditingChapter(chapter);
-    setSubjectId(chapter.subjectId);
-    setName(chapter.name);
-    setSlug(chapter.slug);
-    setDescription(chapter.description || '');
-    setOrderIndex(chapter.orderIndex);
-    setIsActive(chapter.isActive);
+  const openEditModal = (series: TestSeries) => {
+    setEditingSeries(series);
+    setExamId(series.examId);
+    setTitle(series.title);
+    setSlug(series.slug);
+    setDescription(series.description || '');
+    setIsPremium(series.isPremium);
+    setOrderIndex(series.orderIndex);
+    setIsActive(series.isActive);
     setFormError('');
     setIsModalOpen(true);
   };
 
-  const handleNameChange = (val: string) => {
-    setName(val);
-    if (!editingChapter) {
+  const handleTitleChange = (val: string) => {
+    setTitle(val);
+    if (!editingSeries) {
       const generated = val
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -100,30 +93,32 @@ export const AdminChapters: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setFormError('Chapter name is required.');
+    if (!title.trim()) {
+      setFormError('Test Series title is required.');
       return;
     }
-    if (!subjectId) {
-      setFormError('Parent Subject must be selected.');
+    if (!examId) {
+      setFormError('Target Exam must be selected.');
       return;
     }
 
     try {
-      if (editingChapter) {
-        await api.updateChapter(editingChapter.id, {
-          name: name.trim(),
+      if (editingSeries) {
+        await api.updateTestSeries(editingSeries.id, {
+          title: title.trim(),
           slug: slug.trim() || undefined,
           description: description.trim() || undefined,
+          isPremium,
           orderIndex: Number(orderIndex),
           isActive,
         });
       } else {
-        await api.createChapter({
-          subjectId,
-          name: name.trim(),
-          slug: slug.trim() || name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        await api.createTestSeries({
+          examId,
+          title: title.trim(),
+          slug: slug.trim() || title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
           description: description.trim() || undefined,
+          isPremium,
           orderIndex: Number(orderIndex),
           isActive,
         });
@@ -131,30 +126,24 @@ export const AdminChapters: React.FC = () => {
       setIsModalOpen(false);
       await loadData();
     } catch (err: any) {
-      setFormError(err.message || 'Failed to save chapter');
+      setFormError(err.message || 'Failed to save test series');
     }
   };
 
-  const handleToggleActive = async (chapter: Chapter) => {
+  const handleToggleActive = async (series: TestSeries) => {
     try {
-      await api.updateChapter(chapter.id, { isActive: !chapter.isActive });
+      await api.updateTestSeries(series.id, { isActive: !series.isActive });
       await loadData();
     } catch (err) {
       console.error('Failed to toggle status:', err);
     }
   };
 
-  const filteredChapters = chapters.filter(c => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.slug.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const parentSubject = subjects.find(s => s.id === c.subjectId);
-    const matchesExam = !selectedExamId || (parentSubject && parentSubject.examId === selectedExamId);
-    const matchesSubject = !selectedSubjectId || c.subjectId === selectedSubjectId;
-
-    return matchesSearch && matchesExam && matchesSubject;
-  });
+  const filteredSeries = seriesList.filter(s =>
+    s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.examId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -163,15 +152,15 @@ export const AdminChapters: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-              <FolderTree className="w-6 h-6 text-blue-400" />
-              Chapters Management (Topic Modules)
+              <ListOrdered className="w-6 h-6 text-cyan-400" />
+              Test Series Management
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              {chapters.length} Chapters
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              {seriesList.length} Series
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Chapters break subjects into study topics (e.g. Indus Valley Civilization, Vedic Age, Mughal Empire).
+            Thematic mock test packages under target examinations (e.g. Prelims 2025 Series, Mains Pro Pack).
           </p>
         </div>
 
@@ -181,17 +170,17 @@ export const AdminChapters: React.FC = () => {
           leftIcon={<Plus className="w-4 h-4" />}
           onClick={openCreateModal}
         >
-          Add New Chapter
+          Add Test Series
         </Button>
       </div>
 
       {/* Filters Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="relative">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="relative w-full sm:max-w-xs">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
-            placeholder="Search chapters..."
+            placeholder="Search test series..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
@@ -199,34 +188,16 @@ export const AdminChapters: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500 shrink-0" />
+          <Filter className="w-4 h-4 text-slate-500" />
           <select
             value={selectedExamId}
-            onChange={(e) => {
-              setSelectedExamId(e.target.value);
-              setSelectedSubjectId('');
-            }}
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            onChange={(e) => setSelectedExamId(e.target.value)}
+            className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
           >
-            <option value="">All Exams</option>
+            <option value="">All Target Exams</option>
             {exams.map((e) => (
               <option key={e.id} value={e.id}>
                 {e.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <select
-            value={selectedSubjectId}
-            onChange={(e) => setSelectedSubjectId(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="">All Subjects</option>
-            {availableSubjects.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
               </option>
             ))}
           </select>
@@ -239,9 +210,9 @@ export const AdminChapters: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-300">
             <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold text-[10px] border-b border-slate-800">
               <tr>
-                <th className="p-4">Chapter Title</th>
-                <th className="p-4">Parent Subject & Exam</th>
-                <th className="p-4">Tests</th>
+                <th className="p-4">Series Title</th>
+                <th className="p-4">Target Exam</th>
+                <th className="p-4">Access Tier</th>
                 <th className="p-4">Order</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
@@ -251,49 +222,50 @@ export const AdminChapters: React.FC = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-slate-400">
-                    Loading chapters...
+                    Loading test series...
                   </td>
                 </tr>
-              ) : filteredChapters.length === 0 ? (
+              ) : filteredSeries.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-slate-400">
-                    No chapters found matching your filter criteria.
+                    No test series found for the selected filter.
                   </td>
                 </tr>
               ) : (
-                filteredChapters.map((chap) => {
-                  const parentSubject = subjects.find(s => s.id === chap.subjectId);
-                  const parentExam = parentSubject ? exams.find(e => e.id === parentSubject.examId) : null;
+                filteredSeries.map((series) => {
+                  const parentExam = exams.find(e => e.id === series.examId);
                   return (
-                    <tr key={chap.id} className="hover:bg-slate-900/40 transition-colors">
+                    <tr key={series.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
-                            <FolderTree className="w-4 h-4" />
+                          <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">
+                            <ListOrdered className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="font-bold text-white text-sm">{chap.name}</p>
-                            <p className="text-[11px] font-mono text-slate-500">{chap.slug}</p>
+                            <p className="font-bold text-white text-sm">{series.title}</p>
+                            <p className="text-[11px] font-mono text-slate-500">{series.slug}</p>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="space-y-0.5">
-                          <p className="font-semibold text-emerald-400">{parentSubject?.name || chap.subjectId}</p>
-                          {parentExam && (
-                            <p className="text-[10px] text-indigo-400 font-medium">{parentExam.title}</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <span className="flex items-center gap-1 text-slate-300 font-semibold">
-                          <Layers className="w-3.5 h-3.5 text-amber-400" />
-                          {chap.testsCount ?? 0} Tests
+                        <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                          {parentExam?.title || series.examTitle || series.examId}
                         </span>
                       </td>
-                      <td className="p-4 font-bold text-indigo-400">#{chap.orderIndex}</td>
                       <td className="p-4">
-                        {chap.isActive ? (
+                        {series.isPremium ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <Lock className="w-3 h-3" /> PRO PASS
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            FREE
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 font-bold text-indigo-400">#{series.orderIndex}</td>
+                      <td className="p-4">
+                        {series.isActive ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             <CheckCircle2 className="w-3 h-3" /> Active
                           </span>
@@ -306,18 +278,18 @@ export const AdminChapters: React.FC = () => {
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => openEditModal(chap)}
+                            onClick={() => openEditModal(series)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-                            title="Edit Chapter"
+                            title="Edit Series"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleToggleActive(chap)}
+                            onClick={() => handleToggleActive(series)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
-                            title={chap.isActive ? 'Deactivate' : 'Activate'}
+                            title={series.isActive ? 'Deactivate' : 'Activate'}
                           >
-                            {chap.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                            {series.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
                           </button>
                         </div>
                       </td>
@@ -336,8 +308,8 @@ export const AdminChapters: React.FC = () => {
           <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl">
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FolderTree className="w-4 h-4 text-blue-400" />
-                {editingChapter ? 'Edit Chapter' : 'Add New Chapter'}
+                <ListOrdered className="w-4 h-4 text-cyan-400" />
+                {editingSeries ? 'Edit Test Series' : 'Add Test Series'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -356,17 +328,17 @@ export const AdminChapters: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                  Parent Subject *
+                  Target Exam *
                 </label>
                 <select
-                  disabled={Boolean(editingChapter)}
-                  value={subjectId}
-                  onChange={(e) => setSubjectId(e.target.value)}
+                  disabled={Boolean(editingSeries)}
+                  value={examId}
+                  onChange={(e) => setExamId(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
                 >
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.examId})
+                  {exams.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.title}
                     </option>
                   ))}
                 </select>
@@ -374,14 +346,14 @@ export const AdminChapters: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                  Chapter Name *
+                  Test Series Title *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Indus Valley Civilization (সিন্ধু সভ্যতা)"
-                  value={name}
-                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="e.g. WBP Constable 2025 Prelims Test Series"
+                  value={title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -392,7 +364,7 @@ export const AdminChapters: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. indus-valley-civilization"
+                  placeholder="e.g. wbp-prelims-2025"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
@@ -405,7 +377,7 @@ export const AdminChapters: React.FC = () => {
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Topic summary and key exam focus points"
+                  placeholder="Series overview, e.g. 15 Full Mocks + 30 Chapter Drills"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
@@ -426,15 +398,25 @@ export const AdminChapters: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex flex-col justify-end">
-                  <label className="flex items-center gap-2 cursor-pointer pb-2">
+                <div className="flex flex-col justify-end space-y-2 pb-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isPremium}
+                      onChange={(e) => setIsPremium(e.target.checked)}
+                      className="rounded border-slate-700 text-amber-500 focus:ring-amber-400"
+                    />
+                    <span className="text-xs font-bold text-amber-400">Pro Pass Only</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isActive}
                       onChange={(e) => setIsActive(e.target.checked)}
                       className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="text-xs font-bold text-slate-300">Active Chapter</span>
+                    <span className="text-xs font-bold text-slate-300">Active</span>
                   </label>
                 </div>
               </div>
@@ -454,7 +436,7 @@ export const AdminChapters: React.FC = () => {
                   size="sm"
                   className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
                 >
-                  {editingChapter ? 'Save Changes' : 'Create Chapter'}
+                  {editingSeries ? 'Save Changes' : 'Create Series'}
                 </Button>
               </div>
             </form>

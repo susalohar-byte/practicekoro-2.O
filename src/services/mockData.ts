@@ -166,6 +166,35 @@ export const MOCK_CHAPTERS: Record<string, Chapter[]> = {
   ],
 };
 
+export const MOCK_TEST_SERIES: Record<string, import('@/types').TestSeries[]> = {
+  'wbp-constable': [
+    {
+      id: 'wbp-prelims-2025',
+      examId: 'wbp-constable',
+      title: 'WBP Constable 2025 Prelims Test Series',
+      slug: 'wbp-prelims-2025',
+      description: 'Official pattern 85-question full mocks and chapter drills.',
+      isPremium: false,
+      orderIndex: 1,
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      examTitle: 'WBP Constable',
+    },
+    {
+      id: 'wbp-mains-pro',
+      examId: 'wbp-constable',
+      title: 'WBP Constable Mains Pro Series',
+      slug: 'wbp-mains-pro',
+      description: 'Advanced mains test series with detailed bilingual solutions.',
+      isPremium: true,
+      orderIndex: 2,
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      examTitle: 'WBP Constable',
+    },
+  ],
+};
+
 export const MOCK_TESTS: Record<string, MockTest[]> = {
   'wbp-hist-indus': [
     {
@@ -173,6 +202,7 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
       examId: 'wbp-constable',
       subjectId: 'wbp-history',
       chapterId: 'wbp-hist-indus',
+      testSeriesId: 'wbp-prelims-2025',
       title: 'Mock Test Part 01: Indus Valley (Free)',
       slug: 'indus-valley-mock-01',
       description: 'Essential high-yield questions on Harappa & Mohenjodaro discoveries.',
@@ -185,15 +215,18 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
       isPremium: false,
       orderIndex: 1,
       isActive: true,
+      status: 'published',
       examTitle: 'WBP Constable',
       subjectName: 'Indian History',
       chapterName: 'Indus Valley Civilization',
+      testSeriesTitle: 'WBP Constable 2025 Prelims Test Series',
     },
     {
       id: 'test-indus-02',
       examId: 'wbp-constable',
       subjectId: 'wbp-history',
       chapterId: 'wbp-hist-indus',
+      testSeriesId: 'wbp-prelims-2025',
       title: 'Mock Test Part 02: High-Yield Indus (Premium)',
       slug: 'indus-valley-mock-02',
       description: 'Advanced questions on archaeological sites, seals, religion and trade.',
@@ -206,15 +239,18 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
       isPremium: true,
       orderIndex: 2,
       isActive: true,
+      status: 'published',
       examTitle: 'WBP Constable',
       subjectName: 'Indian History',
       chapterName: 'Indus Valley Civilization',
+      testSeriesTitle: 'WBP Constable 2025 Prelims Test Series',
     },
     {
       id: 'test-indus-03',
       examId: 'wbp-constable',
       subjectId: 'wbp-history',
       chapterId: 'wbp-hist-indus',
+      testSeriesId: 'wbp-prelims-2025',
       title: 'Mock Test Part 03: PYQ Mastery (Premium)',
       slug: 'indus-valley-mock-03',
       description: 'Past 10 years WBPRB and WBPSC exam question compilation with explanations.',
@@ -227,9 +263,11 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
       isPremium: true,
       orderIndex: 3,
       isActive: true,
+      status: 'published',
       examTitle: 'WBP Constable',
       subjectName: 'Indian History',
       chapterName: 'Indus Valley Civilization',
+      testSeriesTitle: 'WBP Constable 2025 Prelims Test Series',
     },
   ],
 };

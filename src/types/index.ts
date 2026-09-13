@@ -48,6 +48,19 @@ export interface Chapter {
   testsCount?: number;
 }
 
+export interface TestSeries {
+  id: string;
+  examId: string;
+  title: string;
+  slug: string;
+  description?: string;
+  isPremium: boolean;
+  orderIndex: number;
+  isActive: boolean;
+  createdAt?: string;
+  examTitle?: string;
+}
+
 export interface MockTest {
   id: string;
   examId: string;
@@ -66,14 +79,17 @@ export interface MockTest {
   isPremium: boolean;
   orderIndex: number;
   isActive: boolean;
+  status: 'draft' | 'published' | 'archived';
   examTitle?: string;
   subjectName?: string;
   chapterName?: string;
+  testSeriesTitle?: string;
 }
 
 export interface Question {
   id: string;
   chapterId?: string;
+  subjectId?: string;
   questionText: string;
   questionBengaliText?: string;
   optionA: string;
@@ -87,6 +103,48 @@ export interface Question {
   defaultMarks: number;
   defaultNegativeMarks: number;
   isActive: boolean;
+  status?: 'active' | 'archived' | 'draft';
+  subjectName?: string;
+  chapterName?: string;
+}
+
+export interface AdminDashboardStats {
+  totalExams: number;
+  activeExams: number;
+  totalSubjects: number;
+  totalChapters: number;
+  totalTestSeries: number;
+  totalTests: number;
+  publishedTests: number;
+  draftTests: number;
+  archivedTests: number;
+  totalQuestions: number;
+  activeQuestions: number;
+  totalAttempts: number;
+  completedAttempts: number;
+  totalStudents: number;
+}
+
+export interface TestQuestionAssignment {
+  questionId: string;
+  questionOrder: number;
+  marks: number;
+  negativeMarks: number;
+  questionText?: string;
+  questionBengaliText?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  correctOption?: 'A' | 'B' | 'C' | 'D';
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
+  explanation?: string;
+  chapterName?: string;
+}
+
+export interface PublishValidationResult {
+  isValid: boolean;
+  errors: string[];
 }
 
 /** Sanitized question returned to student during active exam */

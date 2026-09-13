@@ -137,6 +137,33 @@ export interface Database {
         };
         Update: Partial<Database['public']['Tables']['chapters']['Insert']>;
       };
+      test_series: {
+        Row: {
+          id: string;
+          exam_id: string;
+          title: string;
+          slug: string;
+          description: string | null;
+          is_premium: boolean;
+          order_index: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          exam_id: string;
+          title: string;
+          slug: string;
+          description?: string | null;
+          is_premium?: boolean;
+          order_index?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['test_series']['Insert']>;
+      };
       tests: {
         Row: {
           id: string;
@@ -156,6 +183,7 @@ export interface Database {
           is_premium: boolean;
           order_index: number;
           is_active: boolean;
+          status: 'draft' | 'published' | 'archived';
           created_at: string;
           updated_at: string;
         };
@@ -177,6 +205,7 @@ export interface Database {
           is_premium?: boolean;
           order_index?: number;
           is_active?: boolean;
+          status?: 'draft' | 'published' | 'archived';
           created_at?: string;
           updated_at?: string;
         };
@@ -186,6 +215,7 @@ export interface Database {
         Row: {
           id: string;
           chapter_id: string | null;
+          subject_id: string | null;
           question_text: string;
           question_bengali_text: string | null;
           option_a: string;
@@ -199,12 +229,14 @@ export interface Database {
           default_marks: number;
           default_negative_marks: number;
           is_active: boolean;
+          status: 'active' | 'archived' | 'draft';
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           chapter_id?: string | null;
+          subject_id?: string | null;
           question_text: string;
           question_bengali_text?: string | null;
           option_a: string;
@@ -218,6 +250,7 @@ export interface Database {
           default_marks?: number;
           default_negative_marks?: number;
           is_active?: boolean;
+          status?: 'active' | 'archived' | 'draft';
           created_at?: string;
           updated_at?: string;
         };
@@ -469,6 +502,22 @@ export interface Database {
       };
       get_attempt_solutions: {
         Args: { p_attempt_id: string };
+        Returns: Json;
+      };
+      get_admin_dashboard_counts: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      save_test_questions: {
+        Args: { p_test_id: string; p_questions: Json };
+        Returns: Json;
+      };
+      publish_test: {
+        Args: { p_test_id: string };
+        Returns: Json;
+      };
+      archive_test: {
+        Args: { p_test_id: string };
         Returns: Json;
       };
     };

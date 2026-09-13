@@ -25,7 +25,9 @@ import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminExams } from '@/pages/admin/AdminExams';
 import { AdminSubjects } from '@/pages/admin/AdminSubjects';
 import { AdminChapters } from '@/pages/admin/AdminChapters';
+import { AdminTestSeries } from '@/pages/admin/AdminTestSeries';
 import { AdminTests } from '@/pages/admin/AdminTests';
+import { AdminTestQuestions } from '@/pages/admin/AdminTestQuestions';
 import { AdminQuestions } from '@/pages/admin/AdminQuestions';
 import { AdminSubscriptions } from '@/pages/admin/AdminSubscriptions';
 
@@ -114,7 +116,9 @@ export const App: React.FC = () => {
         <Route path="exams" element={<AdminExams />} />
         <Route path="subjects" element={<AdminSubjects />} />
         <Route path="chapters" element={<AdminChapters />} />
+        <Route path="test-series" element={<AdminTestSeries />} />
         <Route path="tests" element={<AdminTests />} />
+        <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
         <Route path="questions" element={<AdminQuestions />} />
         <Route path="subscriptions" element={<AdminSubscriptions />} />
       </Route>
