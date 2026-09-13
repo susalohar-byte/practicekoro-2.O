@@ -22,6 +22,9 @@ END $$;
 -- ----------------------------------------------------------------------------
 -- 1. SECURE RPC: Start or Resume a Test Attempt (auth.uid() strictly enforced)
 -- ----------------------------------------------------------------------------
+-- Drop legacy 2-argument signature to prevent client identity spoofing
+DROP FUNCTION IF EXISTS public.start_test_attempt(TEXT, UUID);
+
 CREATE OR REPLACE FUNCTION public.start_test_attempt(
     p_test_id TEXT
 )
@@ -178,10 +181,24 @@ BEGIN
         RETURN FALSE;
     END IF;
 
-    -- Update time spent
+    -- Update time spent (clamped to test duration)
     UPDATE public.test_attempts
-    SET time_spent_seconds = p_time_spent_seconds
+    SET time_spent_seconds = GREATEST(0, LEAST(p_time_spent_seconds, v_test.duration_minutes * 60))
     WHERE id = p_attempt_id;
+
+    -- Normalize p_answers if passed as an object map or null
+    IF jsonb_typeof(p_answers) = 'object' THEN
+        SELECT COALESCE(jsonb_agg(
+            CASE 
+                WHEN jsonb_typeof(val) = 'object' THEN val || jsonb_build_object('questionId', key)
+                ELSE jsonb_build_object('questionId', key, 'selectedOption', val)
+            END
+        ), '[]'::JSONB)
+        INTO p_answers
+        FROM jsonb_each(p_answers);
+    ELSIF p_answers IS NULL OR jsonb_typeof(p_answers) != 'array' THEN
+        p_answers := '[]'::JSONB;
+    END IF;
 
     -- Save/update student selections
     FOR v_item IN SELECT * FROM jsonb_array_elements(p_answers)
@@ -290,6 +307,20 @@ BEGIN
     END IF;
 
     SELECT * INTO v_test FROM public.tests WHERE id = v_attempt.test_id;
+
+    -- Normalize p_answers if passed as an object map or null
+    IF jsonb_typeof(p_answers) = 'object' THEN
+        SELECT COALESCE(jsonb_agg(
+            CASE 
+                WHEN jsonb_typeof(val) = 'object' THEN val || jsonb_build_object('questionId', key)
+                ELSE jsonb_build_object('questionId', key, 'selectedOption', val)
+            END
+        ), '[]'::JSONB)
+        INTO p_answers
+        FROM jsonb_each(p_answers);
+    ELSIF p_answers IS NULL OR jsonb_typeof(p_answers) != 'array' THEN
+        p_answers := '[]'::JSONB;
+    END IF;
 
     -- Iterate strictly over AUTHORITATIVE test_questions for this test
     -- Client cannot inject arbitrary external question IDs
@@ -418,7 +449,7 @@ BEGIN
     UPDATE public.test_attempts
     SET status = 'completed',
         end_time = NOW(),
-        time_spent_seconds = p_time_spent_seconds,
+        time_spent_seconds = GREATEST(0, LEAST(p_time_spent_seconds, v_test.duration_minutes * 60)),
         score = v_score,
         correct_count = v_correct_count,
         wrong_count = v_wrong_count,
@@ -474,7 +505,7 @@ BEGIN
         'correct_count', v_correct_count,
         'wrong_count', v_wrong_count,
         'skipped_count', v_skipped_count,
-        'time_spent_seconds', p_time_spent_seconds,
+        'time_spent_seconds', GREATEST(0, LEAST(p_time_spent_seconds, v_test.duration_minutes * 60)),
         'rank', v_rank,
         'total_candidates', v_total_candidates,
         'percentile', v_percentile,
@@ -551,10 +582,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 -- ----------------------------------------------------------------------------
 -- 6. RLS TIGHTENING: Prevent Direct Student Modification of Attempts & Results
 -- ----------------------------------------------------------------------------
--- Drop permissive manage policies that allowed arbitrary direct updates
+-- Drop existing policies to allow clean, idempotent re-application
 DROP POLICY IF EXISTS "Users manage own test attempts" ON public.test_attempts;
+DROP POLICY IF EXISTS "Users read own test attempts" ON public.test_attempts;
+DROP POLICY IF EXISTS "Admin manage test attempts" ON public.test_attempts;
+
 DROP POLICY IF EXISTS "Users manage own attempt answers" ON public.attempt_answers;
+DROP POLICY IF EXISTS "Users read own attempt answers" ON public.attempt_answers;
+DROP POLICY IF EXISTS "Admin manage attempt answers" ON public.attempt_answers;
+
 DROP POLICY IF EXISTS "Users or engine insert test results" ON public.test_results;
+DROP POLICY IF EXISTS "Users read own test results" ON public.test_results;
+DROP POLICY IF EXISTS "Admin manage test results" ON public.test_results;
 
 -- Test Attempts: Students can read their own attempts; insertion/update only via RPCs
 CREATE POLICY "Users read own test attempts"
@@ -591,6 +630,7 @@ USING (public.has_role(auth.uid(), 'admin'));
 
 -- Questions table: restrict direct SELECT to admins only, preventing answer scraping
 DROP POLICY IF EXISTS "Questions readable by authenticated users" ON public.questions;
+DROP POLICY IF EXISTS "Questions readable by admins only" ON public.questions;
 CREATE POLICY "Questions readable by admins only"
 ON public.questions FOR SELECT
 USING (public.has_role(auth.uid(), 'admin'));
