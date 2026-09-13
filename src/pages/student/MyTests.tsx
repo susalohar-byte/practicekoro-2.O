@@ -102,7 +102,16 @@ export const MyTests: React.FC = () => {
                     <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                       <p className="text-[10px] uppercase font-bold text-slate-400">State Rank</p>
                       <p className="text-sm font-black text-blue-600">
-                        #{attempt.rank || 14} <span className="text-[10px] font-normal text-slate-500">({attempt.percentile}%ile)</span>
+                        {attempt.rank ? (
+                          <>
+                            #{attempt.rank}{' '}
+                            <span className="text-[10px] font-normal text-slate-500">
+                              ({attempt.percentile ? `${attempt.percentile}%ile` : 'Ranked'})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-400 font-normal text-xs">— (Pending)</span>
+                        )}
                       </p>
                     </div>
                   </div>

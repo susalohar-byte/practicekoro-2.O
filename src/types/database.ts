@@ -377,6 +377,66 @@ export interface Database {
         };
         Update: Partial<Database['public']['Tables']['bookmarks']['Insert']>;
       };
+      attempt_answers: {
+        Row: {
+          id: string;
+          attempt_id: string;
+          question_id: string;
+          selected_option: 'A' | 'B' | 'C' | 'D' | null;
+          is_correct: boolean | null;
+          marks_awarded: number;
+          time_spent_seconds: number;
+          is_marked_for_review: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          attempt_id: string;
+          question_id: string;
+          selected_option?: 'A' | 'B' | 'C' | 'D' | null;
+          is_correct?: boolean | null;
+          marks_awarded?: number;
+          time_spent_seconds?: number;
+          is_marked_for_review?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['attempt_answers']['Insert']>;
+      };
+      test_results: {
+        Row: {
+          id: string;
+          attempt_id: string;
+          user_id: string;
+          test_id: string;
+          score: number;
+          total_marks: number;
+          percentage: number;
+          accuracy: number;
+          rank: number | null;
+          total_candidates: number;
+          percentile: number | null;
+          passed: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          attempt_id: string;
+          user_id: string;
+          test_id: string;
+          score: number;
+          total_marks: number;
+          percentage: number;
+          accuracy: number;
+          rank?: number | null;
+          total_candidates?: number;
+          percentile?: number | null;
+          passed?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['test_results']['Insert']>;
+      };
     };
     Functions: {
       has_role: {
@@ -392,7 +452,11 @@ export interface Database {
         Returns: boolean;
       };
       start_test_attempt: {
-        Args: { p_test_id: string; p_user_id: string };
+        Args: { p_test_id: string };
+        Returns: Json;
+      };
+      get_student_exam_questions: {
+        Args: { p_test_id: string };
         Returns: Json;
       };
       save_test_answers: {
@@ -401,6 +465,10 @@ export interface Database {
       };
       submit_test_attempt: {
         Args: { p_attempt_id: string; p_answers: Json; p_time_spent_seconds: number };
+        Returns: Json;
+      };
+      get_attempt_solutions: {
+        Args: { p_attempt_id: string };
         Returns: Json;
       };
     };

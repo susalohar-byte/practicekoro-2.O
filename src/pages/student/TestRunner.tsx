@@ -49,10 +49,17 @@ export const TestRunner: React.FC = () => {
       if (!testId || !user) return;
       setLoading(true);
       try {
-        const [testData, qData] = await Promise.all([
+        const [testData, qData, attemptData] = await Promise.all([
           api.getTestById(testId),
           api.getStudentTestQuestions(testId),
+          api.getTestAttempt(attemptId),
         ]);
+
+        // If attempt is already completed, redirect to results immediately (idempotency)
+        if (attemptData?.status === 'completed') {
+          navigate(`/tests/${testId}/results/${attemptId}`, { replace: true });
+          return;
+        }
 
         setTest(testData);
         setQuestions(qData);
@@ -69,20 +76,30 @@ export const TestRunner: React.FC = () => {
               });
               setAnswers(map);
             }
-            if (parsed.timeSpentSeconds) {
-              setTimeSpent(parsed.timeSpentSeconds);
-            }
           } catch {
             // ignore
           }
         }
 
-        // Set initial timer duration
+        // SERVER-SYNCHRONIZED COUNTDOWN TIMER:
+        // Duration is locked to attempt.startTime + test.durationMinutes
         const totalDurationSecs = (testData?.durationMinutes || 15) * 60;
-        setTimeRemaining(totalDurationSecs);
+        const startTimestamp = attemptData?.startTime
+          ? new Date(attemptData.startTime).getTime()
+          : Date.now();
+        const elapsedSecs = Math.max(0, Math.floor((Date.now() - startTimestamp) / 1000));
+        const remainingSecs = Math.max(0, totalDurationSecs - elapsedSecs);
+
+        setTimeRemaining(remainingSecs);
+        setTimeSpent(elapsedSecs);
 
         if (qData.length > 0) {
           setVisited(new Set([qData[0].id]));
+        }
+
+        // If test time has already elapsed on load, submit immediately
+        if (remainingSecs <= 0 && attemptData?.status === 'in_progress') {
+          handleSubmitTest();
         }
       } catch (err) {
         console.error('Failed to load test runner data:', err);
@@ -93,7 +110,7 @@ export const TestRunner: React.FC = () => {
     init();
   }, [testId, attemptId, user]);
 
-  // Submit test handler
+  // Submit test handler (Server-authoritative identity via auth.uid())
   const handleSubmitTest = useCallback(async () => {
     if (submitting || !user || !testId) return;
     setSubmitting(true);
@@ -106,7 +123,6 @@ export const TestRunner: React.FC = () => {
         attemptId,
         answersArray,
         timeSpent,
-        user.id,
         testId
       );
 

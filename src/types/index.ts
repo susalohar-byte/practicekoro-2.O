@@ -126,8 +126,8 @@ export interface TestAttempt {
   wrongCount: number;
   skippedCount: number;
   accuracy: number;
-  rank?: number;
-  percentile?: number;
+  rank?: number | null;
+  percentile?: number | null;
   createdAt: string;
 }
 
@@ -143,9 +143,9 @@ export interface GradedResult {
   wrongCount: number;
   skippedCount: number;
   timeSpentSeconds: number;
-  rank: number;
+  rank: number | null;
   totalCandidates: number;
-  percentile: number;
+  percentile: number | null;
   passed: boolean;
 }
 

@@ -84,6 +84,9 @@ export const TestResult: React.FC = () => {
               <p className="text-2xl font-black text-white mt-0.5">
                 {result.score.toFixed(2)} <span className="text-xs text-slate-400 font-normal">/ {result.totalMarks}</span>
               </p>
+              <p className="text-[10px] text-indigo-300 font-semibold mt-0.5">
+                {result.percentage.toFixed(1)}% Marks
+              </p>
             </div>
 
             <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
@@ -91,12 +94,21 @@ export const TestResult: React.FC = () => {
               <p className="text-2xl font-black text-emerald-400 mt-0.5">
                 {result.accuracy.toFixed(1)}%
               </p>
+              <p className="text-[10px] text-emerald-300/80 font-semibold mt-0.5">
+                {result.correctCount}/{result.correctCount + result.wrongCount} Attempted
+              </p>
             </div>
 
             <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
               <p className="text-[10px] uppercase font-bold text-slate-300">State Rank</p>
               <p className="text-2xl font-black text-blue-400 mt-0.5">
-                #{result.rank} <span className="text-xs text-slate-400 font-normal">/ {result.totalCandidates}</span>
+                {result.rank !== null ? `#${result.rank}` : '—'}{' '}
+                <span className="text-xs text-slate-400 font-normal">
+                  {result.rank !== null ? `/ ${result.totalCandidates}` : ''}
+                </span>
+              </p>
+              <p className="text-[10px] text-blue-300/80 font-semibold mt-0.5">
+                {result.percentile !== null ? `${result.percentile}th %ile` : 'Rank Pending'}
               </p>
             </div>
 
@@ -104,6 +116,9 @@ export const TestResult: React.FC = () => {
               <p className="text-[10px] uppercase font-bold text-slate-300">Time Taken</p>
               <p className="text-2xl font-black text-slate-200 mt-0.5">
                 {formatSeconds(result.timeSpentSeconds)}
+              </p>
+              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                Completed
               </p>
             </div>
           </div>

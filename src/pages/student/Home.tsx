@@ -19,7 +19,7 @@ import {
   Crown,
   ChevronRight
 } from 'lucide-react';
-import type { MockTest, Subject } from '@/types';
+import type { MockTest, Subject, TestAttempt } from '@/types';
 
 export const Home: React.FC = () => {
   const { user, isPro } = useAuth();
@@ -28,6 +28,8 @@ export const Home: React.FC = () => {
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [featuredTests, setFeaturedTests] = useState<MockTest[]>([]);
+  const [recentAttempts, setRecentAttempts] = useState<TestAttempt[]>([]);
+  const [mistakesCount, setMistakesCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,6 +43,15 @@ export const Home: React.FC = () => {
         ]);
         setSubjects(subjData);
         setFeaturedTests(testsData.slice(0, 4));
+
+        if (user) {
+          const [attemptsData, mistakesData] = await Promise.all([
+            api.getUserAttempts(user.id),
+            api.getMistakes(user.id),
+          ]);
+          setRecentAttempts(attemptsData);
+          setMistakesCount(mistakesData.length);
+        }
       } catch (err) {
         console.error('Home load error:', err);
       } finally {
@@ -48,7 +59,7 @@ export const Home: React.FC = () => {
       }
     }
     loadData();
-  }, [selectedExam]);
+  }, [selectedExam, user]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -103,8 +114,10 @@ export const Home: React.FC = () => {
               <Layers className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-slate-900 mt-2">1</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">Indus Valley Mock 01</p>
+          <p className="text-2xl font-black text-slate-900 mt-2">{recentAttempts.length}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+            {recentAttempts[0]?.testTitle || (recentAttempts.length > 0 ? 'Latest Mock' : 'No tests taken yet')}
+          </p>
         </Card>
 
         <Card className="p-4 sm:p-5">
@@ -116,8 +129,16 @@ export const Home: React.FC = () => {
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-emerald-600 mt-2">80.0%</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">4 Correct / 1 Wrong</p>
+          <p className="text-2xl font-black text-emerald-600 mt-2">
+            {recentAttempts.length > 0
+              ? `${(recentAttempts.reduce((acc, a) => acc + (a.accuracy || 0), 0) / recentAttempts.length).toFixed(1)}%`
+              : '—'}
+          </p>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            {recentAttempts.length > 0
+              ? `${recentAttempts.reduce((acc, a) => acc + (a.correctCount || 0), 0)} Correct / ${recentAttempts.reduce((acc, a) => acc + (a.wrongCount || 0), 0)} Wrong`
+              : 'Take a test to measure'}
+          </p>
         </Card>
 
         <Card className="p-4 sm:p-5">
@@ -129,8 +150,14 @@ export const Home: React.FC = () => {
               <Award className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-blue-600 mt-2">#14</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">94.5th Percentile</p>
+          <p className="text-2xl font-black text-blue-600 mt-2">
+            {recentAttempts.length > 0 && recentAttempts[0]?.rank ? `#${recentAttempts[0].rank}` : '—'}
+          </p>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            {recentAttempts.length > 0 && recentAttempts[0]?.percentile
+              ? `${recentAttempts[0].percentile}th Percentile`
+              : 'Competitive Rank'}
+          </p>
         </Card>
 
         <Card className="p-4 sm:p-5">
@@ -142,8 +169,10 @@ export const Home: React.FC = () => {
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-amber-600 mt-2">1</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">Pending Revision</p>
+          <p className="text-2xl font-black text-amber-600 mt-2">{mistakesCount}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            {mistakesCount > 0 ? 'Pending Revision' : 'Clean Notebook'}
+          </p>
         </Card>
       </div>
 

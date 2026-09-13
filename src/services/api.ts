@@ -10,7 +10,7 @@ import {
   MOCK_BOOKMARKS,
   MOCK_SUBSCRIPTION_PLANS,
 } from './mockData';
-import type { Database } from '@/types/database';
+import type { Database, AttemptStatus } from '@/types/database';
 import type {
   Exam,
   Subject,
@@ -203,9 +203,23 @@ export const api = {
     }
   },
 
-  // Questions for active exam (Sanitized without answers)
+  // Questions for active exam (Sanitized without answers or explanations)
   async getStudentTestQuestions(testId: string): Promise<StudentTestQuestion[]> {
-    const questions = await this.getTestQuestions(testId);
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any).rpc('get_student_exam_questions', {
+        p_test_id: testId,
+      });
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch exam questions');
+      }
+      if (Array.isArray(data)) {
+        return data as StudentTestQuestion[];
+      }
+      return [];
+    }
+
+    // Local / Demo Fallback: Sanitize MOCK_QUESTIONS without answers
+    const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
     return questions.map((q, idx) => ({
       id: q.id,
       questionOrder: idx + 1,
@@ -292,7 +306,7 @@ export const api = {
   // TEST ATTEMPT & GRADING ENGINE
   // --------------------------------------------------------------------------
 
-  async startTestAttempt(testId: string, userId: string): Promise<{
+  async startTestAttempt(testId: string): Promise<{
     attemptId: string;
     startTime: string;
     durationMinutes: number;
@@ -303,27 +317,27 @@ export const api = {
     const durationMinutes = test.durationMinutes;
 
     if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await (supabase as any).rpc('start_test_attempt', {
-          p_test_id: testId,
-          p_user_id: userId,
-        });
-        if (!error && data && typeof data === 'object') {
-          const res = data as { attempt_id: string; start_time: string };
-          return {
-            attemptId: res.attempt_id,
-            startTime: res.start_time,
-            durationMinutes,
-          };
-        }
-      } catch (err) {
-        console.warn('RPC start_test_attempt failed, using fallback:', err);
+      const { data, error } = await (supabase as any).rpc('start_test_attempt', {
+        p_test_id: testId,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to initialize exam session');
+      }
+
+      if (data && typeof data === 'object') {
+        const res = data as { attempt_id: string; start_time: string; duration_minutes?: number };
+        return {
+          attemptId: res.attempt_id,
+          startTime: res.start_time,
+          durationMinutes: res.duration_minutes || durationMinutes,
+        };
       }
     }
 
-    // Local / Demo Fallback
+    // Local / Demo Fallback (Only active in development when Supabase is unconfigured)
     const existing = Object.values(localAttemptsStore).find(
-      (a) => a.attempt.userId === userId && a.attempt.testId === testId && a.attempt.status === 'in_progress'
+      (a) => a.attempt.testId === testId && a.attempt.status === 'in_progress'
     );
 
     if (existing) {
@@ -340,7 +354,7 @@ export const api = {
     localAttemptsStore[attemptId] = {
       attempt: {
         id: attemptId,
-        userId,
+        userId: 'dev-student',
         testId,
         testTitle: test.title,
         status: 'in_progress',
@@ -358,6 +372,45 @@ export const api = {
     };
 
     return { attemptId, startTime, durationMinutes };
+  },
+
+  async getTestAttempt(attemptId: string): Promise<TestAttempt | null> {
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any)
+        .from('test_attempts')
+        .select('*')
+        .eq('id', attemptId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch test attempt');
+      }
+
+      if (data) {
+        const d = data as AttemptRow;
+        return {
+          id: d.id,
+          userId: d.user_id,
+          testId: d.test_id,
+          status: d.status as AttemptStatus,
+          startTime: d.start_time,
+          endTime: d.end_time ?? undefined,
+          timeSpentSeconds: d.time_spent_seconds,
+          score: d.score,
+          totalMarks: d.total_marks,
+          correctCount: d.correct_count,
+          wrongCount: d.wrong_count,
+          skippedCount: d.skipped_count,
+          accuracy: d.accuracy,
+          rank: d.rank ?? undefined,
+          percentile: d.percentile ?? undefined,
+          createdAt: d.created_at,
+        };
+      }
+      return null;
+    }
+
+    return localAttemptsStore[attemptId]?.attempt || null;
   },
 
   async saveAnswers(
@@ -403,46 +456,45 @@ export const api = {
     attemptId: string,
     answers: AttemptAnswerState[],
     timeSpentSeconds: number,
-    userId: string,
     testId: string
   ): Promise<GradedResult> {
     const test = await this.getTestById(testId);
-    const questions = await this.getTestQuestions(testId);
 
     if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await (supabase as any).rpc('submit_test_attempt', {
-          p_attempt_id: attemptId,
-          p_answers: answers,
-          p_time_spent_seconds: timeSpentSeconds,
-        });
+      const { data, error } = await (supabase as any).rpc('submit_test_attempt', {
+        p_attempt_id: attemptId,
+        p_answers: answers,
+        p_time_spent_seconds: timeSpentSeconds,
+      });
 
-        if (!error && data && typeof data === 'object') {
-          const res = data as Record<string, unknown>;
-          return {
-            attemptId,
-            testId,
-            testTitle: test?.title,
-            score: Number(res.score || 0),
-            totalMarks: Number(res.total_marks || test?.totalMarks || 5),
-            percentage: Number(res.accuracy || 0),
-            accuracy: Number(res.accuracy || 0),
-            correctCount: Number(res.correct_count || 0),
-            wrongCount: Number(res.wrong_count || 0),
-            skippedCount: Number(res.skipped_count || 0),
-            timeSpentSeconds,
-            rank: Number(res.rank || 14),
-            totalCandidates: Number(res.total_candidates || 150),
-            percentile: Number(res.percentile || 94.5),
-            passed: Boolean(res.passed),
-          };
-        }
-      } catch (err) {
-        console.warn('Submit RPC failed, using server-authoritative mock grading:', err);
+      if (error) {
+        throw new Error(error.message || 'Submission failed on server');
+      }
+
+      if (data && typeof data === 'object') {
+        const res = data as Record<string, unknown>;
+        return {
+          attemptId,
+          testId,
+          testTitle: test?.title,
+          score: Number(res.score || 0),
+          totalMarks: Number(res.total_marks || test?.totalMarks || 5),
+          percentage: Number(res.percentage || 0),
+          accuracy: Number(res.accuracy || 0),
+          correctCount: Number(res.correct_count || 0),
+          wrongCount: Number(res.wrong_count || 0),
+          skippedCount: Number(res.skipped_count || 0),
+          timeSpentSeconds,
+          rank: res.rank !== undefined && res.rank !== null ? Number(res.rank) : null,
+          totalCandidates: Number(res.total_candidates || 1),
+          percentile: res.percentile !== undefined && res.percentile !== null ? Number(res.percentile) : null,
+          passed: Boolean(res.passed),
+        };
       }
     }
 
-    // Authoritative grading calculation
+    // Local / Demo Authoritative fallback (only active when Supabase is unconfigured)
+    const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
     let correctCount = 0;
     let wrongCount = 0;
     let skippedCount = 0;
@@ -464,9 +516,8 @@ export const api = {
         wrongCount++;
         score -= negMarks;
 
-        // AUTOMATIC MISTAKES NOTEBOOK POPULATION:
-        // Add or increment this question in MOCK_MISTAKES
-        const existingMistake = MOCK_MISTAKES.find((m) => m.questionId === q.id && m.userId === userId);
+        // AUTOMATIC MISTAKES NOTEBOOK POPULATION (Local demo)
+        const existingMistake = MOCK_MISTAKES.find((m) => m.questionId === q.id);
         if (existingMistake) {
           existingMistake.wrongCount++;
           existingMistake.isResolved = false;
@@ -474,7 +525,7 @@ export const api = {
         } else {
           MOCK_MISTAKES.unshift({
             id: 'mst-' + Date.now() + '-' + q.id.slice(-4),
-            userId,
+            userId: 'dev-student',
             questionId: q.id,
             question: q,
             wrongCount: 1,
@@ -485,9 +536,10 @@ export const api = {
       }
     });
 
-    const totalAnswered = correctCount + wrongCount;
-    const accuracy = totalAnswered > 0 ? Number(((correctCount / totalAnswered) * 100).toFixed(1)) : 0;
+    score = Math.max(0, score);
     const totalMarks = test ? test.totalMarks : 5;
+    const attemptedCount = correctCount + wrongCount;
+    const accuracy = attemptedCount > 0 ? Number(((correctCount / attemptedCount) * 100).toFixed(1)) : 0;
     const percentage = totalMarks > 0 ? Number(((score / totalMarks) * 100).toFixed(1)) : 0;
     const passed = score >= (test?.passingMarks || 2);
 
@@ -503,9 +555,9 @@ export const api = {
       wrongCount,
       skippedCount,
       timeSpentSeconds,
-      rank: 14,
-      totalCandidates: 150,
-      percentile: 94.5,
+      rank: null,
+      totalCandidates: 1,
+      percentile: null,
       passed,
     };
 
@@ -513,7 +565,7 @@ export const api = {
     localAttemptsStore[attemptId] = {
       attempt: {
         id: attemptId,
-        userId,
+        userId: 'dev-student',
         testId,
         testTitle: test?.title,
         status: 'completed',
@@ -526,8 +578,8 @@ export const api = {
         wrongCount,
         skippedCount,
         accuracy,
-        rank: 14,
-        percentile: 94.5,
+        rank: null,
+        percentile: null,
         createdAt: new Date().toISOString(),
       },
       answers: Object.fromEntries(answers.map((a) => [a.questionId, a])),
@@ -545,6 +597,67 @@ export const api = {
   },
 
   async getAttemptResult(attemptId: string): Promise<GradedResult | null> {
+    if (isSupabaseConfigured) {
+      const { data: res, error } = await (supabase as any)
+        .from('test_results')
+        .select(`
+          score,
+          total_marks,
+          percentage,
+          accuracy,
+          rank,
+          total_candidates,
+          percentile,
+          passed,
+          test_id,
+          test_attempts (
+            correct_count,
+            wrong_count,
+            skipped_count,
+            time_spent_seconds
+          ),
+          tests (
+            title
+          )
+        `)
+        .eq('attempt_id', attemptId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch test result');
+      }
+
+      if (res) {
+        const r = res as Record<string, any>;
+        const attempt = r.test_attempts as {
+          correct_count: number;
+          wrong_count: number;
+          skipped_count: number;
+          time_spent_seconds: number;
+        } | null;
+        const test = r.tests as { title: string } | null;
+
+        return {
+          attemptId,
+          testId: String(r.test_id),
+          testTitle: test?.title,
+          score: Number(r.score),
+          totalMarks: Number(r.total_marks),
+          percentage: Number(r.percentage || 0),
+          accuracy: Number(r.accuracy || 0),
+          correctCount: Number(attempt?.correct_count || 0),
+          wrongCount: Number(attempt?.wrong_count || 0),
+          skippedCount: Number(attempt?.skipped_count || 0),
+          timeSpentSeconds: Number(attempt?.time_spent_seconds || 0),
+          rank: r.rank !== null && r.rank !== undefined ? Number(r.rank) : null,
+          totalCandidates: Number(r.total_candidates || 1),
+          percentile: r.percentile !== null && r.percentile !== undefined ? Number(r.percentile) : null,
+          passed: Boolean(r.passed),
+        };
+      }
+      return null;
+    }
+
     if (localAttemptsStore[attemptId]?.result) {
       return localAttemptsStore[attemptId].result!;
     }
@@ -564,9 +677,9 @@ export const api = {
         wrongCount: attempt.wrongCount,
         skippedCount: attempt.skippedCount,
         timeSpentSeconds: attempt.timeSpentSeconds,
-        rank: attempt.rank || 14,
-        totalCandidates: 150,
-        percentile: attempt.percentile || 94.5,
+        rank: attempt.rank ?? null,
+        totalCandidates: 1,
+        percentile: attempt.percentile ?? null,
         passed: attempt.score >= 2,
       };
     }
@@ -575,13 +688,29 @@ export const api = {
   },
 
   async getAttemptSolutions(attemptId: string, testId: string): Promise<QuestionSolution[]> {
-    const questions = await this.getTestQuestions(testId);
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any).rpc('get_attempt_solutions', {
+        p_attempt_id: attemptId,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch solutions');
+      }
+
+      if (Array.isArray(data)) {
+        return data as QuestionSolution[];
+      }
+      return [];
+    }
+
+    // Local / Demo fallback
+    const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
     const answersMap = localAttemptsStore[attemptId]?.answers || {};
 
     return questions.map((q, idx) => {
       const ans = answersMap[q.id];
-      const selected = ans?.selectedOption || (idx === 4 ? 'A' : idx === 0 ? 'B' : null);
-      const isCorrect = selected === q.correctOption;
+      const selected = ans?.selectedOption || null; // Strictly real answer or null; never guess
+      const isCorrect = selected !== null && selected === q.correctOption;
       const marksAwarded = isCorrect ? q.defaultMarks : selected ? -q.defaultNegativeMarks : 0;
 
       return {

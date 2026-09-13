@@ -80,7 +80,7 @@ export const TestDetails: React.FC = () => {
 
     setStarting(true);
     try {
-      const attemptInfo = await api.startTestAttempt(test.id, user.id);
+      const attemptInfo = await api.startTestAttempt(test.id);
       navigate(`/tests/${test.id}/runner?attemptId=${attemptInfo.attemptId}`);
     } catch (err) {
       console.error('Failed to start attempt:', err);
