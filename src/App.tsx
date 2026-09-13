@@ -4,9 +4,13 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from '@/components/layout/ProtectedRoute';
 
-// Student Pages
+// Student Core Pages
 import { Home } from '@/pages/student/Home';
 import { Tests } from '@/pages/student/Tests';
+import { TestDetails } from '@/pages/student/TestDetails';
+import { TestRunner } from '@/pages/student/TestRunner';
+import { TestResult } from '@/pages/student/TestResult';
+import { TestSolutions } from '@/pages/student/TestSolutions';
 import { Practice } from '@/pages/student/Practice';
 import { MyTests } from '@/pages/student/MyTests';
 import { Profile } from '@/pages/student/Profile';
@@ -28,10 +32,27 @@ import { AdminSubscriptions } from '@/pages/admin/AdminSubscriptions';
 export const App: React.FC = () => {
   return (
     <Routes>
-      {/* Student App Layout Routes */}
+      {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Home />} />
         <Route path="tests" element={<Tests />} />
+        <Route path="tests/:testId" element={<TestDetails />} />
+        <Route
+          path="tests/:testId/results/:attemptId"
+          element={
+            <ProtectedRoute>
+              <TestResult />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="tests/:testId/solutions/:attemptId"
+          element={
+            <ProtectedRoute>
+              <TestSolutions />
+            </ProtectedRoute>
+          }
+        />
         <Route path="practice" element={<Practice />} />
         <Route
           path="my-tests"
@@ -50,6 +71,16 @@ export const App: React.FC = () => {
           }
         />
       </Route>
+
+      {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}
+      <Route
+        path="/tests/:testId/runner"
+        element={
+          <ProtectedRoute>
+            <TestRunner />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Auth Public-Only Routes */}
       <Route

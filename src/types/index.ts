@@ -89,6 +89,28 @@ export interface Question {
   isActive: boolean;
 }
 
+/** Sanitized question returned to student during active exam */
+export interface StudentTestQuestion {
+  id: string;
+  questionOrder: number;
+  questionText: string;
+  questionBengaliText?: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  marks: number;
+  negativeMarks: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
+export interface AttemptAnswerState {
+  questionId: string;
+  selectedOption: 'A' | 'B' | 'C' | 'D' | null;
+  isMarkedForReview: boolean;
+  timeSpentSeconds: number;
+}
+
 export interface TestAttempt {
   id: string;
   userId: string;
@@ -107,6 +129,42 @@ export interface TestAttempt {
   rank?: number;
   percentile?: number;
   createdAt: string;
+}
+
+export interface GradedResult {
+  attemptId: string;
+  testId: string;
+  testTitle?: string;
+  score: number;
+  totalMarks: number;
+  percentage: number;
+  accuracy: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  timeSpentSeconds: number;
+  rank: number;
+  totalCandidates: number;
+  percentile: number;
+  passed: boolean;
+}
+
+export interface QuestionSolution {
+  id: string;
+  questionOrder: number;
+  questionText: string;
+  questionBengaliText?: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  selectedOption: 'A' | 'B' | 'C' | 'D' | null;
+  correctOption: 'A' | 'B' | 'C' | 'D';
+  isCorrect: boolean;
+  marksAwarded: number;
+  explanation?: string;
+  explanationBengali?: string;
+  isBookmarked?: boolean;
 }
 
 export interface MistakeItem {

@@ -391,6 +391,18 @@ export interface Database {
         Args: { p_user_id: string; p_test_id: string };
         Returns: boolean;
       };
+      start_test_attempt: {
+        Args: { p_test_id: string; p_user_id: string };
+        Returns: Json;
+      };
+      save_test_answers: {
+        Args: { p_attempt_id: string; p_answers: Json; p_time_spent_seconds: number };
+        Returns: boolean;
+      };
+      submit_test_attempt: {
+        Args: { p_attempt_id: string; p_answers: Json; p_time_spent_seconds: number };
+        Returns: Json;
+      };
     };
   };
 }

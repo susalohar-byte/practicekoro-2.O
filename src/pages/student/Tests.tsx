@@ -17,8 +17,7 @@ import {
   Lock,
   Play,
   CheckCircle,
-  Crown,
-  X
+  Crown
 } from 'lucide-react';
 import type { Subject, Chapter, MockTest } from '@/types';
 
@@ -37,8 +36,6 @@ export const Tests: React.FC = () => {
 
   const [tests, setTests] = useState<MockTest[]>([]);
 
-  // Modals
-  const [activeTestForModal, setActiveTestForModal] = useState<MockTest | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   // Load Subjects when exam changes
@@ -115,7 +112,7 @@ export const Tests: React.FC = () => {
     if (!accessible) {
       setShowSubscriptionModal(true);
     } else {
-      setActiveTestForModal(test);
+      navigate(`/tests/${test.id}`);
     }
   };
 
@@ -308,70 +305,7 @@ export const Tests: React.FC = () => {
         </div>
       </div>
 
-      {/* TEST INSTRUCTIONS & START MODAL */}
-      {activeTestForModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-              <div>
-                <Badge variant={activeTestForModal.isPremium ? 'premium' : 'free'} className="mb-1">
-                  {activeTestForModal.isPremium ? 'PRO PASS' : 'FREE TEST'}
-                </Badge>
-                <h3 className="text-lg font-bold text-slate-900">{activeTestForModal.title}</h3>
-              </div>
-              <button
-                onClick={() => setActiveTestForModal(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="py-4 space-y-3 text-xs text-slate-600">
-              <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-center">
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Questions</p>
-                  <p className="text-sm font-extrabold text-slate-900">{activeTestForModal.totalQuestions}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Time</p>
-                  <p className="text-sm font-extrabold text-slate-900">{activeTestForModal.durationMinutes} Mins</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Total Marks</p>
-                  <p className="text-sm font-extrabold text-slate-900">{activeTestForModal.totalMarks}</p>
-                </div>
-              </div>
-
-              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] pt-1">
-                Instructions / নির্দেশাবলি:
-              </h4>
-              <ul className="space-y-1.5 list-disc pl-4 text-slate-600">
-                <li>Each question carries <strong>1.0 mark</strong>.</li>
-                <li>Negative marking of <strong>0.25 marks</strong> for each wrong answer.</li>
-                <li>Unanswered questions receive <strong>0 marks</strong>.</li>
-                <li>Once submitted, question-wise analysis and solutions will be displayed.</li>
-              </ul>
-            </div>
-
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setActiveTestForModal(null)}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                rightIcon={<Play className="w-3.5 h-3.5 fill-current" />}
-                onClick={() => {
-                  alert(`Test session initialized: ${activeTestForModal.title}.\nFull test runner engine will be loaded in Phase 2.`);
-                  setActiveTestForModal(null);
-                }}
-              >
-                Agree & Start Test
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* SUBSCRIPTION PROMPT MODAL (ONE SUBSCRIPTION = ALL PREMIUM TESTS) */}
       {showSubscriptionModal && (
