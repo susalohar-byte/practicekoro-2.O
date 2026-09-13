@@ -1,0 +1,153 @@
+export type UserRole = 'student' | 'admin' | 'instructor';
+
+export interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+  targetExamId?: string;
+  role: UserRole;
+  createdAt: string;
+}
+
+export interface Exam {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  category: string;
+  iconName: string;
+  bannerUrl?: string;
+  orderIndex: number;
+  isActive: boolean;
+  subjectsCount?: number;
+  testsCount?: number;
+}
+
+export interface Subject {
+  id: string;
+  examId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  iconName: string;
+  orderIndex: number;
+  isActive: boolean;
+  chaptersCount?: number;
+}
+
+export interface Chapter {
+  id: string;
+  subjectId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  orderIndex: number;
+  isActive: boolean;
+  testsCount?: number;
+}
+
+export interface MockTest {
+  id: string;
+  examId: string;
+  subjectId?: string;
+  chapterId?: string;
+  testSeriesId?: string;
+  title: string;
+  slug: string;
+  description?: string;
+  testType: 'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq';
+  durationMinutes: number;
+  totalQuestions: number;
+  totalMarks: number;
+  passingMarks: number;
+  negativeMarking: number;
+  isPremium: boolean;
+  orderIndex: number;
+  isActive: boolean;
+  examTitle?: string;
+  subjectName?: string;
+  chapterName?: string;
+}
+
+export interface Question {
+  id: string;
+  chapterId?: string;
+  questionText: string;
+  questionBengaliText?: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: 'A' | 'B' | 'C' | 'D';
+  explanation?: string;
+  explanationBengali?: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  defaultMarks: number;
+  defaultNegativeMarks: number;
+  isActive: boolean;
+}
+
+export interface TestAttempt {
+  id: string;
+  userId: string;
+  testId: string;
+  testTitle?: string;
+  status: 'in_progress' | 'completed' | 'abandoned';
+  startTime: string;
+  endTime?: string;
+  timeSpentSeconds: number;
+  score: number;
+  totalMarks: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  accuracy: number;
+  rank?: number;
+  percentile?: number;
+  createdAt: string;
+}
+
+export interface MistakeItem {
+  id: string;
+  userId: string;
+  questionId: string;
+  question: Question;
+  wrongCount: number;
+  isResolved: boolean;
+  lastReviewedAt?: string;
+  createdAt: string;
+}
+
+export interface BookmarkItem {
+  id: string;
+  userId: string;
+  questionId: string;
+  question: Question;
+  note?: string;
+  createdAt: string;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  title: string;
+  description?: string;
+  durationDays: number;
+  price: number;
+  originalPrice?: number;
+  features: string[];
+  isActive: boolean;
+  orderIndex: number;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  planId: string;
+  plan?: SubscriptionPlan;
+  status: 'active' | 'expired' | 'cancelled';
+  startsAt: string;
+  expiresAt: string;
+  createdAt: string;
+}
