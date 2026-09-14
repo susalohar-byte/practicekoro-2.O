@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from '@/components/layout/ProtectedRoute';
@@ -40,25 +39,10 @@ import { AdminSubscriptions } from '@/pages/admin/AdminSubscriptions';
 
 /**
  * RootRoute:
- * - If user is not authenticated: renders public Landing Page
- * - If user is student: redirects to /dashboard (Student Panel)
- * - If user is admin: redirects to /admin (Admin Panel)
+ * - Always displays the public Landing Page at https://practicekoro.online/
+ * - If user is logged in, Landing Page dynamically displays Dashboard button instead of Login/Get Started
  */
 const RootRoute: React.FC = () => {
-  const { user, isAdmin, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
-      </div>
-    );
-  }
-
-  if (user) {
-    return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
-  }
-
   return <Landing />;
 };
 
