@@ -800,6 +800,31 @@ export const api = {
   },
 
   async toggleBookmark(userId: string, questionId: string, note?: string): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      try {
+        const { data: existing } = await (supabase as any)
+          .from('bookmarks')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('question_id', questionId)
+          .maybeSingle();
+
+        if (existing) {
+          await (supabase as any).from('bookmarks').delete().eq('id', (existing as any).id);
+          return false; // Removed
+        } else {
+          await (supabase as any).from('bookmarks').insert({
+            user_id: userId,
+            question_id: questionId,
+            note: note || 'Bookmarked during practice review',
+          });
+          return true; // Added
+        }
+      } catch (err) {
+        console.error('Supabase toggleBookmark error:', err);
+      }
+    }
+
     const existingIndex = MOCK_BOOKMARKS.findIndex(
       (b) => b.questionId === questionId && b.userId === userId
     );
@@ -866,6 +891,9 @@ export const api = {
           examTitle: test?.exams?.title,
           subjectName: test?.subjects?.name,
           chapterName: test?.chapters?.name,
+          durationMinutes: test?.duration_minutes ? Number(test.duration_minutes) : undefined,
+          totalQuestions: test?.total_questions ? Number(test.total_questions) : undefined,
+          isPremium: Boolean(test?.is_premium),
           status: d.status,
           startTime: d.start_time,
           endTime: d.end_time ?? undefined,
@@ -900,14 +928,26 @@ export const api = {
           is_resolved,
           last_reviewed_at,
           created_at,
-          questions (*)
+          questions (
+            *,
+            chapters (
+              name,
+              subjects (
+                name,
+                exams (title)
+              )
+            )
+          )
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return (data as unknown as Array<MistakeRow & { questions: Record<string, unknown> }>).map((d) => {
-        const q = d.questions;
+      return (data as unknown as Array<MistakeRow & { questions: any }>).map((d) => {
+        const q = d.questions || {};
+        const ch = q.chapters;
+        const sub = ch?.subjects;
+        const ex = sub?.exams;
         return {
           id: d.id,
           userId: d.user_id,
@@ -916,8 +956,13 @@ export const api = {
           isResolved: d.is_resolved,
           lastReviewedAt: d.last_reviewed_at ?? undefined,
           createdAt: d.created_at,
+          examTitle: ex?.title,
+          subjectName: sub?.name,
+          chapterName: ch?.name,
           question: {
             id: String(q.id),
+            chapterId: q.chapter_id ?? undefined,
+            subjectId: q.subject_id ?? undefined,
             questionText: String(q.question_text),
             questionBengaliText: q.question_bengali_text ? String(q.question_bengali_text) : undefined,
             optionA: String(q.option_a),
@@ -931,12 +976,40 @@ export const api = {
             defaultMarks: Number(q.default_marks || 1),
             defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
             isActive: Boolean(q.is_active),
+            examTitle: ex?.title,
+            subjectName: sub?.name,
+            chapterName: ch?.name,
           },
         };
       });
     } catch {
       return [];
     }
+  },
+
+  // Resolve or unresolve a mistake
+  async resolveMistake(mistakeId: string, isResolved: boolean = true): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await (supabase as any)
+          .from('mistakes')
+          .update({
+            is_resolved: isResolved,
+            last_reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', mistakeId);
+        if (!error) return true;
+      } catch (err) {
+        console.error('resolveMistake Supabase error:', err);
+      }
+    }
+    const idx = MOCK_MISTAKES.findIndex((m) => m.id === mistakeId);
+    if (idx !== -1) {
+      MOCK_MISTAKES[idx].isResolved = isResolved;
+      MOCK_MISTAKES[idx].lastReviewedAt = new Date().toISOString();
+      return true;
+    }
+    return false;
   },
 
   // Bookmarks
@@ -951,22 +1024,39 @@ export const api = {
           question_id,
           note,
           created_at,
-          questions (*)
+          questions (
+            *,
+            chapters (
+              name,
+              subjects (
+                name,
+                exams (title)
+              )
+            )
+          )
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return (data as unknown as Array<BookmarkRow & { questions: Record<string, unknown> }>).map((d) => {
-        const q = d.questions;
+      return (data as unknown as Array<BookmarkRow & { questions: any }>).map((d) => {
+        const q = d.questions || {};
+        const ch = q.chapters;
+        const sub = ch?.subjects;
+        const ex = sub?.exams;
         return {
           id: d.id,
           userId: d.user_id,
           questionId: d.question_id,
           note: d.note ?? undefined,
           createdAt: d.created_at,
+          examTitle: ex?.title,
+          subjectName: sub?.name,
+          chapterName: ch?.name,
           question: {
             id: String(q.id),
+            chapterId: q.chapter_id ?? undefined,
+            subjectId: q.subject_id ?? undefined,
             questionText: String(q.question_text),
             questionBengaliText: q.question_bengali_text ? String(q.question_bengali_text) : undefined,
             optionA: String(q.option_a),
@@ -980,11 +1070,14 @@ export const api = {
             defaultMarks: Number(q.default_marks || 1),
             defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
             isActive: Boolean(q.is_active),
+            examTitle: ex?.title,
+            subjectName: sub?.name,
+            chapterName: ch?.name,
           },
         };
       });
     } catch {
-      return MOCK_BOOKMARKS;
+      return [];
     }
   },
 

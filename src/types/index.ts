@@ -180,6 +180,10 @@ export interface TestAttempt {
   examTitle?: string;
   subjectName?: string;
   chapterName?: string;
+  durationMinutes?: number;
+  totalQuestions?: number;
+  isPremium?: boolean;
+  attemptNumber?: number;
   status: 'in_progress' | 'completed' | 'abandoned';
   startTime: string;
   endTime?: string;
@@ -240,6 +244,9 @@ export interface MistakeItem {
   isResolved: boolean;
   lastReviewedAt?: string;
   createdAt: string;
+  examTitle?: string;
+  subjectName?: string;
+  chapterName?: string;
 }
 
 export interface BookmarkItem {
@@ -249,6 +256,9 @@ export interface BookmarkItem {
   question: Question;
   note?: string;
   createdAt: string;
+  examTitle?: string;
+  subjectName?: string;
+  chapterName?: string;
 }
 
 export interface SubscriptionPlan {
