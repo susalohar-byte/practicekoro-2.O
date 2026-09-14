@@ -147,44 +147,58 @@ export const Home: React.FC = () => {
       {/* =========================================================================
           SECTION 1: HEADER & TARGET EXAM QUICK-SWITCHER
           ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-        {/* Left: Greeting & Student Name */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              {getGreeting()}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-white via-blue-50/25 to-white border border-slate-200/80 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.04)] p-6 sm:p-8 text-center flex flex-col items-center justify-center space-y-4">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-gradient-to-r from-blue-400/10 via-indigo-400/15 to-blue-400/10 blur-2xl pointer-events-none" />
+
+        {/* Top Badges Row (Centered) */}
+        <div className="relative inline-flex items-center gap-2 flex-wrap justify-center">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100/90 text-slate-700 border border-slate-200/80 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="uppercase tracking-wider">{getGreeting()}</span>
+          </span>
+
+          {isPro ? (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs">
+              <Crown className="w-3 h-3 fill-white" />
+              PRO PASS ACTIVE
             </span>
-            {isPro && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs">
-                <Crown className="w-2.5 h-2.5 fill-white" />
-                PRO PASS
-              </span>
-            )}
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
-            {user?.fullName || 'Student Aspirant'}
+          ) : (
+            <Link
+              to="/subscription"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors"
+            >
+              <Sparkles className="w-3 h-3 text-blue-600" />
+              Free Tier
+            </Link>
+          )}
+        </div>
+
+        {/* Grand Centered Student Greeting & Name */}
+        <div className="relative space-y-2 max-w-2xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
+            Welcome back, <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">{user?.fullName || 'Student Aspirant'}</span> 👋
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium">
+          <p className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium leading-relaxed">
             Targeted preparation and rigorous mock tests for West Bengal competitive exams.
           </p>
         </div>
 
-        {/* Right: Target Exam Switcher & Profile Quick Action */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Target Exam Dropdown Pill */}
-          <div className="relative">
+        {/* Centered Target Exam Quick-Switcher Pill */}
+        <div className="relative pt-1">
+          <div className="relative inline-block">
             <button
               type="button"
               onClick={() => setIsExamDropdownOpen(!isExamDropdownOpen)}
-              className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-500 hover:bg-blue-50/40 transition-all text-xs sm:text-sm font-bold text-slate-800 active:scale-[0.98]"
+              className="inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/10 hover:bg-blue-50/40 transition-all text-xs sm:text-sm font-bold text-slate-800 active:scale-[0.98]"
               title="Click to switch your target exam"
             >
-              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-              <span className="text-slate-500 font-medium">Target:</span>
-              <span className="text-blue-700 max-w-[140px] sm:max-w-[200px] truncate">
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
+              <span className="text-slate-500 font-medium">Target Exam:</span>
+              <span className="text-blue-700 font-extrabold max-w-[200px] sm:max-w-[280px] truncate">
                 {selectedExam?.title || 'Select Exam'}
               </span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isExamDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExamDropdownOpen ? 'rotate-180 text-blue-600' : ''}`} />
             </button>
 
             {/* Exam Dropdown Menu */}
@@ -194,7 +208,7 @@ export const Home: React.FC = () => {
                   className="fixed inset-0 z-30"
                   onClick={() => setIsExamDropdownOpen(false)}
                 />
-                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-40 py-2 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-40 py-2 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100 text-left">
                   <div className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     Switch Target Exam
                   </div>
@@ -230,20 +244,22 @@ export const Home: React.FC = () => {
               </>
             )}
           </div>
+        </div>
 
-          {/* Profile Avatar / Quick Link */}
-          <Link
-            to="/profile"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 flex items-center justify-center font-bold text-sm text-slate-700 hover:text-blue-700 transition-all shrink-0 shadow-xs relative"
-            title="View Profile & Subscription"
-          >
-            {user?.fullName?.charAt(0) || 'U'}
-            {isPro && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center ring-2 ring-white">
-                <Crown className="w-2.5 h-2.5 text-white fill-white" />
-              </span>
-            )}
-          </Link>
+        {/* Quick Features Row (Centered) */}
+        <div className="pt-1 flex items-center justify-center gap-2 sm:gap-3 flex-wrap text-[11px] sm:text-xs font-semibold text-slate-500">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200/60">
+            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+            <span>{tests.length} Mock Tests Available</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200/60">
+            <Target className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Syllabus Aligned</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200/60">
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span>Real Exam Simulator</span>
+          </span>
         </div>
       </div>
 

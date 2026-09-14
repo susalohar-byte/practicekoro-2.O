@@ -215,10 +215,9 @@ export const Landing: React.FC = () => {
       {/* =========================================================================
           1. NAVBAR
           ========================================================================= */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
+      <header className="sticky top-3 sm:top-4 z-50 w-full px-4 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
+        <div className="w-full max-w-6xl bg-white/90 backdrop-blur-xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl sm:rounded-full px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between pointer-events-auto transition-all">
+          {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
               <img
                 src="/logo-icon-transparent.png"
@@ -279,8 +278,7 @@ export const Landing: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* =========================================================================
           2. HERO SECTION
