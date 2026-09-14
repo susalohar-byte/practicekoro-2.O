@@ -121,26 +121,8 @@ export const Subscription: React.FC = () => {
       });
 
       if (checkoutResult.error) {
-        // Test fallback checkout simulation mode for environments without checkout.js network reach
-        console.warn('Simulating test payment verification for development...');
-        const mockPayId = `pay_sim_${Date.now()}`;
-        // In local test mode, simulate verification
-        const verification = await api.verifyRazorpayPayment({
-          orderId: order.orderId,
-          paymentId: mockPayId,
-          signature: 'simulated_valid_test_signature',
-          planId: plan.id,
-        });
-
-        if (verification.success) {
-          setSuccessInfo({
-            planTitle: verification.planTitle || plan.title,
-            expiresAt: verification.expiresAt,
-            isRenewal: verification.isRenewal,
-          });
-          setPaymentStatus('success');
-          await refreshSubscription();
-        }
+        setErrorMessage(checkoutResult.error);
+        setPaymentStatus('failed');
       }
     } catch (err: any) {
       console.error('Order creation failed:', err);
