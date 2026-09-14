@@ -11,7 +11,7 @@ import {
   Search,
   BookOpen,
   Layers,
-  X
+  X,
 } from 'lucide-react';
 import type { Exam } from '@/types';
 
@@ -106,7 +106,13 @@ export const AdminExams: React.FC = () => {
       } else {
         await api.createExam({
           title: title.trim(),
-          slug: slug.trim() || title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+          slug:
+            slug.trim() ||
+            title
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, ''),
           category: category.trim(),
           description: description.trim() || undefined,
           iconName: iconName.trim(),
@@ -130,10 +136,11 @@ export const AdminExams: React.FC = () => {
     }
   };
 
-  const filteredExams = exams.filter(e =>
-    e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.slug.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredExams = exams.filter(
+    (e) =>
+      e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -151,7 +158,8 @@ export const AdminExams: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Top-level content entity. All subjects, chapters, test series and mock tests belong to an Exam.
+            Top-level content entity. All subjects, chapters, test series and mock tests belong to
+            an Exam.
           </p>
         </div>
 
@@ -218,7 +226,9 @@ export const AdminExams: React.FC = () => {
                         <div>
                           <p className="font-bold text-white text-sm">{exam.title}</p>
                           {exam.description && (
-                            <p className="text-[11px] text-slate-400 line-clamp-1">{exam.description}</p>
+                            <p className="text-[11px] text-slate-400 line-clamp-1">
+                              {exam.description}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -267,7 +277,11 @@ export const AdminExams: React.FC = () => {
                           className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
                           title={exam.isActive ? 'Deactivate Exam' : 'Activate Exam'}
                         >
-                          {exam.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                          {exam.isActive ? (
+                            <Trash2 className="w-4 h-4" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </td>

@@ -16,7 +16,7 @@ import {
   ChevronRight,
   Lock,
   Play,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react';
 import type { Subject, Chapter, MockTest } from '@/types';
 
@@ -129,7 +129,9 @@ export const Tests: React.FC = () => {
           {selectedChapter && (
             <>
               <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-brand-600 font-bold">{selectedChapter.name.split(' (')[0]}</span>
+              <span className="text-brand-600 font-bold">
+                {selectedChapter.name.split(' (')[0]}
+              </span>
             </>
           )}
         </div>
@@ -192,17 +194,21 @@ export const Tests: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-brand-900' : 'text-slate-800'}`}>
+                    <h3
+                      className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-brand-900' : 'text-slate-800'}`}
+                    >
                       {chap.name}
                     </h3>
-                    <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? 'text-brand-600 translate-x-0.5' : 'text-slate-400'}`} />
+                    <ChevronRight
+                      className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? 'text-brand-600 translate-x-0.5' : 'text-slate-400'}`}
+                    />
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-1">
-                    {chap.description}
-                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-1">{chap.description}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-[10px] font-semibold text-slate-500 bg-white/80 px-2 py-0.5 rounded border border-slate-200">
-                      {isSelected ? `${tests.length} ${tests.length === 1 ? 'Mock Test' : 'Mock Tests'} Available` : 'Chapter Tests'}
+                      {isSelected
+                        ? `${tests.length} ${tests.length === 1 ? 'Mock Test' : 'Mock Tests'} Available`
+                        : 'Chapter Tests'}
                     </span>
                   </div>
                 </div>
@@ -223,9 +229,7 @@ export const Tests: React.FC = () => {
                 Practice chapter-specific mock tests with real exam timers and negative marking
               </p>
             </div>
-            <span className="text-xs font-bold text-slate-500">
-              {tests.length} Tests
-            </span>
+            <span className="text-xs font-bold text-slate-500">{tests.length} Tests</span>
           </div>
 
           {tests.length === 0 ? (
@@ -265,9 +269,7 @@ export const Tests: React.FC = () => {
                           {isLocked && <Lock className="w-4 h-4 text-amber-600 shrink-0" />}
                         </h3>
 
-                        <p className="text-xs text-slate-500 line-clamp-1">
-                          {test.description}
-                        </p>
+                        <p className="text-xs text-slate-500 line-clamp-1">{test.description}</p>
 
                         <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-600">
                           <span className="inline-flex items-center gap-1 font-medium">
@@ -279,7 +281,9 @@ export const Tests: React.FC = () => {
                           <span>•</span>
                           <span>{test.totalMarks} Marks</span>
                           <span>•</span>
-                          <span className="text-rose-600 font-medium">-{test.negativeMarking} Mark Neg</span>
+                          <span className="text-rose-600 font-medium">
+                            -{test.negativeMarking} Mark Neg
+                          </span>
                         </div>
                       </div>
 
@@ -287,7 +291,13 @@ export const Tests: React.FC = () => {
                         <Button
                           size="sm"
                           variant={isLocked ? 'pro' : 'primary'}
-                          rightIcon={isLocked ? <Lock className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                          rightIcon={
+                            isLocked ? (
+                              <Lock className="w-3.5 h-3.5" />
+                            ) : (
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                            )
+                          }
                           onClick={(e) => {
                             e.stopPropagation();
                             handleTestClick(test);
@@ -304,8 +314,6 @@ export const Tests: React.FC = () => {
           )}
         </div>
       </div>
-
-
 
       {/* PREMIUM TEST LOCK MODAL (PART A: NON-PUNITIVE LOCK UX) */}
       {showSubscriptionModal && (
@@ -329,7 +337,9 @@ export const Tests: React.FC = () => {
             <div className="my-5 p-4 bg-gradient-to-br from-amber-50 to-orange-50/60 rounded-xl border border-amber-200 text-left space-y-2.5">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-900 block">PracticeKoro Pro Pass</span>
+                  <span className="text-xs font-bold text-slate-900 block">
+                    PracticeKoro Pro Pass
+                  </span>
                   <span className="text-[11px] text-slate-500">Universal All-Access Pass</span>
                 </div>
                 <div className="text-right">
@@ -339,7 +349,8 @@ export const Tests: React.FC = () => {
               </div>
 
               <p className="text-xs text-slate-700 leading-relaxed pt-1 border-t border-amber-200/60">
-                Unlock this and every other premium mock test with Pro Pass. No individual test purchases required.
+                Unlock this and every other premium mock test with Pro Pass. No individual test
+                purchases required.
               </p>
 
               <ul className="text-[11px] text-slate-700 space-y-1 pt-1">

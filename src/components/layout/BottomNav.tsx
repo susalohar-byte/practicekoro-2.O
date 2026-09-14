@@ -32,11 +32,14 @@ export const BottomNav: React.FC = () => {
               )}
             >
               <div className={cn('p-1 rounded-full', isActive && 'bg-blue-50')}>
-                <Icon className={cn('w-5 h-5 transition-transform', isActive && 'scale-110 stroke-[2.5]')} />
+                <Icon
+                  className={cn(
+                    'w-5 h-5 transition-transform',
+                    isActive && 'scale-110 stroke-[2.5]'
+                  )}
+                />
               </div>
-              <span className="text-[10px] tracking-tight leading-none">
-                {tab.label}
-              </span>
+              <span className="text-[10px] tracking-tight leading-none">{tab.label}</span>
             </Link>
           );
         })}

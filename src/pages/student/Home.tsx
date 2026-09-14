@@ -104,17 +104,13 @@ export const Home: React.FC = () => {
   const totalScoreEarned = completedAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
   const totalMarksPossible = completedAttempts.reduce((sum, a) => sum + (a.totalMarks || 0), 0);
   const avgScorePercentage =
-    totalMarksPossible > 0
-      ? ((totalScoreEarned / totalMarksPossible) * 100).toFixed(1)
-      : '0';
+    totalMarksPossible > 0 ? ((totalScoreEarned / totalMarksPossible) * 100).toFixed(1) : '0';
 
   const totalCorrect = completedAttempts.reduce((sum, a) => sum + (a.correctCount || 0), 0);
   const totalWrong = completedAttempts.reduce((sum, a) => sum + (a.wrongCount || 0), 0);
   const totalAnswered = totalCorrect + totalWrong;
   const overallAccuracy =
-    totalAnswered > 0
-      ? ((totalCorrect / totalAnswered) * 100).toFixed(1)
-      : '0';
+    totalAnswered > 0 ? ((totalCorrect / totalAnswered) * 100).toFixed(1) : '0';
 
   // Derived Recommended Practice
   const attemptedTestIds = new Set(recentAttempts.map((a) => a.testId));
@@ -177,7 +173,11 @@ export const Home: React.FC = () => {
         {/* Grand Centered Student Greeting & Name */}
         <div className="relative space-y-2 max-w-2xl mx-auto">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-            Welcome back, <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">{user?.fullName || 'Student Aspirant'}</span> 👋
+            Welcome back,{' '}
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">
+              {user?.fullName || 'Student Aspirant'}
+            </span>{' '}
+            👋
           </h1>
           <p className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium leading-relaxed">
             Targeted preparation and rigorous mock tests for West Bengal competitive exams.
@@ -198,16 +198,15 @@ export const Home: React.FC = () => {
               <span className="text-blue-700 font-extrabold max-w-[200px] sm:max-w-[280px] truncate">
                 {selectedExam?.title || 'Select Exam'}
               </span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExamDropdownOpen ? 'rotate-180 text-blue-600' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExamDropdownOpen ? 'rotate-180 text-blue-600' : ''}`}
+              />
             </button>
 
             {/* Exam Dropdown Menu */}
             {isExamDropdownOpen && (
               <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setIsExamDropdownOpen(false)}
-                />
+                <div className="fixed inset-0 z-30" onClick={() => setIsExamDropdownOpen(false)} />
                 <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-40 py-2 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100 text-left">
                   <div className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     Switch Target Exam
@@ -232,7 +231,8 @@ export const Home: React.FC = () => {
                           <div className="flex flex-col">
                             <span>{exam.title}</span>
                             <span className="text-[10px] text-slate-400 font-normal">
-                              {exam.category.toUpperCase()} • {exam.totalVacancies || 'Govt'} Vacancies
+                              {exam.category.toUpperCase()} • {exam.totalVacancies || 'Govt'}{' '}
+                              Vacancies
                             </span>
                           </div>
                           {isSelected && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
@@ -304,7 +304,11 @@ export const Home: React.FC = () => {
             </div>
 
             <Button
-              onClick={() => navigate(`/exams/${inProgressAttempt.testId}/runner?attemptId=${inProgressAttempt.id}`)}
+              onClick={() =>
+                navigate(
+                  `/exams/${inProgressAttempt.testId}/runner?attemptId=${inProgressAttempt.id}`
+                )
+              }
               className="bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-blue-500/30 px-6 py-3.5 rounded-xl shrink-0 transition"
               leftIcon={<Play className="w-4 h-4 fill-white" />}
             >
@@ -326,20 +330,29 @@ export const Home: React.FC = () => {
               </h2>
               <p className="text-xs text-slate-500 mt-0.5 font-medium">
                 {latestCompletedAttempt.examTitle || selectedExam?.title}
-                {latestCompletedAttempt.subjectName ? ` • ${latestCompletedAttempt.subjectName}` : ''}
+                {latestCompletedAttempt.subjectName
+                  ? ` • ${latestCompletedAttempt.subjectName}`
+                  : ''}
               </p>
             </div>
 
             {/* Quick Metrics Bar */}
             <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-700 pt-1">
               <span className="inline-flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                Score: <span className="text-blue-700 font-bold">{latestCompletedAttempt.score}</span> / {latestCompletedAttempt.totalMarks}
+                Score:{' '}
+                <span className="text-blue-700 font-bold">{latestCompletedAttempt.score}</span> /{' '}
+                {latestCompletedAttempt.totalMarks}
               </span>
               <span className="inline-flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                Accuracy: <span className="text-emerald-700 font-bold">{Math.round(latestCompletedAttempt.accuracy)}%</span>
+                Accuracy:{' '}
+                <span className="text-emerald-700 font-bold">
+                  {Math.round(latestCompletedAttempt.accuracy)}%
+                </span>
               </span>
               <span className="inline-flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                Correct: <span className="text-emerald-700">{latestCompletedAttempt.correctCount}</span> | Wrong: <span className="text-rose-700">{latestCompletedAttempt.wrongCount}</span>
+                Correct:{' '}
+                <span className="text-emerald-700">{latestCompletedAttempt.correctCount}</span> |
+                Wrong: <span className="text-rose-700">{latestCompletedAttempt.wrongCount}</span>
               </span>
             </div>
           </div>
@@ -348,7 +361,11 @@ export const Home: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(`/exams/${latestCompletedAttempt.testId}/solutions/${latestCompletedAttempt.id}`)}
+              onClick={() =>
+                navigate(
+                  `/exams/${latestCompletedAttempt.testId}/solutions/${latestCompletedAttempt.id}`
+                )
+              }
               leftIcon={<CheckCircle2 className="w-4 h-4 text-blue-600" />}
               className="text-xs font-bold py-2.5 px-4 rounded-xl border-slate-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600"
             >
@@ -377,7 +394,8 @@ export const Home: React.FC = () => {
               Start Your Preparation With a Free Mock Test
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Experience the exact test environment with timer countdown, bilingual questions, instant scoring, negative marking, and error analysis.
+              Experience the exact test environment with timer countdown, bilingual questions,
+              instant scoring, negative marking, and error analysis.
             </p>
           </div>
           <Button
@@ -450,11 +468,13 @@ export const Home: React.FC = () => {
                 <h3 className="text-base font-bold text-slate-900 group-hover:text-amber-700 transition-colors truncate">
                   Mistakes Notebook
                 </h3>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                  mistakesCount > 0
-                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                    : 'bg-slate-100 text-slate-600 border border-slate-200'
-                }`}>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                    mistakesCount > 0
+                      ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}
+                >
                   {mistakesCount} Pending
                 </span>
               </div>
@@ -540,16 +560,20 @@ export const Home: React.FC = () => {
                   onClick={() => navigate(`/exams/${selectedExam?.id || 'wbp-constable'}`)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/exams/${selectedExam?.id || 'wbp-constable'}`)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && navigate(`/exams/${selectedExam?.id || 'wbp-constable'}`)
+                  }
                   className="group rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:border-blue-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer flex flex-col justify-between"
                 >
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider ${
-                        series.isPremium
-                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider ${
+                          series.isPremium
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        }`}
+                      >
                         {series.isPremium ? 'PRO PASS' : 'FREE SERIES'}
                       </span>
                       <span className="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-0.5 rounded-lg border border-slate-100">
@@ -560,7 +584,8 @@ export const Home: React.FC = () => {
                       {series.title}
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed">
-                      {series.description || `Comprehensive mock tests designed for ${selectedExam?.title} aspirants.`}
+                      {series.description ||
+                        `Comprehensive mock tests designed for ${selectedExam?.title} aspirants.`}
                     </p>
                   </div>
 
@@ -569,7 +594,8 @@ export const Home: React.FC = () => {
                       Exam: {series.examTitle || selectedExam?.title}
                     </span>
                     <span className="font-bold text-blue-600 group-hover:text-blue-700 inline-flex items-center gap-1 shrink-0">
-                      Explore Series <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                      Explore Series{' '}
+                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                     </span>
                   </div>
                 </div>
@@ -599,7 +625,8 @@ export const Home: React.FC = () => {
               Available Mock Tests
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Real-time simulated tests with negative marking and detailed Bengali & English solutions
+              Real-time simulated tests with negative marking and detailed Bengali & English
+              solutions
             </p>
           </div>
           <Link
@@ -618,7 +645,9 @@ export const Home: React.FC = () => {
             {subjects.map((subj) => (
               <button
                 key={subj.id}
-                onClick={() => navigate(`/exams/${selectedExam?.id || 'wbp-constable'}?tab=topic-tests`)}
+                onClick={() =>
+                  navigate(`/exams/${selectedExam?.id || 'wbp-constable'}?tab=topic-tests`)
+                }
                 className="px-3 py-1.5 rounded-xl bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 text-xs font-semibold whitespace-nowrap transition-all border border-slate-200/80 shadow-xs shrink-0 active:scale-[0.98]"
               >
                 {subj.name}
@@ -650,11 +679,13 @@ export const Home: React.FC = () => {
                   <div className="space-y-3">
                     {/* Top row badges */}
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider ${
-                        test.isPremium
-                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider ${
+                          test.isPremium
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        }`}
+                      >
                         {test.isPremium ? 'PRO PASS' : 'FREE TEST'}
                       </span>
                       <span className="text-[11px] font-semibold text-slate-500 capitalize bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
@@ -668,7 +699,8 @@ export const Home: React.FC = () => {
                         {test.title}
                       </h3>
                       <p className="text-xs text-slate-500 line-clamp-2 mt-1 leading-relaxed">
-                        {test.description || `Strictly mapped to the ${selectedExam?.title} pattern.`}
+                        {test.description ||
+                          `Strictly mapped to the ${selectedExam?.title} pattern.`}
                       </p>
                     </div>
 
@@ -699,9 +731,7 @@ export const Home: React.FC = () => {
                       <span className="text-slate-300">•</span>
                       <span className="font-medium">{test.totalMarks} Marks</span>
                       <span className="text-slate-300">•</span>
-                      <span className="text-rose-600 font-bold">
-                        -{test.negativeMarking} Neg
-                      </span>
+                      <span className="text-rose-600 font-bold">-{test.negativeMarking} Neg</span>
                     </div>
                   </div>
 
@@ -729,7 +759,9 @@ export const Home: React.FC = () => {
                       {isInProgress ? (
                         <Button
                           size="sm"
-                          onClick={() => navigate(`/exams/${test.id}/runner?attemptId=${userAttempt.id}`)}
+                          onClick={() =>
+                            navigate(`/exams/${test.id}/runner?attemptId=${userAttempt.id}`)
+                          }
                           className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 px-4 py-2 rounded-xl"
                         >
                           Resume
@@ -739,7 +771,9 @@ export const Home: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/exams/${test.id}/solutions/${userAttempt.id}`)}
+                            onClick={() =>
+                              navigate(`/exams/${test.id}/solutions/${userAttempt.id}`)
+                            }
                             className="font-bold text-xs py-2 px-3.5 rounded-xl border-slate-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600"
                           >
                             Solutions
@@ -813,15 +847,15 @@ export const Home: React.FC = () => {
               {mistakesCount > 0
                 ? `Revise ${mistakesCount} Question${mistakesCount > 1 ? 's' : ''} in Mistakes Notebook`
                 : unattemptedTest
-                ? `Attempt: ${unattemptedTest.title}`
-                : `Review & Re-attempt ${selectedExam?.title} Mock Tests`}
+                  ? `Attempt: ${unattemptedTest.title}`
+                  : `Review & Re-attempt ${selectedExam?.title} Mock Tests`}
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               {mistakesCount > 0
                 ? 'Eliminate negative marking by reviewing questions you previously answered incorrectly.'
                 : unattemptedTest
-                ? 'You have not attempted this test yet. Complete it to benchmark your current speed and accuracy.'
-                : 'You have attempted all available tests for this exam. Re-attempt them to improve your score and speed.'}
+                  ? 'You have not attempted this test yet. Complete it to benchmark your current speed and accuracy.'
+                  : 'You have attempted all available tests for this exam. Re-attempt them to improve your score and speed.'}
             </p>
           </div>
         </div>
@@ -842,8 +876,8 @@ export const Home: React.FC = () => {
           {mistakesCount > 0
             ? 'Open Mistakes Notebook'
             : unattemptedTest
-            ? 'Attempt Mock Test'
-            : 'Explore Mock Tests'}
+              ? 'Attempt Mock Test'
+              : 'Explore Mock Tests'}
         </Button>
       </div>
 
@@ -872,10 +906,10 @@ export const Home: React.FC = () => {
                   <Layers className="w-4 h-4" />
                 </div>
               </div>
-              <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900 mt-3">{totalCompleted}</p>
-              <p className="text-xs text-slate-500 mt-1 truncate">
-                Completed tests
+              <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900 mt-3">
+                {totalCompleted}
               </p>
+              <p className="text-xs text-slate-500 mt-1 truncate">Completed tests</p>
             </div>
 
             {/* Metric 2: Average Score */}
@@ -927,19 +961,16 @@ export const Home: React.FC = () => {
               <p className="text-2xl sm:text-3xl font-black font-mono text-sky-700 mt-3">
                 {totalAnswered}
               </p>
-              <p className="text-xs text-slate-500 mt-1 truncate">
-                Total questions answered
-              </p>
+              <p className="text-xs text-slate-500 mt-1 truncate">Total questions answered</p>
             </div>
           </div>
         ) : (
           <div className="rounded-2xl sm:rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center">
             <BarChart3 className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-700">
-              No test attempts recorded yet
-            </p>
+            <p className="text-sm font-bold text-slate-700">No test attempts recorded yet</p>
             <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto leading-relaxed">
-              Attempt your first mock test to unlock real-time accuracy, score averages, and question analysis based strictly on your genuine performance.
+              Attempt your first mock test to unlock real-time accuracy, score averages, and
+              question analysis based strictly on your genuine performance.
             </p>
             <Button
               size="sm"
@@ -970,7 +1001,9 @@ export const Home: React.FC = () => {
                 Unlock Every Premium Mock Test — ₹299 / 365 days
               </h3>
               <p className="text-xs sm:text-sm text-amber-100 max-w-2xl leading-relaxed">
-                PracticeKoro All-Access Pro Pass: One pass. All premium tests. Unlock all premium mock tests, complete bilingual solution keys, and targeted error notebooks across WBCS, WBP Constable, and WBPSC Clerkship.
+                PracticeKoro All-Access Pro Pass: One pass. All premium tests. Unlock all premium
+                mock tests, complete bilingual solution keys, and targeted error notebooks across
+                WBCS, WBP Constable, and WBPSC Clerkship.
               </p>
             </div>
           </div>
@@ -989,9 +1022,7 @@ export const Home: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h3 className="text-base font-extrabold text-white">
-                  All-Access Pro Pass Active
-                </h3>
+                <h3 className="text-base font-extrabold text-white">All-Access Pro Pass Active</h3>
                 <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   {daysRemaining} Days Remaining
                 </span>

@@ -1,11 +1,23 @@
-import { Exam, Subject, Chapter, MockTest, Question, TestAttempt, SubscriptionPlan, UserProfile, MistakeItem, BookmarkItem } from '@/types';
+import {
+  Exam,
+  Subject,
+  Chapter,
+  MockTest,
+  Question,
+  TestAttempt,
+  SubscriptionPlan,
+  UserProfile,
+  MistakeItem,
+  BookmarkItem,
+} from '@/types';
 
 export const MOCK_STUDENT_USER: UserProfile = {
   id: 'usr-student-001',
   fullName: 'Subhamoy Banerjee',
   email: 'student@practicekoro.com',
   phone: '+91 98765 43210',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  avatarUrl:
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
   targetExamId: 'wbp-constable',
   role: 'student',
   createdAt: '2025-01-10T10:00:00Z',
@@ -16,7 +28,8 @@ export const MOCK_ADMIN_USER: UserProfile = {
   fullName: 'Admin PracticeKoro',
   email: 'admin@practicekoro.com',
   phone: '+91 98300 12345',
-  avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+  avatarUrl:
+    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
   role: 'admin',
   createdAt: '2024-12-01T10:00:00Z',
 };
@@ -284,8 +297,10 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
       optionC: 'Sir John Marshall',
       optionD: 'Alexander Cunningham',
       correctOption: 'B',
-      explanation: 'Daya Ram Sahni excavated Harappa in Montgomery district (now in Sahiwal, Pakistan) in 1921 under Sir John Marshall.',
-      explanationBengali: '১৯২১ সালে প্রত্নতাত্ত্বিক দয়ারাম সাহনি হরপ্পা সভ্যতা আবিষ্কার ও খননকাজ পরিচালনা করেন।',
+      explanation:
+        'Daya Ram Sahni excavated Harappa in Montgomery district (now in Sahiwal, Pakistan) in 1921 under Sir John Marshall.',
+      explanationBengali:
+        '১৯২১ সালে প্রত্নতাত্ত্বিক দয়ারাম সাহনি হরপ্পা সভ্যতা আবিষ্কার ও খননকাজ পরিচালনা করেন।',
       difficulty: 'easy',
       defaultMarks: 1.0,
       defaultNegativeMarks: 0.25,
@@ -301,8 +316,10 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
       optionC: 'Mohenjodaro',
       optionD: 'Kalibangan',
       correctOption: 'C',
-      explanation: 'The Great Bath was discovered in Mohenjodaro, built with burnt bricks and coated with natural bitumen/pitch.',
-      explanationBengali: 'বিখ্যাত স্নানাগারটি মহেঞ্জোদারোতে অবস্থিত, যা পোড়ামাটির ইট ও বিটুমিন দিয়ে জলনিরোধক করা হয়েছিল।',
+      explanation:
+        'The Great Bath was discovered in Mohenjodaro, built with burnt bricks and coated with natural bitumen/pitch.',
+      explanationBengali:
+        'বিখ্যাত স্নানাগারটি মহেঞ্জোদারোতে অবস্থিত, যা পোড়ামাটির ইট ও বিটুমিন দিয়ে জলনিরোধক করা হয়েছিল।',
       difficulty: 'easy',
       defaultMarks: 1.0,
       defaultNegativeMarks: 0.25,
@@ -318,8 +335,10 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
       optionC: 'Banawali',
       optionD: 'Rakhigarhi',
       correctOption: 'A',
-      explanation: 'Lothal in Gujarat had a tidal dockyard connected to the Sabarmati river basin for overseas maritime trade.',
-      explanationBengali: 'গুজরাটের লোথালে বিশ্বের অন্যতম প্রাচীন কৃত্রিম নৌ-ঘাঁটি বা বন্দর আবিষ্কৃত হয়েছে।',
+      explanation:
+        'Lothal in Gujarat had a tidal dockyard connected to the Sabarmati river basin for overseas maritime trade.',
+      explanationBengali:
+        'গুজরাটের লোথালে বিশ্বের অন্যতম প্রাচীন কৃত্রিম নৌ-ঘাঁটি বা বন্দর আবিষ্কৃত হয়েছে।',
       difficulty: 'medium',
       defaultMarks: 1.0,
       defaultNegativeMarks: 0.25,
@@ -335,8 +354,10 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
       optionC: 'Chalcolithic / Bronze Age',
       optionD: 'Iron Age',
       correctOption: 'C',
-      explanation: 'The Indus Valley Civilization belonged to the Bronze Age (Proto-historic period). Harappans did not know the use of iron.',
-      explanationBengali: 'সিন্ধু সভ্যতা ব্রোঞ্জ বা তাম্র-ব্রোঞ্জ যুগের সভ্যতা ছিল। লোহার ব্যবহার তাদের অজানা ছিল।',
+      explanation:
+        'The Indus Valley Civilization belonged to the Bronze Age (Proto-historic period). Harappans did not know the use of iron.',
+      explanationBengali:
+        'সিন্ধু সভ্যতা ব্রোঞ্জ বা তাম্র-ব্রোঞ্জ যুগের সভ্যতা ছিল। লোহার ব্যবহার তাদের অজানা ছিল।',
       difficulty: 'medium',
       defaultMarks: 1.0,
       defaultNegativeMarks: 0.25,
@@ -352,7 +373,8 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
       optionC: 'Dholavira',
       optionD: 'Kot Diji',
       correctOption: 'B',
-      explanation: 'Kalibangan in Rajasthan shows evidence of furrows intersecting at right angles, showing double cropping in a ploughed field.',
+      explanation:
+        'Kalibangan in Rajasthan shows evidence of furrows intersecting at right angles, showing double cropping in a ploughed field.',
       explanationBengali: 'রাজস্থানের কালিবঙ্গানে লাঙল চষা কৃষি ক্ষেত্রের নিদর্শন আবিষ্কৃত হয়েছে।',
       difficulty: 'hard',
       defaultMarks: 1.0,
@@ -412,7 +434,8 @@ export const MOCK_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'pro_1_year',
     title: '1-Year All-Access Pass',
-    description: 'Unlimited access to ALL Premium Mock Tests across all West Bengal exams for 365 days.',
+    description:
+      'Unlimited access to ALL Premium Mock Tests across all West Bengal exams for 365 days.',
     durationDays: 365,
     price: 299,
     originalPrice: 999,

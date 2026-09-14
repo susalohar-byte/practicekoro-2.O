@@ -19,7 +19,9 @@ export const AppLayout: React.FC = () => {
       const next = !prev;
       try {
         localStorage.setItem('pk_sidebar_collapsed', String(next));
-      } catch {}
+      } catch {
+        // Ignore malformed cached UI preference and retain the default layout.
+      }
       return next;
     });
   };
@@ -47,7 +49,11 @@ export const AppLayout: React.FC = () => {
         <footer className="hidden md:block border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <img src="/logo-icon-transparent.png" alt="PracticeKoro" className="w-6 h-6 object-contain" />
+              <img
+                src="/logo-icon-transparent.png"
+                alt="PracticeKoro"
+                className="w-6 h-6 object-contain"
+              />
               <span className="font-extrabold text-sm text-slate-800 tracking-tight">
                 Practice<span className="text-brand-600">Koro</span>
               </span>

@@ -1,18 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
-import {
-  CreditCard,
-  Search,
-  RefreshCw,
-  Users,
-  Receipt,
-  Layers,
-  CheckCircle2
-} from 'lucide-react';
+import { CreditCard, Search, RefreshCw, Users, Receipt, Layers, CheckCircle2 } from 'lucide-react';
 import type { SubscriptionPlan, AdminSubscriptionRow, AdminPaymentRow } from '@/types';
 
 export const AdminSubscriptions: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'payments' | 'plans'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'payments' | 'plans'>(
+    'subscriptions'
+  );
 
   // Subscriptions state
   const [subscriptions, setSubscriptions] = useState<AdminSubscriptionRow[]>([]);
@@ -88,7 +82,8 @@ export const AdminSubscriptions: React.FC = () => {
             Subscriptions & Payments Management
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Monetization Model: 1 Active Pro Pass = Universal Access to ALL Premium Mock Tests across all exams
+            Monetization Model: 1 Active Pro Pass = Universal Access to ALL Premium Mock Tests
+            across all exams
           </p>
         </div>
 
@@ -164,7 +159,9 @@ export const AdminSubscriptions: React.FC = () => {
                 className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                 title="Refresh"
               >
-                <RefreshCw className={`w-4 h-4 ${subLoading ? 'animate-spin text-indigo-400' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${subLoading ? 'animate-spin text-indigo-400' : ''}`}
+                />
               </button>
             </div>
           </div>
@@ -188,7 +185,9 @@ export const AdminSubscriptions: React.FC = () => {
                   {subscriptions.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                        {subLoading ? 'Loading subscriptions...' : 'No subscriptions found matching criteria.'}
+                        {subLoading
+                          ? 'Loading subscriptions...'
+                          : 'No subscriptions found matching criteria.'}
                       </td>
                     </tr>
                   ) : (
@@ -201,17 +200,15 @@ export const AdminSubscriptions: React.FC = () => {
                             <div className="text-[10px] text-slate-500">{sub.studentPhone}</div>
                           )}
                         </td>
-                        <td className="px-4 py-3 font-medium text-indigo-300">
-                          {sub.planTitle}
-                        </td>
+                        <td className="px-4 py-3 font-medium text-indigo-300">{sub.planTitle}</td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               sub.status === 'active'
                                 ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                                 : sub.status === 'expired'
-                                ? 'bg-rose-950 text-rose-300 border border-rose-800'
-                                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                  ? 'bg-rose-950 text-rose-300 border border-rose-800'
+                                  : 'bg-slate-800 text-slate-400 border border-slate-700'
                             }`}
                           >
                             {sub.status.toUpperCase()}
@@ -233,7 +230,9 @@ export const AdminSubscriptions: React.FC = () => {
                         </td>
                         <td className="px-4 py-3">
                           {sub.status === 'active' ? (
-                            <span className="font-bold text-emerald-400">{sub.daysRemaining} days</span>
+                            <span className="font-bold text-emerald-400">
+                              {sub.daysRemaining} days
+                            </span>
                           ) : (
                             <span className="text-slate-500">0 days</span>
                           )}
@@ -285,7 +284,9 @@ export const AdminSubscriptions: React.FC = () => {
                 className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                 title="Refresh"
               >
-                <RefreshCw className={`w-4 h-4 ${payLoading ? 'animate-spin text-indigo-400' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${payLoading ? 'animate-spin text-indigo-400' : ''}`}
+                />
               </button>
             </div>
           </div>
@@ -309,7 +310,9 @@ export const AdminSubscriptions: React.FC = () => {
                   {payments.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                        {payLoading ? 'Loading payments...' : 'No payments found matching criteria.'}
+                        {payLoading
+                          ? 'Loading payments...'
+                          : 'No payments found matching criteria.'}
                       </td>
                     </tr>
                   ) : (
@@ -349,8 +352,8 @@ export const AdminSubscriptions: React.FC = () => {
                               p.status === 'completed'
                                 ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                                 : p.status === 'pending'
-                                ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                                : 'bg-rose-950 text-rose-300 border border-rose-800'
+                                  ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                                  : 'bg-rose-950 text-rose-300 border border-rose-800'
                             }`}
                           >
                             {p.status.toUpperCase()}
@@ -383,24 +386,39 @@ export const AdminSubscriptions: React.FC = () => {
                   <div className="text-right">
                     <span className="text-lg font-black text-amber-400">₹{p.price}</span>
                     {p.originalPrice && (
-                      <span className="text-xs text-slate-500 line-through block">₹{p.originalPrice}</span>
+                      <span className="text-xs text-slate-500 line-through block">
+                        ₹{p.originalPrice}
+                      </span>
                     )}
                   </div>
                 </div>
 
                 <div className="p-3 bg-slate-900 rounded-xl border border-slate-850 space-y-1">
                   <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>Plan ID: <code className="text-indigo-300 font-mono">{p.id}</code></span>
-                    <span>Duration: <strong className="text-white">{p.durationDays} Days</strong></span>
+                    <span>
+                      Plan ID: <code className="text-indigo-300 font-mono">{p.id}</code>
+                    </span>
+                    <span>
+                      Duration: <strong className="text-white">{p.durationDays} Days</strong>
+                    </span>
                   </div>
                   <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>Status: <strong className={p.isActive ? 'text-emerald-400' : 'text-slate-500'}>{p.isActive ? 'Active' : 'Disabled'}</strong></span>
-                    <span>Currency: <strong className="text-white">{p.currency || 'INR'}</strong></span>
+                    <span>
+                      Status:{' '}
+                      <strong className={p.isActive ? 'text-emerald-400' : 'text-slate-500'}>
+                        {p.isActive ? 'Active' : 'Disabled'}
+                      </strong>
+                    </span>
+                    <span>
+                      Currency: <strong className="text-white">{p.currency || 'INR'}</strong>
+                    </span>
                   </div>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-300">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Plan Features:</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Plan Features:
+                  </p>
                   <ul className="space-y-1">
                     {p.features.map((f, idx) => (
                       <li key={idx} className="flex items-center gap-2 text-[11px] text-slate-400">

@@ -6,14 +6,7 @@ import { api } from '@/services/api';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
-import {
-  CheckCircle2,
-  AlertTriangle,
-  Play,
-  Lock,
-  ChevronLeft,
-  FileCheck2
-} from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Play, Lock, ChevronLeft, FileCheck2 } from 'lucide-react';
 import type { MockTest } from '@/types';
 
 export const TestDetails: React.FC = () => {
@@ -55,7 +48,9 @@ export const TestDetails: React.FC = () => {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <h2 className="text-lg font-bold text-slate-900">Mock Test Not Found</h2>
-        <p className="text-xs text-slate-500 mt-1">The requested test may have been moved or removed.</p>
+        <p className="text-xs text-slate-500 mt-1">
+          The requested test may have been moved or removed.
+        </p>
         <Link to="/exams" className="mt-4 inline-block">
           <Button size="sm">Back to Tests</Button>
         </Link>
@@ -121,7 +116,8 @@ export const TestDetails: React.FC = () => {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-              {test.description || 'Comprehensive exam simulation with live countdown timer and negative marking.'}
+              {test.description ||
+                'Comprehensive exam simulation with live countdown timer and negative marking.'}
             </p>
           </div>
 
@@ -131,7 +127,13 @@ export const TestDetails: React.FC = () => {
               variant={!isAccessible ? 'pro' : 'primary'}
               isLoading={starting}
               onClick={handleStartTest}
-              leftIcon={!isAccessible ? <Lock className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+              leftIcon={
+                !isAccessible ? (
+                  <Lock className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4 fill-current" />
+                )
+              }
               className="w-full sm:w-auto font-bold text-sm shadow-md"
             >
               {!isAccessible ? 'Unlock Pro Pass' : 'Start Test Now'}
@@ -159,7 +161,8 @@ export const TestDetails: React.FC = () => {
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
             <p className="text-[10px] uppercase font-bold text-slate-400">Marking Scheme</p>
             <p className="text-sm font-black text-slate-900 mt-1">
-              <span className="text-emerald-600">+{marksPerQuestion}</span> / <span className="text-rose-600">-{test.negativeMarking}</span>
+              <span className="text-emerald-600">+{marksPerQuestion}</span> /{' '}
+              <span className="text-rose-600">-{test.negativeMarking}</span>
             </p>
           </div>
         </div>
@@ -181,7 +184,8 @@ export const TestDetails: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                  Unlock this and every other premium mock test with Pro Pass. One subscription, universal access.
+                  Unlock this and every other premium mock test with Pro Pass. One subscription,
+                  universal access.
                 </p>
               </div>
             </div>
@@ -208,25 +212,34 @@ export const TestDetails: React.FC = () => {
           <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Negative Marking Notice:</span> Every incorrect answer will deduct <strong>{test.negativeMarking} marks</strong>. Unanswered questions do not carry negative marks.
+              <span className="font-bold">Negative Marking Notice:</span> Every incorrect answer
+              will deduct <strong>{test.negativeMarking} marks</strong>. Unanswered questions do not
+              carry negative marks.
             </div>
           </div>
 
           <ul className="space-y-2 list-disc pl-5">
             <li>
-              <strong>Total Duration:</strong> You will have <strong>{test.durationMinutes} minutes</strong> to complete all <strong>{test.totalQuestions} questions</strong>.
+              <strong>Total Duration:</strong> You will have{' '}
+              <strong>{test.durationMinutes} minutes</strong> to complete all{' '}
+              <strong>{test.totalQuestions} questions</strong>.
             </li>
             <li>
-              <strong>Language Support:</strong> Questions can be viewed in <strong>বাংলা (Bengali)</strong> or <strong>English</strong> using the language toggle in the exam runner without losing your selected answers.
+              <strong>Language Support:</strong> Questions can be viewed in{' '}
+              <strong>বাংলা (Bengali)</strong> or <strong>English</strong> using the language toggle
+              in the exam runner without losing your selected answers.
             </li>
             <li>
-              <strong>Mark for Review:</strong> You can mark doubtful questions to revisit later before final submission.
+              <strong>Mark for Review:</strong> You can mark doubtful questions to revisit later
+              before final submission.
             </li>
             <li>
-              <strong>Auto-Submission:</strong> Once the countdown timer reaches zero, your test will be submitted automatically with your saved answers.
+              <strong>Auto-Submission:</strong> Once the countdown timer reaches zero, your test
+              will be submitted automatically with your saved answers.
             </li>
             <li>
-              <strong>Mistakes Notebook:</strong> Any wrong answers will automatically be archived in your <strong>Mistakes Notebook</strong> for focused post-test revision.
+              <strong>Mistakes Notebook:</strong> Any wrong answers will automatically be archived
+              in your <strong>Mistakes Notebook</strong> for focused post-test revision.
             </li>
           </ul>
         </div>
@@ -240,7 +253,13 @@ export const TestDetails: React.FC = () => {
             variant={!isAccessible ? 'pro' : 'primary'}
             isLoading={starting}
             onClick={handleStartTest}
-            leftIcon={!isAccessible ? <Lock className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+            leftIcon={
+              !isAccessible ? (
+                <Lock className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4 fill-current" />
+              )
+            }
             className="w-full sm:w-auto font-bold"
           >
             {!isAccessible ? 'Unlock with Pro Pass' : 'Start Test'}
@@ -260,9 +279,7 @@ export const TestDetails: React.FC = () => {
               🔒 Premium Mock Test
             </span>
 
-            <h3 className="text-lg font-black text-slate-900 mt-2">
-              {test.title}
-            </h3>
+            <h3 className="text-lg font-black text-slate-900 mt-2">{test.title}</h3>
             <p className="text-xs text-slate-500 mt-0.5">
               {test.examTitle || 'WBP Constable'} {test.chapterName ? `• ${test.chapterName}` : ''}
             </p>
@@ -270,7 +287,9 @@ export const TestDetails: React.FC = () => {
             <div className="my-5 p-4 bg-gradient-to-br from-amber-50 to-orange-50/60 rounded-xl border border-amber-200 text-left space-y-2.5">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-900 block">PracticeKoro Pro Pass</span>
+                  <span className="text-xs font-bold text-slate-900 block">
+                    PracticeKoro Pro Pass
+                  </span>
                   <span className="text-[11px] text-slate-500">Universal All-Access Pass</span>
                 </div>
                 <div className="text-right">
@@ -280,7 +299,8 @@ export const TestDetails: React.FC = () => {
               </div>
 
               <p className="text-xs text-slate-700 leading-relaxed pt-1 border-t border-amber-200/60">
-                Unlock this and every other premium mock test with Pro Pass. No individual test purchases required.
+                Unlock this and every other premium mock test with Pro Pass. No individual test
+                purchases required.
               </p>
 
               <ul className="text-[11px] text-slate-700 space-y-1 pt-1">

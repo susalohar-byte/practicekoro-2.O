@@ -38,6 +38,7 @@ import type {
   PublishValidationResult,
 } from '@/types';
 import { parseQuestionsCsv } from '@/utils/csvParser';
+import { calculateScore } from '@/utils/scoring';
 
 type ExamRow = Database['public']['Tables']['exams']['Row'];
 type SubjectRow = Database['public']['Tables']['subjects']['Row'];
@@ -82,11 +83,14 @@ Object.entries(MOCK_QUESTIONS).forEach(([testId, questions]) => {
 });
 
 // Local in-memory store for session attempts & submissions (for fallback/offline demo)
-const localAttemptsStore: Record<string, {
-  attempt: TestAttempt;
-  answers: Record<string, AttemptAnswerState>;
-  result?: GradedResult;
-}> = {};
+const localAttemptsStore: Record<
+  string,
+  {
+    attempt: TestAttempt;
+    answers: Record<string, AttemptAnswerState>;
+    result?: GradedResult;
+  }
+> = {};
 
 export const api = {
   // Exams
@@ -177,11 +181,12 @@ export const api = {
   // Mock Tests (Student Catalog - Only active & published tests)
   async getTests(chapterId?: string, examId?: string): Promise<MockTest[]> {
     if (!isSupabaseConfigured) {
-      return localTests.filter(t => 
-        t.isActive && 
-        (t.status === 'published' || !t.status) && 
-        (!examId || t.examId === examId) && 
-        (!chapterId || t.chapterId === chapterId)
+      return localTests.filter(
+        (t) =>
+          t.isActive &&
+          (t.status === 'published' || !t.status) &&
+          (!examId || t.examId === examId) &&
+          (!chapterId || t.chapterId === chapterId)
       );
     }
     try {
@@ -216,11 +221,12 @@ export const api = {
       const { data, error } = await query.order('order_index', { ascending: true });
 
       if (error || !data || data.length === 0) {
-        return localTests.filter(t => 
-          t.isActive && 
-          (t.status === 'published' || !t.status) && 
-          (!examId || t.examId === examId) && 
-          (!chapterId || t.chapterId === chapterId)
+        return localTests.filter(
+          (t) =>
+            t.isActive &&
+            (t.status === 'published' || !t.status) &&
+            (!examId || t.examId === examId) &&
+            (!chapterId || t.chapterId === chapterId)
         );
       }
       return data.map((item: any) => ({
@@ -249,17 +255,21 @@ export const api = {
         testSeriesTitle: item.test_series?.title,
       }));
     } catch {
-      return localTests.filter(t => 
-        t.isActive && 
-        (t.status === 'published' || !t.status) && 
-        (!examId || t.examId === examId) && 
-        (!chapterId || t.chapterId === chapterId)
+      return localTests.filter(
+        (t) =>
+          t.isActive &&
+          (t.status === 'published' || !t.status) &&
+          (!examId || t.examId === examId) &&
+          (!chapterId || t.chapterId === chapterId)
       );
     }
   },
 
   // Exam-centric tests helper
-  async getTestsForExam(examId: string, category?: 'full_mock' | 'pyq' | 'topic'): Promise<MockTest[]> {
+  async getTestsForExam(
+    examId: string,
+    category?: 'full_mock' | 'pyq' | 'topic'
+  ): Promise<MockTest[]> {
     const allTests = await this.getTests(undefined, examId);
     if (!category) return allTests;
 
@@ -270,7 +280,10 @@ export const api = {
       return allTests.filter((t) => t.testType === 'pyq');
     }
     if (category === 'topic') {
-      return allTests.filter((t) => t.testType === 'topic' || t.testType === 'chapter_mock' || t.testType === 'subject_mock');
+      return allTests.filter(
+        (t) =>
+          t.testType === 'topic' || t.testType === 'chapter_mock' || t.testType === 'subject_mock'
+      );
     }
     return allTests;
   },
@@ -326,9 +339,7 @@ export const api = {
 
       if (examIds.length > 0) {
         const rows = examIds.map((eid) => ({ test_id: testId, exam_id: eid }));
-        const { error: insError } = await (supabase as any)
-          .from('test_exams')
-          .insert(rows);
+        const { error: insError } = await (supabase as any).from('test_exams').insert(rows);
         if (insError) return false;
       }
       return true;
@@ -342,7 +353,11 @@ export const api = {
     if (!isSupabaseConfigured) return mockFound || null;
 
     try {
-      const { data, error } = await supabase.from('tests').select('*').eq('id', testId).maybeSingle();
+      const { data, error } = await supabase
+        .from('tests')
+        .select('*')
+        .eq('id', testId)
+        .maybeSingle();
       if (error || !data) return mockFound || null;
       const row = data as TestRow;
       return {
@@ -411,7 +426,8 @@ export const api = {
     try {
       const { data, error } = await supabase
         .from('test_questions')
-        .select(`
+        .select(
+          `
           question_order,
           marks,
           negative_marks,
@@ -432,7 +448,8 @@ export const api = {
             default_negative_marks,
             is_active
           )
-        `)
+        `
+        )
         .eq('test_id', testId)
         .order('question_order', { ascending: true });
 
@@ -440,18 +457,22 @@ export const api = {
         return MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
       }
 
-      return (data as unknown as Array<{
-        question_order: number;
-        marks: number;
-        negative_marks: number;
-        questions: Record<string, unknown>;
-      }>).map((item) => {
+      return (
+        data as unknown as Array<{
+          question_order: number;
+          marks: number;
+          negative_marks: number;
+          questions: Record<string, unknown>;
+        }>
+      ).map((item) => {
         const q = item.questions;
         return {
           id: String(q.id),
           chapterId: q.chapter_id ? String(q.chapter_id) : undefined,
           questionText: String(q.question_text),
-          questionBengaliText: q.question_bengali_text ? String(q.question_bengali_text) : undefined,
+          questionBengaliText: q.question_bengali_text
+            ? String(q.question_bengali_text)
+            : undefined,
           optionA: String(q.option_a),
           optionB: String(q.option_b),
           optionC: String(q.option_c),
@@ -608,11 +629,14 @@ export const api = {
 
     // Persist in localStorage for complete page refresh recovery
     try {
-      localStorage.setItem(`practicekoro_attempt_${attemptId}`, JSON.stringify({
-        answers,
-        timeSpentSeconds,
-        updatedAt: Date.now(),
-      }));
+      localStorage.setItem(
+        `practicekoro_attempt_${attemptId}`,
+        JSON.stringify({
+          answers,
+          timeSpentSeconds,
+          updatedAt: Date.now(),
+        })
+      );
     } catch {
       // localStorage fallback
     }
@@ -655,7 +679,8 @@ export const api = {
           timeSpentSeconds,
           rank: res.rank !== undefined && res.rank !== null ? Number(res.rank) : null,
           totalCandidates: Number(res.total_candidates || 1),
-          percentile: res.percentile !== undefined && res.percentile !== null ? Number(res.percentile) : null,
+          percentile:
+            res.percentile !== undefined && res.percentile !== null ? Number(res.percentile) : null,
           passed: Boolean(res.passed),
         };
       }
@@ -663,28 +688,25 @@ export const api = {
 
     // Local / Demo Authoritative fallback (only active when Supabase is unconfigured)
     const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
-    let correctCount = 0;
-    let wrongCount = 0;
-    let skippedCount = 0;
-    let score = 0;
-
     const answersMap = new Map(answers.map((a) => [a.questionId, a.selectedOption]));
+    const totalMarks = test ? test.totalMarks : 5;
+    const passingMarks = test?.passingMarks || 2;
+    const scoreSummary = calculateScore(
+      questions.map((q) => ({
+        id: q.id,
+        correctOption: q.correctOption,
+        marks: q.defaultMarks || 1,
+        negativeMarks: q.defaultNegativeMarks || 0.25,
+      })),
+      answers,
+      totalMarks,
+      passingMarks
+    );
 
+    // AUTOMATIC MISTAKES NOTEBOOK POPULATION (Local demo)
     questions.forEach((q) => {
       const selected = answersMap.get(q.id);
-      const marksPerQ = q.defaultMarks || 1.0;
-      const negMarks = q.defaultNegativeMarks || 0.25;
-
-      if (!selected) {
-        skippedCount++;
-      } else if (selected === q.correctOption) {
-        correctCount++;
-        score += marksPerQ;
-      } else {
-        wrongCount++;
-        score -= negMarks;
-
-        // AUTOMATIC MISTAKES NOTEBOOK POPULATION (Local demo)
+      if (selected && selected !== q.correctOption) {
         const existingMistake = MOCK_MISTAKES.find((m) => m.questionId === q.id);
         if (existingMistake) {
           existingMistake.wrongCount++;
@@ -704,29 +726,22 @@ export const api = {
       }
     });
 
-    score = Math.max(0, score);
-    const totalMarks = test ? test.totalMarks : 5;
-    const attemptedCount = correctCount + wrongCount;
-    const accuracy = attemptedCount > 0 ? Number(((correctCount / attemptedCount) * 100).toFixed(1)) : 0;
-    const percentage = totalMarks > 0 ? Number(((score / totalMarks) * 100).toFixed(1)) : 0;
-    const passed = score >= (test?.passingMarks || 2);
-
     const gradedResult: GradedResult = {
       attemptId,
       testId,
       testTitle: test?.title,
-      score: Number(score.toFixed(2)),
+      score: scoreSummary.score,
       totalMarks,
-      percentage,
-      accuracy,
-      correctCount,
-      wrongCount,
-      skippedCount,
+      percentage: scoreSummary.percentage,
+      accuracy: scoreSummary.accuracy,
+      correctCount: scoreSummary.correctCount,
+      wrongCount: scoreSummary.wrongCount,
+      skippedCount: scoreSummary.skippedCount,
       timeSpentSeconds,
       rank: null,
       totalCandidates: 1,
       percentile: null,
-      passed,
+      passed: scoreSummary.passed,
     };
 
     // Store in localAttemptsStore
@@ -742,10 +757,10 @@ export const api = {
         timeSpentSeconds,
         score: gradedResult.score,
         totalMarks: gradedResult.totalMarks,
-        correctCount,
-        wrongCount,
-        skippedCount,
-        accuracy,
+        correctCount: scoreSummary.correctCount,
+        wrongCount: scoreSummary.wrongCount,
+        skippedCount: scoreSummary.skippedCount,
+        accuracy: scoreSummary.accuracy,
         rank: null,
         percentile: null,
         createdAt: new Date().toISOString(),
@@ -768,7 +783,8 @@ export const api = {
     if (isSupabaseConfigured) {
       const { data: res, error } = await (supabase as any)
         .from('test_results')
-        .select(`
+        .select(
+          `
           score,
           total_marks,
           percentage,
@@ -787,7 +803,8 @@ export const api = {
           tests (
             title
           )
-        `)
+        `
+        )
         .eq('attempt_id', attemptId)
         .maybeSingle();
 
@@ -819,7 +836,8 @@ export const api = {
           timeSpentSeconds: Number(attempt?.time_spent_seconds || 0),
           rank: r.rank !== null && r.rank !== undefined ? Number(r.rank) : null,
           totalCandidates: Number(r.total_candidates || 1),
-          percentile: r.percentile !== null && r.percentile !== undefined ? Number(r.percentile) : null,
+          percentile:
+            r.percentile !== null && r.percentile !== undefined ? Number(r.percentile) : null,
           passed: Boolean(r.passed),
         };
       }
@@ -912,7 +930,10 @@ export const api = {
           .maybeSingle();
 
         if (existing) {
-          await (supabase as any).from('bookmarks').delete().eq('id', (existing as any).id);
+          await (supabase as any)
+            .from('bookmarks')
+            .delete()
+            .eq('id', (existing as any).id);
           return false; // Removed
         } else {
           await (supabase as any).from('bookmarks').insert({
@@ -935,7 +956,9 @@ export const api = {
       MOCK_BOOKMARKS.splice(existingIndex, 1);
       return false; // Removed
     } else {
-      const q = Object.values(MOCK_QUESTIONS).flat().find((item) => item.id === questionId);
+      const q = Object.values(MOCK_QUESTIONS)
+        .flat()
+        .find((item) => item.id === questionId);
       if (q) {
         MOCK_BOOKMARKS.unshift({
           id: 'bm-' + Date.now(),
@@ -966,7 +989,8 @@ export const api = {
     try {
       const { data, error } = await supabase
         .from('test_attempts')
-        .select(`
+        .select(
+          `
           *,
           tests (
             title,
@@ -980,7 +1004,8 @@ export const api = {
             subjects (name),
             chapters (name)
           )
-        `)
+        `
+        )
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -1026,7 +1051,8 @@ export const api = {
     try {
       const { data, error } = await supabase
         .from('mistakes')
-        .select(`
+        .select(
+          `
           id,
           user_id,
           question_id,
@@ -1044,7 +1070,8 @@ export const api = {
               )
             )
           )
-        `)
+        `
+        )
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -1070,7 +1097,9 @@ export const api = {
             chapterId: q.chapter_id ?? undefined,
             subjectId: q.subject_id ?? undefined,
             questionText: String(q.question_text),
-            questionBengaliText: q.question_bengali_text ? String(q.question_bengali_text) : undefined,
+            questionBengaliText: q.question_bengali_text
+              ? String(q.question_bengali_text)
+              : undefined,
             optionA: String(q.option_a),
             optionB: String(q.option_b),
             optionC: String(q.option_c),
@@ -1120,11 +1149,13 @@ export const api = {
 
   // Bookmarks
   async getBookmarks(userId: string): Promise<BookmarkItem[]> {
-    if (!isSupabaseConfigured) return MOCK_BOOKMARKS.filter((b) => b.userId === userId || !b.userId);
+    if (!isSupabaseConfigured)
+      return MOCK_BOOKMARKS.filter((b) => b.userId === userId || !b.userId);
     try {
       const { data, error } = await supabase
         .from('bookmarks')
-        .select(`
+        .select(
+          `
           id,
           user_id,
           question_id,
@@ -1140,7 +1171,8 @@ export const api = {
               )
             )
           )
-        `)
+        `
+        )
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -1164,7 +1196,9 @@ export const api = {
             chapterId: q.chapter_id ?? undefined,
             subjectId: q.subject_id ?? undefined,
             questionText: String(q.question_text),
-            questionBengaliText: q.question_bengali_text ? String(q.question_bengali_text) : undefined,
+            questionBengaliText: q.question_bengali_text
+              ? String(q.question_bengali_text)
+              : undefined,
             optionA: String(q.option_a),
             optionB: String(q.option_b),
             optionC: String(q.option_c),
@@ -1239,7 +1273,11 @@ export const api = {
         amount: Number(data.amount),
         currency: data.currency || 'INR',
         durationDays: Number(data.duration_days),
-        keyId: data.key_id || (import.meta.env.VITE_RAZORPAY_KEY as string) || (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || '',
+        keyId:
+          data.key_id ||
+          (import.meta.env.VITE_RAZORPAY_KEY as string) ||
+          (import.meta.env.VITE_RAZORPAY_KEY_ID as string) ||
+          '',
       };
     }
 
@@ -1255,7 +1293,10 @@ export const api = {
       amount: plan.price,
       currency: 'INR',
       durationDays: plan.durationDays,
-      keyId: (import.meta.env.VITE_RAZORPAY_KEY as string) || (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || '',
+      keyId:
+        (import.meta.env.VITE_RAZORPAY_KEY as string) ||
+        (import.meta.env.VITE_RAZORPAY_KEY_ID as string) ||
+        '',
     };
   },
 
@@ -1293,7 +1334,8 @@ export const api = {
     }
 
     // Fallback/Local mock mode
-    const plan = MOCK_SUBSCRIPTION_PLANS.find((p) => p.id === payload.planId) || MOCK_SUBSCRIPTION_PLANS[0];
+    const plan =
+      MOCK_SUBSCRIPTION_PLANS.find((p) => p.id === payload.planId) || MOCK_SUBSCRIPTION_PLANS[0];
     const now = new Date();
     const expiresAt = new Date(now.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
     localStorage.setItem('practicekoro_is_pro', 'true');
@@ -1354,7 +1396,8 @@ export const api = {
             planTitle: data.plan_title,
             startsAt: data.starts_at,
             expiresAt: data.expires_at,
-            daysRemaining: typeof data.days_remaining === 'number' ? data.days_remaining : undefined,
+            daysRemaining:
+              typeof data.days_remaining === 'number' ? data.days_remaining : undefined,
           };
         }
       } catch (err) {
@@ -1368,7 +1411,9 @@ export const api = {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch {}
+      } catch {
+        // Ignore malformed local demo data and continue with an empty fallback.
+      }
     }
 
     if (isPro) {
@@ -1646,10 +1691,10 @@ export const api = {
   // Admin: Exams
   async getAllAdminExams(): Promise<Exam[]> {
     if (!isSupabaseConfigured) {
-      return localExams.map(e => ({
+      return localExams.map((e) => ({
         ...e,
-        subjectsCount: localSubjects.filter(s => s.examId === e.id).length,
-        testsCount: localTests.filter(t => t.examId === e.id).length,
+        subjectsCount: localSubjects.filter((s) => s.examId === e.id).length,
+        testsCount: localTests.filter((t) => t.examId === e.id).length,
       }));
     }
     try {
@@ -1659,10 +1704,10 @@ export const api = {
         .order('order_index', { ascending: true });
 
       if (error || !data || data.length === 0) {
-        return localExams.map(e => ({
+        return localExams.map((e) => ({
           ...e,
-          subjectsCount: localSubjects.filter(s => s.examId === e.id).length,
-          testsCount: localTests.filter(t => t.examId === e.id).length,
+          subjectsCount: localSubjects.filter((s) => s.examId === e.id).length,
+          testsCount: localTests.filter((t) => t.examId === e.id).length,
         }));
       }
 
@@ -1676,8 +1721,8 @@ export const api = {
         bannerUrl: item.banner_url ?? undefined,
         orderIndex: item.order_index,
         isActive: item.is_active,
-        subjectsCount: localSubjects.filter(s => s.examId === item.id).length,
-        testsCount: localTests.filter(t => t.examId === item.id).length,
+        subjectsCount: localSubjects.filter((s) => s.examId === item.id).length,
+        testsCount: localTests.filter((t) => t.examId === item.id).length,
       }));
     } catch {
       return localExams;
@@ -1685,7 +1730,12 @@ export const api = {
   },
 
   async createExam(examData: Omit<Exam, 'id'>): Promise<Exam> {
-    const slug = examData.slug || examData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug =
+      examData.slug ||
+      examData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
     const id = slug || `exam-${Date.now()}`;
     const newExam: Exam = {
       id,
@@ -1719,7 +1769,7 @@ export const api = {
   },
 
   async updateExam(id: string, updates: Partial<Exam>): Promise<Exam> {
-    const existingIndex = localExams.findIndex(e => e.id === id);
+    const existingIndex = localExams.findIndex((e) => e.id === id);
     if (existingIndex !== -1) {
       localExams[existingIndex] = { ...localExams[existingIndex], ...updates };
     }
@@ -1742,11 +1792,21 @@ export const api = {
       }
     }
 
-    return localExams[existingIndex] || { id, title: updates.title || '', slug: '', category: '', iconName: '', orderIndex: 0, isActive: true };
+    return (
+      localExams[existingIndex] || {
+        id,
+        title: updates.title || '',
+        slug: '',
+        category: '',
+        iconName: '',
+        orderIndex: 0,
+        isActive: true,
+      }
+    );
   },
 
   async deleteExam(id: string): Promise<boolean> {
-    const idx = localExams.findIndex(e => e.id === id);
+    const idx = localExams.findIndex((e) => e.id === id);
     if (idx !== -1) {
       localExams[idx].isActive = false;
     }
@@ -1765,10 +1825,10 @@ export const api = {
   async getAllAdminSubjects(examId?: string): Promise<Subject[]> {
     if (!isSupabaseConfigured) {
       return localSubjects
-        .filter(s => !examId || s.examId === examId)
-        .map(s => ({
+        .filter((s) => !examId || s.examId === examId)
+        .map((s) => ({
           ...s,
-          chaptersCount: localChapters.filter(c => c.subjectId === s.id).length,
+          chaptersCount: localChapters.filter((c) => c.subjectId === s.id).length,
         }));
     }
     try {
@@ -1777,10 +1837,10 @@ export const api = {
       const { data, error } = await query;
 
       if (error || !data || data.length === 0) {
-        return localSubjects.filter(s => !examId || s.examId === examId);
+        return localSubjects.filter((s) => !examId || s.examId === examId);
       }
 
-      return (data as SubjectRow[]).map(item => ({
+      return (data as SubjectRow[]).map((item) => ({
         id: item.id,
         examId: item.exam_id,
         name: item.name,
@@ -1789,15 +1849,20 @@ export const api = {
         iconName: item.icon_name,
         orderIndex: item.order_index,
         isActive: item.is_active,
-        chaptersCount: localChapters.filter(c => c.subjectId === item.id).length,
+        chaptersCount: localChapters.filter((c) => c.subjectId === item.id).length,
       }));
     } catch {
-      return localSubjects.filter(s => !examId || s.examId === examId);
+      return localSubjects.filter((s) => !examId || s.examId === examId);
     }
   },
 
   async createSubject(subjectData: Omit<Subject, 'id'>): Promise<Subject> {
-    const slug = subjectData.slug || subjectData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug =
+      subjectData.slug ||
+      subjectData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
     const id = `${subjectData.examId}-${slug}`.slice(0, 50);
     const newSubject: Subject = {
       id,
@@ -1828,7 +1893,7 @@ export const api = {
   },
 
   async updateSubject(id: string, updates: Partial<Subject>): Promise<Subject> {
-    const idx = localSubjects.findIndex(s => s.id === id);
+    const idx = localSubjects.findIndex((s) => s.id === id);
     if (idx !== -1) {
       localSubjects[idx] = { ...localSubjects[idx], ...updates };
     }
@@ -1849,11 +1914,21 @@ export const api = {
       }
     }
 
-    return localSubjects[idx] || { id, examId: '', name: '', slug: '', iconName: '', orderIndex: 0, isActive: true };
+    return (
+      localSubjects[idx] || {
+        id,
+        examId: '',
+        name: '',
+        slug: '',
+        iconName: '',
+        orderIndex: 0,
+        isActive: true,
+      }
+    );
   },
 
   async deleteSubject(id: string): Promise<boolean> {
-    const idx = localSubjects.findIndex(s => s.id === id);
+    const idx = localSubjects.findIndex((s) => s.id === id);
     if (idx !== -1) {
       localSubjects[idx].isActive = false;
     }
@@ -1872,10 +1947,10 @@ export const api = {
   async getAllAdminChapters(subjectId?: string): Promise<Chapter[]> {
     if (!isSupabaseConfigured) {
       return localChapters
-        .filter(c => !subjectId || c.subjectId === subjectId)
-        .map(c => ({
+        .filter((c) => !subjectId || c.subjectId === subjectId)
+        .map((c) => ({
           ...c,
-          testsCount: localTests.filter(t => t.chapterId === c.id).length,
+          testsCount: localTests.filter((t) => t.chapterId === c.id).length,
         }));
     }
     try {
@@ -1884,10 +1959,10 @@ export const api = {
       const { data, error } = await query;
 
       if (error || !data || data.length === 0) {
-        return localChapters.filter(c => !subjectId || c.subjectId === subjectId);
+        return localChapters.filter((c) => !subjectId || c.subjectId === subjectId);
       }
 
-      return (data as ChapterRow[]).map(item => ({
+      return (data as ChapterRow[]).map((item) => ({
         id: item.id,
         subjectId: item.subject_id,
         name: item.name,
@@ -1895,15 +1970,20 @@ export const api = {
         description: item.description ?? undefined,
         orderIndex: item.order_index,
         isActive: item.is_active,
-        testsCount: localTests.filter(t => t.chapterId === item.id).length,
+        testsCount: localTests.filter((t) => t.chapterId === item.id).length,
       }));
     } catch {
-      return localChapters.filter(c => !subjectId || c.subjectId === subjectId);
+      return localChapters.filter((c) => !subjectId || c.subjectId === subjectId);
     }
   },
 
   async createChapter(chapterData: Omit<Chapter, 'id'>): Promise<Chapter> {
-    const slug = chapterData.slug || chapterData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug =
+      chapterData.slug ||
+      chapterData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
     const id = `${chapterData.subjectId}-${slug}`.slice(0, 50);
     const newChapter: Chapter = {
       id,
@@ -1933,7 +2013,7 @@ export const api = {
   },
 
   async updateChapter(id: string, updates: Partial<Chapter>): Promise<Chapter> {
-    const idx = localChapters.findIndex(c => c.id === id);
+    const idx = localChapters.findIndex((c) => c.id === id);
     if (idx !== -1) {
       localChapters[idx] = { ...localChapters[idx], ...updates };
     }
@@ -1953,11 +2033,13 @@ export const api = {
       }
     }
 
-    return localChapters[idx] || { id, subjectId: '', name: '', slug: '', orderIndex: 0, isActive: true };
+    return (
+      localChapters[idx] || { id, subjectId: '', name: '', slug: '', orderIndex: 0, isActive: true }
+    );
   },
 
   async deleteChapter(id: string): Promise<boolean> {
-    const idx = localChapters.findIndex(c => c.id === id);
+    const idx = localChapters.findIndex((c) => c.id === id);
     if (idx !== -1) {
       localChapters[idx].isActive = false;
     }
@@ -1976,31 +2058,37 @@ export const api = {
   async getTestSeries(examId?: string): Promise<TestSeries[]> {
     if (!isSupabaseConfigured) {
       return localTestSeries
-        .filter(s => !examId || s.examId === examId)
-        .map(s => {
-          const exam = localExams.find(e => e.id === s.examId);
-          const count = localTests.filter(t => t.testSeriesId === s.id).length;
+        .filter((s) => !examId || s.examId === examId)
+        .map((s) => {
+          const exam = localExams.find((e) => e.id === s.examId);
+          const count = localTests.filter((t) => t.testSeriesId === s.id).length;
           return { ...s, examTitle: exam?.title, testCount: count, testsCount: count };
         });
     }
     try {
-      let query = supabase.from('test_series').select('*, exams(title), tests(count)').order('order_index', { ascending: true });
+      let query = supabase
+        .from('test_series')
+        .select('*, exams(title), tests(count)')
+        .order('order_index', { ascending: true });
       if (examId) query = query.eq('exam_id', examId);
       const { data, error } = await query;
 
       if (error || !data) {
         return localTestSeries
-          .filter(s => !examId || s.examId === examId)
-          .map(s => {
-            const exam = localExams.find(e => e.id === s.examId);
-            const count = localTests.filter(t => t.testSeriesId === s.id).length;
+          .filter((s) => !examId || s.examId === examId)
+          .map((s) => {
+            const exam = localExams.find((e) => e.id === s.examId);
+            const count = localTests.filter((t) => t.testSeriesId === s.id).length;
             return { ...s, examTitle: exam?.title, testCount: count, testsCount: count };
           });
       }
 
-      return (data as any[]).map(item => {
-        const exam = localExams.find(e => e.id === item.exam_id);
-        const count = Array.isArray(item.tests) && item.tests[0]?.count != null ? Number(item.tests[0].count) : 0;
+      return (data as any[]).map((item) => {
+        const exam = localExams.find((e) => e.id === item.exam_id);
+        const count =
+          Array.isArray(item.tests) && item.tests[0]?.count != null
+            ? Number(item.tests[0].count)
+            : 0;
         return {
           id: item.id,
           examId: item.exam_id,
@@ -2018,19 +2106,24 @@ export const api = {
       });
     } catch {
       return localTestSeries
-        .filter(s => !examId || s.examId === examId)
-        .map(s => {
-          const exam = localExams.find(e => e.id === s.examId);
-          const count = localTests.filter(t => t.testSeriesId === s.id).length;
+        .filter((s) => !examId || s.examId === examId)
+        .map((s) => {
+          const exam = localExams.find((e) => e.id === s.examId);
+          const count = localTests.filter((t) => t.testSeriesId === s.id).length;
           return { ...s, examTitle: exam?.title, testCount: count, testsCount: count };
         });
     }
   },
 
   async createTestSeries(seriesData: Omit<TestSeries, 'id'>): Promise<TestSeries> {
-    const slug = seriesData.slug || seriesData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug =
+      seriesData.slug ||
+      seriesData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
     const id = `${seriesData.examId}-${slug}`.slice(0, 50);
-    const exam = localExams.find(e => e.id === seriesData.examId);
+    const exam = localExams.find((e) => e.id === seriesData.examId);
     const newSeries: TestSeries = {
       id,
       ...seriesData,
@@ -2061,7 +2154,7 @@ export const api = {
   },
 
   async updateTestSeries(id: string, updates: Partial<TestSeries>): Promise<TestSeries> {
-    const idx = localTestSeries.findIndex(s => s.id === id);
+    const idx = localTestSeries.findIndex((s) => s.id === id);
     if (idx !== -1) {
       localTestSeries[idx] = { ...localTestSeries[idx], ...updates };
     }
@@ -2082,11 +2175,21 @@ export const api = {
       }
     }
 
-    return localTestSeries[idx] || { id, examId: '', title: '', slug: '', isPremium: false, orderIndex: 0, isActive: true };
+    return (
+      localTestSeries[idx] || {
+        id,
+        examId: '',
+        title: '',
+        slug: '',
+        isPremium: false,
+        orderIndex: 0,
+        isActive: true,
+      }
+    );
   },
 
   async deleteTestSeries(id: string): Promise<boolean> {
-    const idx = localTestSeries.findIndex(s => s.id === id);
+    const idx = localTestSeries.findIndex((s) => s.id === id);
     if (idx !== -1) {
       localTestSeries[idx].isActive = false;
     }
@@ -2122,7 +2225,7 @@ export const api = {
 
         const { data, error } = await query;
         if (!error && data && data.length > 0) {
-          tests = (data as TestRow[]).map(row => ({
+          tests = (data as TestRow[]).map((row) => ({
             id: row.id,
             examId: row.exam_id,
             subjectId: row.subject_id ?? undefined,
@@ -2149,18 +2252,18 @@ export const api = {
     }
 
     if (filter) {
-      if (filter.examId) tests = tests.filter(t => t.examId === filter.examId);
-      if (filter.subjectId) tests = tests.filter(t => t.subjectId === filter.subjectId);
-      if (filter.chapterId) tests = tests.filter(t => t.chapterId === filter.chapterId);
-      if (filter.testSeriesId) tests = tests.filter(t => t.testSeriesId === filter.testSeriesId);
-      if (filter.status) tests = tests.filter(t => t.status === filter.status);
+      if (filter.examId) tests = tests.filter((t) => t.examId === filter.examId);
+      if (filter.subjectId) tests = tests.filter((t) => t.subjectId === filter.subjectId);
+      if (filter.chapterId) tests = tests.filter((t) => t.chapterId === filter.chapterId);
+      if (filter.testSeriesId) tests = tests.filter((t) => t.testSeriesId === filter.testSeriesId);
+      if (filter.status) tests = tests.filter((t) => t.status === filter.status);
     }
 
-    return tests.map(t => {
-      const exam = localExams.find(e => e.id === t.examId);
-      const subject = localSubjects.find(s => s.id === t.subjectId);
-      const chapter = localChapters.find(c => c.id === t.chapterId);
-      const series = localTestSeries.find(s => s.id === t.testSeriesId);
+    return tests.map((t) => {
+      const exam = localExams.find((e) => e.id === t.examId);
+      const subject = localSubjects.find((s) => s.id === t.subjectId);
+      const chapter = localChapters.find((c) => c.id === t.chapterId);
+      const series = localTestSeries.find((s) => s.id === t.testSeriesId);
       return {
         ...t,
         examTitle: exam?.title,
@@ -2171,8 +2274,15 @@ export const api = {
     });
   },
 
-  async createTest(testData: Omit<MockTest, 'id' | 'status'> & { status?: 'draft' | 'published' | 'archived' }): Promise<MockTest> {
-    const slug = testData.slug || testData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  async createTest(
+    testData: Omit<MockTest, 'id' | 'status'> & { status?: 'draft' | 'published' | 'archived' }
+  ): Promise<MockTest> {
+    const slug =
+      testData.slug ||
+      testData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
     const id = `test-${slug}-${Date.now().toString().slice(-4)}`;
     const newTest: MockTest = {
       id,
@@ -2211,7 +2321,9 @@ export const api = {
         );
         if (allAssocExams.length > 0) {
           const assocRows = allAssocExams.map((eid) => ({ test_id: id, exam_id: eid }));
-          await (supabase as any).from('test_exams').upsert(assocRows, { onConflict: 'test_id,exam_id' });
+          await (supabase as any)
+            .from('test_exams')
+            .upsert(assocRows, { onConflict: 'test_id,exam_id' });
         }
       } catch (err) {
         console.error('Supabase createTest error:', err);
@@ -2223,7 +2335,7 @@ export const api = {
   },
 
   async updateTest(id: string, updates: Partial<MockTest>): Promise<MockTest> {
-    const idx = localTests.findIndex(t => t.id === id);
+    const idx = localTests.findIndex((t) => t.id === id);
     if (idx !== -1) {
       localTests[idx] = { ...localTests[idx], ...updates };
     }
@@ -2240,11 +2352,13 @@ export const api = {
         if (updates.description !== undefined) payload.description = updates.description;
         if (updates.testType !== undefined) payload.test_type = updates.testType;
         if (updates.year !== undefined) payload.year = updates.year;
-        if (updates.durationMinutes !== undefined) payload.duration_minutes = updates.durationMinutes;
+        if (updates.durationMinutes !== undefined)
+          payload.duration_minutes = updates.durationMinutes;
         if (updates.totalQuestions !== undefined) payload.total_questions = updates.totalQuestions;
         if (updates.totalMarks !== undefined) payload.total_marks = updates.totalMarks;
         if (updates.passingMarks !== undefined) payload.passing_marks = updates.passingMarks;
-        if (updates.negativeMarking !== undefined) payload.negative_marking = updates.negativeMarking;
+        if (updates.negativeMarking !== undefined)
+          payload.negative_marking = updates.negativeMarking;
         if (updates.isPremium !== undefined) payload.is_premium = updates.isPremium;
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
@@ -2265,7 +2379,7 @@ export const api = {
 
   async validateTestForPublish(testId: string): Promise<PublishValidationResult> {
     const errors: string[] = [];
-    const test = localTests.find(t => t.id === testId);
+    const test = localTests.find((t) => t.id === testId);
 
     if (!test) {
       return { isValid: false, errors: ['Test not found.'] };
@@ -2282,7 +2396,7 @@ export const api = {
     }
 
     // Check assigned questions
-    const assignedQuestions = localTestQuestions.filter(tq => tq.testId === testId);
+    const assignedQuestions = localTestQuestions.filter((tq) => tq.testId === testId);
 
     if (isSupabaseConfigured) {
       try {
@@ -2321,7 +2435,7 @@ export const api = {
       errors.push('Test must have at least one question assigned before publishing.');
     } else {
       assignedQuestions.forEach((tq, idx) => {
-        const q = localQuestions.find(item => item.id === tq.questionId);
+        const q = localQuestions.find((item) => item.id === tq.questionId);
         if (!q) {
           errors.push(`Question #${idx + 1} (ID: ${tq.questionId}) not found in question bank.`);
         } else {
@@ -2362,7 +2476,7 @@ export const api = {
       }
     }
 
-    const idx = localTests.findIndex(t => t.id === testId);
+    const idx = localTests.findIndex((t) => t.id === testId);
     if (idx !== -1) {
       localTests[idx].status = 'published';
       localTests[idx].isActive = true;
@@ -2381,7 +2495,7 @@ export const api = {
       }
     }
 
-    const idx = localTests.findIndex(t => t.id === testId);
+    const idx = localTests.findIndex((t) => t.id === testId);
     if (idx !== -1) {
       localTests[idx].status = 'archived';
       localTests[idx].isActive = false;
@@ -2402,7 +2516,10 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        let query = supabase.from('questions').select('*').order('created_at', { ascending: false });
+        let query = supabase
+          .from('questions')
+          .select('*')
+          .order('created_at', { ascending: false });
         if (filters?.subjectId) query = query.eq('subject_id', filters.subjectId);
         if (filters?.chapterId) query = query.eq('chapter_id', filters.chapterId);
         if (filters?.difficulty) query = query.eq('difficulty', filters.difficulty);
@@ -2410,7 +2527,7 @@ export const api = {
 
         const { data, error } = await query;
         if (!error && data && data.length > 0) {
-          questions = (data as QuestionRow[]).map(q => ({
+          questions = (data as QuestionRow[]).map((q) => ({
             id: q.id,
             chapterId: q.chapter_id ?? undefined,
             subjectId: q.subject_id ?? undefined,
@@ -2436,22 +2553,24 @@ export const api = {
     }
 
     if (filters) {
-      if (filters.subjectId) questions = questions.filter(q => q.subjectId === filters.subjectId);
-      if (filters.chapterId) questions = questions.filter(q => q.chapterId === filters.chapterId);
-      if (filters.difficulty) questions = questions.filter(q => q.difficulty === filters.difficulty);
-      if (filters.status) questions = questions.filter(q => q.status === filters.status);
+      if (filters.subjectId) questions = questions.filter((q) => q.subjectId === filters.subjectId);
+      if (filters.chapterId) questions = questions.filter((q) => q.chapterId === filters.chapterId);
+      if (filters.difficulty)
+        questions = questions.filter((q) => q.difficulty === filters.difficulty);
+      if (filters.status) questions = questions.filter((q) => q.status === filters.status);
       if (filters.search) {
         const term = filters.search.toLowerCase();
-        questions = questions.filter(q =>
-          q.questionText.toLowerCase().includes(term) ||
-          (q.questionBengaliText && q.questionBengaliText.toLowerCase().includes(term))
+        questions = questions.filter(
+          (q) =>
+            q.questionText.toLowerCase().includes(term) ||
+            (q.questionBengaliText && q.questionBengaliText.toLowerCase().includes(term))
         );
       }
     }
 
-    return questions.map(q => {
-      const subject = localSubjects.find(s => s.id === q.subjectId);
-      const chapter = localChapters.find(c => c.id === q.chapterId);
+    return questions.map((q) => {
+      const subject = localSubjects.find((s) => s.id === q.subjectId);
+      const chapter = localChapters.find((c) => c.id === q.chapterId);
       return {
         ...q,
         subjectName: subject?.name,
@@ -2461,11 +2580,15 @@ export const api = {
   },
 
   async getQuestionById(id: string): Promise<Question | null> {
-    const mock = localQuestions.find(q => q.id === id);
+    const mock = localQuestions.find((q) => q.id === id);
     if (!isSupabaseConfigured) return mock || null;
 
     try {
-      const { data, error } = await supabase.from('questions').select('*').eq('id', id).maybeSingle();
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
       if (error || !data) return mock || null;
       const q = data as QuestionRow;
       return {
@@ -2532,7 +2655,7 @@ export const api = {
   },
 
   async updateQuestion(id: string, updates: Partial<Question>): Promise<Question> {
-    const idx = localQuestions.findIndex(q => q.id === id);
+    const idx = localQuestions.findIndex((q) => q.id === id);
     if (idx !== -1) {
       localQuestions[idx] = { ...localQuestions[idx], ...updates };
     }
@@ -2541,17 +2664,20 @@ export const api = {
       try {
         const payload: Record<string, unknown> = {};
         if (updates.questionText !== undefined) payload.question_text = updates.questionText;
-        if (updates.questionBengaliText !== undefined) payload.question_bengali_text = updates.questionBengaliText;
+        if (updates.questionBengaliText !== undefined)
+          payload.question_bengali_text = updates.questionBengaliText;
         if (updates.optionA !== undefined) payload.option_a = updates.optionA;
         if (updates.optionB !== undefined) payload.option_b = updates.optionB;
         if (updates.optionC !== undefined) payload.option_c = updates.optionC;
         if (updates.optionD !== undefined) payload.option_d = updates.optionD;
         if (updates.correctOption !== undefined) payload.correct_option = updates.correctOption;
         if (updates.explanation !== undefined) payload.explanation = updates.explanation;
-        if (updates.explanationBengali !== undefined) payload.explanation_bengali = updates.explanationBengali;
+        if (updates.explanationBengali !== undefined)
+          payload.explanation_bengali = updates.explanationBengali;
         if (updates.difficulty !== undefined) payload.difficulty = updates.difficulty;
         if (updates.defaultMarks !== undefined) payload.default_marks = updates.defaultMarks;
-        if (updates.defaultNegativeMarks !== undefined) payload.default_negative_marks = updates.defaultNegativeMarks;
+        if (updates.defaultNegativeMarks !== undefined)
+          payload.default_negative_marks = updates.defaultNegativeMarks;
         if (updates.chapterId !== undefined) payload.chapter_id = updates.chapterId;
         if (updates.subjectId !== undefined) payload.subject_id = updates.subjectId;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
@@ -2567,7 +2693,7 @@ export const api = {
   },
 
   async archiveQuestion(id: string): Promise<boolean> {
-    const idx = localQuestions.findIndex(q => q.id === id);
+    const idx = localQuestions.findIndex((q) => q.id === id);
     if (idx !== -1) {
       localQuestions[idx].status = 'archived';
       localQuestions[idx].isActive = false;
@@ -2575,7 +2701,10 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('questions').update({ status: 'archived', is_active: false }).eq('id', id);
+        await (supabase as any)
+          .from('questions')
+          .update({ status: 'archived', is_active: false })
+          .eq('id', id);
       } catch (err) {
         console.error('Supabase archiveQuestion error:', err);
       }
@@ -2606,7 +2735,9 @@ export const api = {
         await this.createQuestion(qData);
         successCount++;
       } catch (err: any) {
-        errors.push(`Failed to save question "${qData.questionText.slice(0, 30)}...": ${err.message}`);
+        errors.push(
+          `Failed to save question "${qData.questionText.slice(0, 30)}...": ${err.message}`
+        );
       }
     }
 
@@ -2623,13 +2754,15 @@ export const api = {
       try {
         const { data, error } = await supabase
           .from('test_questions')
-          .select(`
+          .select(
+            `
             question_id,
             question_order,
             marks,
             negative_marks,
             questions (*)
-          `)
+          `
+          )
           .eq('test_id', testId)
           .order('question_order', { ascending: true });
 
@@ -2660,11 +2793,11 @@ export const api = {
 
     // Fallback in-memory
     const assignments = localTestQuestions
-      .filter(tq => tq.testId === testId)
+      .filter((tq) => tq.testId === testId)
       .sort((a, b) => a.questionOrder - b.questionOrder);
 
-    return assignments.map(a => {
-      const q = localQuestions.find(item => item.id === a.questionId);
+    return assignments.map((a) => {
+      const q = localQuestions.find((item) => item.id === a.questionId);
       return {
         questionId: a.questionId,
         questionOrder: a.questionOrder,
@@ -2689,7 +2822,7 @@ export const api = {
   ): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
       try {
-        const payload = questions.map(q => ({
+        const payload = questions.map((q) => ({
           question_id: q.questionId,
           order_index: q.orderIndex,
           marks: q.marks ?? 1.0,
@@ -2723,13 +2856,13 @@ export const api = {
         id: `tq-${testId}-${q.questionId}`,
         testId,
         questionId: q.questionId,
-        questionOrder: q.orderIndex || (idx + 1),
+        questionOrder: q.orderIndex || idx + 1,
         marks,
         negativeMarks: negMarks,
       });
     });
 
-    const testIdx = localTests.findIndex(t => t.id === testId);
+    const testIdx = localTests.findIndex((t) => t.id === testId);
     if (testIdx !== -1) {
       localTests[testIdx].totalQuestions = questions.length;
       localTests[testIdx].totalMarks = totalMarks;

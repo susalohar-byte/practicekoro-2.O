@@ -5,8 +5,10 @@ import { api } from '@/services/api';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { TopicTests } from '@/pages/student/TopicTests';
 import {
   AlertTriangle,
+  BookOpen,
   Bookmark,
   RotateCcw,
   CheckCircle2,
@@ -22,7 +24,7 @@ import {
 } from 'lucide-react';
 import type { MistakeItem, BookmarkItem, Question } from '@/types';
 
-type PracticeTab = 'mistakes' | 'bookmarks';
+type PracticeTab = 'topics' | 'mistakes' | 'bookmarks';
 
 interface PracticeAnswerRecord {
   questionId: string;
@@ -35,7 +37,7 @@ export const Practice: React.FC = () => {
   const navigate = useNavigate();
 
   // Data state
-  const [activeTab, setActiveTab] = useState<PracticeTab>('mistakes');
+  const [activeTab, setActiveTab] = useState<PracticeTab>('topics');
   const [mistakes, setMistakes] = useState<MistakeItem[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -54,7 +56,9 @@ export const Practice: React.FC = () => {
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState<boolean>(false);
   const [sessionAnswers, setSessionAnswers] = useState<PracticeAnswerRecord[]>([]);
   const [isSessionComplete, setIsSessionComplete] = useState<boolean>(false);
-  const [languageMode, setLanguageMode] = useState<'bilingual' | 'english' | 'bengali'>('bilingual');
+  const [languageMode, setLanguageMode] = useState<'bilingual' | 'english' | 'bengali'>(
+    'bilingual'
+  );
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   // Fetch mistakes and bookmarks
@@ -87,7 +91,8 @@ export const Practice: React.FC = () => {
 
   // Available subjects for filtering
   const availableSubjects = useMemo(() => {
-    const activeList = activeTab === 'mistakes' ? mistakes : bookmarks;
+    const activeList =
+      activeTab === 'mistakes' ? mistakes : activeTab === 'bookmarks' ? bookmarks : [];
     const set = new Set<string>();
     activeList.forEach((item) => {
       if (item.subjectName) set.add(item.subjectName);
@@ -260,7 +265,11 @@ export const Practice: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setLanguageMode((prev) =>
-                      prev === 'bilingual' ? 'english' : prev === 'english' ? 'bengali' : 'bilingual'
+                      prev === 'bilingual'
+                        ? 'english'
+                        : prev === 'english'
+                          ? 'bengali'
+                          : 'bilingual'
                     );
                   }}
                   className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-colors"
@@ -339,7 +348,8 @@ export const Practice: React.FC = () => {
 
                 if (isAnswerSubmitted) {
                   if (isCorrectOption) {
-                    stateStyles = 'border-emerald-500 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-500';
+                    stateStyles =
+                      'border-emerald-500 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-500';
                   } else if (isSelected && !isCorrectOption) {
                     stateStyles = 'border-rose-400 bg-rose-50 text-rose-950 ring-1 ring-rose-400';
                   } else {
@@ -362,10 +372,10 @@ export const Practice: React.FC = () => {
                         isAnswerSubmitted && isCorrectOption
                           ? 'bg-emerald-600 text-white border-emerald-600'
                           : isAnswerSubmitted && isSelected && !isCorrectOption
-                          ? 'bg-rose-600 text-white border-rose-600'
-                          : isSelected
-                          ? 'bg-brand-600 text-white border-brand-600'
-                          : 'bg-white text-slate-700 border-slate-300'
+                            ? 'bg-rose-600 text-white border-rose-600'
+                            : isSelected
+                              ? 'bg-brand-600 text-white border-brand-600'
+                              : 'bg-white text-slate-700 border-slate-300'
                       }`}
                     >
                       {opt}
@@ -515,10 +525,7 @@ export const Practice: React.FC = () => {
               >
                 Practice Again
               </Button>
-              <Button
-                onClick={handleExitPractice}
-                className="w-full sm:w-auto font-bold text-xs"
-              >
+              <Button onClick={handleExitPractice} className="w-full sm:w-auto font-bold text-xs">
                 Back to Revision Hub
               </Button>
             </div>
@@ -574,9 +581,7 @@ export const Practice: React.FC = () => {
                   <AlertTriangle className="w-4 h-4" />
                 </div>
               </div>
-              <p className="text-2xl font-black text-amber-600 mt-2">
-                {pendingMistakes.length}
-              </p>
+              <p className="text-2xl font-black text-amber-600 mt-2">{pendingMistakes.length}</p>
               <p className="text-[11px] text-slate-500 mt-0.5 truncate">
                 {pendingMistakes.length > 0
                   ? 'Questions needing revision'
@@ -610,9 +615,7 @@ export const Practice: React.FC = () => {
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
               </div>
-              <p className="text-2xl font-black text-emerald-600 mt-2">
-                {resolvedMistakes.length}
-              </p>
+              <p className="text-2xl font-black text-emerald-600 mt-2">{resolvedMistakes.length}</p>
               <p className="text-[11px] text-slate-500 mt-0.5 truncate">
                 Mistakes mastered & resolved
               </p>
@@ -621,14 +624,30 @@ export const Practice: React.FC = () => {
 
           {/* Primary Navigation Tabs */}
           <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('topics');
+                  setSelectedSubjectFilter('all');
+                }}
+                className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
+                  activeTab === 'topics'
+                    ? 'border-brand-600 text-brand-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-brand-500" />
+                <span>Topic Tests</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab('mistakes');
                   setSelectedSubjectFilter('all');
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
+                className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'mistakes'
                     ? 'border-brand-600 text-brand-600'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -647,7 +666,7 @@ export const Practice: React.FC = () => {
                   setActiveTab('bookmarks');
                   setSelectedSubjectFilter('all');
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
+                className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'bookmarks'
                     ? 'border-brand-600 text-brand-600'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -686,7 +705,7 @@ export const Practice: React.FC = () => {
           </div>
 
           {/* Subject Filter Chips (Part B6) */}
-          {availableSubjects.length > 1 && (
+          {activeTab !== 'topics' && availableSubjects.length > 1 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
               <span className="text-slate-400 text-[11px] font-medium shrink-0">Filter:</span>
               <button
@@ -717,7 +736,10 @@ export const Practice: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 1: MISTAKES NOTEBOOK LIST */}
+          {/* TAB 1: TOPIC TEST DISCOVERY */}
+          {activeTab === 'topics' && <TopicTests />}
+
+          {/* TAB 2: MISTAKES NOTEBOOK LIST */}
           {activeTab === 'mistakes' && (
             <div className="space-y-4">
               {/* Informational Banner with Mobile Practice CTA */}
@@ -898,7 +920,7 @@ export const Practice: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: BOOKMARKED QUESTIONS LIST */}
+          {/* TAB 3: BOOKMARKED QUESTIONS LIST */}
           {activeTab === 'bookmarks' && (
             <div className="space-y-4">
               {/* Informational Banner with Mobile Practice CTA */}
@@ -906,8 +928,9 @@ export const Practice: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Bookmark className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                   <div className="text-xs text-blue-950 leading-relaxed">
-                    <strong className="font-bold">Bookmarked Questions:</strong> High-yield questions
-                    saved during tests. Practice them to keep key concepts sharp before exam day.
+                    <strong className="font-bold">Bookmarked Questions:</strong> High-yield
+                    questions saved during tests. Practice them to keep key concepts sharp before
+                    exam day.
                   </div>
                 </div>
 

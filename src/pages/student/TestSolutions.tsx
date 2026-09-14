@@ -12,7 +12,7 @@ import {
   Bookmark,
   ArrowLeft,
   AlertTriangle,
-  BookOpen
+  BookOpen,
 } from 'lucide-react';
 import type { QuestionSolution } from '@/types';
 
@@ -82,7 +82,12 @@ export const TestSolutions: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <Link to="/practice">
-            <Button size="sm" variant="outline" className="text-xs" leftIcon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              leftIcon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
+            >
               Open Mistakes Notebook
             </Button>
           </Link>
@@ -166,8 +171,12 @@ export const TestSolutions: React.FC = () => {
                     </Badge>
                   )}
                   {isWrong && (
-                    <Badge variant="warning" className="bg-rose-50 text-rose-700 border-rose-200 gap-1">
-                      <XCircle className="w-3.5 h-3.5 text-rose-600" /> Incorrect ({sol.marksAwarded})
+                    <Badge
+                      variant="warning"
+                      className="bg-rose-50 text-rose-700 border-rose-200 gap-1"
+                    >
+                      <XCircle className="w-3.5 h-3.5 text-rose-600" /> Incorrect (
+                      {sol.marksAwarded})
                     </Badge>
                   )}
                   {isSkipped && (
@@ -212,9 +221,11 @@ export const TestSolutions: React.FC = () => {
                   let style = 'bg-white border-slate-200 text-slate-700';
 
                   if (isAnswer) {
-                    style = 'bg-emerald-50/80 border-emerald-400 text-emerald-950 font-bold ring-1 ring-emerald-400';
+                    style =
+                      'bg-emerald-50/80 border-emerald-400 text-emerald-950 font-bold ring-1 ring-emerald-400';
                   } else if (isUserChoice && !sol.isCorrect) {
-                    style = 'bg-rose-50/80 border-rose-400 text-rose-950 font-bold ring-1 ring-rose-400';
+                    style =
+                      'bg-rose-50/80 border-rose-400 text-rose-950 font-bold ring-1 ring-rose-400';
                   }
 
                   return (

@@ -11,7 +11,7 @@ import {
   Search,
   Lock,
   Filter,
-  X
+  X,
 } from 'lucide-react';
 import type { TestSeries, Exam } from '@/types';
 
@@ -116,7 +116,13 @@ export const AdminTestSeries: React.FC = () => {
         await api.createTestSeries({
           examId,
           title: title.trim(),
-          slug: slug.trim() || title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+          slug:
+            slug.trim() ||
+            title
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, ''),
           description: description.trim() || undefined,
           isPremium,
           orderIndex: Number(orderIndex),
@@ -139,10 +145,11 @@ export const AdminTestSeries: React.FC = () => {
     }
   };
 
-  const filteredSeries = seriesList.filter(s =>
-    s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.examId.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSeries = seriesList.filter(
+    (s) =>
+      s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.examId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -160,7 +167,8 @@ export const AdminTestSeries: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Thematic mock test packages under target examinations (e.g. Prelims 2025 Series, Mains Pro Pack).
+            Thematic mock test packages under target examinations (e.g. Prelims 2025 Series, Mains
+            Pro Pack).
           </p>
         </div>
 
@@ -233,7 +241,7 @@ export const AdminTestSeries: React.FC = () => {
                 </tr>
               ) : (
                 filteredSeries.map((series) => {
-                  const parentExam = exams.find(e => e.id === series.examId);
+                  const parentExam = exams.find((e) => e.id === series.examId);
                   return (
                     <tr key={series.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="p-4">
@@ -289,7 +297,11 @@ export const AdminTestSeries: React.FC = () => {
                             className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
                             title={series.isActive ? 'Deactivate' : 'Activate'}
                           >
-                            {series.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                            {series.isActive ? (
+                              <Trash2 className="w-4 h-4" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </td>

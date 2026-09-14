@@ -1,4 +1,4 @@
-import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 
 function InteractiveHoverButtonDemo() {
   return (

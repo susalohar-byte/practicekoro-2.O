@@ -65,7 +65,9 @@ export function loadRazorpayScript(): Promise<boolean> {
 /**
  * Opens Razorpay checkout modal with given options.
  */
-export async function openRazorpayCheckout(options: RazorpayCheckoutOptions): Promise<{ error?: string }> {
+export async function openRazorpayCheckout(
+  options: RazorpayCheckoutOptions
+): Promise<{ error?: string }> {
   const isLoaded = await loadRazorpayScript();
 
   if (!isLoaded || !window.Razorpay) {

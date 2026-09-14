@@ -37,3 +37,8 @@ supabase/.temp/
 
 # Scratch directory
 scratch/
+
+# Test and quality artifacts
+coverage/
+playwright-report/
+test-results/

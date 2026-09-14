@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
-import {  Lock, Mail, User, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight } from 'lucide-react';
 
 export const Register: React.FC = () => {
   const { register } = useAuth();
@@ -51,9 +51,7 @@ export const Register: React.FC = () => {
           />
         </Link>
         <h2 className="text-xl font-bold text-slate-900">Create your student account</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          Start practicing high-yield mock tests today
-        </p>
+        <p className="mt-1 text-xs text-slate-500">Start practicing high-yield mock tests today</p>
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">

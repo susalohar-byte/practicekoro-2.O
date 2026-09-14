@@ -122,9 +122,7 @@ export const MyTests: React.FC = () => {
     } else if (testTypeFilter === 'topic') {
       list = list.filter(
         (a) =>
-          a.testType === 'topic' ||
-          a.testType === 'chapter_mock' ||
-          a.testType === 'subject_mock'
+          a.testType === 'topic' || a.testType === 'chapter_mock' || a.testType === 'subject_mock'
       );
     }
 
@@ -144,10 +142,7 @@ export const MyTests: React.FC = () => {
   const fullMockCount = attempts.filter((a) => a.testType === 'full_mock').length;
   const pyqCount = attempts.filter((a) => a.testType === 'pyq').length;
   const topicCount = attempts.filter(
-    (a) =>
-      a.testType === 'topic' ||
-      a.testType === 'chapter_mock' ||
-      a.testType === 'subject_mock'
+    (a) => a.testType === 'topic' || a.testType === 'chapter_mock' || a.testType === 'subject_mock'
   ).length;
 
   return (
@@ -304,7 +299,9 @@ export const MyTests: React.FC = () => {
               {inProgressCount > 0 && (
                 <span
                   className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                    activeTab === 'in_progress' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
+                    activeTab === 'in_progress'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-amber-100 text-amber-800'
                   }`}
                 >
                   {inProgressCount}
@@ -325,7 +322,9 @@ export const MyTests: React.FC = () => {
               <span>Completed</span>
               <span
                 className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  activeTab === 'completed' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                  activeTab === 'completed'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-200 text-slate-700'
                 }`}
               >
                 {completedCount}
@@ -366,7 +365,8 @@ export const MyTests: React.FC = () => {
             Your test history will appear here.
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
-            Take your first chapter-wise or full-length mock test to track your accuracy, solutions, and score trends.
+            Take your first chapter-wise or full-length mock test to track your accuracy, solutions,
+            and score trends.
           </p>
           <Button
             onClick={() => navigate('/exams')}
@@ -404,9 +404,7 @@ export const MyTests: React.FC = () => {
           {filteredAttempts.map((attempt: any) => {
             const isInProgress = attempt.status === 'in_progress';
             const percentage =
-              attempt.totalMarks > 0
-                ? Math.round((attempt.score / attempt.totalMarks) * 100)
-                : 0;
+              attempt.totalMarks > 0 ? Math.round((attempt.score / attempt.totalMarks) * 100) : 0;
 
             return (
               <Card
@@ -503,7 +501,9 @@ export const MyTests: React.FC = () => {
                         {attempt.chapterName && (
                           <>
                             <span>›</span>
-                            <span className="text-slate-700 font-semibold">{attempt.chapterName}</span>
+                            <span className="text-slate-700 font-semibold">
+                              {attempt.chapterName}
+                            </span>
                           </>
                         )}
                       </div>
@@ -545,15 +545,17 @@ export const MyTests: React.FC = () => {
 
                         {/* Percentage */}
                         <div className="p-2.5 bg-brand-50/40 rounded-xl border border-brand-100">
-                          <p className="text-[10px] uppercase font-bold text-brand-600">Percentage</p>
-                          <p className="text-sm font-black text-brand-700 mt-0.5">
-                            {percentage}%
+                          <p className="text-[10px] uppercase font-bold text-brand-600">
+                            Percentage
                           </p>
+                          <p className="text-sm font-black text-brand-700 mt-0.5">{percentage}%</p>
                         </div>
 
                         {/* Accuracy */}
                         <div className="p-2.5 bg-emerald-50/40 rounded-xl border border-emerald-100">
-                          <p className="text-[10px] uppercase font-bold text-emerald-600">Accuracy</p>
+                          <p className="text-[10px] uppercase font-bold text-emerald-600">
+                            Accuracy
+                          </p>
                           <p className="text-sm font-black text-emerald-700 mt-0.5">
                             {attempt.accuracy.toFixed(1)}%
                           </p>
@@ -561,7 +563,9 @@ export const MyTests: React.FC = () => {
 
                         {/* Time Taken */}
                         <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                          <p className="text-[10px] uppercase font-bold text-slate-400">Time Taken</p>
+                          <p className="text-[10px] uppercase font-bold text-slate-400">
+                            Time Taken
+                          </p>
                           <p className="text-sm font-black text-slate-700 mt-0.5">
                             {formatSeconds(attempt.timeSpentSeconds)}
                           </p>
@@ -591,8 +595,8 @@ export const MyTests: React.FC = () => {
                               attempt.scoreDiff > 0
                                 ? 'text-emerald-700'
                                 : attempt.scoreDiff < 0
-                                ? 'text-rose-600'
-                                : 'text-slate-500'
+                                  ? 'text-rose-600'
+                                  : 'text-slate-500'
                             }`}
                           >
                             <TrendingUp className="w-3.5 h-3.5" />
@@ -600,8 +604,8 @@ export const MyTests: React.FC = () => {
                               {attempt.scoreDiff > 0
                                 ? `+${attempt.scoreDiff.toFixed(2)} marks vs Attempt #${attempt.attemptNumber - 1}`
                                 : attempt.scoreDiff < 0
-                                ? `${attempt.scoreDiff.toFixed(2)} marks vs Attempt #${attempt.attemptNumber - 1}`
-                                : `Same score as Attempt #${attempt.attemptNumber - 1}`}
+                                  ? `${attempt.scoreDiff.toFixed(2)} marks vs Attempt #${attempt.attemptNumber - 1}`
+                                  : `Same score as Attempt #${attempt.attemptNumber - 1}`}
                             </span>
                           </div>
                         )}
@@ -638,9 +642,7 @@ export const MyTests: React.FC = () => {
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() =>
-                            navigate(`/exams/${attempt.testId}/results/${attempt.id}`)
-                          }
+                          onClick={() => navigate(`/exams/${attempt.testId}/results/${attempt.id}`)}
                           leftIcon={<BarChart3 className="w-3.5 h-3.5 text-slate-600" />}
                           className="font-bold text-xs flex-1 lg:flex-initial justify-center"
                         >

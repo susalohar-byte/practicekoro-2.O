@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
-import {  Mail, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Mail, ArrowLeft, AlertCircle } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export const ForgotPassword: React.FC = () => {
@@ -58,7 +58,8 @@ export const ForgotPassword: React.FC = () => {
               </div>
               <h3 className="text-sm font-bold text-slate-900">Instructions Sent</h3>
               <p className="text-xs text-slate-500 mt-1 mb-6">
-                If an account exists for <strong>{email}</strong>, we have sent a password reset link.
+                If an account exists for <strong>{email}</strong>, we have sent a password reset
+                link.
               </p>
               <Link to="/login">
                 <Button variant="outline" className="w-full">

@@ -22,7 +22,7 @@ import {
   X,
   Sparkles,
   ArrowRight,
-  ShieldAlert
+  ShieldAlert,
 } from 'lucide-react';
 
 interface StudentSidebarProps {
@@ -235,7 +235,12 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
         <div className="flex-1 py-3 px-3 space-y-6 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200">
           {/* Main Navigation Group */}
           <div>
-            <p className={cn('px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400', isCollapsed && 'lg:hidden')}>
+            <p
+              className={cn(
+                'px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400',
+                isCollapsed && 'lg:hidden'
+              )}
+            >
               Menu
             </p>
             <nav className="space-y-1">
@@ -264,7 +269,12 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     />
                     <span className={cn('truncate', isCollapsed && 'lg:hidden')}>{item.label}</span>
                     {isActive && (
-                      <span className={cn('absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse', isCollapsed && 'lg:hidden')} />
+                      <span
+                        className={cn(
+                          'absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse',
+                          isCollapsed && 'lg:hidden'
+                        )}
+                      />
                     )}
                   </Link>
                 );
@@ -274,7 +284,12 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
 
           {/* Study Tools Group */}
           <div>
-            <p className={cn('px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400', isCollapsed && 'lg:hidden')}>
+            <p
+              className={cn(
+                'px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400',
+                isCollapsed && 'lg:hidden'
+              )}
+            >
               Practice Tools
             </p>
             <div className="space-y-1">
@@ -293,7 +308,9 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <Icon className="w-4 h-4 text-slate-400 group-hover:text-blue-600 shrink-0 transition-colors" />
-                      <span className={cn('truncate', isCollapsed && 'lg:hidden')}>{tool.label}</span>
+                      <span className={cn('truncate', isCollapsed && 'lg:hidden')}>
+                        {tool.label}
+                      </span>
                     </div>
                     {tool.count > 0 && (
                       <span

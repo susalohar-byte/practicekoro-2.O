@@ -13,7 +13,7 @@ import {
   LogOut,
   ArrowLeft,
   Menu,
-  X
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -150,9 +150,7 @@ export const AdminLayout: React.FC = () => {
             </button>
             <div className="flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <h1 className="text-sm font-semibold text-slate-200">
-                Production Administration
-              </h1>
+              <h1 className="text-sm font-semibold text-slate-200">Production Administration</h1>
             </div>
           </div>
 

@@ -52,19 +52,17 @@ export const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           </div>
           <h2 className="text-lg font-bold text-slate-900 mb-2">Admin Access Required</h2>
           <p className="text-xs text-slate-500 mb-6">
-            You are currently signed in as <strong>{user.fullName}</strong> ({user.role}). This section requires administrator privileges.
+            You are currently signed in as <strong>{user.fullName}</strong> ({user.role}). This
+            section requires administrator privileges.
           </p>
           <div className="space-y-2">
-            <Button
-              className="w-full"
-              onClick={() => switchDemoRole('admin')}
-            >
+            <Button className="w-full" onClick={() => switchDemoRole('admin')}>
               Switch to Demo Admin Role
             </Button>
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => window.location.href = '/'}
+              onClick={() => (window.location.href = '/')}
             >
               Back to Student Portal
             </Button>
@@ -89,7 +87,7 @@ export const PublicOnlyRoute: React.FC<ProtectedRouteProps> = ({ children }) => 
   }
 
   if (user) {
-    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
+    return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
   }
 
   return <>{children}</>;

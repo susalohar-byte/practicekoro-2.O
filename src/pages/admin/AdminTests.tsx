@@ -15,9 +15,16 @@ import {
   Clock,
   X,
   FileQuestion,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
-import type { MockTest, Exam, Subject, Chapter, TestSeries, PublishValidationResult } from '@/types';
+import type {
+  MockTest,
+  Exam,
+  Subject,
+  Chapter,
+  TestSeries,
+  PublishValidationResult,
+} from '@/types';
 
 export const AdminTests: React.FC = () => {
   const [tests, setTests] = useState<MockTest[]>([]);
@@ -47,7 +54,9 @@ export const AdminTests: React.FC = () => {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
-  const [testType, setTestType] = useState<'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq' | 'topic'>('chapter_mock');
+  const [testType, setTestType] = useState<
+    'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq' | 'topic'
+  >('chapter_mock');
   const [year, setYear] = useState<number | ''>('');
   const [associatedExamIds, setAssociatedExamIds] = useState<string[]>([]);
   const [durationMinutes, setDurationMinutes] = useState(15);
@@ -63,7 +72,10 @@ export const AdminTests: React.FC = () => {
   const [testToPublish, setTestToPublish] = useState<MockTest | null>(null);
   const [validationResult, setValidationResult] = useState<PublishValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
-  const [publishMessage, setPublishMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [publishMessage, setPublishMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   // Archive Confirmation Modal State
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
@@ -102,17 +114,21 @@ export const AdminTests: React.FC = () => {
   }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedSeriesId, selectedStatus]);
 
   // Hierarchical cascading for modal
-  const modalAvailableSubjects = examId ? subjects.filter(s => s.examId === examId) : subjects;
-  const modalAvailableChapters = subjectId ? chapters.filter(c => c.subjectId === subjectId) : chapters;
-  const modalAvailableSeries = examId ? testSeriesList.filter(s => s.examId === examId) : testSeriesList;
+  const modalAvailableSubjects = examId ? subjects.filter((s) => s.examId === examId) : subjects;
+  const modalAvailableChapters = subjectId
+    ? chapters.filter((c) => c.subjectId === subjectId)
+    : chapters;
+  const modalAvailableSeries = examId
+    ? testSeriesList.filter((s) => s.examId === examId)
+    : testSeriesList;
 
   const openCreateModal = () => {
     setEditingTest(null);
     const initialExam = selectedExamId || exams[0]?.id || '';
     setExamId(initialExam);
-    const firstSub = subjects.find(s => s.examId === initialExam);
+    const firstSub = subjects.find((s) => s.examId === initialExam);
     setSubjectId(firstSub?.id || '');
-    const firstChap = chapters.find(c => c.subjectId === firstSub?.id);
+    const firstChap = chapters.find((c) => c.subjectId === firstSub?.id);
     setChapterId(firstChap?.id || '');
     setTestSeriesId('');
     setTitle('');
@@ -211,7 +227,13 @@ export const AdminTests: React.FC = () => {
           chapterId: chapterId || undefined,
           testSeriesId: testSeriesId || undefined,
           title: title.trim(),
-          slug: slug.trim() || title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+          slug:
+            slug.trim() ||
+            title
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, ''),
           description: description.trim() || undefined,
           testType,
           year: testType === 'pyq' && year ? Number(year) : undefined,
@@ -259,7 +281,10 @@ export const AdminTests: React.FC = () => {
     try {
       const res = await api.publishTest(testToPublish.id);
       if (res.success) {
-        setPublishMessage({ type: 'success', text: `Test "${testToPublish.title}" is now PUBLISHED and live for students.` });
+        setPublishMessage({
+          type: 'success',
+          text: `Test "${testToPublish.title}" is now PUBLISHED and live for students.`,
+        });
         await loadData();
       } else {
         setPublishMessage({ type: 'error', text: res.error || 'Failed to publish test.' });
@@ -286,9 +311,10 @@ export const AdminTests: React.FC = () => {
     }
   };
 
-  const filteredTests = tests.filter(t =>
-    t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.slug.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTests = tests.filter(
+    (t) =>
+      t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -306,7 +332,8 @@ export const AdminTests: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Configure test duration, marks, negative marking, assign questions, and publish with pre-flight validation.
+            Configure test duration, marks, negative marking, assign questions, and publish with
+            pre-flight validation.
           </p>
         </div>
 
@@ -326,7 +353,12 @@ export const AdminTests: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
             <Filter className="w-3.5 h-3.5 text-indigo-400" /> Filter Tests
           </span>
-          {(selectedExamId || selectedSubjectId || selectedChapterId || selectedSeriesId || selectedStatus || searchTerm) && (
+          {(selectedExamId ||
+            selectedSubjectId ||
+            selectedChapterId ||
+            selectedSeriesId ||
+            selectedStatus ||
+            searchTerm) && (
             <button
               onClick={() => {
                 setSelectedExamId('');
@@ -387,7 +419,10 @@ export const AdminTests: React.FC = () => {
               className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
             >
               <option value="">All Subjects</option>
-              {(selectedExamId ? subjects.filter(s => s.examId === selectedExamId) : subjects).map((s) => (
+              {(selectedExamId
+                ? subjects.filter((s) => s.examId === selectedExamId)
+                : subjects
+              ).map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
                 </option>
@@ -462,7 +497,9 @@ export const AdminTests: React.FC = () => {
                       <div>
                         <p className="font-bold text-white text-sm">{test.title}</p>
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
-                          <span className="text-indigo-400 font-semibold">{test.examTitle || test.examId}</span>
+                          <span className="text-indigo-400 font-semibold">
+                            {test.examTitle || test.examId}
+                          </span>
                           {test.subjectName && <span>• {test.subjectName}</span>}
                           {test.chapterName && <span>• {test.chapterName}</span>}
                         </div>
@@ -479,13 +516,15 @@ export const AdminTests: React.FC = () => {
                           <Clock className="w-3 h-3 text-slate-500" /> {test.durationMinutes} mins
                         </span>
                         <span className="text-slate-400">
-                          {test.totalMarks} Marks (+{test.totalMarks > 0 && test.totalQuestions > 0 ? (test.totalMarks / test.totalQuestions).toFixed(1) : '1'} / -{test.negativeMarking})
+                          {test.totalMarks} Marks (+
+                          {test.totalMarks > 0 && test.totalQuestions > 0
+                            ? (test.totalMarks / test.totalQuestions).toFixed(1)
+                            : '1'}{' '}
+                          / -{test.negativeMarking})
                         </span>
                       </div>
                     </td>
-                    <td className="p-4 font-bold text-indigo-400">
-                      {test.totalQuestions} Qs
-                    </td>
+                    <td className="p-4 font-bold text-indigo-400">{test.totalQuestions} Qs</td>
                     <td className="p-4">
                       {test.isPremium ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -705,7 +744,9 @@ export const AdminTests: React.FC = () => {
                     onChange={(e) => setTestType(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                   >
-                    <option value="full_mock">🎯 Full Mock Test (Multi-Subject Exam Simulation)</option>
+                    <option value="full_mock">
+                      🎯 Full Mock Test (Multi-Subject Exam Simulation)
+                    </option>
                     <option value="pyq">📜 Previous Year Paper (PYQ)</option>
                     <option value="topic">📚 Canonical Topic Test (Reusable)</option>
                     <option value="chapter_mock">Chapter Mock (Legacy)</option>
@@ -741,7 +782,8 @@ export const AdminTests: React.FC = () => {
                   Associated Examinations (Multi-Exam Reusability)
                 </label>
                 <p className="text-[11px] text-slate-400">
-                  Select all examinations where this test should appear. A single test can be reused across exams without duplicating content.
+                  Select all examinations where this test should appear. A single test can be reused
+                  across exams without duplicating content.
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {exams.map((ex) => {
@@ -753,7 +795,9 @@ export const AdminTests: React.FC = () => {
                         onClick={() => {
                           if (ex.id === examId) return;
                           setAssociatedExamIds((prev) =>
-                            prev.includes(ex.id) ? prev.filter((id) => id !== ex.id) : [...prev, ex.id]
+                            prev.includes(ex.id)
+                              ? prev.filter((id) => id !== ex.id)
+                              : [...prev, ex.id]
                           );
                         }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -889,7 +933,8 @@ export const AdminTests: React.FC = () => {
               <div>
                 <h4 className="text-sm font-bold text-white">{testToPublish.title}</h4>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Exam: {testToPublish.examTitle || testToPublish.examId} • Duration: {testToPublish.durationMinutes}m
+                  Exam: {testToPublish.examTitle || testToPublish.examId} • Duration:{' '}
+                  {testToPublish.durationMinutes}m
                 </p>
               </div>
 
@@ -907,7 +952,9 @@ export const AdminTests: React.FC = () => {
                         All Integrity Checks Passed!
                       </div>
                       <p className="text-[11px] text-emerald-300">
-                        This test meets all requirements: valid exam assignment, valid duration, total marks &gt; 0, and all assigned questions have complete options and verified answer keys.
+                        This test meets all requirements: valid exam assignment, valid duration,
+                        total marks &gt; 0, and all assigned questions have complete options and
+                        verified answer keys.
                       </p>
                     </div>
                   ) : (
@@ -982,10 +1029,13 @@ export const AdminTests: React.FC = () => {
               Archive Mock Test?
             </h3>
             <p className="text-xs text-slate-300 mt-2">
-              Are you sure you want to archive <span className="font-bold text-white">{testToArchive.title}</span>?
+              Are you sure you want to archive{' '}
+              <span className="font-bold text-white">{testToArchive.title}</span>?
             </p>
             <p className="text-[11px] text-slate-400 mt-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
-              Archived tests are removed from the student catalog and new attempts cannot be started. However, all existing student attempts, scores, and analytics are permanently preserved.
+              Archived tests are removed from the student catalog and new attempts cannot be
+              started. However, all existing student attempts, scores, and analytics are permanently
+              preserved.
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800 mt-4">
