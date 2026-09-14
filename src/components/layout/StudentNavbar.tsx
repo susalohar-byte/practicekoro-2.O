@@ -6,7 +6,6 @@ import { isStudentNavActive } from '@/lib/utils';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import {
-  
   ChevronDown,
   Crown,
   LogOut,
@@ -15,10 +14,22 @@ import {
   Settings as SettingsIcon,
   Check,
   Menu,
-  X
+  X,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
-export const StudentNavbar: React.FC = () => {
+export interface StudentNavbarProps {
+  onToggleMobileSidebar?: () => void;
+  onToggleCollapse?: () => void;
+  isSidebarCollapsed?: boolean;
+}
+
+export const StudentNavbar: React.FC<StudentNavbarProps> = ({
+  onToggleMobileSidebar,
+  onToggleCollapse,
+  isSidebarCollapsed = false,
+}) => {
   const { user, role, isPro, isAdmin, logout, switchDemoRole } = useAuth();
   const { exams, selectedExam, setSelectedExam } = useExam();
   const location = useLocation();
@@ -36,32 +47,79 @@ export const StudentNavbar: React.FC = () => {
     { label: 'Profile', path: '/profile' },
   ];
 
+  const getPageTitle = (path: string) => {
+    if (path.startsWith('/dashboard') || path === '/') return 'Dashboard';
+    if (path.startsWith('/exams')) return 'Exams Hub';
+    if (path.startsWith('/practice')) return 'Practice';
+    if (path.startsWith('/results')) return 'Results';
+    if (path.startsWith('/profile')) return 'Profile';
+    if (path.startsWith('/settings')) return 'Settings';
+    if (path.startsWith('/subscription')) return 'Pro Pass';
+    return 'Dashboard';
+  };
+
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand Logo & Exam Switcher */}
-          <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="flex items-center gap-2.5 group">
+          {/* Brand Logo, Sidebar Toggles & Breadcrumb */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile Sidebar Trigger Button */}
+            <button
+              type="button"
+              onClick={onToggleMobileSidebar}
+              className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              aria-label="Open side navigation"
+              title="Open Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Desktop Sidebar Collapse / Expand Toggle Button */}
+            {onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                className="hidden lg:flex p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                aria-label="Toggle sidebar width"
+              >
+                {isSidebarCollapsed ? (
+                  <PanelLeftOpen className="w-5 h-5" />
+                ) : (
+                  <PanelLeftClose className="w-5 h-5" />
+                )}
+              </button>
+            )}
+
+            {/* Mobile Brand Logo */}
+            <Link to="/dashboard" className="flex lg:hidden items-center gap-2 group">
               <img
                 src="/logo-icon-transparent.png"
                 alt="PracticeKoro"
-                className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl transition-transform group-hover:scale-105"
+                className="w-8 h-8 object-contain rounded-xl transition-transform group-hover:scale-105"
               />
-              <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight flex items-center">
+              <span className="font-black text-lg text-slate-900 tracking-tight flex items-center">
                 Practice<span className="text-blue-600">Koro</span>
               </span>
             </Link>
 
+            {/* Desktop Breadcrumb Header */}
+            <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 pl-1">
+              <span className="font-extrabold text-slate-900">Portal</span>
+              <span className="text-slate-300">/</span>
+              <span className="font-bold text-blue-600">{getPageTitle(location.pathname)}</span>
+            </div>
+
             {/* Exam Selector Pill */}
-            <div className="relative">
+            <div className="relative ml-1 sm:ml-2">
               <button
                 type="button"
                 onClick={() => setExamDropdownOpen(!examDropdownOpen)}
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200/80 text-slate-800 rounded-lg border border-slate-200 transition-colors"
               >
                 <span className="text-slate-500 font-normal">Exam:</span>
-                <span className="truncate max-w-[140px] font-bold">
+                <span className="truncate max-w-[130px] font-bold">
                   {selectedExam?.title || 'Select Exam'}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
@@ -98,14 +156,14 @@ export const StudentNavbar: React.FC = () => {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex lg:hidden xl:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive = isStudentNavActive(location.pathname, link.label);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     isActive
                       ? 'bg-blue-50 text-blue-700 font-bold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -149,7 +207,7 @@ export const StudentNavbar: React.FC = () => {
                 <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-200">
                   {user?.fullName?.charAt(0) || 'U'}
                 </div>
-                <div className="hidden lg:flex flex-col text-left">
+                <div className="hidden sm:flex flex-col text-left">
                   <span className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[100px]">
                     {user?.fullName || 'Aspirant'}
                   </span>
@@ -157,7 +215,7 @@ export const StudentNavbar: React.FC = () => {
                     {role}
                   </span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:block" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
               </button>
 
               {profileDropdownOpen && (
@@ -240,12 +298,13 @@ export const StudentNavbar: React.FC = () => {
               )}
             </div>
 
-            {/* Mobile menu hamburger toggle */}
+            {/* Mobile quick menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+              aria-label="Toggle exam switcher"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </button>
           </div>
         </div>
