@@ -23,6 +23,7 @@ export interface Exam {
   isActive: boolean;
   subjectsCount?: number;
   testsCount?: number;
+  totalVacancies?: number;
 }
 
 export interface Subject {
@@ -59,6 +60,8 @@ export interface TestSeries {
   isActive: boolean;
   createdAt?: string;
   examTitle?: string;
+  testCount?: number;
+  testsCount?: number;
 }
 
 export interface MockTest {
@@ -174,6 +177,9 @@ export interface TestAttempt {
   userId: string;
   testId: string;
   testTitle?: string;
+  examTitle?: string;
+  subjectName?: string;
+  chapterName?: string;
   status: 'in_progress' | 'completed' | 'abandoned';
   startTime: string;
   endTime?: string;

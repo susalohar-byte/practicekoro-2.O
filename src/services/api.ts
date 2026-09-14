@@ -42,7 +42,6 @@ import { parseQuestionsCsv } from '@/utils/csvParser';
 type ExamRow = Database['public']['Tables']['exams']['Row'];
 type SubjectRow = Database['public']['Tables']['subjects']['Row'];
 type ChapterRow = Database['public']['Tables']['chapters']['Row'];
-type TestSeriesRow = Database['public']['Tables']['test_series']['Row'];
 type TestRow = Database['public']['Tables']['tests']['Row'];
 type QuestionRow = Database['public']['Tables']['questions']['Row'];
 type AttemptRow = Database['public']['Tables']['test_attempts']['Row'];
@@ -186,7 +185,11 @@ export const api = {
       );
     }
     try {
-      let query = supabase.from('tests').select('*').eq('is_active', true).eq('status', 'published');
+      let query = supabase
+        .from('tests')
+        .select('*, exams(title), subjects(name), chapters(name), test_series(title)')
+        .eq('is_active', true)
+        .eq('status', 'published');
       if (chapterId) query = query.eq('chapter_id', chapterId);
       if (examId) query = query.eq('exam_id', examId);
       const { data, error } = await query.order('order_index', { ascending: true });
@@ -199,7 +202,7 @@ export const api = {
           (!chapterId || t.chapterId === chapterId)
         );
       }
-      return (data as TestRow[]).map((item) => ({
+      return data.map((item: any) => ({
         id: item.id,
         examId: item.exam_id,
         subjectId: item.subject_id ?? undefined,
@@ -218,6 +221,10 @@ export const api = {
         orderIndex: item.order_index,
         isActive: item.is_active,
         status: (item.status as 'draft' | 'published' | 'archived') || 'published',
+        examTitle: item.exams?.title,
+        subjectName: item.subjects?.name,
+        chapterName: item.chapters?.name,
+        testSeriesTitle: item.test_series?.title,
       }));
     } catch {
       return localTests.filter(t => 
@@ -818,7 +825,7 @@ export const api = {
 
   // Attempts History
   async getUserAttempts(userId: string): Promise<TestAttempt[]> {
-    // Merge any live session attempts with mock attempts
+    // Merge any live session attempts with mock attempts if not on Supabase
     const sessionAttempts = Object.values(localAttemptsStore)
       .filter((a) => a.attempt.userId === userId && a.attempt.status === 'completed')
       .map((a) => a.attempt);
@@ -832,31 +839,50 @@ export const api = {
     try {
       const { data, error } = await supabase
         .from('test_attempts')
-        .select('*')
+        .select(`
+          *,
+          tests (
+            title,
+            duration_minutes,
+            total_questions,
+            total_marks,
+            is_premium,
+            exams (title),
+            subjects (name),
+            chapters (name)
+          )
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) return MOCK_ATTEMPTS;
-      return (data as AttemptRow[]).map((d) => ({
-        id: d.id,
-        userId: d.user_id,
-        testId: d.test_id,
-        status: d.status,
-        startTime: d.start_time,
-        endTime: d.end_time ?? undefined,
-        timeSpentSeconds: d.time_spent_seconds,
-        score: Number(d.score),
-        totalMarks: Number(d.total_marks),
-        correctCount: d.correct_count,
-        wrongCount: d.wrong_count,
-        skippedCount: d.skipped_count,
-        accuracy: Number(d.accuracy),
-        rank: d.rank ?? undefined,
-        percentile: d.percentile ? Number(d.percentile) : undefined,
-        createdAt: d.created_at,
-      }));
+      if (error || !data || data.length === 0) return [];
+      return data.map((d: any) => {
+        const test = d.tests;
+        return {
+          id: d.id,
+          userId: d.user_id,
+          testId: d.test_id,
+          testTitle: test?.title || d.test_id,
+          examTitle: test?.exams?.title,
+          subjectName: test?.subjects?.name,
+          chapterName: test?.chapters?.name,
+          status: d.status,
+          startTime: d.start_time,
+          endTime: d.end_time ?? undefined,
+          timeSpentSeconds: d.time_spent_seconds,
+          score: Number(d.score),
+          totalMarks: Number(d.total_marks || test?.total_marks || 0),
+          correctCount: d.correct_count,
+          wrongCount: d.wrong_count,
+          skippedCount: d.skipped_count,
+          accuracy: Number(d.accuracy),
+          rank: d.rank ?? undefined,
+          percentile: d.percentile ? Number(d.percentile) : undefined,
+          createdAt: d.created_at,
+        };
+      });
     } catch {
-      return MOCK_ATTEMPTS;
+      return [];
     }
   },
 
@@ -879,7 +905,7 @@ export const api = {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) return MOCK_MISTAKES;
+      if (error || !data || data.length === 0) return [];
       return (data as unknown as Array<MistakeRow & { questions: Record<string, unknown> }>).map((d) => {
         const q = d.questions;
         return {
@@ -909,7 +935,7 @@ export const api = {
         };
       });
     } catch {
-      return MOCK_MISTAKES;
+      return [];
     }
   },
 
@@ -930,7 +956,7 @@ export const api = {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) return MOCK_BOOKMARKS;
+      if (error || !data || data.length === 0) return [];
       return (data as unknown as Array<BookmarkRow & { questions: Record<string, unknown> }>).map((d) => {
         const q = d.questions;
         return {
@@ -1747,27 +1773,35 @@ export const api = {
     return true;
   },
 
-  // Admin: Test Series
+  // Admin & Student: Test Series
   async getTestSeries(examId?: string): Promise<TestSeries[]> {
     if (!isSupabaseConfigured) {
       return localTestSeries
         .filter(s => !examId || s.examId === examId)
         .map(s => {
           const exam = localExams.find(e => e.id === s.examId);
-          return { ...s, examTitle: exam?.title };
+          const count = localTests.filter(t => t.testSeriesId === s.id).length;
+          return { ...s, examTitle: exam?.title, testCount: count, testsCount: count };
         });
     }
     try {
-      let query = supabase.from('test_series').select('*').order('order_index', { ascending: true });
+      let query = supabase.from('test_series').select('*, exams(title), tests(count)').order('order_index', { ascending: true });
       if (examId) query = query.eq('exam_id', examId);
       const { data, error } = await query;
 
-      if (error || !data || data.length === 0) {
-        return localTestSeries.filter(s => !examId || s.examId === examId);
+      if (error || !data) {
+        return localTestSeries
+          .filter(s => !examId || s.examId === examId)
+          .map(s => {
+            const exam = localExams.find(e => e.id === s.examId);
+            const count = localTests.filter(t => t.testSeriesId === s.id).length;
+            return { ...s, examTitle: exam?.title, testCount: count, testsCount: count };
+          });
       }
 
-      return (data as TestSeriesRow[]).map(item => {
+      return (data as any[]).map(item => {
         const exam = localExams.find(e => e.id === item.exam_id);
+        const count = Array.isArray(item.tests) && item.tests[0]?.count != null ? Number(item.tests[0].count) : 0;
         return {
           id: item.id,
           examId: item.exam_id,
@@ -1778,11 +1812,19 @@ export const api = {
           orderIndex: item.order_index,
           isActive: item.is_active,
           createdAt: item.created_at,
-          examTitle: exam?.title,
+          examTitle: item.exams?.title || exam?.title,
+          testCount: count,
+          testsCount: count,
         };
       });
     } catch {
-      return localTestSeries.filter(s => !examId || s.examId === examId);
+      return localTestSeries
+        .filter(s => !examId || s.examId === examId)
+        .map(s => {
+          const exam = localExams.find(e => e.id === s.examId);
+          const count = localTests.filter(t => t.testSeriesId === s.id).length;
+          return { ...s, examTitle: exam?.title, testCount: count, testsCount: count };
+        });
     }
   },
 
