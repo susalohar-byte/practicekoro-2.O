@@ -12,9 +12,12 @@ export const AppLayout: React.FC = () => {
       </main>
       <footer className="hidden md:block border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <img src="/logo-transparent.png" alt="PracticeKoro" className="h-6 w-auto object-contain" />
-            <p className="font-medium text-slate-600">
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-icon-transparent.png" alt="PracticeKoro" className="w-6 h-6 object-contain" />
+            <span className="font-extrabold text-sm text-slate-800 tracking-tight">
+              Practice<span className="text-brand-600">Koro</span>
+            </span>
+            <p className="font-medium text-slate-600 ml-1">
               © {new Date().getFullYear()} PracticeKoro. Focused Mock Test & Practice Platform.
             </p>
           </div>

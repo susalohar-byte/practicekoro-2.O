@@ -193,10 +193,13 @@ export const Landing: React.FC = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
               <img
-                src="/logo-transparent.png"
+                src="/logo-icon-transparent.png"
                 alt="PracticeKoro"
-                className="h-8 sm:h-9 w-auto object-contain"
+                className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl transition-transform group-hover:scale-105"
               />
+              <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight flex items-center">
+                Practice<span className="text-brand-600">Koro</span>
+              </span>
             </Link>
 
             {/* Desktop Navigation Links */}
