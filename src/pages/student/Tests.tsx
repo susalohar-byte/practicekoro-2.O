@@ -202,7 +202,7 @@ export const Tests: React.FC = () => {
                   </p>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-[10px] font-semibold text-slate-500 bg-white/80 px-2 py-0.5 rounded border border-slate-200">
-                      3 Mock Tests Available
+                      {isSelected ? `${tests.length} ${tests.length === 1 ? 'Mock Test' : 'Mock Tests'} Available` : 'Chapter Tests'}
                     </span>
                   </div>
                 </div>

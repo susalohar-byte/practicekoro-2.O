@@ -2,16 +2,34 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
-import { Shield, Mail, ArrowLeft } from 'lucide-react';
+import { Shield, Mail, ArrowLeft, AlertCircle } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
+    if (!email) return;
+    setLoading(true);
+    setError(null);
+    try {
+      if (isSupabaseConfigured) {
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/login`,
+        });
+        if (resetErr) {
+          console.error('Password reset error:', resetErr);
+        }
+      }
       setSubmitted(true);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send reset instructions');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,6 +69,13 @@ export const ForgotPassword: React.FC = () => {
             </div>
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
+              {error && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span>{error}</span>
+                </div>
+              )}
+
               <Input
                 label="Email Address"
                 type="email"
@@ -61,7 +86,7 @@ export const ForgotPassword: React.FC = () => {
                 required
               />
 
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" isLoading={loading}>
                 Send Reset Link
               </Button>
 
