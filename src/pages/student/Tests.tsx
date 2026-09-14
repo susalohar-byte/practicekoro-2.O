@@ -16,8 +16,7 @@ import {
   ChevronRight,
   Lock,
   Play,
-  CheckCircle,
-  Crown
+  CheckCircle
 } from 'lucide-react';
 import type { Subject, Chapter, MockTest } from '@/types';
 
@@ -35,7 +34,7 @@ export const Tests: React.FC = () => {
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
 
   const [tests, setTests] = useState<MockTest[]>([]);
-
+  const [selectedLockedTest, setSelectedLockedTest] = useState<MockTest | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   // Load Subjects when exam changes
@@ -110,6 +109,7 @@ export const Tests: React.FC = () => {
   const handleTestClick = (test: MockTest) => {
     const accessible = hasAccessToTest(test.isPremium);
     if (!accessible) {
+      setSelectedLockedTest(test);
       setShowSubscriptionModal(true);
     } else {
       navigate(`/tests/${test.id}`);
@@ -307,38 +307,53 @@ export const Tests: React.FC = () => {
 
 
 
-      {/* SUBSCRIPTION PROMPT MODAL (ONE SUBSCRIPTION = ALL PREMIUM TESTS) */}
+      {/* PREMIUM TEST LOCK MODAL (PART A: NON-PUNITIVE LOCK UX) */}
       {showSubscriptionModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3">
-              <Crown className="w-6 h-6 fill-amber-500 text-amber-600" />
+            <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3 border border-amber-200">
+              <Lock className="w-6 h-6 text-amber-600" />
             </div>
 
-            <h3 className="text-lg font-black text-slate-900">
-              PracticeKoro Pro Pass
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+              🔒 Premium Mock Test
+            </span>
+
+            <h3 className="text-lg font-black text-slate-900 mt-2">
+              {selectedLockedTest?.title || 'Unlock Full Mock Test'}
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              One active subscription unlocks ALL Premium Mock Tests across all exams. No individual test purchasing required!
+            <p className="text-xs text-slate-500 mt-0.5">
+              {selectedExam?.title} {selectedChapter ? `• ${selectedChapter.name}` : ''}
             </p>
 
-            <div className="my-5 p-4 bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-xl border border-amber-200 text-left space-y-2">
+            <div className="my-5 p-4 bg-gradient-to-br from-amber-50 to-orange-50/60 rounded-xl border border-amber-200 text-left space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900">1-Year All-Access Pass</span>
-                <span className="text-base font-black text-amber-700">₹299 <span className="text-xs font-normal text-slate-400 line-through">₹999</span></span>
+                <div>
+                  <span className="text-xs font-bold text-slate-900 block">PracticeKoro Pro Pass</span>
+                  <span className="text-[11px] text-slate-500">Universal All-Access Pass</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-lg font-black text-amber-700 block">₹299</span>
+                  <span className="text-[10px] font-semibold text-slate-500">/ 365 Days</span>
+                </div>
               </div>
+
+              <p className="text-xs text-slate-700 leading-relaxed pt-1 border-t border-amber-200/60">
+                Unlock this and every other premium mock test with Pro Pass. No individual test purchases required.
+              </p>
+
               <ul className="text-[11px] text-slate-700 space-y-1 pt-1">
                 <li className="flex items-center gap-1.5">
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  Unlimited access to ALL Premium Mock Tests
+                  Access all premium mock tests & test series
                 </li>
                 <li className="flex items-center gap-1.5">
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  Mistakes Notebook & Smart Re-attempts
+                  Mistakes Notebook & detailed bilingual solutions
                 </li>
                 <li className="flex items-center gap-1.5">
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  State-level Rank & Accuracy Analytics
+                  Unlimited re-attempts across all exams
                 </li>
               </ul>
             </div>
@@ -349,10 +364,10 @@ export const Tests: React.FC = () => {
                 className="w-full font-bold"
                 onClick={() => {
                   setShowSubscriptionModal(false);
-                  navigate('/profile');
+                  navigate('/subscription');
                 }}
               >
-                Upgrade to Pro Pass (₹299/yr)
+                Get Pro Pass — ₹299
               </Button>
               <Button
                 variant="ghost"

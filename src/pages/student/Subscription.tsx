@@ -16,7 +16,9 @@ import {
   AlertCircle,
   Receipt,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Lock,
+  RefreshCw
 } from 'lucide-react';
 import { openRazorpayCheckout } from '@/utils/razorpay';
 import type { Payment, SubscriptionPlan } from '@/types';
@@ -29,9 +31,12 @@ export const Subscription: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
 
-  // Payment states
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed' | 'cancelled'>('idle');
+  // Payment states: idle | preparing | processing | success | failed | cancelled | delayed
+  const [paymentStatus, setPaymentStatus] = useState<
+    'idle' | 'preparing' | 'processing' | 'success' | 'failed' | 'cancelled' | 'delayed'
+  >('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
   const [successInfo, setSuccessInfo] = useState<{
     planTitle: string;
     expiresAt: string;
@@ -53,26 +58,37 @@ export const Subscription: React.FC = () => {
     }
   }, [user, paymentStatus]);
 
+  const activeSub = subscriptionDetails?.isActive;
+  const isExpired = subscriptionDetails?.status === 'expired' || (!activeSub && subscriptionDetails?.hasSubscription);
+  const daysLeft = subscriptionDetails?.daysRemaining ?? 0;
+
   const handleInitiateCheckout = async (plan: SubscriptionPlan) => {
     if (!user) {
       navigate('/login', { state: { from: { pathname: '/subscription' } } });
       return;
     }
 
-    setPaymentStatus('processing');
+    // Prevent duplicate clicks
+    if (paymentStatus === 'preparing' || paymentStatus === 'processing') {
+      return;
+    }
+
+    setPaymentStatus('preparing');
     setErrorMessage(null);
 
     try {
       // 1. Create order on server (authoritative database pricing enforced)
       const order = await api.createRazorpayOrder(plan.id);
 
+      setPaymentStatus('processing');
+
       // 2. Launch Razorpay Checkout Modal
       const checkoutResult = await openRazorpayCheckout({
         key: order.keyId,
-        amount: order.amount * 100, // paise
+        amount: order.amount * 100, // in paise
         currency: order.currency,
         name: 'PracticeKoro',
-        description: `${plan.title} (All-Access Pass)`,
+        description: `${plan.title} (All-Access Pro Pass)`,
         order_id: order.orderId,
         prefill: {
           name: user.fullName,
@@ -102,20 +118,17 @@ export const Subscription: React.FC = () => {
               setPaymentStatus('success');
               await refreshSubscription();
             } else {
-              setErrorMessage('Payment verification returned incomplete. Please contact support.');
-              setPaymentStatus('failed');
+              setPaymentStatus('delayed');
             }
           } catch (verifErr: any) {
             console.error('Payment verification failed:', verifErr);
-            setErrorMessage(verifErr.message || 'Signature verification failed.');
+            setErrorMessage(verifErr.message || 'Verification could not be completed.');
             setPaymentStatus('failed');
           }
         },
         modal: {
           ondismiss: () => {
-            if (paymentStatus === 'processing') {
-              setPaymentStatus('cancelled');
-            }
+            setPaymentStatus((prev) => (prev === 'processing' || prev === 'preparing' ? 'cancelled' : prev));
           },
         },
       });
@@ -131,42 +144,73 @@ export const Subscription: React.FC = () => {
     }
   };
 
-  const activeSub = subscriptionDetails?.isActive;
-  const daysLeft = subscriptionDetails?.daysRemaining ?? 0;
+  const handleManualStatusCheck = async () => {
+    setCheckingStatus(true);
+    try {
+      await refreshSubscription();
+      if (subscriptionDetails?.isActive) {
+        setPaymentStatus('success');
+      }
+    } catch (err) {
+      console.error('Error refreshing subscription status:', err);
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
+  // Primary plan reference
+  const activePlan = selectedPlan || plans.find((p) => p.id === 'pro_1_year') || plans[0] || {
+    id: 'pro_1_year',
+    title: '1-Year All-Access Pro Pass',
+    price: 299,
+    durationDays: 365,
+    description: 'Universal mock test access across all West Bengal competitive exams.',
+    features: [
+      'Unlock all premium mock tests',
+      'Access every premium test series',
+      'Practice across supported exams',
+      'Re-attempt tests whenever available',
+      'Review detailed solutions and analysis',
+      'Mistakes Notebook integration for focused revision',
+    ],
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header Banner */}
-      <div className="text-center max-w-2xl mx-auto space-y-3">
+      {/* =========================================================================
+          HERO SECTION (PART B)
+          ========================================================================= */}
+      <div className="text-center max-w-3xl mx-auto space-y-3">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
           <Crown className="w-4 h-4 fill-amber-500 text-amber-600" />
-          <span>ALL-ACCESS PRO PASS</span>
+          <span>ONE PRO PASS • ALL PREMIUM MOCK TESTS</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          One Subscription. Universal Mock Test Access.
+        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          Practice More. Improve Faster.
         </h1>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          PracticeKoro does NOT sell mock tests individually. Get one active All-Access Pro Pass
-          and unlock <strong>every premium mock test</strong> across WBP Constable, Kolkata Police SI, WBCS, and WBPSC Clerkship.
+        <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Unlock every premium mock test and practice without limits across WBP Constable, Kolkata Police SI, WBCS, and WBPSC Clerkship.
         </p>
       </div>
 
-      {/* Active Subscription Status Banner */}
+      {/* =========================================================================
+          ACTIVE SUBSCRIPTION STATUS CARD (PART E)
+          ========================================================================= */}
       {activeSub && (
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg space-y-4">
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Badge variant="premium" className="bg-white/20 text-white border-white/30 gap-1 font-bold">
                   <Sparkles className="w-3.5 h-3.5" />
-                  ACTIVE MEMBERSHIP
+                  PRO PASS ACTIVE
                 </Badge>
-                <span className="text-xs text-amber-100 font-medium">
+                <span className="text-xs text-amber-100 font-semibold">
                   {daysLeft} Days Remaining
                 </span>
               </div>
-              <h2 className="text-xl font-black">
-                {subscriptionDetails?.planTitle || 'PracticeKoro Pro Pass'}
+              <h2 className="text-xl sm:text-2xl font-black">
+                {subscriptionDetails?.planTitle || 'PracticeKoro All-Access Pro Pass'}
               </h2>
               <p className="text-xs text-amber-100 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
@@ -179,124 +223,260 @@ export const Subscription: React.FC = () => {
                     })
                   : 'Active'}
               </p>
+              <p className="text-xs text-amber-100/90 pt-1">
+                Universal access is active. All premium mock tests and test series are unlocked.
+              </p>
             </div>
 
-            <div className="flex flex-col sm:items-end gap-2">
+            <div className="flex flex-col sm:items-end gap-2.5 shrink-0">
+              <Button
+                variant="primary"
+                size="md"
+                className="bg-white text-slate-900 hover:bg-slate-100 font-black text-xs shadow-md"
+                onClick={() => navigate('/tests')}
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+              >
+                Start Practicing
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-white text-amber-800 hover:bg-amber-50 border-white font-bold text-xs"
-                onClick={() => {
-                  if (selectedPlan) handleInitiateCheckout(selectedPlan);
-                }}
+                className="bg-white/10 text-white hover:bg-white/20 border-white/40 font-bold text-xs"
+                disabled={paymentStatus === 'preparing' || paymentStatus === 'processing'}
+                onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
                 leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
               >
-                Extend Pass (+365 Days)
+                {paymentStatus === 'preparing' ? 'Preparing checkout…' : `Extend Pass (+365 Days) — ₹${activePlan.price}`}
               </Button>
-              <span className="text-[11px] text-amber-100">
-                Rule: Renewal extends seamlessly from existing expiry date.
+              <span className="text-[11px] text-amber-100/80">
+                Seamless renewal: adds 365 days to your existing expiry date.
               </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Plan Card Showcase */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-        {plans.map((plan) => {
-          const isPrimary = plan.id === 'pro_1_year';
-          return (
-            <Card
-              key={plan.id}
-              className={`p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all ${
-                isPrimary
-                  ? 'border-2 border-brand-600 shadow-xl ring-2 ring-brand-500/10'
-                  : 'border border-slate-200 shadow-sm'
-              }`}
-            >
-              {isPrimary && (
-                <div className="absolute top-0 right-0 bg-gradient-to-l from-brand-600 to-indigo-600 text-white text-[11px] font-black uppercase tracking-wider px-4 py-1.5 rounded-bl-xl shadow-sm">
-                  Recommended • Best Value
+      {/* =========================================================================
+          EXPIRED SUBSCRIPTION STATUS CARD (PART E)
+          ========================================================================= */}
+      {isExpired && !activeSub && (
+        <div className="p-5 sm:p-6 rounded-2xl bg-amber-50 border border-amber-300 text-slate-900 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Badge variant="warning" className="gap-1 font-bold">
+                <Lock className="w-3 h-3" />
+                PRO PASS EXPIRED
+              </Badge>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900">
+              Renew your Pro Pass to unlock premium mock tests.
+            </h3>
+            <p className="text-xs text-slate-600">
+              Your previous Pro Pass has expired. Re-activate your 365-day universal access to all premium tests.
+            </p>
+          </div>
+          <Button
+            variant="pro"
+            size="md"
+            className="font-bold text-xs shrink-0 self-stretch sm:self-auto shadow-sm"
+            disabled={paymentStatus === 'preparing' || paymentStatus === 'processing'}
+            onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
+            leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+          >
+            {paymentStatus === 'preparing' ? 'Preparing secure checkout…' : `Renew Pro Pass — ₹${activePlan.price}`}
+          </Button>
+        </div>
+      )}
+
+      {/* =========================================================================
+          FEEDBACK ALERTS: CANCELLED & DELAYED STATES (PART D)
+          ========================================================================= */}
+      {paymentStatus === 'cancelled' && (
+        <div className="p-4 rounded-xl bg-slate-100 border border-slate-300 text-slate-800 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-slate-500 shrink-0" />
+            <span>Payment cancelled. Your Pro Pass has not been activated. You can try again whenever you are ready.</span>
+          </div>
+          <button
+            onClick={() => setPaymentStatus('idle')}
+            className="font-bold text-brand-600 hover:text-brand-800 text-xs shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {paymentStatus === 'delayed' && (
+        <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4 text-indigo-600 shrink-0 animate-spin" />
+            <span>Payment received. We're confirming your Pro Pass with the server. This usually takes just a few seconds.</span>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            isLoading={checkingStatus}
+            onClick={handleManualStatusCheck}
+            className="shrink-0 text-xs font-bold"
+          >
+            Check Status
+          </Button>
+        </div>
+      )}
+
+      {/* =========================================================================
+          PRIMARY PRO PASS PRICING & BENEFIT SHOWCASE (PART B)
+          ========================================================================= */}
+      <div className="max-w-2xl mx-auto">
+        <Card className="p-6 sm:p-8 border-2 border-brand-600 shadow-xl ring-4 ring-brand-500/10 rounded-2xl relative overflow-hidden">
+          <div className="space-y-6">
+            {/* Header / Badge */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold shrink-0 border border-brand-100">
+                  <Crown className="w-6 h-6 fill-brand-500 text-brand-600" />
                 </div>
-              )}
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold">
-                    <Crown className="w-5 h-5 fill-brand-500 text-brand-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900">{plan.title}</h3>
-                    <p className="text-xs text-slate-500">Validity: {plan.durationDays} Days</p>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-600 mt-3 leading-relaxed">
-                  {plan.description}
-                </p>
-
-                {/* Price Display */}
-                <div className="my-6 p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-baseline justify-between">
-                  <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-black text-slate-900">₹{plan.price}</span>
-                      {plan.originalPrice && (
-                        <span className="text-sm text-slate-400 line-through">
-                          ₹{plan.originalPrice}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] font-semibold text-emerald-600">
-                      All-Inclusive • One-Time Payment
-                    </span>
-                  </div>
-
-                  {plan.originalPrice && (
-                    <Badge variant="success" className="font-bold text-xs">
-                      SAVE {Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100)}%
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Features List */}
-                <div className="space-y-3 pt-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    What's Included:
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">
+                    {activePlan.title}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Validity: {activePlan.durationDays} Days (1 Full Year)
                   </p>
-                  <ul className="space-y-2.5 text-xs text-slate-700">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span className="leading-tight">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
+              <Badge variant="premium" className="font-bold text-xs shrink-0">
+                ALL-ACCESS PASS
+              </Badge>
+            </div>
 
-              {/* Action Button */}
-              <div className="mt-8 pt-4 border-t border-slate-100 space-y-2">
-                <Button
-                  variant={isPrimary ? 'pro' : 'primary'}
-                  size="lg"
-                  className="w-full font-black text-sm shadow-md"
-                  isLoading={paymentStatus === 'processing'}
-                  onClick={() => handleInitiateCheckout(plan)}
-                  leftIcon={activeSub ? <RotateCcw className="w-4 h-4" /> : <Zap className="w-4 h-4 fill-current" />}
-                >
-                  {activeSub ? `Extend Pass (₹${plan.price})` : `Get Pro Pass (₹${plan.price})`}
-                </Button>
-                <p className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-emerald-600" />
-                  Secure 256-bit encrypted transaction via Razorpay
+            {/* Pricing Callout (NO DARK PATTERNS, NO CROSSED-OUT FAKE PRICES) */}
+            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-baseline justify-between">
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900">₹{activePlan.price}</span>
+                  <span className="text-xs font-bold text-slate-500">/ 365 Days</span>
+                </div>
+                <p className="text-xs font-semibold text-emerald-700 mt-1">
+                  Transparent All-Inclusive Pricing • Single One-Time Payment
                 </p>
               </div>
-            </Card>
-          );
-        })}
+              <span className="text-xs font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border border-brand-100">
+                Universal Access
+              </span>
+            </div>
+
+            {/* Value Proposition Box */}
+            <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/80 text-xs text-slate-800 space-y-1">
+              <p className="font-bold text-amber-900">One Pass. Everything Premium.</p>
+              <p className="text-slate-600 leading-relaxed">
+                Instead of selling individual tests, one ₹299 Pro Pass unlocks the entire premium mock-test library for 365 days.
+              </p>
+            </div>
+
+            {/* Real Benefits List (PART B) */}
+            <div className="space-y-3 pt-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Included in Your Pro Pass:
+              </p>
+              <ul className="space-y-2.5 text-xs text-slate-700">
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight font-medium">Unlock all premium mock tests</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight font-medium">Access every premium test series</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight font-medium">Practice across supported exams (WBP Constable, KP SI, WBCS, WBPSC)</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight font-medium">Re-attempt tests whenever available</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight font-medium">Review detailed solutions and analysis</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight font-medium">Automated Mistakes Notebook for targeted error correction</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Primary CTA & Duplicate Click Protection (PART D) */}
+            <div className="pt-2 space-y-2.5">
+              <Button
+                variant="pro"
+                size="lg"
+                className="w-full font-black text-sm shadow-md py-3.5"
+                disabled={paymentStatus === 'preparing' || paymentStatus === 'processing'}
+                isLoading={paymentStatus === 'preparing' || paymentStatus === 'processing'}
+                onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
+                leftIcon={activeSub ? <RotateCcw className="w-4 h-4" /> : <Zap className="w-4 h-4 fill-current" />}
+              >
+                {paymentStatus === 'preparing'
+                  ? 'Preparing secure checkout…'
+                  : activeSub
+                  ? `Extend Pass (+365 Days) — ₹${activePlan.price}`
+                  : `Get Pro Pass — ₹${activePlan.price}`}
+              </Button>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Payment Feedback Modals */}
+      {/* =========================================================================
+          LIGHTWEIGHT TRUST SECTION (PART B)
+          ========================================================================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+            <Shield className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold text-slate-900">Secure Payment</h4>
+            <p className="text-[11px] text-slate-500 leading-tight">256-bit encrypted checkout via Razorpay.</p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center shrink-0">
+            <Zap className="w-5 h-5 text-brand-600 fill-brand-600" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold text-slate-900">Instant Access</h4>
+            <p className="text-[11px] text-slate-500 leading-tight">Immediate server-side verification and activation.</p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold text-slate-900">365-Day Access</h4>
+            <p className="text-[11px] text-slate-500 leading-tight">Full 1-year coverage from purchase date.</p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+            <Crown className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold text-slate-900">No Per-Test Fees</h4>
+            <p className="text-[11px] text-slate-500 leading-tight">Zero individual test purchases required.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          PAYMENT RESULT MODALS: SUCCESS & FAILURE (PART D)
+          ========================================================================= */}
       {paymentStatus === 'success' && successInfo && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -306,7 +486,7 @@ export const Subscription: React.FC = () => {
 
             <div className="space-y-1">
               <h3 className="text-xl font-black text-slate-900">
-                {successInfo.isRenewal ? 'Pass Extended Successfully!' : 'Welcome to Pro Pass!'}
+                {successInfo.isRenewal ? 'Pass Extended Successfully!' : 'Pro Pass Activated 🎉'}
               </h3>
               <p className="text-xs text-slate-600">
                 Your payment was verified by the server. All premium tests are now fully unlocked.
@@ -321,6 +501,10 @@ export const Subscription: React.FC = () => {
               <div className="flex justify-between">
                 <span className="text-slate-500">Status:</span>
                 <Badge variant="success">Active</Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Access Period:</span>
+                <span className="font-bold text-slate-900">365 Days</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">New Expiry:</span>
@@ -344,7 +528,7 @@ export const Subscription: React.FC = () => {
                 }}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                Start Practicing Premium Tests
+                Start Practicing
               </Button>
             </div>
           </div>
@@ -353,15 +537,15 @@ export const Subscription: React.FC = () => {
 
       {paymentStatus === 'failed' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
               <AlertCircle className="w-8 h-8" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-slate-900">Payment Failed</h3>
+              <h3 className="text-lg font-black text-slate-900">Payment Not Completed</h3>
               <p className="text-xs text-slate-600">
-                {errorMessage || 'The payment could not be completed or verified.'}
+                {errorMessage || 'Your subscription was not activated. You can try again.'}
               </p>
             </div>
 
@@ -386,19 +570,9 @@ export const Subscription: React.FC = () => {
         </div>
       )}
 
-      {paymentStatus === 'cancelled' && (
-        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between">
-          <span>Checkout was cancelled. You can retry at any time.</span>
-          <button
-            onClick={() => setPaymentStatus('idle')}
-            className="font-bold underline ml-2"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      {/* Payment History Section */}
+      {/* =========================================================================
+          PAYMENT HISTORY SECTION
+          ========================================================================= */}
       <div className="pt-6 border-t border-slate-200 space-y-4">
         <div className="flex items-center justify-between">
           <div>

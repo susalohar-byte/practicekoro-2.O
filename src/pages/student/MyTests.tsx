@@ -142,7 +142,7 @@ export const MyTests: React.FC = () => {
           </p>
         </div>
 
-        {/* Pro Pass Status Pill or CTA */}
+        {/* Pro Pass Status Pill or CTA (PART E) */}
         {activeSub ? (
           <div className="inline-flex items-center gap-2 p-2 px-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 shadow-xs">
             <Crown className="w-4 h-4 fill-amber-500 text-amber-600 shrink-0" />
@@ -151,7 +151,7 @@ export const MyTests: React.FC = () => {
               <span className="text-slate-500 ml-1.5">({daysRemaining}d left)</span>
             </div>
             <Link
-              to="/profile"
+              to="/subscription"
               className="text-[11px] font-bold text-brand-600 hover:text-brand-700 ml-2 border-l border-amber-200 pl-2"
             >
               Details
@@ -161,11 +161,11 @@ export const MyTests: React.FC = () => {
           <Button
             size="sm"
             variant="pro"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/subscription')}
             leftIcon={<Crown className="w-3.5 h-3.5 fill-white" />}
             className="font-extrabold text-xs shadow-xs self-start sm:self-auto"
           >
-            Upgrade to Pro Pass (₹299/yr)
+            Get Pro Pass — ₹299
           </Button>
         )}
       </div>

@@ -21,6 +21,7 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
 
   const activeSub = subscriptionDetails?.isActive || isPro;
+  const isExpired = subscriptionDetails?.status === 'expired' || (!activeSub && !!subscriptionDetails?.hasSubscription);
   const daysRemaining = subscriptionDetails?.daysRemaining ?? (activeSub ? 365 : 0);
 
   return (
@@ -41,6 +42,10 @@ export const Profile: React.FC = () => {
                   <Badge variant="premium" className="gap-1">
                     <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
                     PRO PASS ACTIVE
+                  </Badge>
+                ) : isExpired ? (
+                  <Badge variant="warning" className="gap-1">
+                    PRO PASS EXPIRED
                   </Badge>
                 ) : (
                   <Badge variant="default">FREE TIER</Badge>
@@ -130,6 +135,32 @@ export const Profile: React.FC = () => {
               </div>
             </div>
           </Card>
+        ) : isExpired ? (
+          <Card className="p-6 bg-amber-50 border border-amber-300 text-slate-900 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="warning" className="gap-1 font-bold">
+                    PRO PASS EXPIRED
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-black text-slate-900 pt-1">
+                  Pro Pass Expired
+                </h3>
+                <p className="text-xs text-slate-600">
+                  Renew your Pro Pass to unlock premium mock tests.
+                </p>
+              </div>
+              <Button
+                variant="pro"
+                size="md"
+                onClick={() => navigate('/subscription')}
+                className="font-bold text-xs shrink-0 shadow-sm"
+              >
+                Renew Pro Pass — ₹299
+              </Button>
+            </div>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {plans.map((plan) => (
@@ -146,14 +177,9 @@ export const Profile: React.FC = () => {
                   <h3 className="text-base font-bold text-slate-900">{plan.title}</h3>
                   <p className="text-xs text-slate-500 mt-1">{plan.description}</p>
 
-                  <div className="my-4 flex items-baseline gap-2">
+                  <div className="my-4 flex items-baseline gap-1.5">
                     <span className="text-2xl font-black text-slate-900">₹{plan.price}</span>
-                    {plan.originalPrice && (
-                      <span className="text-xs text-slate-400 line-through">
-                        ₹{plan.originalPrice}
-                      </span>
-                    )}
-                    <span className="text-xs font-semibold text-emerald-600">
+                    <span className="text-xs font-semibold text-slate-500">
                       /{plan.durationDays} days
                     </span>
                   </div>
@@ -175,7 +201,7 @@ export const Profile: React.FC = () => {
                     onClick={() => navigate('/subscription')}
                     leftIcon={<Zap className="w-3.5 h-3.5" />}
                   >
-                    Unlock with Pro Pass
+                    Get Pro Pass — ₹{plan.price}
                   </Button>
                 </div>
               </Card>

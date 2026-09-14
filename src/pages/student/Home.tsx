@@ -713,11 +713,11 @@ export const Home: React.FC = () => {
                         <Button
                           size="sm"
                           variant="pro"
-                          onClick={() => navigate('/profile')}
+                          onClick={() => navigate('/subscription')}
                           leftIcon={<Crown className="w-3.5 h-3.5 fill-white" />}
                           className="font-bold text-xs"
                         >
-                          Unlock Pro
+                          Get Pro Pass
                         </Button>
                       ) : (
                         <Button
@@ -909,7 +909,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* =========================================================================
-          SECTION 8: PRO PASS CONVERSION / STATUS
+          SECTION 8: PRO PASS CONVERSION / STATUS (PART F)
           ========================================================================= */}
       {!isPro ? (
         <div className="rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-5 sm:p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
@@ -920,21 +920,21 @@ export const Home: React.FC = () => {
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-extrabold uppercase tracking-wider">
                 <Zap className="w-3 h-3 fill-white" />
-                One Pass • All Exams
+                One pass. All premium tests.
               </div>
               <h3 className="text-base sm:text-lg font-black">
-                PracticeKoro All-Access Pro Pass — ₹299 / 365 Days
+                Unlock Every Premium Mock Test — ₹299 / 365 days
               </h3>
               <p className="text-xs text-amber-100 max-w-2xl leading-relaxed">
-                Unlock all premium mock tests, complete bilingual solution keys, and targeted error notebooks across WBCS, WBP Constable, WBPSC, and Primary TET.
+                PracticeKoro All-Access Pro Pass: One pass. All premium tests. Unlock all premium mock tests, complete bilingual solution keys, and targeted error notebooks across WBCS, WBP Constable, and WBPSC Clerkship.
               </p>
             </div>
           </div>
           <Button
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/subscription')}
             className="bg-white text-slate-900 hover:bg-slate-100 font-black text-xs sm:text-sm whitespace-nowrap shadow-md shrink-0 self-stretch sm:self-auto"
           >
-            Get Pro Pass ₹299
+            Get Pro Pass
           </Button>
         </div>
       ) : (
@@ -953,12 +953,12 @@ export const Home: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
-                Universal access unlocked to all premium tests, questions, and solution keys.
+                Your premium access is active. Universal access unlocked to all premium tests.
               </p>
             </div>
           </div>
           <Link
-            to="/profile"
+            to="/subscription"
             className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 shrink-0"
           >
             <span>Subscription Details</span>
