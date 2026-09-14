@@ -30,6 +30,7 @@ import type { TestAttempt } from '@/types';
 
 type FilterTab = 'all' | 'in_progress' | 'completed';
 type SortOption = 'recent' | 'highest_score';
+type TestTypeFilter = 'all' | 'full_mock' | 'pyq' | 'topic';
 
 export const MyTests: React.FC = () => {
   const { user } = useAuth();
@@ -41,6 +42,7 @@ export const MyTests: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [testTypeFilter, setTestTypeFilter] = useState<TestTypeFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('recent');
 
   const loadAttempts = useCallback(async () => {
@@ -113,6 +115,19 @@ export const MyTests: React.FC = () => {
       list = list.filter((a) => a.status === 'completed');
     }
 
+    if (testTypeFilter === 'full_mock') {
+      list = list.filter((a) => a.testType === 'full_mock');
+    } else if (testTypeFilter === 'pyq') {
+      list = list.filter((a) => a.testType === 'pyq');
+    } else if (testTypeFilter === 'topic') {
+      list = list.filter(
+        (a) =>
+          a.testType === 'topic' ||
+          a.testType === 'chapter_mock' ||
+          a.testType === 'subject_mock'
+      );
+    }
+
     if (sortBy === 'recent') {
       return [...list].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -122,10 +137,18 @@ export const MyTests: React.FC = () => {
     }
 
     return list;
-  }, [attemptsWithMeta, activeTab, sortBy]);
+  }, [attemptsWithMeta, activeTab, testTypeFilter, sortBy]);
 
   const inProgressCount = attempts.filter((a) => a.status === 'in_progress').length;
   const completedCount = attempts.filter((a) => a.status === 'completed').length;
+  const fullMockCount = attempts.filter((a) => a.testType === 'full_mock').length;
+  const pyqCount = attempts.filter((a) => a.testType === 'pyq').length;
+  const topicCount = attempts.filter(
+    (a) =>
+      a.testType === 'topic' ||
+      a.testType === 'chapter_mock' ||
+      a.testType === 'subject_mock'
+  ).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-20">
@@ -190,85 +213,139 @@ export const MyTests: React.FC = () => {
       )}
 
       {/* =========================================================================
-          FILTER & SORT BAR
+          CONTROLS: TEST TYPE FILTERS & STATUS TABS
           ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        {/* Category Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+      <div className="space-y-3">
+        {/* Test Type Filter Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button
             type="button"
-            onClick={() => setActiveTab('all')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'all'
+            onClick={() => setTestTypeFilter('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
+              testTypeFilter === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            All Types ({attempts.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setTestTypeFilter('full_mock')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              testTypeFilter === 'full_mock'
                 ? 'bg-brand-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            <span>All Tests</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-              }`}
-            >
-              {attempts.length}
-            </span>
+            <span>🎯 Full Mock</span>
+            {fullMockCount > 0 && <span className="text-[10px] opacity-80">({fullMockCount})</span>}
           </button>
-
           <button
             type="button"
-            onClick={() => setActiveTab('in_progress')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'in_progress'
+            onClick={() => setTestTypeFilter('pyq')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              testTypeFilter === 'pyq'
                 ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            <Clock className="w-3.5 h-3.5" />
-            <span>In Progress</span>
-            {inProgressCount > 0 && (
-              <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  activeTab === 'in_progress' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
-                }`}
-              >
-                {inProgressCount}
-              </span>
-            )}
+            <span>📜 PYQ</span>
+            {pyqCount > 0 && <span className="text-[10px] opacity-80">({pyqCount})</span>}
           </button>
-
           <button
             type="button"
-            onClick={() => setActiveTab('completed')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'completed'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            onClick={() => setTestTypeFilter('topic')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              testTypeFilter === 'topic'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Completed</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                activeTab === 'completed' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-              }`}
-            >
-              {completedCount}
-            </span>
+            <span>📚 Topic Test</span>
+            {topicCount > 0 && <span className="text-[10px] opacity-80">({topicCount})</span>}
           </button>
         </div>
 
-        {/* Sorting Dropdown */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="text-xs text-slate-500 font-medium">Sort by:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="text-xs font-bold bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-xs cursor-pointer"
-          >
-            <option value="recent">Most Recent</option>
-            <option value="highest_score">Highest Score</option>
-          </select>
+        {/* Status Tabs and Sorting */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-slate-100">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === 'all'
+                  ? 'bg-brand-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span>All Status</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                {attempts.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('in_progress')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === 'in_progress'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>In Progress</span>
+              {inProgressCount > 0 && (
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                    activeTab === 'in_progress' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
+                  }`}
+                >
+                  {inProgressCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('completed')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === 'completed'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Completed</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  activeTab === 'completed' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                {completedCount}
+              </span>
+            </button>
+          </div>
+
+          {/* Sorting Dropdown */}
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="text-xs text-slate-500 font-medium">Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="text-xs font-bold bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-xs cursor-pointer"
+            >
+              <option value="recent">Most Recent</option>
+              <option value="highest_score">Highest Score</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -344,6 +421,25 @@ export const MyTests: React.FC = () => {
                   <div className="space-y-3 flex-1">
                     {/* Header Pills: Status, Attempt Number, Date */}
                     <div className="flex flex-wrap items-center gap-2 text-xs">
+                      {/* Test Type Badge */}
+                      {attempt.testType === 'full_mock' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-50 text-brand-700 border border-brand-200">
+                          🎯 FULL MOCK
+                        </span>
+                      )}
+                      {attempt.testType === 'pyq' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                          📜 PYQ {attempt.year ? `• ${attempt.year}` : ''}
+                        </span>
+                      )}
+                      {(attempt.testType === 'topic' ||
+                        attempt.testType === 'chapter_mock' ||
+                        attempt.testType === 'subject_mock') && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                          📚 TOPIC TEST
+                        </span>
+                      )}
+
                       {isInProgress ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
                           <Clock className="w-3 h-3 animate-spin" />

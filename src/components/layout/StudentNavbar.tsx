@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
+import { isStudentNavActive } from '@/lib/utils';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import {
@@ -96,7 +97,7 @@ export const StudentNavbar: React.FC = () => {
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = isStudentNavActive(location.pathname, item.label);
               return (
                 <Link
                   key={item.path}

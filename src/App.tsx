@@ -10,8 +10,9 @@ import { Landing } from '@/pages/Landing';
 
 // Student Core Pages
 import { Home } from '@/pages/student/Home';
-import { Tests } from '@/pages/student/Tests';
-import { TestDetails } from '@/pages/student/TestDetails';
+import { ExamsCatalog } from '@/pages/student/ExamsCatalog';
+import { ExamDetail } from '@/pages/student/ExamDetail';
+import { ExamOrTestDispatcher } from '@/pages/student/ExamOrTestDispatcher';
 import { TestRunner } from '@/pages/student/TestRunner';
 import { TestResult } from '@/pages/student/TestResult';
 import { TestSolutions } from '@/pages/student/TestSolutions';
@@ -68,62 +69,82 @@ export const App: React.FC = () => {
       <Route path="/" element={<RootRoute />} />
       <Route path="/landing" element={<Landing />} />
 
-      {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
-      <Route element={<AppLayout />}>
-        <Route
-          path="dashboard"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="app" element={<Navigate to="/dashboard" replace />} />
-        <Route path="exams" element={<Tests />} />
-        <Route path="exams/:testId" element={<TestDetails />} />
-        <Route
-          path="exams/:testId/results/:attemptId"
-          element={
-            <ProtectedRoute>
-              <TestResult />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="exams/:testId/solutions/:attemptId"
-          element={
-            <ProtectedRoute>
-              <TestSolutions />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="practice" element={<Practice />} />
-        <Route
-          path="results"
-          element={
-            <ProtectedRoute>
-              <MyTests />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="subscription" element={<Subscription />} />
-      </Route>
+        {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
+        <Route element={<AppLayout />}>
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="home" element={<Navigate to="/dashboard" replace />} />
+          <Route path="app" element={<Navigate to="/dashboard" replace />} />
+
+          {/* Exams Hub & Catalog */}
+          <Route path="exams" element={<ExamsCatalog />} />
+          <Route path="exams/:id" element={<ExamOrTestDispatcher />} />
+          <Route path="exams/:examId/:tab" element={<ExamDetail />} />
+
+          {/* Legacy redirects */}
+          <Route path="tests" element={<Navigate to="/exams" replace />} />
+          <Route path="tests/*" element={<Navigate to="/exams" replace />} />
+          <Route path="my-tests" element={<Navigate to="/results" replace />} />
+          <Route path="my-tests/*" element={<Navigate to="/results" replace />} />
+
+          <Route
+            path="exams/:testId/results/:attemptId"
+            element={
+              <ProtectedRoute>
+                <TestResult />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="exams/:testId/solutions/:attemptId"
+            element={
+              <ProtectedRoute>
+                <TestSolutions />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="practice" element={<Practice />} />
+          <Route path="practice/*" element={<Practice />} />
+          <Route
+            path="results"
+            element={
+              <ProtectedRoute>
+                <MyTests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="results/*"
+            element={
+              <ProtectedRoute>
+                <MyTests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="subscription" element={<Subscription />} />
+        </Route>
 
       {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}
       <Route

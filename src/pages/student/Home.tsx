@@ -509,7 +509,7 @@ export const Home: React.FC = () => {
                 <Card
                   key={series.id}
                   hoverable
-                  onClick={() => navigate(`/tests?series=${series.id}`)}
+                  onClick={() => navigate(`/exams/${selectedExam?.id || 'wbp-constable'}`)}
                   className="p-5 flex flex-col justify-between border-slate-200"
                 >
                   <div className="space-y-2">
@@ -583,7 +583,7 @@ export const Home: React.FC = () => {
             {subjects.map((subj) => (
               <button
                 key={subj.id}
-                onClick={() => navigate(`/tests?subject=${subj.id}`)}
+                onClick={() => navigate(`/exams/${selectedExam?.id || 'wbp-constable'}?tab=topic-tests`)}
                 className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 text-[11px] font-semibold whitespace-nowrap transition-colors border border-slate-200/60"
               >
                 {subj.name}

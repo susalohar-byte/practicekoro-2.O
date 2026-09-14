@@ -47,7 +47,9 @@ export const AdminTests: React.FC = () => {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
-  const [testType, setTestType] = useState<'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq'>('chapter_mock');
+  const [testType, setTestType] = useState<'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq' | 'topic'>('chapter_mock');
+  const [year, setYear] = useState<number | ''>('');
+  const [associatedExamIds, setAssociatedExamIds] = useState<string[]>([]);
   const [durationMinutes, setDurationMinutes] = useState(15);
   const [totalMarks, setTotalMarks] = useState(25);
   const [passingMarks, setPassingMarks] = useState(10);
@@ -116,7 +118,9 @@ export const AdminTests: React.FC = () => {
     setTitle('');
     setSlug('');
     setDescription('');
-    setTestType('chapter_mock');
+    setTestType('full_mock');
+    setYear('');
+    setAssociatedExamIds(initialExam ? [initialExam] : []);
     setDurationMinutes(15);
     setTotalMarks(25);
     setPassingMarks(10);
@@ -137,6 +141,13 @@ export const AdminTests: React.FC = () => {
     setSlug(t.slug);
     setDescription(t.description || '');
     setTestType(t.testType);
+    setYear(t.year || '');
+    setAssociatedExamIds([t.examId]);
+    api.getTestExamAssociations(t.id).then((assocs) => {
+      if (assocs && assocs.length > 0) {
+        setAssociatedExamIds(assocs);
+      }
+    });
     setDurationMinutes(t.durationMinutes);
     setTotalMarks(t.totalMarks);
     setPassingMarks(t.passingMarks);
@@ -168,6 +179,10 @@ export const AdminTests: React.FC = () => {
       setFormError('Target Exam must be selected.');
       return;
     }
+    if (testType === 'pyq' && !year) {
+      setFormError('Exam Year is required for PYQ tests.');
+      return;
+    }
 
     try {
       if (editingTest) {
@@ -180,6 +195,8 @@ export const AdminTests: React.FC = () => {
           slug: slug.trim() || undefined,
           description: description.trim() || undefined,
           testType,
+          year: testType === 'pyq' && year ? Number(year) : undefined,
+          associatedExamIds,
           durationMinutes: Number(durationMinutes),
           totalMarks: Number(totalMarks),
           passingMarks: Number(passingMarks),
@@ -197,6 +214,8 @@ export const AdminTests: React.FC = () => {
           slug: slug.trim() || title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
           description: description.trim() || undefined,
           testType,
+          year: testType === 'pyq' && year ? Number(year) : undefined,
+          associatedExamIds,
           durationMinutes: Number(durationMinutes),
           totalQuestions: 0,
           totalMarks: Number(totalMarks),
@@ -686,11 +705,67 @@ export const AdminTests: React.FC = () => {
                     onChange={(e) => setTestType(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                   >
-                    <option value="chapter_mock">Chapter Mock</option>
-                    <option value="full_mock">Full Syllabus Mock</option>
-                    <option value="subject_mock">Subject Drill Mock</option>
-                    <option value="pyq">Previous Year Paper (PYQ)</option>
+                    <option value="full_mock">🎯 Full Mock Test (Multi-Subject Exam Simulation)</option>
+                    <option value="pyq">📜 Previous Year Paper (PYQ)</option>
+                    <option value="topic">📚 Canonical Topic Test (Reusable)</option>
+                    <option value="chapter_mock">Chapter Mock (Legacy)</option>
+                    <option value="subject_mock">Subject Drill Mock (Legacy)</option>
                   </select>
+                </div>
+              </div>
+
+              {/* PYQ Year Field */}
+              {testType === 'pyq' && (
+                <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-800/60">
+                  <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+                    PYQ Exam Year *
+                  </label>
+                  <input
+                    type="number"
+                    min={1990}
+                    max={2030}
+                    value={year}
+                    onChange={(e) => setYear(parseInt(e.target.value) || '')}
+                    placeholder="e.g. 2024"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                  />
+                  <p className="text-[11px] text-amber-300/80 mt-1">
+                    Enter the official year when this past paper was conducted.
+                  </p>
+                </div>
+              )}
+
+              {/* Multi-Exam Association for Topic Tests & Cross-Exam Sharing */}
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Associated Examinations (Multi-Exam Reusability)
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Select all examinations where this test should appear. A single test can be reused across exams without duplicating content.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {exams.map((ex) => {
+                    const isSelected = associatedExamIds.includes(ex.id) || ex.id === examId;
+                    return (
+                      <button
+                        key={ex.id}
+                        type="button"
+                        onClick={() => {
+                          if (ex.id === examId) return;
+                          setAssociatedExamIds((prev) =>
+                            prev.includes(ex.id) ? prev.filter((id) => id !== ex.id) : [...prev, ex.id]
+                          );
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                          isSelected
+                            ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500'
+                            : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        {ex.title} {ex.id === examId && '(Primary)'}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -185,13 +185,34 @@ export const api = {
       );
     }
     try {
+      let assocTestIds: string[] = [];
+      if (examId) {
+        try {
+          const { data: assocData } = await supabase
+            .from('test_exams')
+            .select('test_id')
+            .eq('exam_id', examId);
+          if (assocData && assocData.length > 0) {
+            assocTestIds = assocData.map((a: any) => a.test_id);
+          }
+        } catch (e) {
+          console.warn('Could not query test_exams table, fallback to exam_id', e);
+        }
+      }
+
       let query = supabase
         .from('tests')
         .select('*, exams(title), subjects(name), chapters(name), test_series(title)')
         .eq('is_active', true)
         .eq('status', 'published');
       if (chapterId) query = query.eq('chapter_id', chapterId);
-      if (examId) query = query.eq('exam_id', examId);
+      if (examId) {
+        if (assocTestIds.length > 0) {
+          query = query.or(`id.in.(${assocTestIds.join(',')}),exam_id.eq.${examId}`);
+        } else {
+          query = query.eq('exam_id', examId);
+        }
+      }
       const { data, error } = await query.order('order_index', { ascending: true });
 
       if (error || !data || data.length === 0) {
@@ -212,6 +233,7 @@ export const api = {
         slug: item.slug,
         description: item.description ?? undefined,
         testType: item.test_type,
+        year: item.year ? Number(item.year) : undefined,
         durationMinutes: item.duration_minutes,
         totalQuestions: item.total_questions,
         totalMarks: Number(item.total_marks),
@@ -236,6 +258,85 @@ export const api = {
     }
   },
 
+  // Exam-centric tests helper
+  async getTestsForExam(examId: string, category?: 'full_mock' | 'pyq' | 'topic'): Promise<MockTest[]> {
+    const allTests = await this.getTests(undefined, examId);
+    if (!category) return allTests;
+
+    if (category === 'full_mock') {
+      return allTests.filter((t) => t.testType === 'full_mock');
+    }
+    if (category === 'pyq') {
+      return allTests.filter((t) => t.testType === 'pyq');
+    }
+    if (category === 'topic') {
+      return allTests.filter((t) => t.testType === 'topic' || t.testType === 'chapter_mock' || t.testType === 'subject_mock');
+    }
+    return allTests;
+  },
+
+  async getTestExamAssociations(testId: string): Promise<string[]> {
+    if (!isSupabaseConfigured) return [];
+    try {
+      const { data, error } = await (supabase as any)
+        .from('test_exams')
+        .select('exam_id')
+        .eq('test_id', testId);
+      if (error || !data) return [];
+      return data.map((d: any) => d.exam_id);
+    } catch {
+      return [];
+    }
+  },
+
+  async associateTestWithExam(testId: string, examId: string): Promise<boolean> {
+    if (!isSupabaseConfigured) return true;
+    try {
+      const { error } = await (supabase as any)
+        .from('test_exams')
+        .upsert({ test_id: testId, exam_id: examId }, { onConflict: 'test_id,exam_id' });
+      return !error;
+    } catch {
+      return false;
+    }
+  },
+
+  async dissociateTestFromExam(testId: string, examId: string): Promise<boolean> {
+    if (!isSupabaseConfigured) return true;
+    try {
+      const { error } = await (supabase as any)
+        .from('test_exams')
+        .delete()
+        .eq('test_id', testId)
+        .eq('exam_id', examId);
+      return !error;
+    } catch {
+      return false;
+    }
+  },
+
+  async syncTestExamAssociations(testId: string, examIds: string[]): Promise<boolean> {
+    if (!isSupabaseConfigured) return true;
+    try {
+      const { error: delError } = await (supabase as any)
+        .from('test_exams')
+        .delete()
+        .eq('test_id', testId);
+      if (delError) return false;
+
+      if (examIds.length > 0) {
+        const rows = examIds.map((eid) => ({ test_id: testId, exam_id: eid }));
+        const { error: insError } = await (supabase as any)
+          .from('test_exams')
+          .insert(rows);
+        if (insError) return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   async getTestById(testId: string): Promise<MockTest | null> {
     const mockFound = localTests.find((t) => t.id === testId);
     if (!isSupabaseConfigured) return mockFound || null;
@@ -254,6 +355,7 @@ export const api = {
         slug: row.slug,
         description: row.description ?? undefined,
         testType: row.test_type,
+        year: (row as any).year ? Number((row as any).year) : undefined,
         durationMinutes: row.duration_minutes,
         totalQuestions: row.total_questions,
         totalMarks: Number(row.total_marks),
@@ -262,7 +364,7 @@ export const api = {
         isPremium: row.is_premium,
         orderIndex: row.order_index,
         isActive: row.is_active,
-        status: (row.status as 'draft' | 'published' | 'archived') || 'published',
+        status: (row as any).status || 'published',
       };
     } catch {
       return mockFound || null;
@@ -872,6 +974,8 @@ export const api = {
             total_questions,
             total_marks,
             is_premium,
+            test_type,
+            year,
             exams (title),
             subjects (name),
             chapters (name)
@@ -894,6 +998,8 @@ export const api = {
           durationMinutes: test?.duration_minutes ? Number(test.duration_minutes) : undefined,
           totalQuestions: test?.total_questions ? Number(test.total_questions) : undefined,
           isPremium: Boolean(test?.is_premium),
+          testType: test?.test_type,
+          year: test?.year ? Number(test.year) : undefined,
           status: d.status,
           startTime: d.start_time,
           endTime: d.end_time ?? undefined,
@@ -2088,6 +2194,7 @@ export const api = {
           slug: newTest.slug,
           description: newTest.description || null,
           test_type: newTest.testType,
+          year: newTest.year || null,
           duration_minutes: newTest.durationMinutes,
           total_questions: newTest.totalQuestions || 0,
           total_marks: newTest.totalMarks || 0,
@@ -2098,6 +2205,14 @@ export const api = {
           is_active: newTest.isActive,
           status: newTest.status,
         });
+
+        const allAssocExams = Array.from(
+          new Set([newTest.examId, ...(newTest.associatedExamIds || [])].filter(Boolean))
+        );
+        if (allAssocExams.length > 0) {
+          const assocRows = allAssocExams.map((eid) => ({ test_id: id, exam_id: eid }));
+          await (supabase as any).from('test_exams').upsert(assocRows, { onConflict: 'test_id,exam_id' });
+        }
       } catch (err) {
         console.error('Supabase createTest error:', err);
       }
@@ -2124,6 +2239,7 @@ export const api = {
         if (updates.slug !== undefined) payload.slug = updates.slug;
         if (updates.description !== undefined) payload.description = updates.description;
         if (updates.testType !== undefined) payload.test_type = updates.testType;
+        if (updates.year !== undefined) payload.year = updates.year;
         if (updates.durationMinutes !== undefined) payload.duration_minutes = updates.durationMinutes;
         if (updates.totalQuestions !== undefined) payload.total_questions = updates.totalQuestions;
         if (updates.totalMarks !== undefined) payload.total_marks = updates.totalMarks;
@@ -2135,6 +2251,10 @@ export const api = {
         if (updates.status !== undefined) payload.status = updates.status;
 
         await (supabase as any).from('tests').update(payload).eq('id', id);
+
+        if (updates.associatedExamIds !== undefined) {
+          await this.syncTestExamAssociations(id, updates.associatedExamIds);
+        }
       } catch (err) {
         console.error('Supabase updateTest error:', err);
       }

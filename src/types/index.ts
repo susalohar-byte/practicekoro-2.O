@@ -73,13 +73,15 @@ export interface MockTest {
   title: string;
   slug: string;
   description?: string;
-  testType: 'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq';
+  testType: 'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq' | 'topic';
   durationMinutes: number;
   totalQuestions: number;
   totalMarks: number;
   passingMarks: number;
   negativeMarking: number;
   isPremium: boolean;
+  year?: number;
+  associatedExamIds?: string[];
   orderIndex: number;
   isActive: boolean;
   status: 'draft' | 'published' | 'archived';
@@ -183,6 +185,8 @@ export interface TestAttempt {
   durationMinutes?: number;
   totalQuestions?: number;
   isPremium?: boolean;
+  testType?: 'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq' | 'topic';
+  year?: number;
   attemptNumber?: number;
   status: 'in_progress' | 'completed' | 'abandoned';
   startTime: string;
