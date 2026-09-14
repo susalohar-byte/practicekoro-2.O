@@ -209,11 +209,8 @@ export const Landing: React.FC = () => {
       {/* =========================================================================
           1. PUBLIC HEADER / NAVBAR
           ========================================================================= */}
-      {/* =========================================================================
-          1. PUBLIC HEADER / NAVBAR
-          ========================================================================= */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
@@ -280,51 +277,51 @@ export const Landing: React.FC = () => {
       </header>
 
       {/* =========================================================================
-          2. HERO SECTION
+          2. HERO SECTION (FULL SCREEN VIEWPORT)
           ========================================================================= */}
-      <section className="relative overflow-hidden pt-10 pb-16 md:pt-16 md:pb-24 bg-white border-b border-slate-100">
+      <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white border-b border-slate-100 py-10 lg:py-0">
         {/* Soft cyan-blue radial background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/3 -translate-y-1/2 w-[500px] h-[500px] lg:w-[650px] lg:h-[650px] bg-gradient-to-tr from-sky-200/50 via-blue-100/40 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/4 -translate-y-1/2 w-[600px] h-[600px] lg:w-[900px] lg:h-[900px] xl:w-[1150px] xl:h-[1150px] bg-gradient-to-tr from-sky-200/45 via-blue-100/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10 py-6 lg:py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 xl:gap-14 items-center">
             {/* Left Content Column */}
-            <div className="lg:col-span-5 text-center lg:text-left">
+            <div className="lg:col-span-5 xl:col-span-5 text-center lg:text-left">
               {/* Eyebrow / Tagline */}
-              <p className="text-xs sm:text-sm font-bold text-sky-600 tracking-[0.2em] uppercase mb-4">
+              <p className="text-xs sm:text-sm lg:text-base font-extrabold text-sky-600 tracking-[0.25em] uppercase mb-3 sm:mb-5">
                 PRACTICE MORE. WORRY LESS.
               </p>
 
               {/* Main Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-black text-slate-900 tracking-tight leading-[1.1]">
+              <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-[68px] font-black text-slate-900 tracking-tight leading-[1.08]">
                 Crack Your <br />
                 <span className="text-blue-600">Dream Exam.</span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-base sm:text-lg text-slate-600 font-medium max-w-md mt-4 leading-relaxed mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg lg:text-xl xl:text-[22px] text-slate-600 font-medium max-w-xl mt-4 sm:mt-6 leading-relaxed mx-auto lg:mx-0">
                 Smart practice for West Bengal's competitive exams.
               </p>
 
               {/* Call to Actions */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-6 sm:pt-8">
                 {user ? (
                   <Button
                     size="lg"
                     onClick={() => navigate(dashboardUrl)}
-                    className="w-full sm:w-auto text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition"
+                    className="w-full sm:w-auto text-base sm:text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white px-8 sm:px-9 py-4 sm:py-4.5 rounded-2xl shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2.5 transition transform hover:-translate-y-0.5"
                   >
                     <span>Go to Dashboard</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   </Button>
                 ) : (
                   <Button
                     size="lg"
                     onClick={() => navigate('/register')}
-                    className="w-full sm:w-auto text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition"
+                    className="w-full sm:w-auto text-base sm:text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white px-8 sm:px-9 py-4 sm:py-4.5 rounded-2xl shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2.5 transition transform hover:-translate-y-0.5"
                   >
                     <span>Get Started Free</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   </Button>
                 )}
                 <Button
@@ -334,30 +331,30 @@ export const Landing: React.FC = () => {
                     const elem = document.getElementById('exams');
                     elem?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full sm:w-auto text-sm sm:text-base font-bold bg-white text-blue-600 hover:bg-blue-50 border-2 border-blue-500/30 hover:border-blue-600 px-7 py-3.5 rounded-xl transition"
+                  className="w-full sm:w-auto text-base sm:text-lg font-bold bg-white text-blue-600 hover:bg-blue-50 border-2 border-blue-500/30 hover:border-blue-600 px-8 sm:px-9 py-4 sm:py-4.5 rounded-2xl transition"
                 >
                   View Exams
                 </Button>
               </div>
 
               {/* Feature Pills Underneath Buttons */}
-              <div className="flex items-center justify-center lg:justify-start gap-4 sm:gap-6 pt-8 text-slate-700 text-xs sm:text-sm font-semibold">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 pt-8 sm:pt-10 text-slate-700 text-xs sm:text-sm lg:text-base font-semibold">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
                     <FileText className="w-4 h-4" />
                   </div>
                   <span>Mock Tests</span>
                 </div>
-                <span className="text-slate-300">|</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                <span className="text-slate-300 hidden sm:inline">|</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
                     <FileText className="w-4 h-4" />
                   </div>
                   <span>PYQs</span>
                 </div>
-                <span className="text-slate-300">|</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                <span className="text-slate-300 hidden sm:inline">|</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
                     <Target className="w-4 h-4" />
                   </div>
                   <span>Topic Practice</span>
@@ -366,14 +363,14 @@ export const Landing: React.FC = () => {
             </div>
 
             {/* Center: Smartphone Mockup */}
-            <div className="lg:col-span-4 flex justify-center">
-              <div className="relative w-[280px] sm:w-[310px] rounded-[44px] bg-slate-950 p-2.5 shadow-2xl ring-1 ring-slate-800 border-[3px] border-slate-700/60">
+            <div className="lg:col-span-4 xl:col-span-4 flex justify-center">
+              <div className="relative w-[295px] sm:w-[330px] lg:w-[335px] xl:w-[365px] rounded-[48px] bg-slate-950 p-2.5 sm:p-3 shadow-2xl ring-1 ring-slate-800 border-[3px] border-slate-700/70">
                 {/* Screen Content */}
-                <div className="rounded-[34px] overflow-hidden bg-white p-4 pt-3 flex flex-col shadow-inner">
+                <div className="rounded-[38px] overflow-hidden bg-white p-4 pt-3.5 flex flex-col shadow-inner">
                   {/* Status Bar */}
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-800 px-2 pb-2">
                     <span>9:41</span>
-                    <div className="w-16 h-3.5 bg-slate-950 rounded-full mx-auto" />
+                    <div className="w-20 h-3.5 bg-slate-950 rounded-full mx-auto" />
                     <div className="flex items-center gap-1.5 text-slate-700">
                       <span className="inline-block w-2.5 h-2 bg-slate-800 rounded-sm" />
                       <Wifi className="w-3 h-3" />
@@ -387,26 +384,26 @@ export const Landing: React.FC = () => {
                   </p>
 
                   {/* Exam List Cards */}
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {/* WBP Constable */}
                     <div
                       onClick={() => navigate('/exams/wbp-constable')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/50 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-3">
                         <img
                           src="/images/exams/wbp_police.png"
                           alt="WBP"
-                          className="w-7 h-7 object-contain rounded-md"
+                          className="w-8 h-8 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             WBP Constable
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">West Bengal Police</p>
+                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">West Bengal Police</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
@@ -415,22 +412,22 @@ export const Landing: React.FC = () => {
                     {/* Kolkata Police */}
                     <div
                       onClick={() => navigate('/exams/kp-police-si')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/50 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-3">
                         <img
                           src="/images/exams/icon_kolkata_police.png"
                           alt="Kolkata Police"
-                          className="w-7 h-7 object-contain rounded-md"
+                          className="w-8 h-8 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             Kolkata Police
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Kolkata Police</p>
+                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Kolkata Police</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
@@ -439,22 +436,22 @@ export const Landing: React.FC = () => {
                     {/* RRB */}
                     <div
                       onClick={() => navigate('/exams/railway-group-d')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/50 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-3">
                         <img
                           src="/images/exams/icon_railway_exact.png"
                           alt="RRB"
-                          className="w-7 h-7 object-contain rounded-md"
+                          className="w-8 h-8 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             RRB
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Indian Railways</p>
+                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Indian Railways</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
@@ -463,22 +460,22 @@ export const Landing: React.FC = () => {
                     {/* SSC GD */}
                     <div
                       onClick={() => navigate('/exams')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/50 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-3">
                         <img
                           src="/images/exams/icon_ssc_clean.png"
                           alt="SSC GD"
-                          className="w-7 h-7 object-contain rounded-md"
+                          className="w-8 h-8 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             SSC GD
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Staff Selection Commission</p>
+                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Staff Selection Commission</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
@@ -487,22 +484,22 @@ export const Landing: React.FC = () => {
                     {/* SSC MTS */}
                     <div
                       onClick={() => navigate('/exams')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/50 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-3">
                         <img
                           src="/images/exams/icon_ssc_clean.png"
                           alt="SSC MTS"
-                          className="w-7 h-7 object-contain rounded-md"
+                          className="w-8 h-8 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             SSC MTS
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Staff Selection Commission</p>
+                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Staff Selection Commission</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
@@ -513,12 +510,12 @@ export const Landing: React.FC = () => {
             </div>
 
             {/* Right: West Bengal Map & Motto */}
-            <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col items-center lg:items-start justify-center gap-6 text-center lg:text-left">
+            <div className="lg:col-span-3 xl:col-span-3 flex flex-col sm:flex-row lg:flex-col items-center lg:items-start justify-center gap-6 text-center lg:text-left">
               {/* West Bengal Map Silhouette */}
               <div className="relative">
                 <svg
                   viewBox="0 0 200 320"
-                  className="w-36 sm:w-44 lg:w-48 h-auto drop-shadow-sm opacity-90 transition-transform hover:scale-105"
+                  className="w-40 sm:w-48 lg:w-52 xl:w-60 h-auto drop-shadow-sm opacity-90 transition-transform hover:scale-105"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
@@ -533,12 +530,12 @@ export const Landing: React.FC = () => {
 
               {/* Motto */}
               <div className="flex flex-col items-center lg:items-start">
-                <span className="text-slate-800 font-bold text-xl sm:text-2xl leading-tight tracking-tight">
+                <span className="text-slate-900 font-black text-2xl sm:text-3xl xl:text-4xl leading-[1.1] tracking-tight">
                   For a<br />
                   Stronger<br />
                   West Bengal
                 </span>
-                <div className="w-12 h-1.5 bg-blue-600 rounded-full mt-3" />
+                <div className="w-14 h-1.5 bg-blue-600 rounded-full mt-3.5" />
               </div>
             </div>
           </div>
@@ -555,7 +552,7 @@ export const Landing: React.FC = () => {
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-sky-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
           {/* Top Header */}
           <div className="text-center max-w-2xl mx-auto mb-4">
             <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-sky-100/80 text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">
@@ -664,7 +661,7 @@ export const Landing: React.FC = () => {
           4. 4 CORE PRODUCT PILLARS
           ========================================================================= */}
       <section id="features" className="py-20 bg-slate-50 border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
             <Badge variant="info" className="font-bold px-3 py-1">
               কেন PracticeKoro?
@@ -717,7 +714,7 @@ export const Landing: React.FC = () => {
           5. THE 4-STEP STUDENT LOOP
           ========================================================================= */}
       <section id="how-it-works" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
             <Badge variant="info" className="font-bold px-3 py-1">
               প্রস্তুতি চক্র
@@ -765,7 +762,7 @@ export const Landing: React.FC = () => {
           6. TRANSPARENT PRICING (PRO PASS)
           ========================================================================= */}
       <section id="pricing" className="py-20 bg-gradient-to-b from-slate-50 to-white border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
             <Badge variant="premium" className="font-bold px-3 py-1">
               স্বচ্ছ সাবস্ক্রিপশন
@@ -976,7 +973,7 @@ export const Landing: React.FC = () => {
           9. PUBLIC FOOTER
           ========================================================================= */}
       <footer className="border-t border-slate-200 bg-slate-900 text-slate-400 py-12 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
             {/* Col 1: Brand */}
             <div className="space-y-3 md:col-span-2">
