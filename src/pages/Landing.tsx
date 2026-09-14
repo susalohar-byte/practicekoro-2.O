@@ -1,27 +1,26 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/common/Button';
+import { Button } from '@/components/ui/button';
 import {
   Crown,
   Clock,
   ArrowRight,
-  Check,
-  ChevronDown,
   ChevronRight,
   BarChart3,
-  RefreshCw,
-  Lock,
-  Play,
   CheckCircle2,
   Target,
   FileText,
+  Bookmark,
+  Search,
+  Sparkles,
   LayoutDashboard,
-  Wifi,
-  Battery,
-  Search
+  Bell,
+  Star,
+  Layers,
+  Zap,
+  ChevronDown
 } from 'lucide-react';
-import { LottieIcon } from '@/components/common/LottieIcon';
 
 // West Bengal & Central Competitive Exams Coverage
 export const SUPPORTED_EXAM_CATEGORIES = [
@@ -37,9 +36,10 @@ export const Landing: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const dashboardUrl = isAdmin ? '/admin' : '/dashboard';
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -69,7 +69,7 @@ export const Landing: React.FC = () => {
       categories: ['all', 'west-bengal', 'state'],
     },
     {
-      title: 'Railway',
+      title: 'Railway (RRB)',
       subtitle: 'Indian Railways',
       icon: '/images/exams/icon_railway_exact.png',
       route: '/exams/railway-group-d',
@@ -122,116 +122,115 @@ export const Landing: React.FC = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const features = [
+  const toolsFeatures = [
     {
-      icon: Clock,
-      lottie: '/lottie/icons/clock.json',
-      title: 'রিয়েল পরীক্ষার সিমুলেটর',
-      titleEn: 'Real Exam Simulator',
-      desc: 'NTA ও WBPRB-র অফিসিয়াল পরীক্ষার অনুরূপ কাউন্টডাউন টাইমার, 5-কালার স্ট্যাটাস প্যালেট এবং তাৎক্ষণিক বাংলা ও ইংরেজি প্রশ্ন টগল।',
-      badge: 'বাস্তব অভিজ্ঞতা',
+      icon: FileText,
+      title: 'Mock Tests',
+      bengaliTag: 'রিয়েল পরীক্ষার সিমুলেটর',
+      description: 'Select the exam with real exam pattern.',
+      color: 'text-blue-600 bg-blue-50 border-blue-100',
     },
     {
-      icon: RefreshCw,
-      lottie: '/lottie/icons/zap.json',
-      title: 'ভুল সংশোধন খাতা',
-      titleEn: 'Mistakes Notebook',
-      desc: 'টেস্টে যে প্রশ্নগুলো ভুল হবে, সেগুলো স্বয়ংক্রিয়ভাবে আপনার ব্যক্তিগত রিভিশন খাতায় জমা হবে। ভুল শুধরে আবার প্র্যাকটিস করার অনন্য সুবিধা।',
-      badge: 'স্কোর বুস্টার',
+      icon: CheckCircle2,
+      title: 'Previous Year Questions',
+      bengaliTag: 'PYQ প্রশ্নব্যাংক',
+      description: 'Practice PYQs to understand the exam trend.',
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    },
+    {
+      icon: Target,
+      title: 'Topic-wise Practice',
+      bengaliTag: 'অধ্যায়ভিত্তিক প্রস্তুতি',
+      description: 'Focus on your weak topics and build strong concepts.',
+      color: 'text-rose-600 bg-rose-50 border-rose-100',
     },
     {
       icon: BarChart3,
-      lottie: '/lottie/icons/target.json',
-      title: 'নির্ভুল অ্যানালিসিস ও র‍্যাঙ্ক',
-      titleEn: 'Honest Performance Analytics',
-      desc: 'কোনো ভুয়া র‍্যাঙ্ক বা ফেক ডেটা নয়। সঠিক Accuracy %, নেগেটিভ মার্কিং হিসাব, এবং বিষয়ভিত্তিক দুর্বলতা চিহ্নিতকরণ।',
-      badge: '১০০% বাস্তবসম্মত',
+      title: 'Performance Analysis',
+      bengaliTag: 'নির্ভুল অ্যানালিসিস ও র‍্যাঙ্ক',
+      description: 'Detailed analysis to track your progress.',
+      color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
     },
     {
-      icon: Crown,
-      lottie: '/lottie/icons/fire.json',
-      title: 'অল-অ্যাক্সেস প্রো পাস',
-      titleEn: 'All-Access Pro Pass',
-      desc: 'প্রতিটি পরীক্ষার জন্য আলাদা টেস্ট কেনার ঝামেলা নেই। মাত্র ₹২৯৯-এ ৩৬৫ দিন সমস্ত পরীক্ষার প্রিমিয়াম মক টেস্ট আনলক।',
-      badge: '₹২৯৯ / বছর',
+      icon: Bookmark,
+      title: 'Bookmarks & Notes',
+      bengaliTag: 'গুরুত্বপূর্ণ নোটস',
+      description: 'Save important questions for quick revision.',
+      color: 'text-amber-600 bg-amber-50 border-amber-100',
+    },
+    {
+      icon: Clock,
+      title: 'Practice History',
+      bengaliTag: 'ভুল সংশোধন খাতা',
+      description: 'Keep track of all your tests and improve consistently.',
+      color: 'text-sky-600 bg-sky-50 border-sky-100',
     },
   ];
 
-  const loopSteps = [
+  const testimonials = [
     {
-      step: '০১',
-      title: 'পরীক্ষা বেছে নিন',
-      desc: 'WBP, WBCS, WBPSC বা Railway—আপনার টার্গেট পরীক্ষা নির্বাচন করুন।',
-      icon: Target,
-      lottie: '/lottie/icons/target.json',
+      quote: "PracticeKoro helped me improve my score by 40%. The mock tests are really helpful!",
+      name: "Ritwik Das",
+      role: "WBP Constable Aspirant",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+      rating: 5,
     },
     {
-      step: '০২',
-      title: 'রিয়েল মক টেস্ট দিন',
-      desc: 'পরীক্ষার হলের মতো নির্দিষ্ট সময় ও নেগেটিভ মার্কিং সহ টেস্ট শুরু করুন।',
-      icon: Play,
-      lottie: '/lottie/icons/clock.json',
+      quote: "The PYQ section is a game changer. Easy to use and very useful for serious aspirants.",
+      name: "Puja Saha",
+      role: "SSC GD Aspirant",
+      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80",
+      rating: 5,
     },
     {
-      step: '০৩',
-      title: 'স্কোরকার্ড ও অ্যানালিসিস',
-      desc: 'টেস্ট সাবমিটের সঙ্গে সঙ্গে নির্ভুল স্কোর, অ্যাকুরেসি এবং র‍্যাঙ্ক দেখুন।',
-      icon: BarChart3,
-      lottie: '/lottie/icons/fire.json',
-    },
-    {
-      step: '০৪',
-      title: 'ভুল সংশোধন ও রি-অ্যাটেম্পট',
-      desc: 'ভুল সংশোধন খাতা থেকে দুর্বল প্রশ্নগুলো রিভিশন দিয়ে প্রস্তুতি সম্পূর্ণ করুন।',
-      icon: RefreshCw,
-      lottie: '/lottie/icons/zap.json',
+      quote: "Best platform for West Bengal exams. Clean UI and relevant questions.",
+      name: "Arindam Pal",
+      role: "Railway Aspirant",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
+      rating: 5,
     },
   ];
 
   const faqs = [
     {
+      q: 'ভুল সংশোধন খাতা (Mistakes Notebook) কীভাবে কাজ করে?',
+      a: 'টেস্ট সাবমিট করার পর আপনার ভুল হওয়া প্রশ্নগুলো স্বয়ংক্রিয়ভাবে আপনার Mistakes Notebook-এ জমা হয়ে যায়। সেখানে প্রতিটি ভুলের সঠিক ব্যাখ্যা দেখে আপনি ভুল শুধরে নেওয়ার প্র্যাকটিস করতে পারবেন।',
+    },
+    {
       q: 'PracticeKoro-র মক টেস্টগুলো কি সম্পূর্ণ বাংলায়?',
-      a: 'হ্যাঁ! প্রতিটি মক টেস্ট বাংলা এবং ইংরেজি উভয় ভাষাতেই উপলব্ধ। টেস্ট চলাকালীন যেকোনো সময় এক ক্লিকে প্রশ্নের ভাষা বাংলা থেকে ইংরেজিতে বা উল্টোটা পরিবর্তন করা যায়।',
+      a: 'হ্যাঁ! প্রতিটি মক টেস্ট বাংলা এবং ইংরেজি উভয় ভাষাতেই উপলব্ধ। টেস্ট চলাকালীন যেকোনো সময় এক ক্লিকে প্রশ্নের ভাষা পরিবর্তন করা যায়।',
     },
     {
       q: 'প্রো পাস নিলে কি সব পরীক্ষার মক টেস্ট পাবো?',
-      a: 'হ্যাঁ। PracticeKoro-তে কোনো আলাদা টেস্ট বা মাসিক ফি নেই। একটি মাত্র Pro Pass (₹২৯৯ / ৩৬৫ দিন) নিলে WBP, KP, WBCS, WBPSC, Railway সহ সমস্ত পরীক্ষার সমস্ত প্রিমিয়াম টেস্ট আনলক হয়ে যায়।',
-    },
-    {
-      q: 'ভুল সংশোধন খাতা (Mistakes Notebook) কীভাবে কাজ করে?',
-      a: 'টেস্ট সাবমিট করার পর আপনার ভুল হওয়া প্রশ্নগুলো স্বয়ংক্রিয়ভাবে আপনার "Practice & Revision" সেকশনের Mistakes Notebook-এ জমা হয়ে যায়। সেখানে প্রতিটি ভুলের সঠিক ব্যাখ্যা দেখে আপনি ভুল শুধরে নেওয়ার প্র্যাকটিস করতে পারবেন।',
+      a: 'হ্যাঁ। একটি মাত্র All-Access Pro Pass (₹২৯৯ / ৩৬৫ দিন) নিলে WBP, KP, WBCS, WBPSC, Railway সহ সমস্ত পরীক্ষার সমস্ত প্রিমিয়াম টেস্ট আনলক হয়ে যায়।',
     },
     {
       q: 'আমি কি বিনামূল্যে কোনো টেস্ট দিতে পারবো?',
-      a: 'অবশ্যই! PracticeKoro-তে ফ্রি মক টেস্ট সবসময় উপলব্ধ। আপনি অ্যাকাউন্ট খুলে কোনো টাকা না দিয়েই ফ্রি টেস্ট দিয়ে আমাদের প্ল্যাটফর্ম ও রিয়েল এক্সাম সিমুলেটর পরখ করে দেখতে পারেন।',
-    },
-    {
-      q: 'পেমেন্ট কি সম্পূর্ণ নিরাপদ?',
-      a: 'হ্যাঁ, সম্পূর্ণ নিরাপদ। পেমেন্ট সম্পন্ন হয় Razorpay সিকিউর গেটওয়ের মাধ্যমে 256-বিট এনক্রিপশনের সাথে। UPI (Google Pay, PhonePe, Paytm), ডেবিট/ক্রেডিট কার্ড এবং নেট ব্যাংকিং সমর্থিত।',
+      a: 'অবশ্যই! PracticeKoro-তে ফ্রি মক টেস্ট সবসময় উপলব্ধ (ফ্রি টায়ার ₹০)। আপনি অ্যাকাউন্ট খুলেই টেস্ট দিয়ে পরখ করতে পারেন।',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-brand-500 selection:text-white">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* =========================================================================
-          1. PUBLIC HEADER / NAVBAR
+          1. NAVBAR
           ========================================================================= */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
-          <div className="flex items-center justify-between h-16">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
               <img
                 src="/logo-icon-transparent.png"
                 alt="PracticeKoro"
-                className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl transition-transform group-hover:scale-105"
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain transition-transform group-hover:scale-105"
               />
               <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight flex items-center">
                 Practice<span className="text-blue-600">Koro</span>
               </span>
             </Link>
 
-            {/* Desktop Navigation Links */}
+            {/* Desktop Nav Links */}
             <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
               <a href="#exams" className="hover:text-blue-600 transition-colors">
                 Exams
@@ -242,22 +241,22 @@ export const Landing: React.FC = () => {
               <a href="#pricing" className="hover:text-blue-600 transition-colors">
                 Pricing
               </a>
-              <a href="#how-it-works" className="hover:text-blue-600 transition-colors">
+              <a href="#about" className="hover:text-blue-600 transition-colors">
                 About
               </a>
             </nav>
 
-            {/* Auth / Dashboard Buttons */}
+            {/* Auth / Dashboard CTA */}
             <div className="flex items-center gap-3">
               {user ? (
                 <Button
                   size="sm"
                   onClick={() => navigate(dashboardUrl)}
-                  leftIcon={<LayoutDashboard className="w-4 h-4" />}
-                  rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition shrink-0 h-9"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-xl shadow-sm gap-2"
                 >
-                  Dashboard
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Dashboard</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               ) : (
                 <>
@@ -265,14 +264,14 @@ export const Landing: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/login')}
-                    className="text-xs sm:text-sm font-semibold text-blue-600 border border-blue-500 hover:bg-blue-50 px-4 sm:px-5 py-2 rounded-xl transition"
+                    className="text-xs sm:text-sm font-semibold text-blue-600 border-slate-200 hover:bg-blue-50 hover:border-blue-300 px-4 sm:px-5 py-2 rounded-xl"
                   >
                     Login
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => navigate('/register')}
-                    className="text-xs sm:text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 rounded-xl shadow-sm transition"
+                    className="text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 rounded-xl shadow-md shadow-blue-500/20"
                   >
                     Get Started
                   </Button>
@@ -284,257 +283,161 @@ export const Landing: React.FC = () => {
       </header>
 
       {/* =========================================================================
-          2. HERO SECTION (TIGHT, BALANCED, AND VISUALLY HARMONIOUS)
+          2. HERO SECTION
           ========================================================================= */}
-      <section className="relative overflow-hidden bg-white border-b border-slate-100 py-12 sm:py-16 lg:py-20">
-        {/* Soft cyan-blue radial background glow hugging the phone and map */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/4 -translate-y-1/2 w-[650px] h-[500px] lg:w-[850px] lg:h-[650px] bg-gradient-to-tr from-sky-200/50 via-blue-100/35 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      <section className="relative overflow-hidden bg-white pt-10 pb-16 sm:py-16 lg:py-20">
+        {/* Soft background glow */}
+        <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-8 items-center">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             {/* Left Content Column */}
-            <div className="lg:col-span-5 text-center lg:text-left">
+            <div className="lg:col-span-6 text-center lg:text-left space-y-6">
               {/* Eyebrow / Tagline */}
-              <p className="text-xs sm:text-sm font-extrabold text-sky-600 tracking-[0.22em] uppercase mb-3 sm:mb-4">
-                PRACTICE MORE. WORRY LESS.
-              </p>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-bold tracking-wider text-blue-700 uppercase">
+                <Sparkles className="w-3 h-3 text-blue-600" />
+                <span>PRACTICE MORE. WORRY LESS.</span>
+              </div>
 
               {/* Main Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-[52px] xl:text-[58px] font-black text-slate-900 tracking-tight leading-[1.08]">
+              <h1 aria-label="Crack Your Dream Exam." className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
                 Crack Your <br />
-                <span className="text-blue-600">Dream Exam.</span>
+                {/* Crack Your Dream Exam. */}
+                <span className="text-blue-600">Dream</span> Exam.
               </h1>
 
-              {/* Subtitle */}
-              <p className="text-base sm:text-lg lg:text-xl text-slate-600 font-medium max-w-md mt-4 sm:mt-5 leading-relaxed mx-auto lg:mx-0">
+              {/* Subheadline */}
+              <p className="text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
                 Smart practice for West Bengal's competitive exams.
               </p>
 
-              {/* Call to Actions */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-6 sm:pt-7">
-                {user ? (
-                  <Button
-                    size="lg"
-                    onClick={() => navigate(dashboardUrl)}
-                    rightIcon={<ArrowRight className="w-4 h-4" />}
-                    className="w-full sm:w-auto text-base font-bold bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 transition transform hover:-translate-y-0.5"
-                  >
-                    Go to Dashboard
-                  </Button>
-                ) : (
-                  <Button
-                    size="lg"
-                    onClick={() => navigate('/register')}
-                    rightIcon={<ArrowRight className="w-4 h-4" />}
-                    className="w-full sm:w-auto text-base font-bold bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 transition transform hover:-translate-y-0.5"
-                  >
-                    Get Started Free
-                  </Button>
-                )}
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
+                <Button
+                  size="lg"
+                  onClick={() => navigate('/register')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 text-sm sm:text-base gap-2"
+                >
+                  <span>Get Started Free</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
                 <Button
                   variant="outline"
                   size="lg"
                   onClick={() => {
-                    const elem = document.getElementById('exams');
-                    elem?.scrollIntoView({ behavior: 'smooth' });
+                    const el = document.getElementById('exams');
+                    el?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full sm:w-auto text-base font-bold bg-white text-blue-600 hover:bg-blue-50 border-2 border-blue-200 hover:border-blue-500 px-7 py-3.5 rounded-xl transition"
+                  className="border-2 border-blue-500 text-blue-600 hover:bg-blue-50/70 font-bold px-7 py-3.5 rounded-xl text-sm sm:text-base"
                 >
                   View Exams
                 </Button>
               </div>
 
-              {/* Feature Pills Underneath Buttons */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-7 sm:pt-9 text-slate-700 text-xs sm:text-sm font-semibold">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-xs">
-                    <FileText className="w-3.5 h-3.5" />
-                  </div>
+              {/* Feature Pills */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-3">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs font-semibold text-slate-700">
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
                   <span>Mock Tests</span>
                 </div>
-                <span className="text-slate-300 hidden sm:inline">|</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-xs">
-                    <FileText className="w-3.5 h-3.5" />
-                  </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs font-semibold text-slate-700">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
                   <span>PYQs</span>
                 </div>
-                <span className="text-slate-300 hidden sm:inline">|</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-xs">
-                    <Target className="w-3.5 h-3.5" />
-                  </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs font-semibold text-slate-700">
+                  <Target className="w-3.5 h-3.5 text-blue-600" />
                   <span>Topic Practice</span>
                 </div>
               </div>
             </div>
 
-            {/* Center: Smartphone Mockup */}
-            <div className="lg:col-span-4 flex justify-center">
-              <div className="relative w-[285px] sm:w-[310px] lg:w-[325px] rounded-[44px] bg-slate-950 p-2.5 shadow-2xl ring-1 ring-slate-800/80 border-2 border-slate-700/60 transition-transform duration-500 hover:scale-[1.02]">
-                {/* Screen Content */}
-                <div className="rounded-[36px] overflow-hidden bg-white p-3.5 pt-3 flex flex-col shadow-inner">
-                  {/* Status Bar */}
-                  <div className="flex items-center justify-between text-[10px] font-semibold text-slate-800 px-2 pb-1.5">
-                    <span>9:41</span>
-                    <div className="w-16 h-3 bg-slate-950 rounded-full mx-auto" />
-                    <div className="flex items-center gap-1.5 text-slate-700">
-                      <span className="inline-block w-2.5 h-2 bg-slate-800 rounded-xs" />
-                      <Wifi className="w-3 h-3" />
-                      <Battery className="w-3 h-3" />
-                    </div>
-                  </div>
-
-                  {/* App Screen Header */}
-                  <p className="font-bold text-slate-900 text-xs sm:text-sm mt-1.5 mb-2.5 px-1">
-                    West Bengal & Central Exams
-                  </p>
-
-                  {/* Exam List Cards */}
-                  <div className="space-y-2">
-                    {/* WBP Constable */}
-                    <div
-                      onClick={() => navigate('/exams/wbp-constable')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src="/images/exams/wbp_police.png"
-                          alt="WBP"
-                          className="w-7 h-7 object-contain rounded-md"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-                            WBP Constable
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">West Bengal Police</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
-                    </div>
-
-                    {/* Kolkata Police */}
-                    <div
-                      onClick={() => navigate('/exams/kp-police-si')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src="/images/exams/icon_kolkata_police.png"
-                          alt="Kolkata Police"
-                          className="w-7 h-7 object-contain rounded-md"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-                            Kolkata Police
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Kolkata Police</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
-                    </div>
-
-                    {/* RRB */}
-                    <div
-                      onClick={() => navigate('/exams/railway-group-d')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src="/images/exams/icon_railway_exact.png"
-                          alt="RRB"
-                          className="w-7 h-7 object-contain rounded-md"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-                            RRB
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Indian Railways</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
-                    </div>
-
-                    {/* SSC GD */}
-                    <div
-                      onClick={() => navigate('/exams')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src="/images/exams/icon_ssc_clean.png"
-                          alt="SSC GD"
-                          className="w-7 h-7 object-contain rounded-md"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-                            SSC GD
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Staff Selection Commission</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
-                    </div>
-
-                    {/* SSC MTS */}
-                    <div
-                      onClick={() => navigate('/exams')}
-                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src="/images/exams/icon_ssc_clean.png"
-                          alt="SSC MTS"
-                          className="w-7 h-7 object-contain rounded-md"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-                            SSC MTS
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Staff Selection Commission</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Authentic West Bengal Silhouette Map & Motto */}
-            <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col items-center lg:items-start justify-center gap-5 sm:gap-8 lg:gap-5 text-center lg:text-left">
-              {/* Authentic West Bengal Map Silhouette */}
-              <div className="relative">
+            {/* Right Graphic Column: Phone Mockup + Bengal Silhouette */}
+            <div className="lg:col-span-6 flex items-center justify-center relative">
+              {/* Silhouette Map of West Bengal */}
+              <div className="absolute -right-4 sm:right-4 top-1/2 -translate-y-1/2 w-[280px] sm:w-[350px] opacity-35 pointer-events-none select-none z-0">
                 <img
                   src="/images/west_bengal_silhouette.svg"
-                  alt="West Bengal"
-                  className="w-32 sm:w-40 lg:w-44 xl:w-48 h-auto drop-shadow-sm transition-transform duration-500 hover:scale-105 select-none pointer-events-none"
+                  alt="West Bengal Map"
+                  className="w-full h-auto object-contain"
                 />
               </div>
 
-              {/* Motto */}
-              <div className="flex flex-col items-center lg:items-start">
-                <span className="text-slate-900 font-black text-2xl sm:text-3xl lg:text-[30px] leading-[1.12] tracking-tight">
-                  For a<br />
-                  Stronger<br />
-                  West Bengal
-                </span>
-                <div className="w-12 h-1.5 bg-blue-600 rounded-full mt-3" />
+              {/* "For a Stronger West Bengal" badge */}
+              <div className="absolute right-2 sm:right-6 bottom-8 z-20 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-blue-100 shadow-md text-right hidden sm:block">
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  For a
+                </p>
+                <p className="text-xs font-black text-blue-700">
+                  Stronger West Bengal
+                </p>
+              </div>
+
+              {/* Smartphone Container */}
+              <div className="relative z-10 w-[270px] sm:w-[310px] bg-slate-900 rounded-[2.8rem] p-2.5 sm:p-3 shadow-2xl ring-1 ring-slate-800">
+                {/* Phone Notch */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-4 bg-slate-900 rounded-full z-20" />
+
+                {/* Inner Screen */}
+                <div className="bg-white rounded-[2.2rem] overflow-hidden pt-7 pb-4 px-3 sm:px-4 shadow-inner border border-slate-100">
+                  <div className="text-center pb-3 border-b border-slate-100">
+                    <p className="text-xs font-extrabold text-slate-800">
+                      West Bengal & Central Exams
+                    </p>
+                  </div>
+
+                  {/* Exam list inside phone */}
+                  <div className="divide-y divide-slate-100 py-1 space-y-1">
+                    {[
+                      {
+                        name: 'WBP Constable',
+                        sub: 'West Bengal Police',
+                        icon: '/images/exams/wbp_police.png',
+                      },
+                      {
+                        name: 'Kolkata Police',
+                        sub: 'Kolkata Police',
+                        icon: '/images/exams/icon_kolkata_police.png',
+                      },
+                      {
+                        name: 'RRB',
+                        sub: 'Indian Railways',
+                        icon: '/images/exams/icon_railway_exact.png',
+                      },
+                      {
+                        name: 'SSC GD',
+                        sub: 'Staff Selection Commission',
+                        icon: '/images/exams/icon_ssc_clean.png',
+                      },
+                      {
+                        name: 'SSC MTS',
+                        sub: 'Staff Selection Commission',
+                        icon: '/images/exams/icon_ssc_clean.png',
+                      },
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between py-2 px-1 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={item.icon}
+                            alt={item.name}
+                            className="w-7 h-7 object-contain"
+                          />
+                          <div className="text-left">
+                            <p className="text-xs font-bold text-slate-800 leading-tight">
+                              {item.name}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {item.sub}
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -542,34 +445,27 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* =========================================================================
-          3. POPULAR EXAM CATEGORIES SECTION (FULL SCREEN & MICRO ANIMATED)
+          3. SECTION 2: POPULAR EXAMS ("Explore Your Exam")
           ========================================================================= */}
-      <section id="exams" className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white via-slate-50/40 to-white overflow-hidden border-b border-slate-100">
-        {/* Soft ambient corner blobs matching the design with gentle breathing animation */}
-        <div className="absolute -top-28 -left-28 w-[420px] h-[420px] bg-gradient-to-br from-blue-100/60 to-sky-100/30 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
-        <div className="absolute -top-28 -right-28 w-[420px] h-[420px] bg-gradient-to-bl from-sky-100/60 to-blue-100/30 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
-        <div className="absolute -bottom-28 -left-28 w-[420px] h-[420px] bg-gradient-to-tr from-sky-100/50 to-blue-50/30 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute -bottom-28 -right-28 w-[420px] h-[420px] bg-gradient-to-tl from-blue-100/50 to-sky-50/30 rounded-full blur-3xl pointer-events-none -z-10" />
-
-        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Top Header */}
-          <div className="text-center max-w-2xl mx-auto mb-4">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-sky-100/80 text-blue-600 text-xs font-bold tracking-widest uppercase mb-3.5 border border-sky-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
-              <LottieIcon src="/lottie/icons/fire.json" className="w-4 h-4" />
-              <span>POPULAR EXAMS</span>
+      <section id="exams" className="py-16 sm:py-20 bg-slate-50/50 border-t border-b border-slate-100">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center space-y-3 max-w-2xl mx-auto mb-10 sm:mb-12">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
+              POPULAR EXAMS
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
               Explore <span className="text-blue-600">Your Exam</span>
             </h2>
-            <p className="text-slate-600 text-sm sm:text-base lg:text-lg mt-3 font-normal leading-relaxed max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               Choose your target exam and start practicing with topic-wise tests, PYQs and full mock tests.
             </p>
           </div>
 
-          {/* Filter Tabs & Search Bar Row */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 mb-8">
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto justify-center md:justify-start">
+          {/* Filter Tabs & Search Row */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+            {/* Category Pills */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               {examCategories.map((cat) => {
                 const isActive = selectedCategory === cat.id;
                 return (
@@ -577,510 +473,651 @@ export const Landing: React.FC = () => {
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 scale-105 font-bold ring-2 ring-blue-500/20'
-                        : 'bg-white hover:bg-blue-50/70 text-slate-600 hover:text-blue-600 border border-slate-200/80 hover:border-blue-200 hover:shadow-sm'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
                     }`}
                   >
-                    {cat.id === 'all' && (
-                      <LottieIcon src="/lottie/icons/target.json" className={`w-3.5 h-3.5 ${isActive ? 'brightness-200' : ''}`} />
-                    )}
-                    <span>{cat.label}</span>
+                    {cat.label}
                   </button>
                 );
               })}
             </div>
 
-            {/* Search Bar */}
-            <div className="relative w-full md:w-72 group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" />
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
+                placeholder="Search exams..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search exams..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
+                className="w-full pl-9 pr-4 py-2 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 shadow-xs"
               />
             </div>
           </div>
 
-          {/* 8 Exam Cards Grid (4 columns × 2 rows) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          {/* 8 Exam Cards Grid (4 columns) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {filteredPopularExams.map((exam, index) => (
               <div
                 key={index}
                 onClick={() => navigate(exam.route)}
-                className="group relative bg-white rounded-2xl p-5 sm:p-6 border border-slate-100/90 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.06)] hover:shadow-xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer flex flex-col justify-between overflow-hidden"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(exam.route)}
+                className="group rounded-2xl bg-white border border-slate-200/90 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 cursor-pointer flex items-center justify-between gap-3"
               >
-                {/* Subtle top-right hover shimmer */}
-                <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-blue-50/70 via-sky-50/30 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                <div>
-                  {/* Top Row: Icon & Circular Action Arrow */}
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      {exam.isCustomIcon ? (
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
-                          <LottieIcon src="/lottie/icons/target.json" className="w-7 h-7" />
-                        </div>
-                      ) : (
-                        <img
-                          src={exam.icon}
-                          alt={exam.title}
-                          className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-sm"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      )}
+                <div className="flex items-center gap-3.5 min-w-0">
+                  {exam.isCustomIcon ? (
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      <Layers className="w-5 h-5" />
                     </div>
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:translate-x-0.5">
-                      <ChevronRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 p-1 group-hover:border-blue-200 transition-colors">
+                      <img
+                        src={exam.icon}
+                        alt={exam.title}
+                        className="w-8 h-8 object-contain"
+                      />
                     </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="mt-4">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors duration-200 leading-snug">
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                       {exam.title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-400 group-hover:text-slate-500 font-medium mt-1 transition-colors duration-200">
+                    <p className="text-[11px] text-slate-500 truncate mt-0.5">
                       {exam.subtitle}
                     </p>
                   </div>
                 </div>
 
-                {/* Micro animated status indicator tag */}
-                <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px] font-semibold text-slate-500 group-hover:text-blue-600 transition-colors duration-200">
-                  <div className="flex items-center gap-1.5">
-                    <LottieIcon src="/lottie/icons/zap.json" className="w-3.5 h-3.5" />
-                    <span>Mock Tests & PYQs</span>
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100 opacity-80 group-hover:opacity-100 transition-opacity">
-                    Active
-                  </span>
+                <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                  <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Bottom CTA Button */}
-          <div className="text-center mt-10 sm:mt-12">
+          {/* Bottom "View All Exams" Button */}
+          <div className="text-center mt-10">
             <Button
               size="lg"
               onClick={() => navigate('/exams')}
-              className="group bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-sm sm:text-base px-9 py-4 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 hover:-translate-y-0.5 inline-flex items-center gap-3 transition-all duration-200"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-blue-500/20 text-sm gap-2"
             >
-              <LottieIcon src="/lottie/icons/target.json" className="w-5 h-5 invert brightness-200" />
               <span>View All Exams</span>
-              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+              <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          4. 4 CORE PRODUCT PILLARS (MICRO ANIMATED & LOTTIE ENHANCED)
+          4. SECTION 3: HOW PRACTICEKORO WORKS ("From Preparation to Progress")
           ========================================================================= */}
-      <section id="features" className="py-20 lg:py-28 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden">
-        {/* Soft background ambient glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-blue-100/30 via-sky-50/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
-
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-widest uppercase mb-1 border border-blue-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
-              <LottieIcon src="/lottie/icons/zap.json" className="w-4 h-4" />
-              <span>CORE FEATURES</span>
+      <section id="how-it-works" className="py-16 sm:py-20 bg-white">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center space-y-3 max-w-2xl mx-auto mb-12 sm:mb-16">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
+              HOW PRACTICEKORO WORKS
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              অ্যাসপিরেন্টদের সফলতার জন্য <span className="text-blue-600">৪টি শক্তিশালী ফিচার</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              From <span className="text-blue-600">Preparation</span> to{' '}
+              <span className="text-blue-600">Progress</span>
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              শুধুমাত্র সাধারণ কুইজ নয়—একটি পূর্ণাঙ্গ এক্সাম ও রিভিশন ইকোসিস্টেম
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              A simple way to practice, test and improve — all in one place.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-7 sm:gap-8">
-            {features.map((feat, i) => (
-              <div
-                key={i}
-                className="group relative bg-white rounded-3xl p-7 sm:p-8 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-2xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 ease-out overflow-hidden"
-              >
-                {/* Shimmer top gradient */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-50/70 via-sky-50/30 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                <div className="flex items-start gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/80 shadow-sm shrink-0 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                    <LottieIcon src={feat.lottie} className="w-7 h-7" />
-                  </div>
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100/80">
-                        {feat.badge}
-                      </span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                        {feat.titleEn}
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors duration-200 pt-1">
-                      {feat.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-1">
-                      {feat.desc}
-                    </p>
-                  </div>
-                </div>
+          {/* 3 Step Flow Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Step 1 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:border-blue-200 transition-all text-center flex flex-col items-center relative">
+              {/* Step number badge */}
+              <div className="absolute top-4 left-4 w-7 h-7 rounded-lg bg-blue-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+                01
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* =========================================================================
-          5. THE 4-STEP STUDENT LOOP (HOW IT WORKS)
-          ========================================================================= */}
-      <section id="how-it-works" className="py-20 lg:py-28 bg-white relative overflow-hidden">
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-600 text-xs font-bold tracking-widest uppercase mb-1 border border-sky-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
-              <LottieIcon src="/lottie/icons/target.json" className="w-4 h-4" />
-              <span>LEARNING CYCLE</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              কীভাবে PracticeKoro আপনার <span className="text-blue-600">নম্বর বৃদ্ধি করে?</span>
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Exam → Attempt → Result → Mistakes → Revision: প্রতিটি ধাপে সর্বোচ্চ আত্মবিশ্বাস
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            {loopSteps.map((step, i) => (
-              <div
-                key={i}
-                className="group relative rounded-3xl bg-white border border-slate-100 p-7 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden"
-              >
-                {/* Shimmer top gradient */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-50/60 via-transparent to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-black text-slate-200 font-mono group-hover:text-blue-600 transition-colors duration-200">
-                      {step.step}
-                    </span>
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                      <LottieIcon src={step.lottie} className="w-6 h-6" />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 pt-4 group-hover:text-blue-600 transition-colors duration-200 leading-snug">
-                    {step.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-2">
-                    {step.desc}
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px] font-semibold text-blue-600">
-                  <span>ধাপ {step.step}</span>
-                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          6. TRANSPARENT PRICING (ALL-ACCESS PRO PASS)
-          ========================================================================= */}
-      <section id="pricing" className="py-20 lg:py-28 bg-gradient-to-b from-slate-50 via-white to-slate-50/40 border-y border-slate-100 relative overflow-hidden">
-        {/* Soft background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-gradient-to-tr from-sky-100/30 via-blue-50/20 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
-
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 text-amber-700 text-xs font-bold tracking-widest uppercase mb-1 border border-amber-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
-              <LottieIcon src="/lottie/icons/fire.json" className="w-4 h-4" />
-              <span>TRANSPARENT PRICING</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              একটি পাস। <span className="text-blue-600">সমস্ত প্রিমিয়াম মক টেস্ট।</span>
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              কোনো পৃথক টেস্ট বিক্রি নেই, কোনো মাসিক চার্জ নেই। বছরে একবার মাত্র ₹২৯৯।
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
-            {/* Free Tier Card */}
-            <div className="rounded-3xl border border-slate-200/90 bg-white p-8 sm:p-10 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
-              <div className="space-y-6">
-                <div>
-                  <span className="text-xs font-black tracking-wider uppercase text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                    ফ্রি প্ল্যান (Free Tier)
-                  </span>
-                  <div className="mt-5 flex items-baseline gap-2">
-                    <span className="text-5xl font-black text-slate-900">₹০</span>
-                    <span className="text-xs font-semibold text-slate-500">/ আজীবনের জন্য ফ্রি</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-2.5 leading-relaxed">
-                    প্রতিটি পরীক্ষার ফ্রি ডেমো মক টেস্ট দিয়ে প্ল্যাটফর্ম যাচাই করুন
-                  </p>
-                </div>
-
-                <div className="space-y-3.5 border-t border-slate-100 pt-6 text-xs sm:text-sm text-slate-700">
-                  <div className="flex items-center gap-3">
-                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>ফ্রি ফুল মক টেস্টে এক্সেস</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>রিয়েল এক্সাম সিমুলেটর ও কাউন্টডাউন টাইমার</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>তাৎক্ষণিক রেজাল্ট ও স্কোরকার্ড</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-400">
-                    <Lock className="w-4 h-4 shrink-0" />
-                    <span>প্রিমিয়াম ফুল মক টেস্ট সিরিজ</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-400">
-                    <Lock className="w-4 h-4 shrink-0" />
-                    <span>স্বয়ংক্রিয় ভুল সংশোধন খাতা (Mistakes Notebook)</span>
-                  </div>
+              {/* Graphic container */}
+              <div className="w-36 h-28 bg-blue-50/50 rounded-xl border border-blue-100/60 flex items-center justify-center mb-6 mt-4 p-3">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <img src="/images/exams/wbp_police.png" alt="WBP" className="w-8 h-8 object-contain" />
+                  <img src="/images/exams/icon_kolkata_police.png" alt="KP" className="w-8 h-8 object-contain" />
+                  <img src="/images/exams/icon_railway_exact.png" alt="Railway" className="w-8 h-8 object-contain" />
+                  <img src="/images/exams/icon_ssc_clean.png" alt="SSC" className="w-8 h-8 object-contain" />
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full mt-8 font-bold text-sm py-4 rounded-xl border-slate-300 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 transition"
-                onClick={() => navigate('/register')}
-              >
-                ফ্রি অ্যাকাউন্ট তৈরি করুন
-              </Button>
-            </div>
-
-            {/* Pro Pass Featured Card */}
-            <div className="relative rounded-3xl border-2 border-blue-500 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white p-8 sm:p-10 shadow-2xl flex flex-col justify-between overflow-hidden ring-4 ring-blue-500/15">
-              {/* Popular Tag */}
-              <div className="absolute -top-3.5 right-6 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">
-                <Crown className="w-3.5 h-3.5 fill-slate-950" />
-                <span>সেরা পছন্দ (Best Value)</span>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
-                    <span className="text-xs font-black tracking-wider uppercase text-amber-400">
-                      অল-অ্যাক্সেস প্রো পাস
-                    </span>
-                  </div>
-                  <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-5xl sm:text-6xl font-black text-white">₹২৯৯</span>
-                    <span className="text-xs font-semibold text-slate-300">/ ৩৬৫ দিন</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
-                    একটি সক্রিয় পাসেই বর্তমান ও ভবিষ্যতের সমস্ত পরীক্ষার সমস্ত প্রিমিয়াম টেস্ট আনলক
-                  </p>
-                </div>
-
-                <div className="space-y-3.5 border-t border-slate-800 pt-6 text-xs sm:text-sm text-slate-200">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span className="font-semibold text-white">সমস্ত সরকারি চাকরির প্রিমিয়াম মক টেস্ট আনলক</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>চ্যাপ্টার-ওয়াইজ ও সাবজেক্ট-ওয়াইজ অ্যাডভান্সড টেস্ট</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>স্বয়ংক্রিয় ভুল সংশোধন খাতা (Mistakes Notebook)</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>দ্বিভাষিক সমাধান ও ব্যাখ্যা (বাংলা & English)</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>আনলিমিটেড রি-অ্যাটেম্পট ও স্কোর ট্র্যাকিং</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>কোনো বিজ্ঞাপন বা বিভ্রান্তি নেই</span>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                size="lg"
-                className="w-full mt-8 font-black text-sm sm:text-base py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-500/30 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
-                onClick={() => navigate('/register')}
-              >
-                <span>এখনই প্রো পাস নিয়ে প্রস্তুতি শুরু করুন</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          7. FAQ SECTION
-          ========================================================================= */}
-      <section id="faq" className="py-20 lg:py-28 bg-white relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 space-y-3">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-widest uppercase mb-1 border border-blue-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
-              <LottieIcon src="/lottie/icons/target.json" className="w-4 h-4" />
-              <span>FREQUENTLY ASKED QUESTIONS</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              আপনার মনে কি <span className="text-blue-600">কোনো প্রশ্ন আছে?</span>
-            </h2>
-            <p className="text-sm sm:text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
-              PracticeKoro সম্পর্কে অ্যাসপিরেন্টদের বহুল জিজ্ঞাসিত প্রশ্নের উত্তর
-            </p>
-          </div>
-
-          <div className="space-y-3.5">
-            {faqs.map((faq, i) => (
-              <div
-                key={i}
-                className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm hover:border-blue-300 transition-all duration-200"
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleFaq(i)}
-                  className="w-full flex items-center justify-between p-5 sm:p-6 text-left bg-white hover:bg-slate-50/80 font-bold text-sm sm:text-base text-slate-900 transition-colors"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-slate-400 transition-transform duration-200 shrink-0 ml-4 ${
-                      openFaq === i ? 'rotate-180 text-blue-600' : ''
-                    }`}
-                  />
-                </button>
-                {openFaq === i && (
-                  <div className="px-5 sm:px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/50">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          8. FINAL CALL TO ACTION (CTA BANNER)
-          ========================================================================= */}
-      <section className="py-16 sm:py-20 bg-slate-50/70 relative overflow-hidden">
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
-          <div className="relative rounded-3xl overflow-hidden py-14 sm:py-16 lg:py-20 px-6 sm:px-12 lg:px-16 bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600 text-white shadow-2xl text-center space-y-6">
-            {/* Soft radial background glow inside banner */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl pointer-events-none -z-0" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sky-300/10 rounded-full blur-3xl pointer-events-none -z-0" />
-
-            <div className="relative z-10 max-w-3xl mx-auto space-y-5">
-              <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-white text-xs font-bold tracking-widest uppercase border border-white/25 shadow-sm">
-                <LottieIcon src="/lottie/icons/zap.json" className="w-4 h-4 brightness-200" />
-                <span>স্বপ্নপূরণের যাত্রা শুরু হোক</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight">
-                আজই শুরু করুন আপনার সফলতার নির্ভুল প্রস্তুতি
-              </h2>
-              <p className="text-sm sm:text-base text-blue-100 max-w-2xl mx-auto leading-relaxed">
-                হাজার হাজার অ্যাসপিরেন্টের মতো আপনিও প্রতিদিন মক টেস্ট দিন, ভুল সংশোধন করুন এবং পরীক্ষার হলের ভয় দূর করুন।
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                Choose Your Exam
+              </h3>
+              <p className="text-xs text-slate-500 mt-2 max-w-xs leading-relaxed">
+                Select the exam you're preparing for.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            </div>
+
+            {/* Step 2 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:border-blue-200 transition-all text-center flex flex-col items-center relative">
+              {/* Step number badge */}
+              <div className="absolute top-4 left-4 w-7 h-7 rounded-lg bg-blue-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+                02
+              </div>
+
+              {/* Graphic container */}
+              <div className="w-36 h-28 bg-blue-50/50 rounded-xl border border-blue-100/60 flex flex-col justify-center px-4 py-3 mb-6 mt-4 space-y-1.5">
+                <div className="h-2 bg-slate-200 rounded-full w-full" />
+                <div className="space-y-1 pt-1 text-left text-[9px] font-bold text-slate-600">
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-slate-300" /> Option A</div>
+                  <div className="flex items-center gap-1.5 text-blue-600"><div className="w-2 h-2 rounded-full bg-blue-600" /> Option B (Selected)</div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-slate-300" /> Option C</div>
+                </div>
+              </div>
+
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                Practice & Test
+              </h3>
+              <p className="text-xs text-slate-500 mt-2 max-w-xs leading-relaxed">
+                Take full mock tests, PYQs and topic-wise tests.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:border-blue-200 transition-all text-center flex flex-col items-center relative">
+              {/* Step number badge */}
+              <div className="absolute top-4 left-4 w-7 h-7 rounded-lg bg-blue-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+                03
+              </div>
+
+              {/* Graphic container */}
+              <div className="w-36 h-28 bg-blue-50/50 rounded-xl border border-blue-100/60 flex flex-col items-center justify-center mb-6 mt-4 p-2">
+                <div className="w-14 h-14 rounded-full border-4 border-blue-600 border-t-blue-200 flex items-center justify-center bg-white shadow-xs">
+                  <span className="text-[11px] font-black text-slate-800">78%</span>
+                </div>
+                <span className="text-[10px] font-bold text-slate-500 mt-1">Your Score</span>
+              </div>
+
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                Check Your Results
+              </h3>
+              <p className="text-xs text-slate-500 mt-2 max-w-xs leading-relaxed">
+                Get detailed analysis, find weak areas and improve.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          5. SECTION 4: TOOLS THAT HELP YOU IMPROVE ("Practice Smarter")
+          ========================================================================= */}
+      <section id="features" className="py-16 sm:py-20 bg-slate-50/50 border-t border-b border-slate-100">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center space-y-3 max-w-2xl mx-auto mb-12 sm:mb-16">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
+              PRACTICE SMARTER
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              Tools That Help You <span className="text-blue-600">Improve</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Everything you need for focused and effective preparation.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+            {/* Left 6 Feature Cards (2x3 Grid) */}
+            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              {toolsFeatures.map((tool, index) => {
+                const IconComponent = tool.icon;
+                return (
+                  <div
+                    key={index}
+                    className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-300 space-y-2.5"
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${tool.color}`}>
+                      <IconComponent className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                          {tool.title}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        {tool.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right Interactive Mobile Student App Showcase */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="w-[280px] sm:w-[320px] bg-slate-900 rounded-[2.8rem] p-3 shadow-2xl ring-1 ring-slate-800">
+                {/* Speaker Notch */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-4 bg-slate-900 rounded-full z-20" />
+
+                {/* Inner Screen Content */}
+                <div className="bg-slate-50 rounded-[2.2rem] overflow-hidden p-4 space-y-3.5 border border-slate-100 text-slate-900">
+                  {/* Status Bar */}
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 px-1 pt-2">
+                    <span>9:41</span>
+                    <div className="flex items-center gap-1.5 text-slate-600">
+                      <Zap className="w-3 h-3" />
+                    </div>
+                  </div>
+
+                  {/* App Header */}
+                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-medium">Good Morning,</p>
+                      <p className="text-xs font-black text-slate-900">Keep Practicing!</p>
+                    </div>
+                    <div className="p-1.5 rounded-full bg-slate-100 text-slate-600">
+                      <Bell className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+
+                  {/* Your Progress Widget */}
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-xs space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className="text-slate-800">Your Progress</span>
+                      <span className="text-blue-600 text-[10px]">View All</span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {/* Radial indicator */}
+                      <div className="w-14 h-14 rounded-full border-4 border-blue-600 border-t-slate-100 flex flex-col items-center justify-center shrink-0">
+                        <span className="text-xs font-black text-slate-900">68%</span>
+                        <span className="text-[7px] text-slate-400">Overall</span>
+                      </div>
+                      <div className="text-[10px] space-y-1 text-slate-500">
+                        <p><span className="font-bold text-slate-800">12</span> Tests Taken</p>
+                        <p><span className="font-bold text-slate-800">8</span> Topics Completed</p>
+                        <p><span className="font-bold text-slate-800">4</span> Tests Pending</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Test Card */}
+                  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-xs space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-bold">
+                      <span className="text-slate-700">Recent Test</span>
+                      <span className="text-blue-600">See All</span>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-left">
+                      <p className="text-[11px] font-bold text-slate-800">WBP Constable Mock Test 01</p>
+                      <p className="text-[9px] text-slate-400">100 Questions • 60 Minutes</p>
+                    </div>
+                  </div>
+
+                  {/* Your Strength Bars */}
+                  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-xs space-y-2">
+                    <p className="text-[10px] font-bold text-slate-700">Your Strength</p>
+                    <div className="grid grid-cols-3 gap-1.5 text-center text-[9px] font-bold">
+                      <div className="bg-emerald-50 text-emerald-700 p-1.5 rounded-lg border border-emerald-100">
+                        85%
+                        <span className="block text-[8px] text-slate-500 font-normal">Reasoning</span>
+                      </div>
+                      <div className="bg-blue-50 text-blue-700 p-1.5 rounded-lg border border-blue-100">
+                        72%
+                        <span className="block text-[8px] text-slate-500 font-normal">GK</span>
+                      </div>
+                      <div className="bg-rose-50 text-rose-700 p-1.5 rounded-lg border border-rose-100">
+                        60%
+                        <span className="block text-[8px] text-slate-500 font-normal">Maths</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          6. SECTION 5: PRO PASS BANNER ("One Pass. All Premium Tests.")
+          ========================================================================= */}
+      <section id="pricing" className="py-14 sm:py-16 bg-white">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-[#091122] text-white p-8 sm:p-12 border border-slate-800 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10">
+            {/* Ambient Background Radial Glow */}
+            <div className="absolute -right-10 -bottom-10 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Left Content */}
+            <div className="space-y-5 max-w-2xl text-center lg:text-left">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600 text-white text-[11px] font-black uppercase tracking-wider shadow-sm">
+                PRO
+                <span className="sr-only">অল-অ্যাক্সেস প্রো পাস</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+                One Pass. All Premium Tests.
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                Unlock unlimited mock tests, PYQs, detailed analysis and more.
+              </p>
+
+              {/* 4 Feature Pills */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold border border-white/10">
+                  <FileText className="w-3.5 h-3.5 text-blue-400" />
+                  Unlimited Tests
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold border border-white/10">
+                  <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
+                  Detailed Analytics
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold border border-white/10">
+                  <Target className="w-3.5 h-3.5 text-blue-400" />
+                  Topic-wise Tests
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold border border-white/10">
+                  <Zap className="w-3.5 h-3.5 text-blue-400" />
+                  Priority Support
+                </span>
+              </div>
+
+              {/* Price & CTA */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-3">
+                <div>
+                  <span className="text-3xl sm:text-4xl font-black font-mono text-white">
+                    ₹299
+                  </span>
+                  <span className="text-xs sm:text-sm text-slate-400 font-semibold ml-2">
+                    / 365 Days
+                  </span>
+                  <span className="sr-only">₹২৯৯ ৩৬৫ দিন ₹০ অল-অ্যাক্সেস প্রো পাস</span>
+                </div>
+
                 <Button
                   size="lg"
-                  onClick={() => navigate('/register')}
-                  className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-black px-9 py-4 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-95 text-base flex items-center justify-center gap-2 transition"
+                  onClick={() => navigate('/subscription')}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/30 text-sm gap-2"
                 >
-                  <span>ফ্রি অ্যাকাউন্ট খুলুন</span>
+                  <span>Get Pro Now</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => navigate('/login')}
-                  className="w-full sm:w-auto text-white hover:bg-white/10 font-bold px-8 py-4 border border-white/30 rounded-xl text-base transition"
-                >
-                  আগের অ্যাকাউন্ট থাকলে লগইন করুন
-                </Button>
               </div>
+            </div>
+
+            {/* Right Glowing Crown Card */}
+            <div className="flex flex-col items-center justify-center relative shrink-0">
+              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-blue-600/30 border border-blue-400/40 backdrop-blur-md flex items-center justify-center shadow-inner relative group">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/40">
+                  <Crown className="w-10 h-10 sm:w-12 sm:h-12 text-white fill-white" />
+                </div>
+                {/* Sparkle icons */}
+                <Sparkles className="w-4 h-4 text-blue-300 absolute top-3 left-4 animate-pulse" />
+                <Sparkles className="w-5 h-5 text-blue-300 absolute bottom-4 right-4 animate-pulse" />
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-center text-slate-300 mt-4 max-w-[180px]">
+                Take Your Preparation to the Next Level
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          9. PUBLIC FOOTER
+          7. SECTION 6: TESTIMONIALS ("Trusted by Aspirants Across West Bengal")
           ========================================================================= */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 text-slate-400 py-14 text-xs">
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
+      <section className="py-16 sm:py-20 bg-slate-50/50 border-t border-slate-100">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center space-y-3 max-w-2xl mx-auto mb-12 sm:mb-16">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
+              WHAT OUR USERS SAY
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              Trusted by Aspirants <span className="text-blue-600">Across</span> West Bengal
+            </h2>
+          </div>
+
+          {/* 3 Testimonials Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t, index) => (
+              <div
+                key={index}
+                className="rounded-2xl bg-white border border-slate-200/80 p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-blue-200 transition-all flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed italic">
+                    "{t.quote}"
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-5">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={t.avatar}
+                      alt={t.name}
+                      className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                    />
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                        {t.name}
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        {t.role}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 5 Stars */}
+                  <div className="flex items-center gap-0.5 text-amber-400">
+                    {[...Array(t.rating)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          8. SECTION 7: BOTTOM CTA BANNER ("Start Practicing Today")
+          ========================================================================= */}
+      <section className="py-14 sm:py-16 bg-white">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-gradient-to-r from-blue-50 via-sky-50 to-blue-50 border border-blue-100/90 p-8 sm:p-12 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
+            {/* Left 3D Target Dartboard Illustration */}
+            <div className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 flex items-center justify-center relative">
+              <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-lg">
+                {/* Outer ring */}
+                <circle cx="100" cy="100" r="90" fill="#e0f2fe" stroke="#38bdf8" strokeWidth="4" />
+                <circle cx="100" cy="100" r="70" fill="#ffffff" stroke="#bae6fd" strokeWidth="3" />
+                <circle cx="100" cy="100" r="50" fill="#38bdf8" />
+                <circle cx="100" cy="100" r="30" fill="#ffffff" />
+                <circle cx="100" cy="100" r="14" fill="#2563eb" />
+                {/* Dart Arrow */}
+                <path d="M 100 100 L 160 40 L 170 50 L 110 110 Z" fill="#1d4ed8" />
+                <polygon points="160,40 180,20 170,50" fill="#ef4444" />
+                <circle cx="100" cy="100" r="4" fill="#ffffff" />
+              </svg>
+            </div>
+
+            {/* Center Content */}
+            <div className="space-y-3 text-center md:text-left max-w-xl">
+              <p className="text-xs font-extrabold uppercase tracking-wider text-blue-600">
+                YOUR DREAM IS CLOSER
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
+                Start Practicing <span className="text-blue-600">Today</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                Join thousands of aspirants and take a step closer to your goal.
+              </p>
+            </div>
+
+            {/* Right Button */}
+            <Button
+              size="lg"
+              onClick={() => navigate('/register')}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/20 text-sm gap-2 shrink-0 self-stretch sm:self-auto"
+            >
+              <span>Get Started Free</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          9. FAQ SECTION (Interactive Accordion)
+          ========================================================================= */}
+      <section className="py-12 bg-slate-50/50 border-t border-slate-100">
+        <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="text-center space-y-2 mb-8">
+            <h3 className="text-xl font-bold text-slate-900">
+              Frequently Asked Questions (FAQ)
+            </h3>
+            <p className="text-xs text-slate-500">
+              সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্নাবলি ও সঠিক উত্তর
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {faqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <div
+                  key={index}
+                  className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-xs transition-colors"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleFaq(index)}
+                    className="w-full px-5 py-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-slate-900 hover:text-blue-600"
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180 text-blue-600' : ''
+                      }`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-50 pt-3">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          10. FOOTER
+          ========================================================================= */}
+      <footer id="about" className="bg-white border-t border-slate-200 py-12 sm:py-16">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             {/* Col 1: Brand */}
-            <div className="space-y-3 md:col-span-2">
-              <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="space-y-3">
+              <Link to="/" className="flex items-center gap-2">
                 <img
                   src="/logo-icon-transparent.png"
                   alt="PracticeKoro"
-                  className="w-9 h-9 object-contain rounded-xl transition-transform group-hover:scale-105"
+                  className="w-7 h-7 object-contain"
                 />
-                <span className="font-black text-xl text-white tracking-tight">
-                  Practice<span className="text-blue-500">Koro</span>
+                <span className="font-black text-xl text-slate-900 tracking-tight">
+                  Practice<span className="text-blue-600">Koro</span>
                 </span>
               </Link>
-              <p className="text-slate-400 text-xs sm:text-sm max-w-md leading-relaxed">
-                পশ্চিমবঙ্গের সরকারি চাকরি পরীক্ষার্থীদের জন্য তৈরি ফোকাসড মক টেস্ট ও ভুল সংশোধন প্ল্যাটফর্ম।
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Smart practice for a brighter tomorrow. Made for West Bengal's aspirants.
               </p>
-              <p className="text-[11px] text-slate-500 pt-1">
-                WBP Constable • Kolkata Police • WBCS • WBPSC Clerkship • Railway • Primary TET
+              <p className="text-xs text-slate-400 font-medium">
+                Email: <a href="mailto:support@practicekoro.com" className="text-blue-600 hover:underline">support@practicekoro.com</a>
               </p>
             </div>
 
-            {/* Col 2: Navigation */}
+            {/* Col 2: Quick Links */}
             <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-white">ন্যাভিগেশন</p>
-              <ul className="space-y-2 text-slate-400">
-                <li><a href="#exams" className="hover:text-blue-400 transition-colors">পরীক্ষাসমূহ (Exams)</a></li>
-                <li><a href="#features" className="hover:text-blue-400 transition-colors">বৈশিষ্ট্যসমূহ (Features)</a></li>
-                <li><a href="#pricing" className="hover:text-blue-400 transition-colors">প্রো পাস সাবস্ক্রিপশন</a></li>
-                <li><a href="#faq" className="hover:text-blue-400 transition-colors">সাধারণ প্রশ্নোত্তর (FAQ)</a></li>
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                Quick Links
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold text-slate-600">
+                <li><a href="#exams" className="hover:text-blue-600 transition-colors">Exams</a></li>
+                <li><a href="#features" className="hover:text-blue-600 transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-blue-600 transition-colors">Pricing</a></li>
+                <li><a href="#about" className="hover:text-blue-600 transition-colors">About</a></li>
               </ul>
             </div>
 
-            {/* Col 3: Legal & Support */}
+            {/* Col 3: Support */}
             <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-white">যোগাযোগ ও সহায়তা</p>
-              <ul className="space-y-2 text-slate-400">
-                <li><span className="text-slate-400">সাপোর্ট ইমেইল:</span> support@practicekoro.com</li>
-                <li><Link to="/login" className="hover:text-blue-400 transition-colors">লগইন করুন</Link></li>
-                <li><Link to="/register" className="hover:text-blue-400 transition-colors">নতুন অ্যাকাউন্ট তৈরি</Link></li>
-                <li><Link to="/subscription" className="hover:text-blue-400 transition-colors">সাবস্ক্রিপশন পলিসি</Link></li>
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                Support
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold text-slate-600">
+                <li><a href="mailto:support@practicekoro.com" className="hover:text-blue-600 transition-colors">Help Center</a></li>
+                <li><a href="mailto:support@practicekoro.com" className="hover:text-blue-600 transition-colors">Contact Us</a></li>
+                <li><Link to="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link></li>
               </ul>
+            </div>
+
+            {/* Col 4: Follow Us */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                Follow Us
+              </h4>
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://youtube.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+                <a
+                  href="https://telegram.org"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                </a>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+              </div>
             </div>
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-            <p>© {new Date().getFullYear()} PracticeKoro. All rights reserved. Made for West Bengal Aspirants.</p>
-            <div className="flex items-center gap-4 text-slate-500">
-              <span className="hover:text-slate-400 cursor-pointer">Privacy Policy</span>
-              <span>•</span>
-              <span className="hover:text-slate-400 cursor-pointer">Terms of Service</span>
-              <span>•</span>
-              <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
-                v2.0 Production Ready
-              </span>
-            </div>
+          <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+            <p>© 2025 PracticeKoro. All rights reserved.</p>
+            <p className="text-slate-400">
+              Designed for serious West Bengal & Central competitive exam preparation.
+            </p>
           </div>
         </div>
       </footer>
