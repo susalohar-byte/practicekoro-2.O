@@ -7,6 +7,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        primary: {
+          DEFAULT: '#2563eb',
+          foreground: '#ffffff',
+        },
+        background: '#ffffff',
+        foreground: '#0f172a',
         brand: {
           50: '#eff6ff',
           100: '#dbeafe',

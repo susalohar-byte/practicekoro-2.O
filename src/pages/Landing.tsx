@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import {
   Crown,
   Clock,
@@ -14,7 +15,6 @@ import {
   Bookmark,
   Search,
   Sparkles,
-  LayoutDashboard,
   Bell,
   Star,
   Layers,
@@ -248,15 +248,11 @@ export const Landing: React.FC = () => {
             {/* Auth / Dashboard CTA */}
             <div className="flex items-center gap-3">
               {user ? (
-                <Button
-                  size="sm"
+                <InteractiveHoverButton
+                  text="Dashboard"
                   onClick={() => navigate(dashboardUrl)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-xl shadow-sm gap-2"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>Dashboard</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                  className="w-32 sm:w-36 text-xs sm:text-sm h-9 sm:h-10 border-blue-200 text-blue-600 shadow-sm"
+                />
               ) : (
                 <>
                   <Button
@@ -311,14 +307,22 @@ export const Landing: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
-                <Button
-                  size="lg"
-                  onClick={() => navigate('/register')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 text-sm sm:text-base gap-2"
-                >
-                  <span>Get Started Free</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+                {user ? (
+                  <InteractiveHoverButton
+                    text="Dashboard"
+                    onClick={() => navigate(dashboardUrl)}
+                    className="w-40 sm:w-44 h-12 text-sm sm:text-base border-blue-200 text-blue-700 shadow-md"
+                  />
+                ) : (
+                  <Button
+                    size="lg"
+                    onClick={() => navigate('/register')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 text-sm sm:text-base gap-2"
+                  >
+                    <span>Get Started Free</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="lg"

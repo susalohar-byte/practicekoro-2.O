@@ -108,8 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } else {
         if (isSupabaseConfigured) {
-          setUser(null);
-          localStorage.removeItem('practicekoro_user');
+          const saved = localStorage.getItem('practicekoro_user');
+          if (!saved) {
+            setUser(null);
+            localStorage.removeItem('practicekoro_user');
+          }
         }
       }
     });
