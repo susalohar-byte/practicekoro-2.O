@@ -30,3 +30,7 @@ dist-ssr
 
 # Supabase
 supabase/.temp/
+
+# Distribution archives
+*.zip
+*.tar.gz
