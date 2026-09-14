@@ -283,7 +283,7 @@ export const Landing: React.FC = () => {
         {/* Soft background glow */}
         <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-6 text-center lg:text-left space-y-6">
@@ -356,7 +356,7 @@ export const Landing: React.FC = () => {
             {/* Right Graphic Column: Phone Mockup + Bengal Silhouette */}
             <div className="lg:col-span-6 flex items-center justify-center relative">
               {/* Silhouette Map of West Bengal */}
-              <div className="absolute -right-4 sm:right-4 top-1/2 -translate-y-1/2 w-[280px] sm:w-[350px] opacity-35 pointer-events-none select-none z-0">
+              <div className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 w-[240px] sm:w-[300px] opacity-35 pointer-events-none select-none z-0">
                 <img
                   src="/images/west_bengal_silhouette.svg"
                   alt="West Bengal Map"
@@ -365,7 +365,7 @@ export const Landing: React.FC = () => {
               </div>
 
               {/* "For a Stronger West Bengal" badge */}
-              <div className="absolute right-2 sm:right-6 bottom-8 z-20 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-blue-100 shadow-md text-right hidden sm:block">
+              <div className="absolute right-0 sm:right-2 bottom-8 z-20 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-blue-100 shadow-md text-right hidden sm:block">
                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   For a
                 </p>
@@ -375,7 +375,7 @@ export const Landing: React.FC = () => {
               </div>
 
               {/* Smartphone Container */}
-              <div className="relative z-10 w-[270px] sm:w-[310px] bg-slate-900 rounded-[2.8rem] p-2.5 sm:p-3 shadow-2xl ring-1 ring-slate-800">
+              <div className="relative z-10 w-[260px] sm:w-[290px] bg-slate-900 rounded-[2.8rem] p-2.5 sm:p-3 shadow-2xl ring-1 ring-slate-800">
                 {/* Phone Notch */}
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-4 bg-slate-900 rounded-full z-20" />
 
@@ -450,7 +450,7 @@ export const Landing: React.FC = () => {
           3. SECTION 2: POPULAR EXAMS ("Explore Your Exam")
           ========================================================================= */}
       <section id="exams" className="py-16 sm:py-20 bg-slate-50/50 border-t border-b border-slate-100">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-10 sm:mb-12">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
@@ -560,7 +560,7 @@ export const Landing: React.FC = () => {
           4. SECTION 3: HOW PRACTICEKORO WORKS ("From Preparation to Progress")
           ========================================================================= */}
       <section id="how-it-works" className="py-16 sm:py-20 bg-white">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-12 sm:mb-16">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
@@ -657,7 +657,7 @@ export const Landing: React.FC = () => {
           5. SECTION 4: TOOLS THAT HELP YOU IMPROVE ("Practice Smarter")
           ========================================================================= */}
       <section id="features" className="py-16 sm:py-20 bg-slate-50/50 border-t border-b border-slate-100">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-12 sm:mb-16">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
@@ -788,7 +788,7 @@ export const Landing: React.FC = () => {
           6. SECTION 5: PRO PASS BANNER ("One Pass. All Premium Tests.")
           ========================================================================= */}
       <section id="pricing" className="py-14 sm:py-16 bg-white">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-[#091122] text-white p-8 sm:p-12 border border-slate-800 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10">
             {/* Ambient Background Radial Glow */}
             <div className="absolute -right-10 -bottom-10 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -873,7 +873,7 @@ export const Landing: React.FC = () => {
           7. SECTION 6: TESTIMONIALS ("Trusted by Aspirants Across West Bengal")
           ========================================================================= */}
       <section className="py-16 sm:py-20 bg-slate-50/50 border-t border-slate-100">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-12 sm:mb-16">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
@@ -931,7 +931,7 @@ export const Landing: React.FC = () => {
           8. SECTION 7: BOTTOM CTA BANNER ("Start Practicing Today")
           ========================================================================= */}
       <section className="py-14 sm:py-16 bg-white">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-gradient-to-r from-blue-50 via-sky-50 to-blue-50 border border-blue-100/90 p-8 sm:p-12 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
             {/* Left 3D Target Dartboard Illustration */}
             <div className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 flex items-center justify-center relative">
@@ -1025,7 +1025,7 @@ export const Landing: React.FC = () => {
           10. FOOTER
           ========================================================================= */}
       <footer id="about" className="bg-white border-t border-slate-200 py-12 sm:py-16">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             {/* Col 1: Brand */}
             <div className="space-y-3">
