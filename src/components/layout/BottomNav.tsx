@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export const BottomNav: React.FC = () => {
   const tabs = [
-    { label: 'Home', path: '/', icon: Home },
+    { label: 'Home', path: '/dashboard', icon: Home },
     { label: 'Exams', path: '/exams', icon: Layers },
     { label: 'Practice', path: '/practice', icon: BookOpen },
     { label: 'Results', path: '/results', icon: BarChart3 },

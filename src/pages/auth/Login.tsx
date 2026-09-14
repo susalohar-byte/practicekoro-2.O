@@ -15,7 +15,7 @@ export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
+  const from = (location.state as { from?: { pathname?: string } })?.from?.pathname;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +33,21 @@ export const Login: React.FC = () => {
     if (res.error) {
       setError(res.error.message);
     } else {
-      navigate(from, { replace: true });
+      if (res.role === 'admin' || email.includes('admin')) {
+        navigate('/admin', { replace: true });
+      } else {
+        const dest = from && from !== '/' ? from : '/dashboard';
+        navigate(dest, { replace: true });
+      }
     }
   };
 
   const handleQuickDemo = (role: 'student' | 'admin') => {
     switchDemoRole(role);
     if (role === 'admin') {
-      navigate('/admin');
+      navigate('/admin', { replace: true });
     } else {
-      navigate(from, { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   };
 

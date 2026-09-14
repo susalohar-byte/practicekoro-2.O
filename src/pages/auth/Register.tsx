@@ -36,7 +36,7 @@ export const Register: React.FC = () => {
     } else {
       const match = exams.find((x) => x.id === targetExam);
       if (match) setSelectedExam(match);
-      navigate('/');
+      navigate('/dashboard', { replace: true });
     }
   };
 

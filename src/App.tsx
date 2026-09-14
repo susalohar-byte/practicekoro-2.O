@@ -1,8 +1,12 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from '@/components/layout/ProtectedRoute';
+
+// Public Landing Page
+import { Landing } from '@/pages/Landing';
 
 // Student Core Pages
 import { Home } from '@/pages/student/Home';
@@ -33,12 +37,48 @@ import { AdminTestQuestions } from '@/pages/admin/AdminTestQuestions';
 import { AdminQuestions } from '@/pages/admin/AdminQuestions';
 import { AdminSubscriptions } from '@/pages/admin/AdminSubscriptions';
 
+/**
+ * RootRoute:
+ * - If user is not authenticated: renders public Landing Page
+ * - If user is student: redirects to /dashboard (Student Panel)
+ * - If user is admin: redirects to /admin (Admin Panel)
+ */
+const RootRoute: React.FC = () => {
+  const { user, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
+  }
+
+  return <Landing />;
+};
+
 export const App: React.FC = () => {
   return (
     <Routes>
+      {/* Root Route (Landing for guests, redirects to appropriate panel if logged in) */}
+      <Route path="/" element={<RootRoute />} />
+      <Route path="/landing" element={<Landing />} />
+
       {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
-      <Route path="/" element={<AppLayout />}>
-        <Route index element={<Home />} />
+      <Route element={<AppLayout />}>
+        <Route
+          path="dashboard"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="app" element={<Navigate to="/dashboard" replace />} />
         <Route path="exams" element={<Tests />} />
         <Route path="exams/:testId" element={<TestDetails />} />
         <Route

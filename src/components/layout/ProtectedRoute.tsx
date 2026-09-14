@@ -78,7 +78,7 @@ export const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 };
 
 export const PublicOnlyRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -89,7 +89,7 @@ export const PublicOnlyRoute: React.FC<ProtectedRouteProps> = ({ children }) => 
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
   }
 
   return <>{children}</>;

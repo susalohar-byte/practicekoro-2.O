@@ -28,7 +28,7 @@ export const StudentNavbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Home', path: '/' },
+    { label: 'Home', path: '/dashboard' },
     { label: 'Exams', path: '/exams' },
     { label: 'Practice', path: '/practice' },
     { label: 'Results', path: '/results' },
@@ -41,7 +41,7 @@ export const StudentNavbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo & Exam Switcher */}
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-2.5 group">
+            <Link to="/dashboard" className="flex items-center gap-2.5 group">
               <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-bold shadow-md shadow-brand-600/20 group-hover:bg-brand-700 transition-colors">
                 <Shield className="w-5 h-5 fill-white/20" />
               </div>

@@ -13,8 +13,8 @@ interface AuthContextType {
   isStudent: boolean;
   isPro: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ error: Error | null }>;
-  register: (fullName: string, email: string, password: string) => Promise<{ error: Error | null }>;
+  login: (email: string, password: string) => Promise<{ error: Error | null; role?: UserRole }>;
+  register: (fullName: string, email: string, password: string) => Promise<{ error: Error | null; role?: UserRole }>;
   logout: () => Promise<void>;
   switchDemoRole: (role: UserRole) => void;
 }
@@ -29,10 +29,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         return JSON.parse(saved);
       } catch {
-        return MOCK_STUDENT_USER;
+        return null;
       }
     }
-    return MOCK_STUDENT_USER;
+    return null;
   });
 
   const [isPro, setIsPro] = useState<boolean>(() => {
@@ -119,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ error: Error | null }> => {
+  const login = async (email: string, password: string): Promise<{ error: Error | null; role?: UserRole }> => {
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
@@ -127,16 +127,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (email.includes('admin')) {
           setUser(MOCK_ADMIN_USER);
           localStorage.setItem('practicekoro_user', JSON.stringify(MOCK_ADMIN_USER));
+          return { error: null, role: 'admin' };
         } else {
           setUser(MOCK_STUDENT_USER);
           localStorage.setItem('practicekoro_user', JSON.stringify(MOCK_STUDENT_USER));
+          return { error: null, role: 'student' };
         }
-        return { error: null };
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return { error };
 
+      let authenticatedRole: UserRole = 'student';
       if (data.user) {
         const { data: profileData } = await supabase
           .from('profiles')
@@ -156,11 +158,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: profile.role,
             createdAt: profile.created_at,
           };
+          authenticatedRole = profile.role;
           setUser(userObj);
           localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
         }
       }
-      return { error: null };
+      return { error: null, role: authenticatedRole };
     } catch (err: unknown) {
       return { error: err as Error };
     } finally {
@@ -168,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (fullName: string, email: string, password: string): Promise<{ error: Error | null }> => {
+  const register = async (fullName: string, email: string, password: string): Promise<{ error: Error | null; role?: UserRole }> => {
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
@@ -181,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(newUser);
         localStorage.setItem('practicekoro_user', JSON.stringify(newUser));
-        return { error: null };
+        return { error: null, role: 'student' };
       }
 
       const { data, error } = await supabase.auth.signUp({
@@ -205,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(newUser);
         localStorage.setItem('practicekoro_user', JSON.stringify(newUser));
       }
-      return { error: null };
+      return { error: null, role: 'student' };
     } catch (err: unknown) {
       return { error: err as Error };
     } finally {
