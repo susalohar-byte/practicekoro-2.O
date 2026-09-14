@@ -286,6 +286,11 @@ export const TestRunner: React.FC = () => {
       {/* 1. TOP EXAM HEADER */}
       <header className="sticky top-0 z-40 bg-slate-900 text-white border-b border-slate-800 px-4 sm:px-6 h-16 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
+          <img
+            src="/logo-icon-transparent.png"
+            alt="PracticeKoro"
+            className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-lg shrink-0"
+          />
           <div className="flex flex-col">
             <h1 className="text-xs sm:text-sm font-extrabold text-white truncate max-w-[180px] sm:max-w-xs">
               {test?.title || 'Mock Test Session'}

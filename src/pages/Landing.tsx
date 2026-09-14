@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import {
-  Shield,
+  
   Crown,
   Clock,
   ArrowRight,
@@ -192,17 +192,11 @@ export const Landing: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-bold shadow-md shadow-brand-600/20 group-hover:bg-brand-700 transition-colors">
-                <Shield className="w-5 h-5 fill-white/20" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-lg text-slate-900 leading-none tracking-tight">
-                  Practice<span className="text-brand-600">Koro</span>
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
-                  Mock & Practice
-                </span>
-              </div>
+              <img
+                src="/logo-transparent.png"
+                alt="PracticeKoro"
+                className="h-8 sm:h-9 w-auto object-contain"
+              />
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -324,7 +318,11 @@ export const Landing: React.FC = () => {
                 {/* Header of Simulated Exam */}
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <img
+                      src="/logo-icon-transparent.png"
+                      alt="PracticeKoro"
+                      className="w-5 h-5 object-contain rounded-md"
+                    />
                     <span className="text-xs font-bold text-slate-800">WBP Constable Mock Test #01</span>
                   </div>
                   <div className="flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 font-mono text-xs font-bold">
@@ -789,14 +787,16 @@ export const Landing: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
             {/* Col 1: Brand */}
             <div className="space-y-3 md:col-span-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center text-white font-bold">
-                  <Shield className="w-4 h-4" />
-                </div>
+              <Link to="/" className="flex items-center gap-2.5">
+                <img
+                  src="/logo-icon-transparent.png"
+                  alt="PracticeKoro"
+                  className="w-8 h-8 object-contain rounded-xl"
+                />
                 <span className="font-extrabold text-lg text-white tracking-tight">
                   Practice<span className="text-brand-500">Koro</span>
                 </span>
-              </div>
+              </Link>
               <p className="text-slate-400 text-xs max-w-sm leading-relaxed">
                 পশ্চিমবঙ্গের সরকারি চাকরি পরীক্ষার্থীদের জন্য তৈরি ফোকাসড মক টেস্ট ও ভুল সংশোধন প্ল্যাটফর্ম।
               </p>

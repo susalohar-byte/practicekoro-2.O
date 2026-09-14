@@ -5,7 +5,7 @@ import { useExam } from '@/context/ExamContext';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import {
-  Shield,
+  
   ChevronDown,
   Crown,
   LogOut,
@@ -42,17 +42,11 @@ export const StudentNavbar: React.FC = () => {
           {/* Brand Logo & Exam Switcher */}
           <div className="flex items-center gap-4">
             <Link to="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-bold shadow-md shadow-brand-600/20 group-hover:bg-brand-700 transition-colors">
-                <Shield className="w-5 h-5 fill-white/20" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-lg text-slate-900 leading-none tracking-tight">
-                  Practice<span className="text-brand-600">Koro</span>
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
-                  Mock & Practice
-                </span>
-              </div>
+              <img
+                src="/logo-transparent.png"
+                alt="PracticeKoro"
+                className="h-8 sm:h-9 w-auto object-contain"
+              />
             </Link>
 
             {/* Exam Selector Pill */}

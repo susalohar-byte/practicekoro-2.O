@@ -53,9 +53,11 @@ export const AdminLayout: React.FC = () => {
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800/80">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/30">
-              P
-            </div>
+            <img
+              src="/logo-icon-transparent.png"
+              alt="PracticeKoro"
+              className="w-8 h-8 object-contain rounded-lg shadow-sm"
+            />
             <div>
               <span className="font-extrabold text-sm tracking-tight text-white">PracticeKoro</span>
               <span className="block text-[10px] uppercase font-bold text-indigo-400 tracking-wider">
