@@ -70,6 +70,7 @@ ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS plan_id TEXT REFERENCES pub
 ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS razorpay_order_id TEXT;
 ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS razorpay_payment_id TEXT;
 ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS razorpay_signature TEXT;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
 ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_status_check;
 ALTER TABLE public.payments ADD CONSTRAINT payments_status_check
@@ -581,3 +582,185 @@ GRANT EXECUTE ON FUNCTION public.verify_razorpay_payment(TEXT, TEXT, TEXT, TEXT)
 GRANT EXECUTE ON FUNCTION public.get_student_subscription_details() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_admin_subscriptions(TEXT, TEXT, INT, INT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_admin_payments(TEXT, TEXT, INT, INT) TO authenticated;
+
+-- -------------------------------------------------------------
+-- 7. USER TEST ACCESS VIEW & WEBHOOK RECONCILIATION ENGINE
+-- -------------------------------------------------------------
+
+-- Helper View: user_test_access
+CREATE OR REPLACE VIEW public.user_test_access AS
+SELECT 
+    t.id AS test_id,
+    t.title,
+    t.slug,
+    t.is_premium,
+    t.status,
+    public.has_test_access(auth.uid(), t.id) AS has_access
+FROM public.tests t
+WHERE t.status = 'published';
+
+-- Enhance payment_gateways with webhook_secret
+ALTER TABLE public.payment_gateways ADD COLUMN IF NOT EXISTS webhook_secret TEXT;
+UPDATE public.payment_gateways
+SET webhook_secret = 'whsec_practicekoro_test_2026'
+WHERE gateway = 'razorpay' AND (webhook_secret IS NULL OR webhook_secret = '');
+
+-- Webhook Reconciliation RPC
+CREATE OR REPLACE FUNCTION public.reconcile_razorpay_webhook(
+    p_order_id TEXT,
+    p_payment_id TEXT,
+    p_amount NUMERIC,
+    p_currency TEXT,
+    p_event_id TEXT DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+    v_payment RECORD;
+    v_plan RECORD;
+    v_active_sub RECORD;
+    v_user_id UUID;
+    v_subscription_id UUID;
+    v_starts_at TIMESTAMPTZ;
+    v_new_expires_at TIMESTAMPTZ;
+    v_is_renewal BOOLEAN := FALSE;
+BEGIN
+    -- 1. Locate payment record by order_id or razorpay_order_id
+    SELECT * INTO v_payment
+    FROM public.payments
+    WHERE order_id = p_order_id OR razorpay_order_id = p_order_id
+    ORDER BY created_at DESC
+    LIMIT 1;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Order record not found for webhook: %', p_order_id USING ERRCODE = '40401';
+    END IF;
+
+    v_user_id := v_payment.user_id;
+
+    -- 2. Verify amount and currency
+    IF v_payment.amount != p_amount THEN
+        RAISE EXCEPTION 'Mismatched payment amount: expected %, received %', v_payment.amount, p_amount USING ERRCODE = '40003';
+    END IF;
+
+    IF p_currency IS NOT NULL AND p_currency != 'INR' THEN
+        RAISE EXCEPTION 'Unsupported payment currency: %', p_currency USING ERRCODE = '40004';
+    END IF;
+
+    -- 3. Idempotency Check: if payment is already completed
+    IF v_payment.status = 'completed' THEN
+        SELECT s.id, s.status, s.starts_at, s.expires_at INTO v_active_sub
+        FROM public.subscriptions s
+        WHERE s.payment_id = v_payment.id
+           OR (s.user_id = v_user_id AND s.status = 'active')
+        ORDER BY s.expires_at DESC
+        LIMIT 1;
+
+        RETURN jsonb_build_object(
+            'success', true,
+            'message', 'Payment already reconciled and completed (idempotent)',
+            'subscription_id', v_active_sub.id,
+            'status', v_active_sub.status,
+            'starts_at', v_active_sub.starts_at,
+            'expires_at', v_active_sub.expires_at,
+            'is_duplicate', true
+        );
+    END IF;
+
+    -- 4. Check if payment_id was already used for a different record
+    IF EXISTS (
+        SELECT 1 FROM public.payments
+        WHERE razorpay_payment_id = p_payment_id
+          AND id != v_payment.id
+          AND status = 'completed'
+    ) THEN
+        RAISE EXCEPTION 'Duplicate payment ID already processed: %', p_payment_id USING ERRCODE = '40901';
+    END IF;
+
+    -- 5. Retrieve active subscription plan
+    SELECT * INTO v_plan
+    FROM public.subscription_plans
+    WHERE id = v_payment.plan_id AND is_active = TRUE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Subscription plan not found or inactive: %', v_payment.plan_id USING ERRCODE = '40400';
+    END IF;
+
+    -- 6. Active subscription check (renewal vs fresh)
+    SELECT * INTO v_active_sub
+    FROM public.subscriptions
+    WHERE user_id = v_user_id
+      AND status = 'active'
+      AND expires_at > NOW()
+    ORDER BY expires_at DESC
+    LIMIT 1;
+
+    IF v_active_sub.id IS NOT NULL THEN
+        -- Renewal: extend from current expiry date
+        v_starts_at := v_active_sub.starts_at;
+        v_new_expires_at := v_active_sub.expires_at + (v_plan.duration_days || ' days')::INTERVAL;
+
+        UPDATE public.subscriptions
+        SET expires_at = v_new_expires_at,
+            payment_id = v_payment.id,
+            updated_at = NOW()
+        WHERE id = v_active_sub.id;
+
+        v_subscription_id := v_active_sub.id;
+        v_is_renewal := TRUE;
+    ELSE
+        -- Fresh purchase: starts immediately
+        v_starts_at := NOW();
+        v_new_expires_at := NOW() + (v_plan.duration_days || ' days')::INTERVAL;
+
+        INSERT INTO public.subscriptions (
+            user_id,
+            plan_id,
+            payment_id,
+            status,
+            starts_at,
+            expires_at
+        )
+        VALUES (
+            v_user_id,
+            v_plan.id,
+            v_payment.id,
+            'active',
+            v_starts_at,
+            v_new_expires_at
+        )
+        RETURNING id INTO v_subscription_id;
+    END IF;
+
+    -- 7. Mark payment as completed
+    UPDATE public.payments
+    SET status = 'completed',
+        razorpay_order_id = p_order_id,
+        razorpay_payment_id = p_payment_id,
+        raw_response = jsonb_build_object(
+            'source', 'webhook',
+            'event_id', p_event_id,
+            'reconciled_at', NOW()
+        ),
+        updated_at = NOW()
+    WHERE id = v_payment.id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'message', 'Payment successfully reconciled via webhook',
+        'subscription_id', v_subscription_id,
+        'user_id', v_user_id,
+        'is_renewal', v_is_renewal,
+        'starts_at', v_starts_at,
+        'expires_at', v_new_expires_at,
+        'is_duplicate', false
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Security: Restrict RPC execution
+REVOKE EXECUTE ON FUNCTION public.reconcile_razorpay_webhook(TEXT, TEXT, NUMERIC, TEXT, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.reconcile_razorpay_webhook(TEXT, TEXT, NUMERIC, TEXT, TEXT) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.reconcile_razorpay_webhook(TEXT, TEXT, NUMERIC, TEXT, TEXT) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.reconcile_razorpay_webhook(TEXT, TEXT, NUMERIC, TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.reconcile_razorpay_webhook(TEXT, TEXT, NUMERIC, TEXT, TEXT) TO postgres;
+
