@@ -13,7 +13,7 @@ import {
   Search,
   FileQuestion,
   Layers,
-  X
+  X,
 } from 'lucide-react';
 import type { MockTest, Question, TestQuestionAssignment } from '@/types';
 
@@ -121,13 +121,13 @@ export const AdminTestQuestions: React.FC = () => {
   };
 
   const handleToggleBankSelect = (id: string) => {
-    setSelectedBankIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    setSelectedBankIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
   const handleAddSelectedFromBank = () => {
-    const questionsToAdd = bankQuestions.filter(q => selectedBankIds.includes(q.id));
+    const questionsToAdd = bankQuestions.filter((q) => selectedBankIds.includes(q.id));
     const newAssignments: TestQuestionAssignment[] = questionsToAdd.map((q, idx) => ({
       questionId: q.id,
       questionOrder: assignedQuestions.length + idx + 1,
@@ -144,18 +144,19 @@ export const AdminTestQuestions: React.FC = () => {
       explanation: q.explanation,
     }));
 
-    setAssignedQuestions(prev => [...prev, ...newAssignments]);
+    setAssignedQuestions((prev) => [...prev, ...newAssignments]);
     setIsBankModalOpen(false);
     setSaveSuccess(false);
   };
 
-  const assignedIds = new Set(assignedQuestions.map(q => q.questionId));
-  const availableBankQuestions = bankQuestions.filter(q => {
+  const assignedIds = new Set(assignedQuestions.map((q) => q.questionId));
+  const availableBankQuestions = bankQuestions.filter((q) => {
     const isAlreadyAssigned = assignedIds.has(q.id);
     const matchesSearch =
       !bankSearch ||
       q.questionText.toLowerCase().includes(bankSearch.toLowerCase()) ||
-      (q.questionBengaliText && q.questionBengaliText.toLowerCase().includes(bankSearch.toLowerCase()));
+      (q.questionBengaliText &&
+        q.questionBengaliText.toLowerCase().includes(bankSearch.toLowerCase()));
     const matchesDifficulty = !bankDifficulty || q.difficulty === bankDifficulty;
     return !isAlreadyAssigned && matchesSearch && matchesDifficulty;
   });
@@ -163,11 +164,7 @@ export const AdminTestQuestions: React.FC = () => {
   const totalAssignedMarks = assignedQuestions.reduce((acc, q) => acc + (q.marks || 0), 0);
 
   if (isLoading) {
-    return (
-      <div className="p-12 text-center text-slate-400 text-xs">
-        Loading test questions...
-      </div>
-    );
+    return <div className="p-12 text-center text-slate-400 text-xs">Loading test questions...</div>;
   }
 
   if (!test) {
@@ -202,9 +199,11 @@ export const AdminTestQuestions: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Exam: <span className="text-indigo-400 font-semibold">{test.examTitle || test.examId}</span> • Duration:{' '}
-            <span className="text-white font-mono">{test.durationMinutes}m</span> • Configured Total Marks:{' '}
-            <span className="text-white font-mono">{test.totalMarks}</span> (Sum: {totalAssignedMarks})
+            Exam:{' '}
+            <span className="text-indigo-400 font-semibold">{test.examTitle || test.examId}</span> •
+            Duration: <span className="text-white font-mono">{test.durationMinutes}m</span> •
+            Configured Total Marks: <span className="text-white font-mono">{test.totalMarks}</span>{' '}
+            (Sum: {totalAssignedMarks})
           </p>
         </div>
 
@@ -250,7 +249,8 @@ export const AdminTestQuestions: React.FC = () => {
             <FileQuestion className="w-10 h-10 text-slate-600 mx-auto" />
             <p className="text-sm font-bold text-white">No questions assigned to this test yet.</p>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Click &quot;Add Questions from Bank&quot; above to select questions and specify their deterministic test order.
+              Click &quot;Add Questions from Bank&quot; above to select questions and specify their
+              deterministic test order.
             </p>
             <Button
               size="sm"
@@ -350,7 +350,9 @@ export const AdminTestQuestions: React.FC = () => {
               <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
                 <div className="flex items-center gap-2">
                   <div>
-                    <label className="block text-[9px] uppercase font-bold text-slate-500">Marks</label>
+                    <label className="block text-[9px] uppercase font-bold text-slate-500">
+                      Marks
+                    </label>
                     <input
                       type="number"
                       step="0.5"
@@ -362,7 +364,9 @@ export const AdminTestQuestions: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] uppercase font-bold text-slate-500">Neg Mark</label>
+                    <label className="block text-[9px] uppercase font-bold text-slate-500">
+                      Neg Mark
+                    </label>
                     <input
                       type="number"
                       step="0.05"
@@ -487,9 +491,7 @@ export const AdminTestQuestions: React.FC = () => {
 
             {/* Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-slate-800 shrink-0">
-              <span className="text-xs text-slate-400">
-                {selectedBankIds.length} selected
-              </span>
+              <span className="text-xs text-slate-400">{selectedBankIds.length} selected</span>
               <div className="flex items-center gap-2">
                 <Button
                   type="button"

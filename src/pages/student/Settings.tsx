@@ -13,7 +13,7 @@ import {
   Check,
   ArrowLeft,
   User,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 
 export const Settings: React.FC = () => {
@@ -221,11 +221,10 @@ export const Settings: React.FC = () => {
             <AlertCircle className="w-5 h-5" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-sm sm:text-base font-bold text-slate-900">
-              Account Management
-            </h2>
+            <h2 className="text-sm sm:text-base font-bold text-slate-900">Account Management</h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Account deletion requires a dedicated secure backend workflow. To request permanent deletion of your account and personal data, please contact PracticeKoro support at{' '}
+              Account deletion requires a dedicated secure backend workflow. To request permanent
+              deletion of your account and personal data, please contact PracticeKoro support at{' '}
               <span className="font-semibold text-slate-900">support@practicekoro.com</span>.
             </p>
           </div>

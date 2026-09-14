@@ -3,15 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useExam } from '@/context/ExamContext';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import {
-  Layers,
-  Search,
-  ChevronRight,
-  BookOpen,
-  Award,
-  History,
-  CheckCircle2,
-} from 'lucide-react';
+import { Layers, Search, ChevronRight, BookOpen, Award, History, CheckCircle2 } from 'lucide-react';
 import type { Exam } from '@/types';
 
 export const ExamsCatalog: React.FC = () => {
@@ -62,7 +54,8 @@ export const ExamsCatalog: React.FC = () => {
               Target Examinations
             </h1>
             <p className="text-sm sm:text-base text-brand-100/90 leading-relaxed">
-              Select your examination to access curated Full Mock Tests, Previous Year Question Papers (PYQ), and Syllabus-wise Topic Tests.
+              Select your examination to access curated Full Mock Tests, Previous Year Question
+              Papers (PYQ), and Syllabus-wise Topic Tests.
             </p>
           </div>
 
@@ -137,7 +130,9 @@ export const ExamsCatalog: React.FC = () => {
                   key={exam.id}
                   hoverable
                   className={`flex flex-col justify-between border transition-all duration-200 cursor-pointer overflow-hidden ${
-                    isSelected ? 'ring-2 ring-brand-500 border-brand-500 bg-brand-50/10' : 'hover:border-slate-300'
+                    isSelected
+                      ? 'ring-2 ring-brand-500 border-brand-500 bg-brand-50/10'
+                      : 'hover:border-slate-300'
                   }`}
                   onClick={() => handleSelectExam(exam)}
                 >
@@ -167,7 +162,8 @@ export const ExamsCatalog: React.FC = () => {
                         {exam.title}
                       </h3>
                       <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
-                        {exam.description || 'Complete exam preparation package with simulated full mocks, PYQs, and topic drills.'}
+                        {exam.description ||
+                          'Complete exam preparation package with simulated full mocks, PYQs, and topic drills.'}
                       </p>
                     </div>
 
@@ -177,30 +173,34 @@ export const ExamsCatalog: React.FC = () => {
                         <div className="text-xs font-extrabold text-brand-700 flex items-center justify-center gap-1">
                           <Award className="w-3 h-3" /> Full Mock
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5 font-medium">Exam Simulation</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                          Exam Simulation
+                        </div>
                       </div>
 
                       <div className="bg-slate-50 rounded-xl p-2 text-center border border-slate-100">
                         <div className="text-xs font-extrabold text-amber-700 flex items-center justify-center gap-1">
                           <History className="w-3 h-3" /> PYQ
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5 font-medium">Official Papers</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                          Official Papers
+                        </div>
                       </div>
 
                       <div className="bg-slate-50 rounded-xl p-2 text-center border border-slate-100">
                         <div className="text-xs font-extrabold text-blue-700 flex items-center justify-center gap-1">
                           <BookOpen className="w-3 h-3" /> Topic Test
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5 font-medium">Chapter Drills</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                          Chapter Drills
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Card Footer CTA */}
                   <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-600">
-                      View all tests
-                    </span>
+                    <span className="text-xs font-semibold text-slate-600">View all tests</span>
                     <Button
                       variant={isSelected ? 'primary' : 'outline'}
                       size="sm"

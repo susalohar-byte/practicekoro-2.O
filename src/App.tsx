@@ -4,38 +4,87 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from '@/components/layout/ProtectedRoute';
 
-// Public Landing Page
-import { Landing } from '@/pages/Landing';
-
-// Student Core Pages
-import { Home } from '@/pages/student/Home';
-import { ExamsCatalog } from '@/pages/student/ExamsCatalog';
-import { ExamDetail } from '@/pages/student/ExamDetail';
-import { ExamOrTestDispatcher } from '@/pages/student/ExamOrTestDispatcher';
-import { TestRunner } from '@/pages/student/TestRunner';
-import { TestResult } from '@/pages/student/TestResult';
-import { TestSolutions } from '@/pages/student/TestSolutions';
-import { Practice } from '@/pages/student/Practice';
-import { MyTests } from '@/pages/student/MyTests';
-import { Profile } from '@/pages/student/Profile';
-import { Settings } from '@/pages/student/Settings';
-import { Subscription } from '@/pages/student/Subscription';
-
-// Auth Pages
-import { Login } from '@/pages/auth/Login';
-import { Register } from '@/pages/auth/Register';
-import { ForgotPassword } from '@/pages/auth/ForgotPassword';
-
-// Admin Pages
-import { AdminDashboard } from '@/pages/admin/AdminDashboard';
-import { AdminExams } from '@/pages/admin/AdminExams';
-import { AdminSubjects } from '@/pages/admin/AdminSubjects';
-import { AdminChapters } from '@/pages/admin/AdminChapters';
-import { AdminTestSeries } from '@/pages/admin/AdminTestSeries';
-import { AdminTests } from '@/pages/admin/AdminTests';
-import { AdminTestQuestions } from '@/pages/admin/AdminTestQuestions';
-import { AdminQuestions } from '@/pages/admin/AdminQuestions';
-import { AdminSubscriptions } from '@/pages/admin/AdminSubscriptions';
+const Landing = React.lazy(() =>
+  import('@/pages/Landing').then((module) => ({ default: module.Landing }))
+);
+const Home = React.lazy(() =>
+  import('@/pages/student/Home').then((module) => ({ default: module.Home }))
+);
+const ExamsCatalog = React.lazy(() =>
+  import('@/pages/student/ExamsCatalog').then((module) => ({ default: module.ExamsCatalog }))
+);
+const ExamDetail = React.lazy(() =>
+  import('@/pages/student/ExamDetail').then((module) => ({ default: module.ExamDetail }))
+);
+const ExamOrTestDispatcher = React.lazy(() =>
+  import('@/pages/student/ExamOrTestDispatcher').then((module) => ({
+    default: module.ExamOrTestDispatcher,
+  }))
+);
+const TestRunner = React.lazy(() =>
+  import('@/pages/student/TestRunner').then((module) => ({ default: module.TestRunner }))
+);
+const TestResult = React.lazy(() =>
+  import('@/pages/student/TestResult').then((module) => ({ default: module.TestResult }))
+);
+const TestSolutions = React.lazy(() =>
+  import('@/pages/student/TestSolutions').then((module) => ({ default: module.TestSolutions }))
+);
+const Practice = React.lazy(() =>
+  import('@/pages/student/Practice').then((module) => ({ default: module.Practice }))
+);
+const MyTests = React.lazy(() =>
+  import('@/pages/student/MyTests').then((module) => ({ default: module.MyTests }))
+);
+const Profile = React.lazy(() =>
+  import('@/pages/student/Profile').then((module) => ({ default: module.Profile }))
+);
+const Settings = React.lazy(() =>
+  import('@/pages/student/Settings').then((module) => ({ default: module.Settings }))
+);
+const Subscription = React.lazy(() =>
+  import('@/pages/student/Subscription').then((module) => ({ default: module.Subscription }))
+);
+const Login = React.lazy(() =>
+  import('@/pages/auth/Login').then((module) => ({ default: module.Login }))
+);
+const Register = React.lazy(() =>
+  import('@/pages/auth/Register').then((module) => ({ default: module.Register }))
+);
+const ForgotPassword = React.lazy(() =>
+  import('@/pages/auth/ForgotPassword').then((module) => ({ default: module.ForgotPassword }))
+);
+const AdminDashboard = React.lazy(() =>
+  import('@/pages/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
+);
+const AdminExams = React.lazy(() =>
+  import('@/pages/admin/AdminExams').then((module) => ({ default: module.AdminExams }))
+);
+const AdminSubjects = React.lazy(() =>
+  import('@/pages/admin/AdminSubjects').then((module) => ({ default: module.AdminSubjects }))
+);
+const AdminChapters = React.lazy(() =>
+  import('@/pages/admin/AdminChapters').then((module) => ({ default: module.AdminChapters }))
+);
+const AdminTestSeries = React.lazy(() =>
+  import('@/pages/admin/AdminTestSeries').then((module) => ({ default: module.AdminTestSeries }))
+);
+const AdminTests = React.lazy(() =>
+  import('@/pages/admin/AdminTests').then((module) => ({ default: module.AdminTests }))
+);
+const AdminTestQuestions = React.lazy(() =>
+  import('@/pages/admin/AdminTestQuestions').then((module) => ({
+    default: module.AdminTestQuestions,
+  }))
+);
+const AdminQuestions = React.lazy(() =>
+  import('@/pages/admin/AdminQuestions').then((module) => ({ default: module.AdminQuestions }))
+);
+const AdminSubscriptions = React.lazy(() =>
+  import('@/pages/admin/AdminSubscriptions').then((module) => ({
+    default: module.AdminSubscriptions,
+  }))
+);
 
 /**
  * RootRoute:
@@ -48,10 +97,20 @@ const RootRoute: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <Routes>
-      {/* Root Route (Landing for guests, redirects to appropriate panel if logged in) */}
-      <Route path="/" element={<RootRoute />} />
-      <Route path="/landing" element={<Landing />} />
+    <React.Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          <div
+            className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600"
+            aria-label="Loading page"
+          />
+        </div>
+      }
+    >
+      <Routes>
+        {/* Root Route (Landing for guests, redirects to appropriate panel if logged in) */}
+        <Route path="/" element={<RootRoute />} />
+        <Route path="/landing" element={<Landing />} />
 
         {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
         <Route element={<AppLayout />}>
@@ -130,57 +189,58 @@ export const App: React.FC = () => {
           <Route path="subscription" element={<Subscription />} />
         </Route>
 
-      {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}
-      <Route
-        path="/exams/:testId/runner"
-        element={
-          <ProtectedRoute>
-            <TestRunner />
-          </ProtectedRoute>
-        }
-      />
+        {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}
+        <Route
+          path="/exams/:testId/runner"
+          element={
+            <ProtectedRoute>
+              <TestRunner />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Auth Public-Only Routes */}
-      <Route
-        path="/login"
-        element={
-          <PublicOnlyRoute>
-            <Login />
-          </PublicOnlyRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicOnlyRoute>
-            <Register />
-          </PublicOnlyRoute>
-        }
-      />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* Auth Public-Only Routes */}
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicOnlyRoute>
+              <Register />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* Admin Protected Routes */}
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <AdminLayout />
-          </AdminRoute>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="exams" element={<AdminExams />} />
-        <Route path="subjects" element={<AdminSubjects />} />
-        <Route path="chapters" element={<AdminChapters />} />
-        <Route path="test-series" element={<AdminTestSeries />} />
-        <Route path="tests" element={<AdminTests />} />
-        <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
-        <Route path="questions" element={<AdminQuestions />} />
-        <Route path="subscriptions" element={<AdminSubscriptions />} />
-      </Route>
+        {/* Admin Protected Routes */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="exams" element={<AdminExams />} />
+          <Route path="subjects" element={<AdminSubjects />} />
+          <Route path="chapters" element={<AdminChapters />} />
+          <Route path="test-series" element={<AdminTestSeries />} />
+          <Route path="tests" element={<AdminTests />} />
+          <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
+          <Route path="questions" element={<AdminQuestions />} />
+          <Route path="subscriptions" element={<AdminSubscriptions />} />
+        </Route>
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </React.Suspense>
   );
 };

@@ -45,7 +45,7 @@ export function parseCsvRaw(csvText: string): string[][] {
     } else if (char === '\n' && !insideQuotes) {
       currentRow.push(currentField.trim());
       // Only push non-empty rows
-      if (currentRow.some(field => field.length > 0)) {
+      if (currentRow.some((field) => field.length > 0)) {
         rows.push(currentRow);
       }
       currentRow = [];
@@ -58,7 +58,7 @@ export function parseCsvRaw(csvText: string): string[][] {
   // Handle final field/row if not followed by newline
   if (currentField.length > 0 || currentRow.length > 0) {
     currentRow.push(currentField.trim());
-    if (currentRow.some(field => field.length > 0)) {
+    if (currentRow.some((field) => field.length > 0)) {
       rows.push(currentRow);
     }
   }
@@ -112,7 +112,12 @@ export function parseQuestionsCsv(
   };
 
   const colQuestionText = getCol(['question_text', 'question', 'questiontext']);
-  const colQuestionBengali = getCol(['question_bengali_text', 'bengali_question', 'questionbengali', 'questionbengalitext']);
+  const colQuestionBengali = getCol([
+    'question_bengali_text',
+    'bengali_question',
+    'questionbengali',
+    'questionbengalitext',
+  ]);
   const colOptA = getCol(['option_a', 'optiona', 'a']);
   const colOptB = getCol(['option_b', 'optionb', 'b']);
   const colOptC = getCol(['option_c', 'optionc', 'c']);
@@ -132,7 +137,9 @@ export function parseQuestionsCsv(
     errors.push('Missing required column: "question_text"');
   }
   if (colOptA === -1 || colOptB === -1 || colOptC === -1 || colOptD === -1) {
-    errors.push('Missing one or more required option columns: "option_a", "option_b", "option_c", "option_d"');
+    errors.push(
+      'Missing one or more required option columns: "option_a", "option_b", "option_c", "option_d"'
+    );
   }
   if (colCorrect === -1) {
     errors.push('Missing required column: "correct_option"');
@@ -231,8 +238,8 @@ export function parseQuestionsCsv(
     }
   }
 
-  const validCount = parsedRows.filter(p => p.isValid).length;
-  const invalidCount = parsedRows.filter(p => !p.isValid).length;
+  const validCount = parsedRows.filter((p) => p.isValid).length;
+  const invalidCount = parsedRows.filter((p) => !p.isValid).length;
 
   return {
     questions: validQuestions,
@@ -240,6 +247,9 @@ export function parseQuestionsCsv(
     totalRows: parsedRows.length,
     validCount,
     invalidCount,
-    errors: invalidCount > 0 ? [`${invalidCount} out of ${parsedRows.length} rows have validation errors.`] : [],
+    errors:
+      invalidCount > 0
+        ? [`${invalidCount} out of ${parsedRows.length} rows have validation errors.`]
+        : [],
   };
 }

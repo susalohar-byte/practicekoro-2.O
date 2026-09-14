@@ -6,7 +6,9 @@ import type { SubscriptionPlan, StudentSubscriptionDetails } from '@/types';
 export function useSubscription() {
   const { user, isPro } = useAuth();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [subscriptionDetails, setSubscriptionDetails] = useState<StudentSubscriptionDetails | null>(null);
+  const [subscriptionDetails, setSubscriptionDetails] = useState<StudentSubscriptionDetails | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {

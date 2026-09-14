@@ -36,11 +36,7 @@ export function isStudentNavActive(pathname: string, label: string): boolean {
   }
 
   if (label === 'Results') {
-    return (
-      p.startsWith('/results') ||
-      p.startsWith('/my-tests') ||
-      p.includes('/results/')
-    );
+    return p.startsWith('/results') || p.startsWith('/my-tests') || p.includes('/results/');
   }
 
   if (label === 'Exams') {
@@ -58,4 +54,3 @@ export function isStudentNavActive(pathname: string, label: string): boolean {
 
   return false;
 }
-

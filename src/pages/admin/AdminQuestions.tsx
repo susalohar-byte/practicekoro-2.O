@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
-import {
-  FileQuestion,
-  Plus,
-  Edit2,
-  Trash2,
-  Search,
-  Upload,
-  X,
-  Download
-} from 'lucide-react';
+import { FileQuestion, Plus, Edit2, Trash2, Search, Upload, X, Download } from 'lucide-react';
 import type { Question, Subject, Chapter } from '@/types';
 import { parseQuestionsCsv, CsvParseResult } from '@/utils/csvParser';
 
@@ -53,7 +44,10 @@ export const AdminQuestions: React.FC = () => {
   const [csvDefaultChapter, setCsvDefaultChapter] = useState('');
   const [csvParseResult, setCsvParseResult] = useState<CsvParseResult | null>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [importNotice, setImportNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [importNotice, setImportNotice] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   const loadData = async () => {
     try {
@@ -84,7 +78,7 @@ export const AdminQuestions: React.FC = () => {
   }, [selectedSubjectId, selectedChapterId, selectedDifficulty, selectedStatus, searchTerm]);
 
   // Modal cascaded chapters
-  const modalChapters = subjectId ? chapters.filter(c => c.subjectId === subjectId) : chapters;
+  const modalChapters = subjectId ? chapters.filter((c) => c.subjectId === subjectId) : chapters;
 
   const openCreateModal = () => {
     setEditingQuestion(null);
@@ -276,7 +270,8 @@ export const AdminQuestions: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Standardized repository of bilingual questions, verified answer keys, and pedagogical explanations.
+            Standardized repository of bilingual questions, verified answer keys, and pedagogical
+            explanations.
           </p>
         </div>
 
@@ -343,7 +338,10 @@ export const AdminQuestions: React.FC = () => {
               className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
             >
               <option value="">All Chapters</option>
-              {(selectedSubjectId ? chapters.filter(c => c.subjectId === selectedSubjectId) : chapters).map((c) => (
+              {(selectedSubjectId
+                ? chapters.filter((c) => c.subjectId === selectedSubjectId)
+                : chapters
+              ).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -383,9 +381,7 @@ export const AdminQuestions: React.FC = () => {
       {/* Questions List */}
       <div className="space-y-3">
         {isLoading ? (
-          <div className="p-12 text-center text-slate-400 text-xs">
-            Loading questions bank...
-          </div>
+          <div className="p-12 text-center text-slate-400 text-xs">Loading questions bank...</div>
         ) : questions.length === 0 ? (
           <div className="p-12 text-center rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
             <FileQuestion className="w-10 h-10 text-slate-600 mx-auto" />
@@ -415,8 +411,8 @@ export const AdminQuestions: React.FC = () => {
                       q.difficulty === 'easy'
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         : q.difficulty === 'hard'
-                        ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                        : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                     }`}
                   >
                     {q.difficulty}
@@ -514,7 +510,9 @@ export const AdminQuestions: React.FC = () => {
                     Verified Explanation:
                   </span>
                   {q.explanation && <p className="text-slate-300">{q.explanation}</p>}
-                  {q.explanationBengali && <p className="text-slate-400 italic">{q.explanationBengali}</p>}
+                  {q.explanationBengali && (
+                    <p className="text-slate-400 italic">{q.explanationBengali}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -799,7 +797,8 @@ export const AdminQuestions: React.FC = () => {
                   Bulk Questions CSV Import
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Import multiple questions with instant syntax validation, live preview, and duplicate safety.
+                  Import multiple questions with instant syntax validation, live preview, and
+                  duplicate safety.
                 </p>
               </div>
               <button
@@ -926,7 +925,10 @@ export const AdminQuestions: React.FC = () => {
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
                         {csvParseResult.parsedRows.slice(0, 8).map((r) => (
-                          <tr key={r.rowNumber} className={r.isValid ? 'bg-slate-900/40' : 'bg-rose-950/20'}>
+                          <tr
+                            key={r.rowNumber}
+                            className={r.isValid ? 'bg-slate-900/40' : 'bg-rose-950/20'}
+                          >
                             <td className="p-2.5 font-bold">#{r.rowNumber}</td>
                             <td className="p-2.5">
                               {r.isValid ? (
@@ -938,7 +940,9 @@ export const AdminQuestions: React.FC = () => {
                             <td className="p-2.5 font-sans font-medium line-clamp-1 max-w-xs">
                               {r.data.questionText || '<Missing>'}
                             </td>
-                            <td className="p-2.5 text-indigo-400 font-bold">{r.data.correctOption}</td>
+                            <td className="p-2.5 text-indigo-400 font-bold">
+                              {r.data.correctOption}
+                            </td>
                             <td className="p-2.5 text-rose-400 font-sans text-[10px]">
                               {r.errors.join('; ')}
                             </td>

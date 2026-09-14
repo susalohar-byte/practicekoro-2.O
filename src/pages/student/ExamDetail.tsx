@@ -227,7 +227,9 @@ export const ExamDetail: React.FC = () => {
               <span>Full Mock Test</span>
               <span
                 className={`text-[11px] py-0.5 px-2 rounded-full font-extrabold ml-1 hidden sm:inline-block ${
-                  activeTab === 'full-mock' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                  activeTab === 'full-mock'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 text-slate-600'
                 }`}
               >
                 {fullMockTests.length}
@@ -265,7 +267,9 @@ export const ExamDetail: React.FC = () => {
               <span>Topic Tests</span>
               <span
                 className={`text-[11px] py-0.5 px-2 rounded-full font-extrabold ml-1 hidden sm:inline-block ${
-                  activeTab === 'topic-tests' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                  activeTab === 'topic-tests'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 text-slate-600'
                 }`}
               >
                 {topicTests.length}
@@ -284,7 +288,8 @@ export const ExamDetail: React.FC = () => {
                   Full Exam Simulations
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Full length tests matching the official syllabus, time duration, and negative marking scheme.
+                  Full length tests matching the official syllabus, time duration, and negative
+                  marking scheme.
                 </p>
               </div>
               <span className="text-xs font-semibold text-slate-500">
@@ -402,7 +407,8 @@ export const ExamDetail: React.FC = () => {
                   Official Previous Year Question Papers (PYQ)
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Solve real past examination papers with instant timer, negative marking, and bilingual answer analysis.
+                  Solve real past examination papers with instant timer, negative marking, and
+                  bilingual answer analysis.
                 </p>
               </div>
 
@@ -548,7 +554,8 @@ export const ExamDetail: React.FC = () => {
                   Canonical Topic Tests
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Targeted chapter-wise drills centralized across multiple exams to build concept mastery.
+                  Targeted chapter-wise drills centralized across multiple exams to build concept
+                  mastery.
                 </p>
               </div>
 

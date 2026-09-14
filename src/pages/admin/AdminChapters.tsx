@@ -11,7 +11,7 @@ import {
   Search,
   Layers,
   Filter,
-  X
+  X,
 } from 'lucide-react';
 import type { Chapter, Subject, Exam } from '@/types';
 
@@ -59,7 +59,7 @@ export const AdminChapters: React.FC = () => {
 
   // When exam filter changes, auto-filter subjects
   const availableSubjects = selectedExamId
-    ? subjects.filter(s => s.examId === selectedExamId)
+    ? subjects.filter((s) => s.examId === selectedExamId)
     : subjects;
 
   const openCreateModal = () => {
@@ -122,7 +122,13 @@ export const AdminChapters: React.FC = () => {
         await api.createChapter({
           subjectId,
           name: name.trim(),
-          slug: slug.trim() || name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+          slug:
+            slug.trim() ||
+            name
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, ''),
           description: description.trim() || undefined,
           orderIndex: Number(orderIndex),
           isActive,
@@ -144,13 +150,14 @@ export const AdminChapters: React.FC = () => {
     }
   };
 
-  const filteredChapters = chapters.filter(c => {
+  const filteredChapters = chapters.filter((c) => {
     const matchesSearch =
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.slug.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const parentSubject = subjects.find(s => s.id === c.subjectId);
-    const matchesExam = !selectedExamId || (parentSubject && parentSubject.examId === selectedExamId);
+    const parentSubject = subjects.find((s) => s.id === c.subjectId);
+    const matchesExam =
+      !selectedExamId || (parentSubject && parentSubject.examId === selectedExamId);
     const matchesSubject = !selectedSubjectId || c.subjectId === selectedSubjectId;
 
     return matchesSearch && matchesExam && matchesSubject;
@@ -171,7 +178,8 @@ export const AdminChapters: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Chapters break subjects into study topics (e.g. Indus Valley Civilization, Vedic Age, Mughal Empire).
+            Chapters break subjects into study topics (e.g. Indus Valley Civilization, Vedic Age,
+            Mughal Empire).
           </p>
         </div>
 
@@ -262,8 +270,10 @@ export const AdminChapters: React.FC = () => {
                 </tr>
               ) : (
                 filteredChapters.map((chap) => {
-                  const parentSubject = subjects.find(s => s.id === chap.subjectId);
-                  const parentExam = parentSubject ? exams.find(e => e.id === parentSubject.examId) : null;
+                  const parentSubject = subjects.find((s) => s.id === chap.subjectId);
+                  const parentExam = parentSubject
+                    ? exams.find((e) => e.id === parentSubject.examId)
+                    : null;
                   return (
                     <tr key={chap.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="p-4">
@@ -279,9 +289,13 @@ export const AdminChapters: React.FC = () => {
                       </td>
                       <td className="p-4">
                         <div className="space-y-0.5">
-                          <p className="font-semibold text-emerald-400">{parentSubject?.name || chap.subjectId}</p>
+                          <p className="font-semibold text-emerald-400">
+                            {parentSubject?.name || chap.subjectId}
+                          </p>
                           {parentExam && (
-                            <p className="text-[10px] text-indigo-400 font-medium">{parentExam.title}</p>
+                            <p className="text-[10px] text-indigo-400 font-medium">
+                              {parentExam.title}
+                            </p>
                           )}
                         </div>
                       </td>
@@ -317,7 +331,11 @@ export const AdminChapters: React.FC = () => {
                             className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
                             title={chap.isActive ? 'Deactivate' : 'Activate'}
                           >
-                            {chap.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                            {chap.isActive ? (
+                              <Trash2 className="w-4 h-4" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </td>

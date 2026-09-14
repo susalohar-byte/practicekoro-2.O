@@ -16,7 +16,7 @@ import {
   Menu,
   X,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
 } from 'lucide-react';
 
 export interface StudentNavbarProps {
@@ -180,7 +180,10 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
             {/* Pro Badge / Pass CTA */}
             {isPro ? (
               <Link to="/subscription">
-                <Badge variant="premium" className="hidden sm:inline-flex gap-1 py-1 px-2.5 shadow-sm hover:opacity-90 cursor-pointer">
+                <Badge
+                  variant="premium"
+                  className="hidden sm:inline-flex gap-1 py-1 px-2.5 shadow-sm hover:opacity-90 cursor-pointer"
+                >
                   <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
                   <span className="font-bold">PRO PASS</span>
                 </Badge>
@@ -211,9 +214,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
                   <span className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[100px]">
                     {user?.fullName || 'Aspirant'}
                   </span>
-                  <span className="text-[10px] text-slate-500 capitalize">
-                    {role}
-                  </span>
+                  <span className="text-[10px] text-slate-500 capitalize">{role}</span>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
               </button>
@@ -319,13 +320,15 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
               <select
                 value={selectedExam?.id || ''}
                 onChange={(e) => {
-                  const f = exams.find(x => x.id === e.target.value);
+                  const f = exams.find((x) => x.id === e.target.value);
                   if (f) setSelectedExam(f);
                 }}
                 className="w-full text-xs font-semibold py-2 px-3 bg-slate-100 rounded-lg border border-slate-200"
               >
-                {exams.map(e => (
-                  <option key={e.id} value={e.id}>{e.title}</option>
+                {exams.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.title}
+                  </option>
                 ))}
               </select>
             </div>

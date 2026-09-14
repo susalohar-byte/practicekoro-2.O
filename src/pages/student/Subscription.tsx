@@ -18,7 +18,7 @@ import {
   RotateCcw,
   Sparkles,
   Lock,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 import { openRazorpayCheckout } from '@/utils/razorpay';
 import type { Payment, SubscriptionPlan } from '@/types';
@@ -52,14 +52,17 @@ export const Subscription: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      api.getStudentPaymentHistory()
+      api
+        .getStudentPaymentHistory()
         .then(setPayments)
         .catch((err) => console.error('Error fetching payments:', err));
     }
   }, [user, paymentStatus]);
 
   const activeSub = subscriptionDetails?.isActive;
-  const isExpired = subscriptionDetails?.status === 'expired' || (!activeSub && subscriptionDetails?.hasSubscription);
+  const isExpired =
+    subscriptionDetails?.status === 'expired' ||
+    (!activeSub && subscriptionDetails?.hasSubscription);
   const daysLeft = subscriptionDetails?.daysRemaining ?? 0;
 
   const handleInitiateCheckout = async (plan: SubscriptionPlan) => {
@@ -128,7 +131,9 @@ export const Subscription: React.FC = () => {
         },
         modal: {
           ondismiss: () => {
-            setPaymentStatus((prev) => (prev === 'processing' || prev === 'preparing' ? 'cancelled' : prev));
+            setPaymentStatus((prev) =>
+              prev === 'processing' || prev === 'preparing' ? 'cancelled' : prev
+            );
           },
         },
       });
@@ -159,21 +164,23 @@ export const Subscription: React.FC = () => {
   };
 
   // Primary plan reference
-  const activePlan = selectedPlan || plans.find((p) => p.id === 'pro_1_year') || plans[0] || {
-    id: 'pro_1_year',
-    title: '1-Year All-Access Pro Pass',
-    price: 299,
-    durationDays: 365,
-    description: 'Universal mock test access across all West Bengal competitive exams.',
-    features: [
-      'Unlock all premium mock tests',
-      'Access every premium test series',
-      'Practice across supported exams',
-      'Re-attempt tests whenever available',
-      'Review detailed solutions and analysis',
-      'Mistakes Notebook integration for focused revision',
-    ],
-  };
+  const activePlan = selectedPlan ||
+    plans.find((p) => p.id === 'pro_1_year') ||
+    plans[0] || {
+      id: 'pro_1_year',
+      title: '1-Year All-Access Pro Pass',
+      price: 299,
+      durationDays: 365,
+      description: 'Universal mock test access across all West Bengal competitive exams.',
+      features: [
+        'Unlock all premium mock tests',
+        'Access every premium test series',
+        'Practice across supported exams',
+        'Re-attempt tests whenever available',
+        'Review detailed solutions and analysis',
+        'Mistakes Notebook integration for focused revision',
+      ],
+    };
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -189,7 +196,8 @@ export const Subscription: React.FC = () => {
           Practice More. Improve Faster.
         </h1>
         <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Unlock every premium mock test and practice without limits across WBP Constable, Kolkata Police SI, WBCS, and WBPSC Clerkship.
+          Unlock every premium mock test and practice without limits across WBP Constable, Kolkata
+          Police SI, WBCS, and WBPSC Clerkship.
         </p>
       </div>
 
@@ -201,7 +209,10 @@ export const Subscription: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <Badge variant="premium" className="bg-white/20 text-white border-white/30 gap-1 font-bold">
+                <Badge
+                  variant="premium"
+                  className="bg-white/20 text-white border-white/30 gap-1 font-bold"
+                >
                   <Sparkles className="w-3.5 h-3.5" />
                   PRO PASS ACTIVE
                 </Badge>
@@ -246,7 +257,9 @@ export const Subscription: React.FC = () => {
                 onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
                 leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
               >
-                {paymentStatus === 'preparing' ? 'Preparing checkout…' : `Extend Pass (+365 Days) — ₹${activePlan.price}`}
+                {paymentStatus === 'preparing'
+                  ? 'Preparing checkout…'
+                  : `Extend Pass (+365 Days) — ₹${activePlan.price}`}
               </Button>
               <span className="text-[11px] text-amber-100/80">
                 Seamless renewal: adds 365 days to your existing expiry date.
@@ -272,7 +285,8 @@ export const Subscription: React.FC = () => {
               Renew your Pro Pass to unlock premium mock tests.
             </h3>
             <p className="text-xs text-slate-600">
-              Your previous Pro Pass has expired. Re-activate your 365-day universal access to all premium tests.
+              Your previous Pro Pass has expired. Re-activate your 365-day universal access to all
+              premium tests.
             </p>
           </div>
           <Button
@@ -283,7 +297,9 @@ export const Subscription: React.FC = () => {
             onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
             leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
           >
-            {paymentStatus === 'preparing' ? 'Preparing secure checkout…' : `Renew Pro Pass — ₹${activePlan.price}`}
+            {paymentStatus === 'preparing'
+              ? 'Preparing secure checkout…'
+              : `Renew Pro Pass — ₹${activePlan.price}`}
           </Button>
         </div>
       )}
@@ -295,7 +311,10 @@ export const Subscription: React.FC = () => {
         <div className="p-4 rounded-xl bg-slate-100 border border-slate-300 text-slate-800 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-150">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-slate-500 shrink-0" />
-            <span>Payment cancelled. Your Pro Pass has not been activated. You can try again whenever you are ready.</span>
+            <span>
+              Payment cancelled. Your Pro Pass has not been activated. You can try again whenever
+              you are ready.
+            </span>
           </div>
           <button
             onClick={() => setPaymentStatus('idle')}
@@ -310,7 +329,10 @@ export const Subscription: React.FC = () => {
         <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-150">
           <div className="flex items-center gap-2">
             <RefreshCw className="w-4 h-4 text-indigo-600 shrink-0 animate-spin" />
-            <span>Payment received. We're confirming your Pro Pass with the server. This usually takes just a few seconds.</span>
+            <span>
+              Payment received. We're confirming your Pro Pass with the server. This usually takes
+              just a few seconds.
+            </span>
           </div>
           <Button
             variant="primary"
@@ -337,9 +359,7 @@ export const Subscription: React.FC = () => {
                   <Crown className="w-6 h-6 fill-brand-500 text-brand-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">
-                    {activePlan.title}
-                  </h3>
+                  <h3 className="text-xl font-black text-slate-900">{activePlan.title}</h3>
                   <p className="text-xs text-slate-500">
                     Validity: {activePlan.durationDays} Days (1 Full Year)
                   </p>
@@ -354,7 +374,9 @@ export const Subscription: React.FC = () => {
             <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-baseline justify-between">
               <div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900">₹{activePlan.price}</span>
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900">
+                    ₹{activePlan.price}
+                  </span>
                   <span className="text-xs font-bold text-slate-500">/ 365 Days</span>
                 </div>
                 <p className="text-xs font-semibold text-emerald-700 mt-1">
@@ -370,7 +392,8 @@ export const Subscription: React.FC = () => {
             <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/80 text-xs text-slate-800 space-y-1">
               <p className="font-bold text-amber-900">One Pass. Everything Premium.</p>
               <p className="text-slate-600 leading-relaxed">
-                Instead of selling individual tests, one ₹299 Pro Pass unlocks the entire premium mock-test library for 365 days.
+                Instead of selling individual tests, one ₹299 Pro Pass unlocks the entire premium
+                mock-test library for 365 days.
               </p>
             </div>
 
@@ -386,23 +409,33 @@ export const Subscription: React.FC = () => {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">Access every premium test series</span>
+                  <span className="leading-tight font-medium">
+                    Access every premium test series
+                  </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">Practice across supported exams (WBP Constable, KP SI, WBCS, WBPSC)</span>
+                  <span className="leading-tight font-medium">
+                    Practice across supported exams (WBP Constable, KP SI, WBCS, WBPSC)
+                  </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">Re-attempt tests whenever available</span>
+                  <span className="leading-tight font-medium">
+                    Re-attempt tests whenever available
+                  </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">Review detailed solutions and analysis</span>
+                  <span className="leading-tight font-medium">
+                    Review detailed solutions and analysis
+                  </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">Automated Mistakes Notebook for targeted error correction</span>
+                  <span className="leading-tight font-medium">
+                    Automated Mistakes Notebook for targeted error correction
+                  </span>
                 </li>
               </ul>
             </div>
@@ -416,13 +449,19 @@ export const Subscription: React.FC = () => {
                 disabled={paymentStatus === 'preparing' || paymentStatus === 'processing'}
                 isLoading={paymentStatus === 'preparing' || paymentStatus === 'processing'}
                 onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
-                leftIcon={activeSub ? <RotateCcw className="w-4 h-4" /> : <Zap className="w-4 h-4 fill-current" />}
+                leftIcon={
+                  activeSub ? (
+                    <RotateCcw className="w-4 h-4" />
+                  ) : (
+                    <Zap className="w-4 h-4 fill-current" />
+                  )
+                }
               >
                 {paymentStatus === 'preparing'
                   ? 'Preparing secure checkout…'
                   : activeSub
-                  ? `Extend Pass (+365 Days) — ₹${activePlan.price}`
-                  : `Get Pro Pass — ₹${activePlan.price}`}
+                    ? `Extend Pass (+365 Days) — ₹${activePlan.price}`
+                    : `Get Pro Pass — ₹${activePlan.price}`}
               </Button>
             </div>
           </div>
@@ -439,7 +478,9 @@ export const Subscription: React.FC = () => {
           </div>
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-slate-900">Secure Payment</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">256-bit encrypted checkout via Razorpay.</p>
+            <p className="text-[11px] text-slate-500 leading-tight">
+              256-bit encrypted checkout via Razorpay.
+            </p>
           </div>
         </div>
 
@@ -449,7 +490,9 @@ export const Subscription: React.FC = () => {
           </div>
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-slate-900">Instant Access</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">Immediate server-side verification and activation.</p>
+            <p className="text-[11px] text-slate-500 leading-tight">
+              Immediate server-side verification and activation.
+            </p>
           </div>
         </div>
 
@@ -459,7 +502,9 @@ export const Subscription: React.FC = () => {
           </div>
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-slate-900">365-Day Access</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">Full 1-year coverage from purchase date.</p>
+            <p className="text-[11px] text-slate-500 leading-tight">
+              Full 1-year coverage from purchase date.
+            </p>
           </div>
         </div>
 
@@ -469,7 +514,9 @@ export const Subscription: React.FC = () => {
           </div>
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-slate-900">No Per-Test Fees</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">Zero individual test purchases required.</p>
+            <p className="text-[11px] text-slate-500 leading-tight">
+              Zero individual test purchases required.
+            </p>
           </div>
         </div>
       </div>
@@ -616,9 +663,7 @@ export const Subscription: React.FC = () => {
                       <td className="px-4 py-3 font-semibold text-slate-900">
                         {p.planTitle || 'Pro Pass'}
                       </td>
-                      <td className="px-4 py-3 font-bold text-slate-900">
-                        ₹{p.amount.toFixed(2)}
-                      </td>
+                      <td className="px-4 py-3 font-bold text-slate-900">₹{p.amount.toFixed(2)}</td>
                       <td className="px-4 py-3 font-mono text-[11px] text-slate-500 truncate max-w-[140px]">
                         {p.transactionId || p.orderId || p.id.substring(0, 8)}
                       </td>
@@ -628,10 +673,12 @@ export const Subscription: React.FC = () => {
                             p.status === 'completed'
                               ? 'success'
                               : p.status === 'pending'
-                              ? 'warning'
-                              : 'outline'
+                                ? 'warning'
+                                : 'outline'
                           }
-                          className={p.status === 'failed' ? 'text-rose-600 border-rose-200 bg-rose-50' : ''}
+                          className={
+                            p.status === 'failed' ? 'text-rose-600 border-rose-200 bg-rose-50' : ''
+                          }
                         >
                           {p.status}
                         </Badge>

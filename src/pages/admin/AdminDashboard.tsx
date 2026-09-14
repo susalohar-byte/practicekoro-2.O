@@ -15,7 +15,7 @@ import {
   Plus,
   ArrowRight,
   Upload,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 import type { AdminDashboardStats, MockTest } from '@/types';
 
@@ -124,7 +124,8 @@ export const AdminDashboard: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Normalized Content Hierarchy: <span className="text-indigo-400 font-semibold">Exam</span> →{' '}
+            Normalized Content Hierarchy:{' '}
+            <span className="text-indigo-400 font-semibold">Exam</span> →{' '}
             <span className="text-emerald-400 font-semibold">Subject</span> →{' '}
             <span className="text-blue-400 font-semibold">Chapter</span> →{' '}
             <span className="text-cyan-400 font-semibold">Test Series</span> →{' '}
@@ -174,11 +175,11 @@ export const AdminDashboard: React.FC = () => {
                   <p className="text-2xl font-black text-white mt-1">
                     {isLoading ? '...' : s.value}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
-                    {s.subValue}
-                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">{s.subValue}</p>
                 </div>
-                <div className={`p-3 rounded-xl border ${s.color} transition-transform group-hover:scale-105`}>
+                <div
+                  className={`p-3 rounded-xl border ${s.color} transition-transform group-hover:scale-105`}
+                >
                   <Icon className="w-5 h-5" />
                 </div>
               </div>
@@ -204,21 +205,31 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-indigo-400 font-bold">1. Target Exam: WBP Constable</p>
               <span className="text-[10px] text-slate-500 font-sans">Primary Entry Point</span>
             </div>
-            <p className="pl-4 text-emerald-400 font-semibold">└── 2. Subject: Indian History (ভারত ও বাংলার ইতিহাস)</p>
-            <p className="pl-8 text-blue-400 font-medium">└── 3. Chapter: Indus Valley Civilization</p>
+            <p className="pl-4 text-emerald-400 font-semibold">
+              └── 2. Subject: Indian History (ভারত ও বাংলার ইতিহাস)
+            </p>
+            <p className="pl-8 text-blue-400 font-medium">
+              └── 3. Chapter: Indus Valley Civilization
+            </p>
             <p className="pl-12 text-cyan-400">└── 4. Test Series: WBP Constable 2025 Prelims</p>
             <div className="pl-16 space-y-1 pt-1 border-l border-slate-700 ml-12">
               <div className="flex items-center justify-between text-slate-200">
                 <span>├── Part 01: Harappa & Mohenjodaro</span>
-                <span className="px-2 py-0.2 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold">PUBLISHED (Live)</span>
+                <span className="px-2 py-0.2 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold">
+                  PUBLISHED (Live)
+                </span>
               </div>
               <div className="flex items-center justify-between text-slate-200">
                 <span>├── Part 02: High-Yield Indus Archaeological Drill</span>
-                <span className="px-2 py-0.2 rounded text-[10px] bg-amber-500/20 text-amber-400 font-bold">DRAFT (Hidden from Students)</span>
+                <span className="px-2 py-0.2 rounded text-[10px] bg-amber-500/20 text-amber-400 font-bold">
+                  DRAFT (Hidden from Students)
+                </span>
               </div>
               <div className="flex items-center justify-between text-slate-200">
                 <span>└── Part 03: Historical PYQ Mastery Series</span>
-                <span className="px-2 py-0.2 rounded text-[10px] bg-slate-700/50 text-slate-400 font-bold">ARCHIVED</span>
+                <span className="px-2 py-0.2 rounded text-[10px] bg-slate-700/50 text-slate-400 font-bold">
+                  ARCHIVED
+                </span>
               </div>
             </div>
           </div>
@@ -264,7 +275,11 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <Link to="/admin/tests" className="w-full">
-            <Button variant="outline" size="sm" className="w-full border-slate-700 text-xs text-slate-300">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-slate-700 text-xs text-slate-300"
+            >
               View Tests Manager
             </Button>
           </Link>
@@ -279,7 +294,9 @@ export const AdminDashboard: React.FC = () => {
               <Layers className="w-4 h-4 text-amber-400" />
               Recently Created / Managed Mock Tests
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Quick oversight of tests across all exams</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Quick oversight of tests across all exams
+            </p>
           </div>
           <Link
             to="/admin/tests"
@@ -305,21 +322,18 @@ export const AdminDashboard: React.FC = () => {
             <tbody className="divide-y divide-slate-800/60">
               {recentTests.map((t) => (
                 <tr key={t.id} className="hover:bg-slate-900/40">
-                  <td className="p-4 font-bold text-white">
-                    {t.title}
-                  </td>
+                  <td className="p-4 font-bold text-white">{t.title}</td>
                   <td className="p-4 text-slate-400">
                     <span className="text-indigo-400 font-semibold">{t.examTitle || t.examId}</span>
                     {t.chapterName && <span className="text-slate-500"> • {t.chapterName}</span>}
                   </td>
                   <td className="p-4 font-mono">
                     <span className="flex items-center gap-1 text-slate-300">
-                      <Clock className="w-3 h-3 text-slate-500" /> {t.durationMinutes}m • {t.totalMarks} Marks
+                      <Clock className="w-3 h-3 text-slate-500" /> {t.durationMinutes}m •{' '}
+                      {t.totalMarks} Marks
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-indigo-400">
-                    {t.totalQuestions} Qs
-                  </td>
+                  <td className="p-4 font-bold text-indigo-400">{t.totalQuestions} Qs</td>
                   <td className="p-4">
                     {t.isPremium ? (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">

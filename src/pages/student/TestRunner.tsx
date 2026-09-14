@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Languages,
   Grid,
-  X
+  X,
 } from 'lucide-react';
 import { formatSeconds } from '@/lib/utils';
 import type { MockTest, StudentTestQuestion, AttemptAnswerState } from '@/types';
@@ -121,12 +121,7 @@ export const TestRunner: React.FC = () => {
 
     try {
       const answersArray = Object.values(answers);
-      await api.submitTestAttempt(
-        attemptId,
-        answersArray,
-        timeSpent,
-        testId
-      );
+      await api.submitTestAttempt(attemptId, answersArray, timeSpent, testId);
 
       navigate(`/exams/${testId}/results/${attemptId}`, { replace: true });
     } catch (err) {
@@ -361,7 +356,8 @@ export const TestRunner: React.FC = () => {
                   Q {currentIndex + 1}
                 </span>
                 <span className="text-xs text-slate-500 font-semibold">
-                  Marks: <strong className="text-emerald-600">+{currentQ.marks}</strong> / <span className="text-rose-600">-{currentQ.negativeMarks}</span>
+                  Marks: <strong className="text-emerald-600">+{currentQ.marks}</strong> /{' '}
+                  <span className="text-rose-600">-{currentQ.negativeMarks}</span>
                 </span>
               </div>
 
@@ -387,7 +383,9 @@ export const TestRunner: React.FC = () => {
               {/* If Bengali selected and English exists, show secondary subtext */}
               {language === 'bn' && currentQ.questionBengaliText && (
                 <p className="text-xs text-slate-500 font-medium pt-1 border-t border-slate-100">
-                  <span className="text-slate-400 font-bold uppercase text-[10px] block mb-0.5">English Reference:</span>
+                  <span className="text-slate-400 font-bold uppercase text-[10px] block mb-0.5">
+                    English Reference:
+                  </span>
                   {currentQ.questionText}
                 </p>
               )}
@@ -442,7 +440,11 @@ export const TestRunner: React.FC = () => {
                 size="sm"
                 variant={isCurrentMarked ? 'secondary' : 'outline'}
                 onClick={handleToggleMarkForReview}
-                leftIcon={<Bookmark className={`w-4 h-4 ${isCurrentMarked ? 'fill-current text-amber-600' : ''}`} />}
+                leftIcon={
+                  <Bookmark
+                    className={`w-4 h-4 ${isCurrentMarked ? 'fill-current text-amber-600' : ''}`}
+                  />
+                }
               >
                 {isCurrentMarked ? 'Unmark Review' : 'Mark for Review'}
               </Button>
@@ -532,7 +534,8 @@ export const TestRunner: React.FC = () => {
                 const bgColors = {
                   answered: 'bg-emerald-500 text-white hover:bg-emerald-600',
                   marked: 'bg-purple-600 text-white hover:bg-purple-700',
-                  answered_and_marked: 'bg-purple-600 text-white ring-2 ring-emerald-400 hover:bg-purple-700',
+                  answered_and_marked:
+                    'bg-purple-600 text-white ring-2 ring-emerald-400 hover:bg-purple-700',
                   skipped: 'bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200',
                   unvisited: 'bg-slate-100 text-slate-600 hover:bg-slate-200',
                 };
@@ -575,9 +578,7 @@ export const TestRunner: React.FC = () => {
               <div className="w-12 h-12 rounded-full bg-indigo-50 text-brand-600 flex items-center justify-center mx-auto mb-2">
                 <Send className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-black text-slate-900">
-                Submit Mock Test?
-              </h3>
+              <h3 className="text-lg font-black text-slate-900">Submit Mock Test?</h3>
               <p className="text-xs text-slate-500">
                 Are you sure you want to complete and submit your exam attempt?
               </p>
@@ -602,7 +603,9 @@ export const TestRunner: React.FC = () => {
             {unansweredCount > 0 && (
               <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-lg border border-amber-200 mb-5 flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <span>You still have <strong>{unansweredCount} unanswered questions</strong>.</span>
+                <span>
+                  You still have <strong>{unansweredCount} unanswered questions</strong>.
+                </span>
               </div>
             )}
 

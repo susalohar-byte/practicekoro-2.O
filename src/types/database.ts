@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type UserRole = 'student' | 'admin' | 'instructor';
 export type TestType = 'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq';

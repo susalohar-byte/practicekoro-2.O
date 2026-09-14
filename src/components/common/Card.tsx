@@ -5,17 +5,13 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hoverable?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({
-  className,
-  hoverable = false,
-  children,
-  ...props
-}) => {
+export const Card: React.FC<CardProps> = ({ className, hoverable = false, children, ...props }) => {
   return (
     <div
       className={cn(
         'bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden',
-        hoverable && 'transition-all duration-200 hover:shadow-md hover:border-slate-300 active:scale-[0.99] cursor-pointer',
+        hoverable &&
+          'transition-all duration-200 hover:shadow-md hover:border-slate-300 active:scale-[0.99] cursor-pointer',
         className
       )}
       {...props}

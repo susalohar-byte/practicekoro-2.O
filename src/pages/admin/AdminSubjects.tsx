@@ -11,7 +11,7 @@ import {
   Search,
   FolderTree,
   Filter,
-  X
+  X,
 } from 'lucide-react';
 import type { Subject, Exam } from '@/types';
 
@@ -116,7 +116,13 @@ export const AdminSubjects: React.FC = () => {
         await api.createSubject({
           examId,
           name: name.trim(),
-          slug: slug.trim() || name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+          slug:
+            slug.trim() ||
+            name
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, ''),
           description: description.trim() || undefined,
           iconName: iconName.trim(),
           orderIndex: Number(orderIndex),
@@ -139,10 +145,11 @@ export const AdminSubjects: React.FC = () => {
     }
   };
 
-  const filteredSubjects = subjects.filter(s =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.examId.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSubjects = subjects.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.examId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -160,7 +167,8 @@ export const AdminSubjects: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Subjects group syllabus topics under an exam (e.g. History, Math, Reasoning, General Science).
+            Subjects group syllabus topics under an exam (e.g. History, Math, Reasoning, General
+            Science).
           </p>
         </div>
 
@@ -233,7 +241,7 @@ export const AdminSubjects: React.FC = () => {
                 </tr>
               ) : (
                 filteredSubjects.map((sub) => {
-                  const parentExam = exams.find(e => e.id === sub.examId);
+                  const parentExam = exams.find((e) => e.id === sub.examId);
                   return (
                     <tr key={sub.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="p-4">
@@ -284,7 +292,11 @@ export const AdminSubjects: React.FC = () => {
                             className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
                             title={sub.isActive ? 'Deactivate' : 'Activate'}
                           >
-                            {sub.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                            {sub.isActive ? (
+                              <Trash2 className="w-4 h-4" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </td>

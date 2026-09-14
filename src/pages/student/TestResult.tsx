@@ -11,7 +11,7 @@ import {
   MinusCircle,
   RotateCcw,
   AlertTriangle,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 import { formatSeconds } from '@/lib/utils';
 import type { GradedResult } from '@/types';
@@ -65,7 +65,10 @@ export const TestResult: React.FC = () => {
       <Card className="p-6 sm:p-8 bg-gradient-to-br from-slate-900 via-slate-850 to-indigo-950 text-white border-0 shadow-lg relative overflow-hidden">
         <div className="relative z-10 space-y-3">
           <div className="flex items-center gap-2">
-            <Badge variant="success" className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30">
+            <Badge
+              variant="success"
+              className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
+            >
               Exam Attempt Completed
             </Badge>
             <span className="text-xs text-slate-400 font-mono">
@@ -82,7 +85,8 @@ export const TestResult: React.FC = () => {
             <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
               <p className="text-[10px] uppercase font-bold text-slate-300">Total Score</p>
               <p className="text-2xl font-black text-white mt-0.5">
-                {result.score.toFixed(2)} <span className="text-xs text-slate-400 font-normal">/ {result.totalMarks}</span>
+                {result.score.toFixed(2)}{' '}
+                <span className="text-xs text-slate-400 font-normal">/ {result.totalMarks}</span>
               </p>
               <p className="text-[10px] text-indigo-300 font-semibold mt-0.5">
                 {result.percentage.toFixed(1)}% Marks
@@ -117,9 +121,7 @@ export const TestResult: React.FC = () => {
               <p className="text-2xl font-black text-slate-200 mt-0.5">
                 {formatSeconds(result.timeSpentSeconds)}
               </p>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                Completed
-              </p>
+              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Completed</p>
             </div>
           </div>
         </div>
@@ -132,7 +134,9 @@ export const TestResult: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5 border-slate-200 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Correct Answers</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Correct Answers
+            </span>
             <p className="text-2xl font-black text-emerald-600 mt-1">{result.correctCount}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">Full marks awarded</p>
           </div>
@@ -143,7 +147,9 @@ export const TestResult: React.FC = () => {
 
         <Card className="p-5 border-slate-200 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Incorrect Answers</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Incorrect Answers
+            </span>
             <p className="text-2xl font-black text-rose-600 mt-1">{result.wrongCount}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">Negative marks deducted</p>
           </div>
@@ -154,7 +160,9 @@ export const TestResult: React.FC = () => {
 
         <Card className="p-5 border-slate-200 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Skipped / Unanswered</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Skipped / Unanswered
+            </span>
             <p className="text-2xl font-black text-slate-600 mt-1">{result.skippedCount}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">0 marks change</p>
           </div>
@@ -169,10 +177,17 @@ export const TestResult: React.FC = () => {
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1 text-xs text-amber-900">
-            <span className="font-bold">Automated Mistakes Notebook Linkage:</span> We detected <strong>{result.wrongCount} wrong answers</strong>. These questions have been automatically added to your <strong>Mistakes Notebook</strong> so you can revise them without repeating mistakes.
+            <span className="font-bold">Automated Mistakes Notebook Linkage:</span> We detected{' '}
+            <strong>{result.wrongCount} wrong answers</strong>. These questions have been
+            automatically added to your <strong>Mistakes Notebook</strong> so you can revise them
+            without repeating mistakes.
           </div>
           <Link to="/practice">
-            <Button size="sm" variant="outline" className="bg-white border-amber-300 text-amber-800 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              className="bg-white border-amber-300 text-amber-800 shrink-0"
+            >
               Open Notebook
             </Button>
           </Link>

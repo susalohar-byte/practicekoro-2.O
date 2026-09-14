@@ -19,7 +19,7 @@ import {
   BarChart3,
   AlertCircle,
   RefreshCw,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 
 export const Profile: React.FC = () => {
@@ -33,7 +33,9 @@ export const Profile: React.FC = () => {
   const [attemptsError, setAttemptsError] = useState<string | null>(null);
 
   const activeSub = subscriptionDetails?.isActive || isPro;
-  const isExpired = subscriptionDetails?.status === 'expired' || (!activeSub && !!subscriptionDetails?.hasSubscription);
+  const isExpired =
+    subscriptionDetails?.status === 'expired' ||
+    (!activeSub && !!subscriptionDetails?.hasSubscription);
   const daysRemaining = subscriptionDetails?.daysRemaining ?? (activeSub ? 365 : 0);
 
   const fetchAttempts = useCallback(async () => {
@@ -64,16 +66,15 @@ export const Profile: React.FC = () => {
 
   const totalScore = completedAttempts.reduce((acc, a) => acc + (a.score || 0), 0);
   const totalMaxMarks = completedAttempts.reduce((acc, a) => acc + (a.totalMarks || 100), 0);
-  const avgScore = testsAttemptedCount > 0
-    ? totalMaxMarks > 0
-      ? Math.round((totalScore / totalMaxMarks) * 100)
-      : Math.round(totalScore / testsAttemptedCount)
-    : 0;
+  const avgScore =
+    testsAttemptedCount > 0
+      ? totalMaxMarks > 0
+        ? Math.round((totalScore / totalMaxMarks) * 100)
+        : Math.round(totalScore / testsAttemptedCount)
+      : 0;
 
   const totalAccuracy = completedAttempts.reduce((acc, a) => acc + (a.accuracy || 0), 0);
-  const avgAccuracy = testsAttemptedCount > 0
-    ? Math.round(totalAccuracy / testsAttemptedCount)
-    : 0;
+  const avgAccuracy = testsAttemptedCount > 0 ? Math.round(totalAccuracy / testsAttemptedCount) : 0;
 
   const totalQuestionsPracticed = completedAttempts.reduce(
     (acc, a) => acc + (a.correctCount || 0) + (a.wrongCount || 0),
@@ -155,7 +156,8 @@ export const Profile: React.FC = () => {
               )}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Switching your target exam personalizes mock tests, subjects, and revision across PracticeKoro
+              Switching your target exam personalizes mock tests, subjects, and revision across
+              PracticeKoro
             </p>
           </div>
         </div>
@@ -201,15 +203,16 @@ export const Profile: React.FC = () => {
               Genuine performance statistics from your completed mock tests
             </p>
           </div>
-          {loadingAttempts && (
-            <span className="text-xs text-slate-400">Loading metrics…</span>
-          )}
+          {loadingAttempts && <span className="text-xs text-slate-400">Loading metrics…</span>}
         </div>
 
         {loadingAttempts ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="p-4 rounded-xl bg-slate-50 border border-slate-100 animate-pulse space-y-2">
+              <div
+                key={n}
+                className="p-4 rounded-xl bg-slate-50 border border-slate-100 animate-pulse space-y-2"
+              >
                 <div className="h-3 w-16 bg-slate-200 rounded" />
                 <div className="h-6 w-10 bg-slate-300 rounded" />
               </div>
@@ -241,7 +244,8 @@ export const Profile: React.FC = () => {
                 No tests attempted yet. Start your first mock test to see your progress here.
               </p>
               <p className="text-[11px] text-slate-500">
-                Your test scores, accuracy, and practice question stats will be tracked automatically.
+                Your test scores, accuracy, and practice question stats will be tracked
+                automatically.
               </p>
             </div>
             <Button
@@ -268,18 +272,14 @@ export const Profile: React.FC = () => {
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 Average Score
               </p>
-              <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-                {avgScore}%
-              </p>
+              <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{avgScore}%</p>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 Accuracy
               </p>
-              <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-                {avgAccuracy}%
-              </p>
+              <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{avgAccuracy}%</p>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
@@ -322,9 +322,7 @@ export const Profile: React.FC = () => {
                   <Crown className="w-3.5 h-3.5" />
                   Pro Pass Active
                 </div>
-                <h3 className="text-xl font-black pt-1">
-                  ₹299 / 365 Days
-                </h3>
+                <h3 className="text-xl font-black pt-1">₹299 / 365 Days</h3>
                 <p className="text-xs text-amber-100 font-medium">
                   {daysRemaining > 0
                     ? `${daysRemaining} Days Remaining • All premium mock tests unlocked`
@@ -361,9 +359,7 @@ export const Profile: React.FC = () => {
                     PRO PASS EXPIRED
                   </Badge>
                 </div>
-                <h3 className="text-lg font-black text-slate-900 pt-1">
-                  Pro Pass Expired
-                </h3>
+                <h3 className="text-lg font-black text-slate-900 pt-1">Pro Pass Expired</h3>
                 <p className="text-xs text-slate-600 font-medium">
                   Renew your Pro Pass to unlock premium mock tests.
                 </p>
@@ -411,9 +407,7 @@ export const Profile: React.FC = () => {
 
       {/* A5. Account Information */}
       <Card className="p-6 border-slate-200 space-y-4">
-        <h2 className="text-sm sm:text-base font-bold text-slate-900">
-          Account Information
-        </h2>
+        <h2 className="text-sm sm:text-base font-bold text-slate-900">Account Information</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
@@ -447,18 +441,14 @@ export const Profile: React.FC = () => {
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               Member Since
             </p>
-            <p className="font-bold text-slate-900 text-sm mt-0.5">
-              {memberSince}
-            </p>
+            <p className="font-bold text-slate-900 text-sm mt-0.5">{memberSince}</p>
           </div>
         </div>
       </Card>
 
       {/* A6. Quick Links */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-          Quick Access
-        </h2>
+        <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Quick Access</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Link
             to="/results"

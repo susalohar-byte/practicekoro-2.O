@@ -14,7 +14,11 @@ interface AuthContextType {
   isPro: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: Error | null; role?: UserRole }>;
-  register: (fullName: string, email: string, password: string) => Promise<{ error: Error | null; role?: UserRole }>;
+  register: (
+    fullName: string,
+    email: string,
+    password: string
+  ) => Promise<{ error: Error | null; role?: UserRole }>;
   logout: () => Promise<void>;
   switchDemoRole: (role: UserRole) => void;
 }
@@ -50,7 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check active Supabase session
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session?.user) {
           const { data } = await supabase
             .from('profiles')
@@ -83,7 +89,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const { data } = await supabase
           .from('profiles')
@@ -122,7 +130,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ error: Error | null; role?: UserRole }> => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<{ error: Error | null; role?: UserRole }> => {
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
@@ -174,7 +185,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (fullName: string, email: string, password: string): Promise<{ error: Error | null; role?: UserRole }> => {
+  const register = async (
+    fullName: string,
+    email: string,
+    password: string
+  ): Promise<{ error: Error | null; role?: UserRole }> => {
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
