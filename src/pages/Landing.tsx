@@ -253,11 +253,11 @@ export const Landing: React.FC = () => {
                 <Button
                   size="sm"
                   onClick={() => navigate(dashboardUrl)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition"
+                  leftIcon={<LayoutDashboard className="w-4 h-4" />}
+                  rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition shrink-0 h-9"
                 >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>Dashboard</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  Dashboard
                 </Button>
               ) : (
                 <>
@@ -284,51 +284,51 @@ export const Landing: React.FC = () => {
       </header>
 
       {/* =========================================================================
-          2. HERO SECTION (FULL SCREEN VIEWPORT)
+          2. HERO SECTION (TIGHT, BALANCED, AND VISUALLY HARMONIOUS)
           ========================================================================= */}
-      <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white border-b border-slate-100 py-10 lg:py-0">
-        {/* Soft cyan-blue radial background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/4 -translate-y-1/2 w-[600px] h-[600px] lg:w-[900px] lg:h-[900px] xl:w-[1150px] xl:h-[1150px] bg-gradient-to-tr from-sky-200/45 via-blue-100/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      <section className="relative overflow-hidden bg-white border-b border-slate-100 py-12 sm:py-16 lg:py-20">
+        {/* Soft cyan-blue radial background glow hugging the phone and map */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/4 -translate-y-1/2 w-[650px] h-[500px] lg:w-[850px] lg:h-[650px] bg-gradient-to-tr from-sky-200/50 via-blue-100/35 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10 py-6 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 xl:gap-14 items-center">
+        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-8 items-center">
             {/* Left Content Column */}
-            <div className="lg:col-span-5 xl:col-span-5 text-center lg:text-left">
+            <div className="lg:col-span-5 text-center lg:text-left">
               {/* Eyebrow / Tagline */}
-              <p className="text-xs sm:text-sm lg:text-base font-extrabold text-sky-600 tracking-[0.25em] uppercase mb-3 sm:mb-5">
+              <p className="text-xs sm:text-sm font-extrabold text-sky-600 tracking-[0.22em] uppercase mb-3 sm:mb-4">
                 PRACTICE MORE. WORRY LESS.
               </p>
 
               {/* Main Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-[68px] font-black text-slate-900 tracking-tight leading-[1.08]">
+              <h1 className="text-4xl sm:text-5xl lg:text-[52px] xl:text-[58px] font-black text-slate-900 tracking-tight leading-[1.08]">
                 Crack Your <br />
                 <span className="text-blue-600">Dream Exam.</span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-base sm:text-lg lg:text-xl xl:text-[22px] text-slate-600 font-medium max-w-xl mt-4 sm:mt-6 leading-relaxed mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg lg:text-xl text-slate-600 font-medium max-w-md mt-4 sm:mt-5 leading-relaxed mx-auto lg:mx-0">
                 Smart practice for West Bengal's competitive exams.
               </p>
 
               {/* Call to Actions */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-6 sm:pt-8">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-6 sm:pt-7">
                 {user ? (
                   <Button
                     size="lg"
                     onClick={() => navigate(dashboardUrl)}
-                    className="w-full sm:w-auto text-base sm:text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white px-8 sm:px-9 py-4 sm:py-4.5 rounded-2xl shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2.5 transition transform hover:-translate-y-0.5"
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
+                    className="w-full sm:w-auto text-base font-bold bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 transition transform hover:-translate-y-0.5"
                   >
-                    <span>Go to Dashboard</span>
-                    <ArrowRight className="w-5 h-5" />
+                    Go to Dashboard
                   </Button>
                 ) : (
                   <Button
                     size="lg"
                     onClick={() => navigate('/register')}
-                    className="w-full sm:w-auto text-base sm:text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white px-8 sm:px-9 py-4 sm:py-4.5 rounded-2xl shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2.5 transition transform hover:-translate-y-0.5"
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
+                    className="w-full sm:w-auto text-base font-bold bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 transition transform hover:-translate-y-0.5"
                   >
-                    <span>Get Started Free</span>
-                    <ArrowRight className="w-5 h-5" />
+                    Get Started Free
                   </Button>
                 )}
                 <Button
@@ -338,31 +338,31 @@ export const Landing: React.FC = () => {
                     const elem = document.getElementById('exams');
                     elem?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full sm:w-auto text-base sm:text-lg font-bold bg-white text-blue-600 hover:bg-blue-50 border-2 border-blue-500/30 hover:border-blue-600 px-8 sm:px-9 py-4 sm:py-4.5 rounded-2xl transition"
+                  className="w-full sm:w-auto text-base font-bold bg-white text-blue-600 hover:bg-blue-50 border-2 border-blue-200 hover:border-blue-500 px-7 py-3.5 rounded-xl transition"
                 >
                   View Exams
                 </Button>
               </div>
 
               {/* Feature Pills Underneath Buttons */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 pt-8 sm:pt-10 text-slate-700 text-xs sm:text-sm lg:text-base font-semibold">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
-                    <FileText className="w-4 h-4" />
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-7 sm:pt-9 text-slate-700 text-xs sm:text-sm font-semibold">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-xs">
+                    <FileText className="w-3.5 h-3.5" />
                   </div>
                   <span>Mock Tests</span>
                 </div>
                 <span className="text-slate-300 hidden sm:inline">|</span>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
-                    <FileText className="w-4 h-4" />
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-xs">
+                    <FileText className="w-3.5 h-3.5" />
                   </div>
                   <span>PYQs</span>
                 </div>
                 <span className="text-slate-300 hidden sm:inline">|</span>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
-                    <Target className="w-4 h-4" />
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-xs">
+                    <Target className="w-3.5 h-3.5" />
                   </div>
                   <span>Topic Practice</span>
                 </div>
@@ -370,179 +370,171 @@ export const Landing: React.FC = () => {
             </div>
 
             {/* Center: Smartphone Mockup */}
-            <div className="lg:col-span-4 xl:col-span-4 flex justify-center">
-              <div className="relative w-[295px] sm:w-[330px] lg:w-[335px] xl:w-[365px] rounded-[48px] bg-slate-950 p-2.5 sm:p-3 shadow-2xl ring-1 ring-slate-800 border-[3px] border-slate-700/70">
+            <div className="lg:col-span-4 flex justify-center">
+              <div className="relative w-[285px] sm:w-[310px] lg:w-[325px] rounded-[44px] bg-slate-950 p-2.5 shadow-2xl ring-1 ring-slate-800/80 border-2 border-slate-700/60 transition-transform duration-500 hover:scale-[1.02]">
                 {/* Screen Content */}
-                <div className="rounded-[38px] overflow-hidden bg-white p-4 pt-3.5 flex flex-col shadow-inner">
+                <div className="rounded-[36px] overflow-hidden bg-white p-3.5 pt-3 flex flex-col shadow-inner">
                   {/* Status Bar */}
-                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-800 px-2 pb-2">
+                  <div className="flex items-center justify-between text-[10px] font-semibold text-slate-800 px-2 pb-1.5">
                     <span>9:41</span>
-                    <div className="w-20 h-3.5 bg-slate-950 rounded-full mx-auto" />
+                    <div className="w-16 h-3 bg-slate-950 rounded-full mx-auto" />
                     <div className="flex items-center gap-1.5 text-slate-700">
-                      <span className="inline-block w-2.5 h-2 bg-slate-800 rounded-sm" />
+                      <span className="inline-block w-2.5 h-2 bg-slate-800 rounded-xs" />
                       <Wifi className="w-3 h-3" />
-                      <Battery className="w-3.5 h-3.5" />
+                      <Battery className="w-3 h-3" />
                     </div>
                   </div>
 
                   {/* App Screen Header */}
-                  <p className="font-bold text-slate-900 text-xs sm:text-sm mt-2 mb-3 px-1">
+                  <p className="font-bold text-slate-900 text-xs sm:text-sm mt-1.5 mb-2.5 px-1">
                     West Bengal & Central Exams
                   </p>
 
                   {/* Exam List Cards */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     {/* WBP Constable */}
                     <div
                       onClick={() => navigate('/exams/wbp-constable')}
-                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <img
                           src="/images/exams/wbp_police.png"
                           alt="WBP"
-                          className="w-8 h-8 object-contain rounded-md"
+                          className="w-7 h-7 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             WBP Constable
                           </p>
-                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">West Bengal Police</p>
+                          <p className="text-[10px] text-slate-400 font-medium">West Bengal Police</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
                     </div>
 
                     {/* Kolkata Police */}
                     <div
                       onClick={() => navigate('/exams/kp-police-si')}
-                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <img
                           src="/images/exams/icon_kolkata_police.png"
                           alt="Kolkata Police"
-                          className="w-8 h-8 object-contain rounded-md"
+                          className="w-7 h-7 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             Kolkata Police
                           </p>
-                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Kolkata Police</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Kolkata Police</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
                     </div>
 
                     {/* RRB */}
                     <div
                       onClick={() => navigate('/exams/railway-group-d')}
-                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <img
                           src="/images/exams/icon_railway_exact.png"
                           alt="RRB"
-                          className="w-8 h-8 object-contain rounded-md"
+                          className="w-7 h-7 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             RRB
                           </p>
-                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Indian Railways</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Indian Railways</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
                     </div>
 
                     {/* SSC GD */}
                     <div
                       onClick={() => navigate('/exams')}
-                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <img
                           src="/images/exams/icon_ssc_clean.png"
                           alt="SSC GD"
-                          className="w-8 h-8 object-contain rounded-md"
+                          className="w-7 h-7 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             SSC GD
                           </p>
-                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Staff Selection Commission</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Staff Selection Commission</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
                     </div>
 
                     {/* SSC MTS */}
                     <div
                       onClick={() => navigate('/exams')}
-                      className="group p-3 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-sm flex items-center justify-between transition cursor-pointer"
+                      className="group p-2.5 rounded-xl border border-slate-100 bg-white hover:bg-blue-50/60 hover:border-blue-200 shadow-xs flex items-center justify-between transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <img
                           src="/images/exams/icon_ssc_clean.png"
                           alt="SSC MTS"
-                          className="w-8 h-8 object-contain rounded-md"
+                          className="w-7 h-7 object-contain rounded-md"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
                         <div className="text-left">
-                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                          <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
                             SSC MTS
                           </p>
-                          <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Staff Selection Commission</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Staff Selection Commission</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: West Bengal Map & Motto */}
-            <div className="lg:col-span-3 xl:col-span-3 flex flex-col sm:flex-row lg:flex-col items-center lg:items-start justify-center gap-6 text-center lg:text-left">
-              {/* West Bengal Map Silhouette */}
+            {/* Right: Authentic West Bengal Silhouette Map & Motto */}
+            <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col items-center lg:items-start justify-center gap-5 sm:gap-8 lg:gap-5 text-center lg:text-left">
+              {/* Authentic West Bengal Map Silhouette */}
               <div className="relative">
-                <svg
-                  viewBox="0 0 200 320"
-                  className="w-40 sm:w-48 lg:w-52 xl:w-60 h-auto drop-shadow-sm opacity-90 transition-transform hover:scale-105"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M108 8 C115 12, 126 28, 122 42 C118 52, 112 65, 118 78 C124 90, 116 102, 106 112 C98 120, 94 130, 92 142 C90 155, 102 165, 110 178 C118 190, 116 205, 114 218 C112 232, 118 248, 112 265 C106 282, 94 294, 82 292 C74 290, 70 280, 68 270 C66 255, 52 240, 50 222 C48 205, 54 190, 52 175 C50 162, 44 150, 56 140 C66 132, 74 122, 78 110 C82 98, 88 85, 94 72 C98 60, 96 42, 100 24 Z"
-                    className="fill-sky-100 stroke-sky-300"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <img
+                  src="/images/west_bengal_silhouette.svg"
+                  alt="West Bengal"
+                  className="w-32 sm:w-40 lg:w-44 xl:w-48 h-auto drop-shadow-sm transition-transform duration-500 hover:scale-105 select-none pointer-events-none"
+                />
               </div>
 
               {/* Motto */}
               <div className="flex flex-col items-center lg:items-start">
-                <span className="text-slate-900 font-black text-2xl sm:text-3xl xl:text-4xl leading-[1.1] tracking-tight">
+                <span className="text-slate-900 font-black text-2xl sm:text-3xl lg:text-[30px] leading-[1.12] tracking-tight">
                   For a<br />
                   Stronger<br />
                   West Bengal
                 </span>
-                <div className="w-14 h-1.5 bg-blue-600 rounded-full mt-3.5" />
+                <div className="w-12 h-1.5 bg-blue-600 rounded-full mt-3" />
               </div>
             </div>
           </div>
@@ -552,14 +544,14 @@ export const Landing: React.FC = () => {
       {/* =========================================================================
           3. POPULAR EXAM CATEGORIES SECTION (FULL SCREEN & MICRO ANIMATED)
           ========================================================================= */}
-      <section id="exams" className="relative min-h-[calc(100vh-4rem)] flex flex-col justify-center py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white via-slate-50/40 to-white overflow-hidden border-b border-slate-100">
+      <section id="exams" className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white via-slate-50/40 to-white overflow-hidden border-b border-slate-100">
         {/* Soft ambient corner blobs matching the design with gentle breathing animation */}
         <div className="absolute -top-28 -left-28 w-[420px] h-[420px] bg-gradient-to-br from-blue-100/60 to-sky-100/30 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
         <div className="absolute -top-28 -right-28 w-[420px] h-[420px] bg-gradient-to-bl from-sky-100/60 to-blue-100/30 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
         <div className="absolute -bottom-28 -left-28 w-[420px] h-[420px] bg-gradient-to-tr from-sky-100/50 to-blue-50/30 rounded-full blur-3xl pointer-events-none -z-10" />
         <div className="absolute -bottom-28 -right-28 w-[420px] h-[420px] bg-gradient-to-tl from-blue-100/50 to-sky-50/30 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
+        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Top Header */}
           <div className="text-center max-w-2xl mx-auto mb-4">
             <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-sky-100/80 text-blue-600 text-xs font-bold tracking-widest uppercase mb-3.5 border border-sky-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
