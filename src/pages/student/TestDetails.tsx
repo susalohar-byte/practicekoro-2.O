@@ -212,7 +212,7 @@ export const TestDetails: React.FC = () => {
             leftIcon={!isAccessible ? <Lock className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
             className="w-full sm:w-auto font-bold"
           >
-            {!isAccessible ? 'Unlock with Pro Pass' : 'I Understand, Start Test'}
+            {!isAccessible ? 'Unlock with Pro Pass' : 'Start Test'}
           </Button>
         </div>
       </Card>
@@ -255,7 +255,7 @@ export const TestDetails: React.FC = () => {
                 className="w-full font-bold"
                 onClick={() => {
                   setShowSubModal(false);
-                  navigate('/profile');
+                  navigate('/subscription');
                 }}
               >
                 Upgrade to Pro Pass (₹299/yr)

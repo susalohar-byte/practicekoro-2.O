@@ -14,6 +14,7 @@ import { TestSolutions } from '@/pages/student/TestSolutions';
 import { Practice } from '@/pages/student/Practice';
 import { MyTests } from '@/pages/student/MyTests';
 import { Profile } from '@/pages/student/Profile';
+import { Subscription } from '@/pages/student/Subscription';
 
 // Auth Pages
 import { Login } from '@/pages/auth/Login';
@@ -72,6 +73,7 @@ export const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="subscription" element={<Subscription />} />
       </Route>
 
       {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}

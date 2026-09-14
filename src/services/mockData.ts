@@ -416,6 +416,7 @@ export const MOCK_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     durationDays: 365,
     price: 299,
     originalPrice: 999,
+    currency: 'INR',
     features: [
       'Unlock ALL Premium Mock Tests across all exams',
       'WBP Constable, KP SI, WBCS & WBPSC Clerkship',
@@ -434,6 +435,7 @@ export const MOCK_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     durationDays: 180,
     price: 199,
     originalPrice: 599,
+    currency: 'INR',
     features: [
       'Unlock ALL Premium Mock Tests',
       'Detailed Explanations & Solutions',

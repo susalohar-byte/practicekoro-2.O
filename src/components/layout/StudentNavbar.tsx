@@ -122,16 +122,18 @@ export const StudentNavbar: React.FC = () => {
           <div className="flex items-center gap-3">
             {/* Pro Badge / Pass CTA */}
             {isPro ? (
-              <Badge variant="premium" className="hidden sm:inline-flex gap-1 py-1 px-2.5 shadow-sm">
-                <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-                <span className="font-bold">PRO PASS</span>
-              </Badge>
+              <Link to="/subscription">
+                <Badge variant="premium" className="hidden sm:inline-flex gap-1 py-1 px-2.5 shadow-sm hover:opacity-90 cursor-pointer">
+                  <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                  <span className="font-bold">PRO PASS</span>
+                </Badge>
+              </Link>
             ) : (
               <Button
                 variant="pro"
                 size="sm"
                 className="hidden sm:inline-flex text-xs font-bold"
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/subscription')}
                 leftIcon={<Crown className="w-3.5 h-3.5" />}
               >
                 Get Pro Pass
@@ -168,6 +170,15 @@ export const StudentNavbar: React.FC = () => {
                     <p className="text-xs font-bold text-slate-900 truncate">{user?.fullName}</p>
                     <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
                   </div>
+
+                  <Link
+                    to="/subscription"
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs text-amber-700 hover:bg-amber-50 font-semibold"
+                  >
+                    <Crown className="w-4 h-4 text-amber-600 fill-amber-500" />
+                    Pro Pass & Billing
+                  </Link>
 
                   <Link
                     to="/profile"

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -16,16 +17,11 @@ import {
 export const Profile: React.FC = () => {
   const { user, isPro, logout } = useAuth();
   const { exams, selectedExam, setSelectedExam } = useExam();
-  const { plans } = useSubscription();
+  const { plans, subscriptionDetails } = useSubscription();
+  const navigate = useNavigate();
 
-  const [proActiveState, setProActiveState] = useState(isPro);
-
-  const toggleProSimulated = () => {
-    const nextState = !proActiveState;
-    setProActiveState(nextState);
-    localStorage.setItem('practicekoro_is_pro', nextState ? 'true' : 'false');
-    window.location.reload();
-  };
+  const activeSub = subscriptionDetails?.isActive || isPro;
+  const daysRemaining = subscriptionDetails?.daysRemaining ?? (activeSub ? 365 : 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -41,7 +37,7 @@ export const Profile: React.FC = () => {
                 <h1 className="text-lg sm:text-xl font-bold text-slate-900">
                   {user?.fullName || 'Student Aspirant'}
                 </h1>
-                {isPro ? (
+                {activeSub ? (
                   <Badge variant="premium" className="gap-1">
                     <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
                     PRO PASS ACTIVE
@@ -82,18 +78,18 @@ export const Profile: React.FC = () => {
               PracticeKoro Pro Subscription
             </h2>
             <p className="text-xs text-slate-500">
-              Rule: One active subscription gives you unlimited access to ALL Premium Mock Tests
+              Rule: One active subscription gives you universal access to ALL Premium Mock Tests
             </p>
           </div>
-          <button
-            onClick={toggleProSimulated}
-            className="text-xs font-bold text-brand-600 hover:text-brand-700 underline"
+          <Link
+            to="/subscription"
+            className="text-xs font-bold text-brand-600 hover:text-brand-700 underline flex items-center gap-1"
           >
-            [Dev: Toggle Pro Status]
-          </button>
+            Manage Pass & Billing
+          </Link>
         </div>
 
-        {isPro ? (
+        {activeSub ? (
           <Card className="p-6 bg-gradient-to-br from-amber-500 to-orange-600 text-white border-0 shadow-md">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
@@ -102,15 +98,35 @@ export const Profile: React.FC = () => {
                   ACTIVE MEMBERSHIP
                 </div>
                 <h3 className="text-xl font-black pt-1">
-                  1-Year All-Access Pass
+                  {subscriptionDetails?.planTitle || 'PracticeKoro Pro Pass'}
                 </h3>
                 <p className="text-xs text-amber-100">
-                  Expires in 348 days • All premium mock tests and solution analysis unlocked
+                  {daysRemaining > 0
+                    ? `Expires in ${daysRemaining} days • All premium mock tests unlocked`
+                    : 'Active • Universal Access to All Mock Tests'}
                 </p>
+                {subscriptionDetails?.expiresAt && (
+                  <p className="text-[11px] text-amber-100/90 pt-1">
+                    Valid until: {new Date(subscriptionDetails.expiresAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </p>
+                )}
               </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 text-center sm:text-right">
-                <p className="text-xs uppercase font-bold text-amber-200">Subscription Status</p>
-                <p className="text-lg font-black text-white">Full Access</p>
+              <div className="flex flex-col sm:items-end gap-3">
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 text-center sm:text-right">
+                  <p className="text-xs uppercase font-bold text-amber-200">Access Status</p>
+                  <p className="text-lg font-black text-white">Full Access</p>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-white text-amber-800 hover:bg-amber-50 font-bold text-xs"
+                  onClick={() => navigate('/subscription')}
+                >
+                  Extend Pass
+                </Button>
               </div>
             </div>
           </Card>
@@ -123,7 +139,7 @@ export const Profile: React.FC = () => {
               >
                 {plan.id === 'pro_1_year' && (
                   <div className="absolute top-0 right-0 bg-brand-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-lg">
-                    Most Popular
+                    Recommended
                   </div>
                 )}
                 <div>
@@ -156,10 +172,10 @@ export const Profile: React.FC = () => {
                   <Button
                     variant={plan.id === 'pro_1_year' ? 'pro' : 'primary'}
                     className="w-full font-bold text-xs"
-                    onClick={toggleProSimulated}
+                    onClick={() => navigate('/subscription')}
                     leftIcon={<Zap className="w-3.5 h-3.5" />}
                   >
-                    Activate {plan.title}
+                    Unlock with Pro Pass
                   </Button>
                 </div>
               </Card>

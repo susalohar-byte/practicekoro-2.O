@@ -247,23 +247,111 @@ export interface BookmarkItem {
 
 export interface SubscriptionPlan {
   id: string;
+  name?: string;
   title: string;
   description?: string;
   durationDays: number;
   price: number;
   originalPrice?: number;
+  currency: string;
   features: string[];
   isActive: boolean;
   orderIndex: number;
 }
+
+export type SubscriptionStatus = 'pending' | 'active' | 'expired' | 'cancelled' | 'failed';
 
 export interface Subscription {
   id: string;
   userId: string;
   planId: string;
   plan?: SubscriptionPlan;
-  status: 'active' | 'expired' | 'cancelled';
+  status: SubscriptionStatus;
   startsAt: string;
   expiresAt: string;
+  createdAt: string;
+}
+
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
+export interface Payment {
+  id: string;
+  userId: string;
+  planId?: string;
+  planTitle?: string;
+  amount: number;
+  currency: string;
+  gateway: string;
+  orderId?: string;
+  razorpayOrderId?: string;
+  transactionId?: string;
+  razorpayPaymentId?: string;
+  status: PaymentStatus;
+  createdAt: string;
+  studentName?: string;
+  studentEmail?: string;
+}
+
+export interface RazorpayOrderResponse {
+  orderId: string;
+  paymentId: string;
+  planId: string;
+  planTitle: string;
+  amount: number;
+  currency: string;
+  durationDays: number;
+  keyId: string;
+}
+
+export interface RazorpayVerificationPayload {
+  orderId: string;
+  paymentId: string;
+  signature: string;
+  planId: string;
+}
+
+export interface StudentSubscriptionDetails {
+  hasSubscription: boolean;
+  isActive: boolean;
+  status: SubscriptionStatus | 'none';
+  subscriptionId?: string;
+  planId?: string;
+  planTitle?: string;
+  startsAt?: string;
+  expiresAt?: string;
+  daysRemaining?: number;
+}
+
+export interface AdminSubscriptionRow {
+  id: string;
+  userId: string;
+  studentName: string;
+  studentEmail: string;
+  studentPhone?: string;
+  planId: string;
+  planTitle: string;
+  status: SubscriptionStatus;
+  startsAt: string;
+  expiresAt: string;
+  paymentId?: string;
+  daysRemaining: number;
+  createdAt: string;
+}
+
+export interface AdminPaymentRow {
+  id: string;
+  userId: string;
+  studentName: string;
+  studentEmail: string;
+  planId?: string;
+  planTitle?: string;
+  amount: number;
+  currency: string;
+  gateway: string;
+  orderId?: string;
+  razorpayOrderId?: string;
+  transactionId?: string;
+  razorpayPaymentId?: string;
+  status: PaymentStatus;
   createdAt: string;
 }

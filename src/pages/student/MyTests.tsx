@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { api } from '@/services/api';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -11,13 +12,16 @@ import {
   XCircle,
   MinusCircle,
   ChevronRight,
-  FileCheck2
+  FileCheck2,
+  Crown,
+  ArrowRight
 } from 'lucide-react';
 import { formatSeconds } from '@/lib/utils';
 import type { TestAttempt } from '@/types';
 
 export const MyTests: React.FC = () => {
   const { user } = useAuth();
+  const { isPro, subscriptionDetails } = useSubscription();
   const navigate = useNavigate();
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
 
@@ -34,16 +38,77 @@ export const MyTests: React.FC = () => {
     loadAttempts();
   }, [user]);
 
+  const activeSub = isPro || subscriptionDetails?.isActive;
+  const daysRemaining = subscriptionDetails?.daysRemaining;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-          My Mock Test Attempts
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500">
-          Review past test attempts, detailed question-by-question solutions, and score trends
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            My Mock Test Attempts
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Review past test attempts, detailed question-by-question solutions, and score trends
+          </p>
+        </div>
+
+        {activeSub ? (
+          <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+            <Crown className="w-4 h-4 fill-amber-500 text-amber-600 shrink-0" />
+            <div className="text-xs">
+              <span className="font-bold text-slate-900">Pro Pass Active</span>
+              {typeof daysRemaining === 'number' && (
+                <span className="text-slate-500 ml-1">({daysRemaining}d left)</span>
+              )}
+            </div>
+            <Link
+              to="/subscription"
+              className="text-[11px] font-bold text-brand-600 hover:text-brand-700 ml-2"
+            >
+              Details
+            </Link>
+          </div>
+        ) : (
+          <Button
+            size="sm"
+            variant="pro"
+            onClick={() => navigate('/subscription')}
+            leftIcon={<Crown className="w-3.5 h-3.5" />}
+            className="font-bold text-xs"
+          >
+            Upgrade to Pro Pass
+          </Button>
+        )}
       </div>
+
+      {/* Subscription Status Notice */}
+      {!activeSub && (
+        <Card className="p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <Crown className="w-5 h-5 fill-amber-500 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Unlock All Premium Mock Tests & Detailed Solutions
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                PracticeKoro Pro Pass gives you universal access to all mock tests across all exams for 1 full year.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="pro"
+            className="font-bold text-xs shrink-0"
+            onClick={() => navigate('/subscription')}
+            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+          >
+            Get Pro Pass (₹299/yr)
+          </Button>
+        </Card>
+      )}
 
       {attempts.length === 0 ? (
         <EmptyState
