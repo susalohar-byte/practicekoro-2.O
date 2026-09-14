@@ -99,9 +99,15 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // 4. Resolve webhook secret
-  const webhookSecret =
-    Deno.env.get("RAZORPAY_WEBHOOK_SECRET") || "whsec_practicekoro_test_2026";
+  // 4. Resolve webhook secret - strictly FAIL CLOSED
+  const webhookSecret = Deno.env.get("RAZORPAY_WEBHOOK_SECRET");
+  if (!webhookSecret) {
+    console.error("Server misconfiguration: RAZORPAY_WEBHOOK_SECRET is not set");
+    return new Response(
+      JSON.stringify({ error: "Server configuration error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   // 5. Cryptographic signature check
   const isValid = await verifyRazorpaySignature(rawBody, signature, webhookSecret);
@@ -165,12 +171,17 @@ Deno.serve(async (req: Request) => {
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error("Supabase environment configuration missing in Edge Function");
     return new Response(
-      JSON.stringify({ error: "Server misconfiguration" }),
+      JSON.stringify({ error: "Server configuration error" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Stable event identifier: uses payment ID and account/event identity rather than Date.now()
+  const stableEventId = data.account_id
+    ? `${data.account_id}_${event}_${paymentId}`
+    : `evt_${event}_${paymentId}`;
 
   const { data: rpcResult, error: rpcError } = await supabase.rpc(
     "reconcile_razorpay_webhook",
@@ -179,18 +190,15 @@ Deno.serve(async (req: Request) => {
       p_payment_id: paymentId,
       p_amount: amountInr,
       p_currency: currency,
-      p_event_id: data.account_id || `event_${Date.now()}`,
+      p_event_id: stableEventId,
     }
   );
 
   if (rpcError) {
-    console.error("Reconciliation RPC error:", rpcError);
-    // Return 400 for business logic rejection (e.g. unknown order or mismatched amounts)
+    console.error("Reconciliation RPC rejected transaction. Error code:", rpcError.code);
     return new Response(
       JSON.stringify({
-        error: "Reconciliation failed",
-        details: rpcError.message,
-        code: rpcError.code,
+        error: "Reconciliation rejected",
       }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );

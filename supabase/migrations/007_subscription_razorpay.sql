@@ -93,10 +93,10 @@ CREATE TABLE IF NOT EXISTS public.payment_gateways (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Seed default test secret (never exposed to frontend/clients)
-INSERT INTO public.payment_gateways (gateway, key_id, key_secret, is_active)
-VALUES ('razorpay', 'rzp_test_practicekoro_key', 'rzp_test_sec_practicekoro_2026', TRUE)
-ON CONFLICT (gateway) DO UPDATE SET is_active = EXCLUDED.is_active;
+-- Seed default gateway configuration (secrets must be configured via server environment)
+INSERT INTO public.payment_gateways (gateway, key_id, is_active)
+VALUES ('razorpay', NULL, TRUE)
+ON CONFLICT (gateway) DO NOTHING;
 
 -- Secure payment_gateways table (only superuser / security definer functions can read)
 ALTER TABLE public.payment_gateways ENABLE ROW LEVEL SECURITY;
@@ -246,7 +246,7 @@ BEGIN
         'amount', v_plan.price,
         'currency', v_plan.currency,
         'duration_days', v_plan.duration_days,
-        'key_id', COALESCE(v_key_id, 'rzp_test_practicekoro_key')
+        'key_id', v_key_id
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -300,8 +300,8 @@ BEGIN
     FROM public.payment_gateways
     WHERE gateway = 'razorpay' AND is_active = TRUE;
 
-    IF v_secret IS NULL THEN
-        v_secret := 'rzp_test_sec_practicekoro_2026';
+    IF v_secret IS NULL OR v_secret = '' THEN
+        RAISE EXCEPTION 'Server configuration error: Payment gateway secret not configured' USING ERRCODE = '50001';
     END IF;
 
     v_expected_signature := encode(hmac((p_order_id || '|' || p_payment_id)::bytea, v_secret::bytea, 'sha256'), 'hex');
@@ -601,9 +601,6 @@ WHERE t.status = 'published';
 
 -- Enhance payment_gateways with webhook_secret
 ALTER TABLE public.payment_gateways ADD COLUMN IF NOT EXISTS webhook_secret TEXT;
-UPDATE public.payment_gateways
-SET webhook_secret = 'whsec_practicekoro_test_2026'
-WHERE gateway = 'razorpay' AND (webhook_secret IS NULL OR webhook_secret = '');
 
 -- Webhook Reconciliation RPC
 CREATE OR REPLACE FUNCTION public.reconcile_razorpay_webhook(

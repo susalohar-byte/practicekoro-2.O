@@ -1133,7 +1133,7 @@ export const api = {
         amount: Number(data.amount),
         currency: data.currency || 'INR',
         durationDays: Number(data.duration_days),
-        keyId: data.key_id || (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || 'rzp_test_practicekoro_key',
+        keyId: data.key_id || (import.meta.env.VITE_RAZORPAY_KEY as string) || (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || '',
       };
     }
 
@@ -1149,7 +1149,7 @@ export const api = {
       amount: plan.price,
       currency: 'INR',
       durationDays: plan.durationDays,
-      keyId: (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || 'rzp_test_practicekoro_key',
+      keyId: (import.meta.env.VITE_RAZORPAY_KEY as string) || (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || '',
     };
   },
 
