@@ -49,7 +49,7 @@ export const StudentNavbar: React.FC = () => {
                 className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl transition-transform group-hover:scale-105"
               />
               <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight flex items-center">
-                Practice<span className="text-brand-600">Koro</span>
+                Practice<span className="text-blue-600">Koro</span>
               </span>
             </Link>
 
@@ -84,11 +84,11 @@ export const StudentNavbar: React.FC = () => {
                         setSelectedExam(exam);
                         setExamDropdownOpen(false);
                       }}
-                      className="w-full flex items-center justify-between px-3.5 py-2.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors"
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"
                     >
                       <span className="truncate font-semibold">{exam.title}</span>
                       {selectedExam?.id === exam.id && (
-                        <Check className="w-4 h-4 text-brand-600 shrink-0" />
+                        <Check className="w-4 h-4 text-blue-600 shrink-0" />
                       )}
                     </button>
                   ))}
@@ -99,19 +99,19 @@ export const StudentNavbar: React.FC = () => {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((item) => {
-              const isActive = isStudentNavActive(location.pathname, item.label);
+            {navLinks.map((link) => {
+              const isActive = isStudentNavActive(location.pathname, link.label);
               return (
                 <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  key={link.path}
+                  to={link.path}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                     isActive
-                      ? 'bg-brand-50 text-brand-700 font-bold'
+                      ? 'bg-blue-50 text-blue-700 font-bold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  {item.label}
+                  {link.label}
                 </Link>
               );
             })}
@@ -146,7 +146,7 @@ export const StudentNavbar: React.FC = () => {
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs border border-brand-200">
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-200">
                   {user?.fullName?.charAt(0) || 'U'}
                 </div>
                 <div className="hidden lg:flex flex-col text-left">
@@ -201,9 +201,9 @@ export const StudentNavbar: React.FC = () => {
                     <Link
                       to="/admin"
                       onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-brand-700 font-semibold hover:bg-brand-50"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-blue-700 font-semibold hover:bg-blue-50"
                     >
-                      <LayoutDashboard className="w-4 h-4 text-brand-600" />
+                      <LayoutDashboard className="w-4 h-4 text-blue-600" />
                       Admin Control Panel
                     </Link>
                   )}
@@ -274,7 +274,7 @@ export const StudentNavbar: React.FC = () => {
               <Link
                 to="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-brand-700 bg-brand-50 rounded-lg mx-2"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-blue-700 bg-blue-50 rounded-lg mx-2"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 Open Admin Panel

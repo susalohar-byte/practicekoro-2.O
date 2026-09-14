@@ -27,11 +27,11 @@ export const BottomNav: React.FC = () => {
               className={cn(
                 'flex flex-col items-center justify-center gap-1 transition-colors select-none',
                 isActive
-                  ? 'text-brand-600 font-bold'
+                  ? 'text-blue-600 font-bold'
                   : 'text-slate-400 hover:text-slate-600 font-medium'
               )}
             >
-              <div className={cn('p-1 rounded-full', isActive && 'bg-brand-50')}>
+              <div className={cn('p-1 rounded-full', isActive && 'bg-blue-50')}>
                 <Icon className={cn('w-5 h-5 transition-transform', isActive && 'scale-110 stroke-[2.5]')} />
               </div>
               <span className="text-[10px] tracking-tight leading-none">
