@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
-import { Badge } from '@/components/common/Badge';
 import {
   Crown,
   Clock,
@@ -126,6 +125,7 @@ export const Landing: React.FC = () => {
   const features = [
     {
       icon: Clock,
+      lottie: '/lottie/icons/clock.json',
       title: 'রিয়েল পরীক্ষার সিমুলেটর',
       titleEn: 'Real Exam Simulator',
       desc: 'NTA ও WBPRB-র অফিসিয়াল পরীক্ষার অনুরূপ কাউন্টডাউন টাইমার, 5-কালার স্ট্যাটাস প্যালেট এবং তাৎক্ষণিক বাংলা ও ইংরেজি প্রশ্ন টগল।',
@@ -133,6 +133,7 @@ export const Landing: React.FC = () => {
     },
     {
       icon: RefreshCw,
+      lottie: '/lottie/icons/zap.json',
       title: 'ভুল সংশোধন খাতা',
       titleEn: 'Mistakes Notebook',
       desc: 'টেস্টে যে প্রশ্নগুলো ভুল হবে, সেগুলো স্বয়ংক্রিয়ভাবে আপনার ব্যক্তিগত রিভিশন খাতায় জমা হবে। ভুল শুধরে আবার প্র্যাকটিস করার অনন্য সুবিধা।',
@@ -140,6 +141,7 @@ export const Landing: React.FC = () => {
     },
     {
       icon: BarChart3,
+      lottie: '/lottie/icons/target.json',
       title: 'নির্ভুল অ্যানালিসিস ও র‍্যাঙ্ক',
       titleEn: 'Honest Performance Analytics',
       desc: 'কোনো ভুয়া র‍্যাঙ্ক বা ফেক ডেটা নয়। সঠিক Accuracy %, নেগেটিভ মার্কিং হিসাব, এবং বিষয়ভিত্তিক দুর্বলতা চিহ্নিতকরণ।',
@@ -147,6 +149,7 @@ export const Landing: React.FC = () => {
     },
     {
       icon: Crown,
+      lottie: '/lottie/icons/fire.json',
       title: 'অল-অ্যাক্সেস প্রো পাস',
       titleEn: 'All-Access Pro Pass',
       desc: 'প্রতিটি পরীক্ষার জন্য আলাদা টেস্ট কেনার ঝামেলা নেই। মাত্র ₹২৯৯-এ ৩৬৫ দিন সমস্ত পরীক্ষার প্রিমিয়াম মক টেস্ট আনলক।',
@@ -160,24 +163,28 @@ export const Landing: React.FC = () => {
       title: 'পরীক্ষা বেছে নিন',
       desc: 'WBP, WBCS, WBPSC বা Railway—আপনার টার্গেট পরীক্ষা নির্বাচন করুন।',
       icon: Target,
+      lottie: '/lottie/icons/target.json',
     },
     {
       step: '০২',
       title: 'রিয়েল মক টেস্ট দিন',
       desc: 'পরীক্ষার হলের মতো নির্দিষ্ট সময় ও নেগেটিভ মার্কিং সহ টেস্ট শুরু করুন।',
       icon: Play,
+      lottie: '/lottie/icons/clock.json',
     },
     {
       step: '০৩',
       title: 'স্কোরকার্ড ও অ্যানালিসিস',
       desc: 'টেস্ট সাবমিটের সঙ্গে সঙ্গে নির্ভুল স্কোর, অ্যাকুরেসি এবং র‍্যাঙ্ক দেখুন।',
       icon: BarChart3,
+      lottie: '/lottie/icons/fire.json',
     },
     {
       step: '০৪',
       title: 'ভুল সংশোধন ও রি-অ্যাটেম্পট',
       desc: 'ভুল সংশোধন খাতা থেকে দুর্বল প্রশ্নগুলো রিভিশন দিয়ে প্রস্তুতি সম্পূর্ণ করুন।',
       icon: RefreshCw,
+      lottie: '/lottie/icons/zap.json',
     },
   ];
 
@@ -682,156 +689,172 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* =========================================================================
-          4. 4 CORE PRODUCT PILLARS
+          4. 4 CORE PRODUCT PILLARS (MICRO ANIMATED & LOTTIE ENHANCED)
           ========================================================================= */}
-      <section id="features" className="py-20 bg-slate-50 border-y border-slate-200">
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
-          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-            <Badge variant="info" className="font-bold px-3 py-1">
-              কেন PracticeKoro?
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              অ্যাসপিরেন্টদের সফলতার জন্য ৪টি শক্তিশালী ফিচার
+      <section id="features" className="py-20 lg:py-28 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden">
+        {/* Soft background ambient glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-blue-100/30 via-sky-50/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-widest uppercase mb-1 border border-blue-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
+              <LottieIcon src="/lottie/icons/zap.json" className="w-4 h-4" />
+              <span>CORE FEATURES</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              অ্যাসপিরেন্টদের সফলতার জন্য <span className="text-blue-600">৪টি শক্তিশালী ফিচার</span>
             </h2>
-            <p className="text-sm sm:text-base text-slate-500">
+            <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
               শুধুমাত্র সাধারণ কুইজ নয়—একটি পূর্ণাঙ্গ এক্সাম ও রিভিশন ইকোসিস্টেম
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {features.map((feat, i) => {
-              const Icon = feat.icon;
-              return (
-                <div
-                  key={i}
-                  className="bg-white rounded-2xl p-7 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center shrink-0">
-                      <Icon className="w-6 h-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-7 sm:gap-8">
+            {features.map((feat, i) => (
+              <div
+                key={i}
+                className="group relative bg-white rounded-3xl p-7 sm:p-8 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-2xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 ease-out overflow-hidden"
+              >
+                {/* Shimmer top gradient */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-50/70 via-sky-50/30 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                <div className="flex items-start gap-5">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/80 shadow-sm shrink-0 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                    <LottieIcon src={feat.lottie} className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100/80">
+                        {feat.badge}
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        {feat.titleEn}
+                      </span>
                     </div>
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">
-                          {feat.badge}
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-400">
-                          {feat.titleEn}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-slate-900 pt-1">
-                        {feat.title}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-1">
-                        {feat.desc}
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors duration-200 pt-1">
+                      {feat.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-1">
+                      {feat.desc}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          5. THE 4-STEP STUDENT LOOP
+          5. THE 4-STEP STUDENT LOOP (HOW IT WORKS)
           ========================================================================= */}
-      <section id="how-it-works" className="py-20 bg-white">
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
-          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-            <Badge variant="info" className="font-bold px-3 py-1">
-              প্রস্তুতি চক্র
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              কীভাবে PracticeKoro আপনার নম্বর বৃদ্ধি করে?
+      <section id="how-it-works" className="py-20 lg:py-28 bg-white relative overflow-hidden">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-600 text-xs font-bold tracking-widest uppercase mb-1 border border-sky-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
+              <LottieIcon src="/lottie/icons/target.json" className="w-4 h-4" />
+              <span>LEARNING CYCLE</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              কীভাবে PracticeKoro আপনার <span className="text-blue-600">নম্বর বৃদ্ধি করে?</span>
             </h2>
-            <p className="text-sm sm:text-base text-slate-500">
+            <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
               Exam → Attempt → Result → Mistakes → Revision: প্রতিটি ধাপে সর্বোচ্চ আত্মবিশ্বাস
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {loopSteps.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <div
-                  key={i}
-                  className="relative rounded-2xl bg-slate-50 border border-slate-200 p-6 flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-black text-slate-300 font-mono">
-                        {step.step}
-                      </span>
-                      <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-brand-600 flex items-center justify-center shadow-sm">
-                        <Icon className="w-5 h-5" />
-                      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+            {loopSteps.map((step, i) => (
+              <div
+                key={i}
+                className="group relative rounded-3xl bg-white border border-slate-100 p-7 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+              >
+                {/* Shimmer top gradient */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-50/60 via-transparent to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-black text-slate-200 font-mono group-hover:text-blue-600 transition-colors duration-200">
+                      {step.step}
+                    </span>
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                      <LottieIcon src={step.lottie} className="w-6 h-6" />
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 pt-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      {step.desc}
-                    </p>
                   </div>
+                  <h3 className="text-lg font-black text-slate-900 pt-4 group-hover:text-blue-600 transition-colors duration-200 leading-snug">
+                    {step.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-2">
+                    {step.desc}
+                  </p>
                 </div>
-              );
-            })}
+
+                <div className="mt-6 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px] font-semibold text-blue-600">
+                  <span>ধাপ {step.step}</span>
+                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          6. TRANSPARENT PRICING (PRO PASS)
+          6. TRANSPARENT PRICING (ALL-ACCESS PRO PASS)
           ========================================================================= */}
-      <section id="pricing" className="py-20 bg-gradient-to-b from-slate-50 to-white border-t border-slate-200">
-        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
-          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-            <Badge variant="premium" className="font-bold px-3 py-1">
-              স্বচ্ছ সাবস্ক্রিপশন
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              একটি পাস। সমস্ত প্রিমিয়াম মক টেস্ট।
+      <section id="pricing" className="py-20 lg:py-28 bg-gradient-to-b from-slate-50 via-white to-slate-50/40 border-y border-slate-100 relative overflow-hidden">
+        {/* Soft background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-gradient-to-tr from-sky-100/30 via-blue-50/20 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 text-amber-700 text-xs font-bold tracking-widest uppercase mb-1 border border-amber-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
+              <LottieIcon src="/lottie/icons/fire.json" className="w-4 h-4" />
+              <span>TRANSPARENT PRICING</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              একটি পাস। <span className="text-blue-600">সমস্ত প্রিমিয়াম মক টেস্ট।</span>
             </h2>
-            <p className="text-sm sm:text-base text-slate-500">
+            <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
               কোনো পৃথক টেস্ট বিক্রি নেই, কোনো মাসিক চার্জ নেই। বছরে একবার মাত্র ₹২৯৯।
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
             {/* Free Tier Card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm flex flex-col justify-between">
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-8 sm:p-10 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-6">
                 <div>
-                  <Badge variant="default" className="font-bold">ফ্রি প্ল্যান</Badge>
-                  <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-slate-900">₹০</span>
+                  <span className="text-xs font-black tracking-wider uppercase text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    ফ্রি প্ল্যান (Free Tier)
+                  </span>
+                  <div className="mt-5 flex items-baseline gap-2">
+                    <span className="text-5xl font-black text-slate-900">₹০</span>
                     <span className="text-xs font-semibold text-slate-500">/ আজীবনের জন্য ফ্রি</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
+                  <p className="text-xs sm:text-sm text-slate-500 mt-2.5 leading-relaxed">
                     প্রতিটি পরীক্ষার ফ্রি ডেমো মক টেস্ট দিয়ে প্ল্যাটফর্ম যাচাই করুন
                   </p>
                 </div>
 
-                <div className="space-y-3 border-t border-slate-100 pt-6 text-xs text-slate-700">
-                  <div className="flex items-center gap-2.5">
+                <div className="space-y-3.5 border-t border-slate-100 pt-6 text-xs sm:text-sm text-slate-700">
+                  <div className="flex items-center gap-3">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>ফ্রি ফুল মক টেস্টে এক্সেস</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>রিয়েল এক্সাম সিমুলেটর ও কাউন্টডাউন টাইমার</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>তাৎক্ষণিক রেজাল্ট ও স্কোরকার্ড</span>
                   </div>
-                  <div className="flex items-center gap-2.5 text-slate-400">
+                  <div className="flex items-center gap-3 text-slate-400">
                     <Lock className="w-4 h-4 shrink-0" />
                     <span>প্রিমিয়াম ফুল মক টেস্ট সিরিজ</span>
                   </div>
-                  <div className="flex items-center gap-2.5 text-slate-400">
+                  <div className="flex items-center gap-3 text-slate-400">
                     <Lock className="w-4 h-4 shrink-0" />
                     <span>স্বয়ংক্রিয় ভুল সংশোধন খাতা (Mistakes Notebook)</span>
                   </div>
@@ -840,7 +863,8 @@ export const Landing: React.FC = () => {
 
               <Button
                 variant="outline"
-                className="w-full mt-8 font-bold text-xs"
+                size="lg"
+                className="w-full mt-8 font-bold text-sm py-4 rounded-xl border-slate-300 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 transition"
                 onClick={() => navigate('/register')}
               >
                 ফ্রি অ্যাকাউন্ট তৈরি করুন
@@ -848,10 +872,11 @@ export const Landing: React.FC = () => {
             </div>
 
             {/* Pro Pass Featured Card */}
-            <div className="relative rounded-3xl border-2 border-brand-500 bg-gradient-to-b from-brand-950 via-slate-900 to-slate-900 text-white p-8 shadow-2xl flex flex-col justify-between">
+            <div className="relative rounded-3xl border-2 border-blue-500 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white p-8 sm:p-10 shadow-2xl flex flex-col justify-between overflow-hidden ring-4 ring-blue-500/15">
               {/* Popular Tag */}
-              <div className="absolute -top-3.5 right-6 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
-                👑 সেরা পছন্দ (Best Value)
+              <div className="absolute -top-3.5 right-6 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">
+                <Crown className="w-3.5 h-3.5 fill-slate-950" />
+                <span>সেরা পছন্দ (Best Value)</span>
               </div>
 
               <div className="space-y-6">
@@ -863,36 +888,36 @@ export const Landing: React.FC = () => {
                     </span>
                   </div>
                   <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-4xl sm:text-5xl font-black text-white">₹২৯৯</span>
+                    <span className="text-5xl sm:text-6xl font-black text-white">₹২৯৯</span>
                     <span className="text-xs font-semibold text-slate-300">/ ৩৬৫ দিন</span>
                   </div>
-                  <p className="text-xs text-slate-300 mt-2">
+                  <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
                     একটি সক্রিয় পাসেই বর্তমান ও ভবিষ্যতের সমস্ত পরীক্ষার সমস্ত প্রিমিয়াম টেস্ট আনলক
                   </p>
                 </div>
 
-                <div className="space-y-3 border-t border-slate-800 pt-6 text-xs text-slate-200">
-                  <div className="flex items-center gap-2.5">
+                <div className="space-y-3.5 border-t border-slate-800 pt-6 text-xs sm:text-sm text-slate-200">
+                  <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span className="font-semibold">সমস্ত সরকারি চাকরির প্রিমিয়াম মক টেস্ট আনলক</span>
+                    <span className="font-semibold text-white">সমস্ত সরকারি চাকরির প্রিমিয়াম মক টেস্ট আনলক</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>চ্যাপ্টার-ওয়াইজ ও সাবজেক্ট-ওয়াইজ অ্যাডভান্সড টেস্ট</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>স্বয়ংক্রিয় ভুল সংশোধন খাতা (Mistakes Notebook)</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>দ্বিভাষিক সমাধান ও ব্যাখ্যা (বাংলা & English)</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>আনলিমিটেড রি-অ্যাটেম্পট ও স্কোর ট্র্যাকিং</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>কোনো বিজ্ঞাপন বা বিভ্রান্তি নেই</span>
                   </div>
@@ -900,12 +925,12 @@ export const Landing: React.FC = () => {
               </div>
 
               <Button
-                variant="pro"
-                className="w-full mt-8 font-extrabold text-xs sm:text-sm py-3"
+                size="lg"
+                className="w-full mt-8 font-black text-sm sm:text-base py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-500/30 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
                 onClick={() => navigate('/register')}
-                rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                এখনই প্রো পাস নিয়ে প্রস্তুতি শুরু করুন
+                <span>এখনই প্রো পাস নিয়ে প্রস্তুতি শুরু করুন</span>
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -915,40 +940,41 @@ export const Landing: React.FC = () => {
       {/* =========================================================================
           7. FAQ SECTION
           ========================================================================= */}
-      <section id="faq" className="py-20 bg-white">
+      <section id="faq" className="py-20 lg:py-28 bg-white relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 space-y-3">
-            <Badge variant="info" className="font-bold px-3 py-1">
-              সাধারণ প্রশ্নোত্তর
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              আপনার মনে কি কোনো প্রশ্ন আছে?
+          <div className="text-center mb-14 space-y-3">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-widest uppercase mb-1 border border-blue-200/60 shadow-sm transition-transform duration-300 hover:scale-105">
+              <LottieIcon src="/lottie/icons/target.json" className="w-4 h-4" />
+              <span>FREQUENTLY ASKED QUESTIONS</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              আপনার মনে কি <span className="text-blue-600">কোনো প্রশ্ন আছে?</span>
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm sm:text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
               PracticeKoro সম্পর্কে অ্যাসপিরেন্টদের বহুল জিজ্ঞাসিত প্রশ্নের উত্তর
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-slate-200 overflow-hidden transition-colors"
+                className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm hover:border-blue-300 transition-all duration-200"
               >
                 <button
                   type="button"
                   onClick={() => toggleFaq(i)}
-                  className="w-full flex items-center justify-between p-5 text-left bg-white hover:bg-slate-50 font-bold text-xs sm:text-sm text-slate-900 transition-colors"
+                  className="w-full flex items-center justify-between p-5 sm:p-6 text-left bg-white hover:bg-slate-50/80 font-bold text-sm sm:text-base text-slate-900 transition-colors"
                 >
                   <span>{faq.q}</span>
                   <ChevronDown
-                    className={`w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ml-4 ${
-                      openFaq === i ? 'rotate-180' : ''
+                    className={`w-5 h-5 text-slate-400 transition-transform duration-200 shrink-0 ml-4 ${
+                      openFaq === i ? 'rotate-180 text-blue-600' : ''
                     }`}
                   />
                 </button>
                 {openFaq === i && (
-                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/50">
+                  <div className="px-5 sm:px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/50">
                     {faq.a}
                   </div>
                 )}
@@ -959,36 +985,45 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* =========================================================================
-          8. FINAL CALL TO ACTION
+          8. FINAL CALL TO ACTION (CTA BANNER)
           ========================================================================= */}
-      <section className="py-20 bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-700 text-white relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
-          <Badge variant="premium" className="font-bold px-3 py-1">
-            স্বপ্নপূরণের যাত্রা শুরু হোক
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight">
-            আজই শুরু করুন আপনার সফলতার নির্ভুল প্রস্তুতি
-          </h2>
-          <p className="text-sm sm:text-base text-brand-100 max-w-2xl mx-auto leading-relaxed">
-            হাজার হাজার অ্যাসপিরেন্টের মতো আপনিও প্রতিদিন মক টেস্ট দিন, ভুল সংশোধন করুন এবং পরীক্ষার হলের ভয় দূর করুন।
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button
-              size="lg"
-              onClick={() => navigate('/register')}
-              className="w-full sm:w-auto bg-white text-brand-700 hover:bg-slate-100 font-extrabold px-8 py-3.5 shadow-xl text-sm"
-              rightIcon={<ArrowRight className="w-4 h-4 text-brand-700" />}
-            >
-              ফ্রি অ্যাকাউন্ট খুলুন
-            </Button>
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={() => navigate('/login')}
-              className="w-full sm:w-auto text-white hover:bg-white/10 font-bold px-8 py-3.5 border border-white/30 text-sm"
-            >
-              আগের অ্যাকাউন্ট থাকলে লগইন করুন
-            </Button>
+      <section className="py-16 sm:py-20 bg-slate-50/70 relative overflow-hidden">
+        <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
+          <div className="relative rounded-3xl overflow-hidden py-14 sm:py-16 lg:py-20 px-6 sm:px-12 lg:px-16 bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600 text-white shadow-2xl text-center space-y-6">
+            {/* Soft radial background glow inside banner */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl pointer-events-none -z-0" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sky-300/10 rounded-full blur-3xl pointer-events-none -z-0" />
+
+            <div className="relative z-10 max-w-3xl mx-auto space-y-5">
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-white text-xs font-bold tracking-widest uppercase border border-white/25 shadow-sm">
+                <LottieIcon src="/lottie/icons/zap.json" className="w-4 h-4 brightness-200" />
+                <span>স্বপ্নপূরণের যাত্রা শুরু হোক</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight">
+                আজই শুরু করুন আপনার সফলতার নির্ভুল প্রস্তুতি
+              </h2>
+              <p className="text-sm sm:text-base text-blue-100 max-w-2xl mx-auto leading-relaxed">
+                হাজার হাজার অ্যাসপিরেন্টের মতো আপনিও প্রতিদিন মক টেস্ট দিন, ভুল সংশোধন করুন এবং পরীক্ষার হলের ভয় দূর করুন।
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <Button
+                  size="lg"
+                  onClick={() => navigate('/register')}
+                  className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-black px-9 py-4 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-95 text-base flex items-center justify-center gap-2 transition"
+                >
+                  <span>ফ্রি অ্যাকাউন্ট খুলুন</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => navigate('/login')}
+                  className="w-full sm:w-auto text-white hover:bg-white/10 font-bold px-8 py-4 border border-white/30 rounded-xl text-base transition"
+                >
+                  আগের অ্যাকাউন্ট থাকলে লগইন করুন
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -996,60 +1031,63 @@ export const Landing: React.FC = () => {
       {/* =========================================================================
           9. PUBLIC FOOTER
           ========================================================================= */}
-      <footer className="border-t border-slate-200 bg-slate-900 text-slate-400 py-12 text-xs">
+      <footer className="border-t border-slate-800/80 bg-slate-950 text-slate-400 py-14 text-xs">
         <div className="w-full max-w-7xl xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
             {/* Col 1: Brand */}
             <div className="space-y-3 md:col-span-2">
-              <Link to="/" className="flex items-center gap-2.5">
+              <Link to="/" className="flex items-center gap-2.5 group">
                 <img
                   src="/logo-icon-transparent.png"
                   alt="PracticeKoro"
-                  className="w-8 h-8 object-contain rounded-xl"
+                  className="w-9 h-9 object-contain rounded-xl transition-transform group-hover:scale-105"
                 />
-                <span className="font-extrabold text-lg text-white tracking-tight">
-                  Practice<span className="text-brand-500">Koro</span>
+                <span className="font-black text-xl text-white tracking-tight">
+                  Practice<span className="text-blue-500">Koro</span>
                 </span>
               </Link>
-              <p className="text-slate-400 text-xs max-w-sm leading-relaxed">
+              <p className="text-slate-400 text-xs sm:text-sm max-w-md leading-relaxed">
                 পশ্চিমবঙ্গের সরকারি চাকরি পরীক্ষার্থীদের জন্য তৈরি ফোকাসড মক টেস্ট ও ভুল সংশোধন প্ল্যাটফর্ম।
               </p>
-              <p className="text-[11px] text-slate-500">
-                WBP • Kolkata Police • WBCS • WBPSC Clerkship • Railway • Primary TET
+              <p className="text-[11px] text-slate-500 pt-1">
+                WBP Constable • Kolkata Police • WBCS • WBPSC Clerkship • Railway • Primary TET
               </p>
             </div>
 
             {/* Col 2: Navigation */}
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <p className="text-xs font-bold uppercase tracking-wider text-white">ন্যাভিগেশন</p>
-              <ul className="space-y-2">
-                <li><a href="#exams" className="hover:text-white transition-colors">পরীক্ষাসমূহ (Exams)</a></li>
-                <li><a href="#features" className="hover:text-white transition-colors">বৈশিষ্ট্যসমূহ</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">প্রো পাস সাবস্ক্রিপশন</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">সাধারণ প্রশ্নোত্তর</a></li>
+              <ul className="space-y-2 text-slate-400">
+                <li><a href="#exams" className="hover:text-blue-400 transition-colors">পরীক্ষাসমূহ (Exams)</a></li>
+                <li><a href="#features" className="hover:text-blue-400 transition-colors">বৈশিষ্ট্যসমূহ (Features)</a></li>
+                <li><a href="#pricing" className="hover:text-blue-400 transition-colors">প্রো পাস সাবস্ক্রিপশন</a></li>
+                <li><a href="#faq" className="hover:text-blue-400 transition-colors">সাধারণ প্রশ্নোত্তর (FAQ)</a></li>
               </ul>
             </div>
 
             {/* Col 3: Legal & Support */}
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <p className="text-xs font-bold uppercase tracking-wider text-white">যোগাযোগ ও সহায়তা</p>
-              <ul className="space-y-2">
+              <ul className="space-y-2 text-slate-400">
                 <li><span className="text-slate-400">সাপোর্ট ইমেইল:</span> support@practicekoro.com</li>
-                <li><Link to="/login" className="hover:text-white transition-colors">লগইন করুন</Link></li>
-                <li><Link to="/register" className="hover:text-white transition-colors">নতুন অ্যাকাউন্ট</Link></li>
-                <li><Link to="/subscription" className="hover:text-white transition-colors">সাবস্ক্রিপশন পলিসি</Link></li>
+                <li><Link to="/login" className="hover:text-blue-400 transition-colors">লগইন করুন</Link></li>
+                <li><Link to="/register" className="hover:text-blue-400 transition-colors">নতুন অ্যাকাউন্ট তৈরি</Link></li>
+                <li><Link to="/subscription" className="hover:text-blue-400 transition-colors">সাবস্ক্রিপশন পলিসি</Link></li>
               </ul>
             </div>
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px]">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
             <p>© {new Date().getFullYear()} PracticeKoro. All rights reserved. Made for West Bengal Aspirants.</p>
             <div className="flex items-center gap-4 text-slate-500">
-              <span>Privacy Policy</span>
+              <span className="hover:text-slate-400 cursor-pointer">Privacy Policy</span>
               <span>•</span>
-              <span>Terms of Service</span>
+              <span className="hover:text-slate-400 cursor-pointer">Terms of Service</span>
               <span>•</span>
-              <span className="text-emerald-400 font-semibold">v2.0 Production Ready</span>
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                v2.0 Production Ready
+              </span>
             </div>
           </div>
         </div>
