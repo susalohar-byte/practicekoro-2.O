@@ -14,6 +14,7 @@ import { TestSolutions } from '@/pages/student/TestSolutions';
 import { Practice } from '@/pages/student/Practice';
 import { MyTests } from '@/pages/student/MyTests';
 import { Profile } from '@/pages/student/Profile';
+import { Settings } from '@/pages/student/Settings';
 import { Subscription } from '@/pages/student/Subscription';
 
 // Auth Pages
@@ -70,6 +71,14 @@ export const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

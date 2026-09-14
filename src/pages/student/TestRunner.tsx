@@ -32,7 +32,9 @@ export const TestRunner: React.FC = () => {
   // Attempt State
   const [answers, setAnswers] = useState<Record<string, AttemptAnswerState>>({});
   const [visited, setVisited] = useState<Set<string>>(new Set());
-  const [language, setLanguage] = useState<'bn' | 'en'>('bn');
+  const [language, setLanguage] = useState<'bn' | 'en'>(() => {
+    return (localStorage.getItem('practicekoro_language') as 'bn' | 'en') || 'bn';
+  });
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [timeSpent, setTimeSpent] = useState<number>(0);
 
@@ -310,7 +312,11 @@ export const TestRunner: React.FC = () => {
         <div className="flex items-center gap-2">
           {/* Bilingual Toggle */}
           <button
-            onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
+            onClick={() => {
+              const next = language === 'bn' ? 'en' : 'bn';
+              setLanguage(next);
+              localStorage.setItem('practicekoro_language', next);
+            }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition-colors"
             title="Toggle Question Language"
           >
