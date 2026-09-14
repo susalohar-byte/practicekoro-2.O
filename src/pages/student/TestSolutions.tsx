@@ -73,7 +73,7 @@ export const TestSolutions: React.FC = () => {
       {/* Top Navigation */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate(`/tests/${testId}/results/${attemptId}`)}
+          onClick={() => navigate(`/exams/${testId}/results/${attemptId}`)}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="w-4 h-4" />

@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Layers, BookOpen, Clock, User } from 'lucide-react';
+import { Home, Layers, BookOpen, BarChart3, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const BottomNav: React.FC = () => {
   const tabs = [
     { label: 'Home', path: '/', icon: Home },
-    { label: 'Tests', path: '/tests', icon: Layers },
+    { label: 'Exams', path: '/exams', icon: Layers },
     { label: 'Practice', path: '/practice', icon: BookOpen },
-    { label: 'My Tests', path: '/my-tests', icon: Clock },
+    { label: 'Results', path: '/results', icon: BarChart3 },
     { label: 'Profile', path: '/profile', icon: User },
   ];
 

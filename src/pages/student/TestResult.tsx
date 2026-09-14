@@ -52,7 +52,7 @@ export const TestResult: React.FC = () => {
       <div className="max-w-md mx-auto px-4 py-12 text-center">
         <h2 className="text-lg font-bold text-slate-900">Result Not Found</h2>
         <p className="text-xs text-slate-500 mt-1">Unable to locate the test attempt result.</p>
-        <Link to="/tests" className="mt-4 inline-block">
+        <Link to="/exams" className="mt-4 inline-block">
           <Button size="sm">Back to Tests</Button>
         </Link>
       </div>
@@ -185,7 +185,7 @@ export const TestResult: React.FC = () => {
           size="lg"
           className="w-full sm:w-auto font-bold shadow-md"
           rightIcon={<ChevronRight className="w-4 h-4" />}
-          onClick={() => navigate(`/tests/${testId}/solutions/${attemptId}`)}
+          onClick={() => navigate(`/exams/${testId}/solutions/${attemptId}`)}
         >
           Review Detailed Question Solutions
         </Button>
@@ -196,7 +196,7 @@ export const TestResult: React.FC = () => {
             variant="outline"
             className="w-full sm:w-auto text-xs"
             leftIcon={<RotateCcw className="w-4 h-4" />}
-            onClick={() => navigate(`/tests/${testId}`)}
+            onClick={() => navigate(`/exams/${testId}`)}
           >
             Retake Mock Test
           </Button>
@@ -205,7 +205,7 @@ export const TestResult: React.FC = () => {
             size="lg"
             variant="secondary"
             className="w-full sm:w-auto text-xs"
-            onClick={() => navigate('/tests')}
+            onClick={() => navigate('/exams')}
           >
             Back to Tests
           </Button>

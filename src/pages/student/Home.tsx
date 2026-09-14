@@ -287,7 +287,7 @@ export const Home: React.FC = () => {
             </div>
 
             <Button
-              onClick={() => navigate(`/tests/${inProgressAttempt.testId}/runner?attemptId=${inProgressAttempt.id}`)}
+              onClick={() => navigate(`/exams/${inProgressAttempt.testId}/runner?attemptId=${inProgressAttempt.id}`)}
               className="bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-brand-600/40 shrink-0"
               leftIcon={<Play className="w-4 h-4 fill-white" />}
             >
@@ -331,7 +331,7 @@ export const Home: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(`/tests/${latestCompletedAttempt.testId}/solutions/${latestCompletedAttempt.id}`)}
+              onClick={() => navigate(`/exams/${latestCompletedAttempt.testId}/solutions/${latestCompletedAttempt.id}`)}
               leftIcon={<CheckCircle2 className="w-4 h-4 text-brand-600" />}
               className="text-xs font-bold"
             >
@@ -340,7 +340,7 @@ export const Home: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => navigate(`/tests/${latestCompletedAttempt.testId}`)}
+              onClick={() => navigate(`/exams/${latestCompletedAttempt.testId}`)}
               leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
               className="text-xs font-bold"
             >
@@ -367,9 +367,9 @@ export const Home: React.FC = () => {
             onClick={() => {
               const freeTest = tests.find((t) => !t.isPremium);
               if (freeTest) {
-                navigate(`/tests/${freeTest.id}`);
+                navigate(`/exams/${freeTest.id}`);
               } else {
-                navigate('/tests');
+                navigate('/exams');
               }
             }}
             className="bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-brand-600/40 shrink-0"
@@ -387,7 +387,7 @@ export const Home: React.FC = () => {
         {/* Pillar 1: All Mock Tests */}
         <Card
           hoverable
-          onClick={() => navigate('/tests')}
+          onClick={() => navigate('/exams')}
           className="p-4 sm:p-5 flex items-start gap-3.5 border-slate-200/90"
         >
           <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 border border-brand-100">
@@ -487,7 +487,7 @@ export const Home: React.FC = () => {
             </p>
           </div>
           <Link
-            to="/tests"
+            to="/exams"
             className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1"
           >
             <span>All Series</span>
@@ -568,7 +568,7 @@ export const Home: React.FC = () => {
             </p>
           </div>
           <Link
-            to="/tests"
+            to="/exams"
             className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1"
           >
             <span>View All ({tests.length})</span>
@@ -685,7 +685,7 @@ export const Home: React.FC = () => {
                       {isInProgress ? (
                         <Button
                           size="sm"
-                          onClick={() => navigate(`/tests/${test.id}/runner?attemptId=${userAttempt.id}`)}
+                          onClick={() => navigate(`/exams/${test.id}/runner?attemptId=${userAttempt.id}`)}
                           className="font-bold text-xs"
                         >
                           Resume
@@ -695,7 +695,7 @@ export const Home: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/tests/${test.id}/solutions/${userAttempt.id}`)}
+                            onClick={() => navigate(`/exams/${test.id}/solutions/${userAttempt.id}`)}
                             className="font-bold text-xs"
                           >
                             Solutions
@@ -703,7 +703,7 @@ export const Home: React.FC = () => {
                           <Button
                             size="sm"
                             variant="secondary"
-                            onClick={() => navigate(`/tests/${test.id}`)}
+                            onClick={() => navigate(`/exams/${test.id}`)}
                             className="font-bold text-xs"
                           >
                             Retake
@@ -722,7 +722,7 @@ export const Home: React.FC = () => {
                       ) : (
                         <Button
                           size="sm"
-                          onClick={() => navigate(`/tests/${test.id}`)}
+                          onClick={() => navigate(`/exams/${test.id}`)}
                           className="font-bold text-xs"
                         >
                           Start Test
@@ -787,9 +787,9 @@ export const Home: React.FC = () => {
             if (mistakesCount > 0) {
               navigate('/practice');
             } else if (unattemptedTest) {
-              navigate(`/tests/${unattemptedTest.id}`);
+              navigate(`/exams/${unattemptedTest.id}`);
             } else {
-              navigate('/tests');
+              navigate('/exams');
             }
           }}
           className="font-bold text-xs sm:text-sm shrink-0 shadow-xs"
@@ -899,7 +899,7 @@ export const Home: React.FC = () => {
             </p>
             <Button
               size="sm"
-              onClick={() => navigate('/tests')}
+              onClick={() => navigate('/exams')}
               className="mt-3 text-xs font-bold"
             >
               Attempt First Test

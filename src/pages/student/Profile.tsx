@@ -247,7 +247,7 @@ export const Profile: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => navigate('/tests')}
+              onClick={() => navigate('/exams')}
               className="font-bold text-xs"
             >
               Browse Mock Tests
@@ -461,7 +461,7 @@ export const Profile: React.FC = () => {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Link
-            to="/my-tests"
+            to="/results"
             className="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between group"
           >
             <div className="flex items-center gap-3">

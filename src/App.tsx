@@ -39,10 +39,10 @@ export const App: React.FC = () => {
       {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Home />} />
-        <Route path="tests" element={<Tests />} />
-        <Route path="tests/:testId" element={<TestDetails />} />
+        <Route path="exams" element={<Tests />} />
+        <Route path="exams/:testId" element={<TestDetails />} />
         <Route
-          path="tests/:testId/results/:attemptId"
+          path="exams/:testId/results/:attemptId"
           element={
             <ProtectedRoute>
               <TestResult />
@@ -50,7 +50,7 @@ export const App: React.FC = () => {
           }
         />
         <Route
-          path="tests/:testId/solutions/:attemptId"
+          path="exams/:testId/solutions/:attemptId"
           element={
             <ProtectedRoute>
               <TestSolutions />
@@ -59,7 +59,7 @@ export const App: React.FC = () => {
         />
         <Route path="practice" element={<Practice />} />
         <Route
-          path="my-tests"
+          path="results"
           element={
             <ProtectedRoute>
               <MyTests />
@@ -87,7 +87,7 @@ export const App: React.FC = () => {
 
       {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}
       <Route
-        path="/tests/:testId/runner"
+        path="/exams/:testId/runner"
         element={
           <ProtectedRoute>
             <TestRunner />

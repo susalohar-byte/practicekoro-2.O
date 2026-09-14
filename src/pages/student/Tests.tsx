@@ -112,7 +112,7 @@ export const Tests: React.FC = () => {
       setSelectedLockedTest(test);
       setShowSubscriptionModal(true);
     } else {
-      navigate(`/tests/${test.id}`);
+      navigate(`/exams/${test.id}`);
     }
   };
 

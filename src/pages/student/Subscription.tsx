@@ -233,7 +233,7 @@ export const Subscription: React.FC = () => {
                 variant="primary"
                 size="md"
                 className="bg-white text-slate-900 hover:bg-slate-100 font-black text-xs shadow-md"
-                onClick={() => navigate('/tests')}
+                onClick={() => navigate('/exams')}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
                 Start Practicing
@@ -524,7 +524,7 @@ export const Subscription: React.FC = () => {
                 className="w-full font-bold"
                 onClick={() => {
                   setPaymentStatus('idle');
-                  navigate('/tests');
+                  navigate('/exams');
                 }}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >

@@ -135,7 +135,7 @@ export const MyTests: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            My Tests
+            Results
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Track your practice, results and progress.
@@ -292,7 +292,7 @@ export const MyTests: React.FC = () => {
             Take your first chapter-wise or full-length mock test to track your accuracy, solutions, and score trends.
           </p>
           <Button
-            onClick={() => navigate('/tests')}
+            onClick={() => navigate('/exams')}
             className="mt-4 font-bold text-xs sm:text-sm shadow-xs"
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
@@ -518,7 +518,7 @@ export const MyTests: React.FC = () => {
                     {isInProgress ? (
                       <Button
                         onClick={() =>
-                          navigate(`/tests/${attempt.testId}/runner?attemptId=${attempt.id}`)
+                          navigate(`/exams/${attempt.testId}/runner?attemptId=${attempt.id}`)
                         }
                         className="font-bold text-xs sm:text-sm bg-brand-600 hover:bg-brand-700 text-white shadow-sm"
                         leftIcon={<Play className="w-4 h-4 fill-white" />}
@@ -531,7 +531,7 @@ export const MyTests: React.FC = () => {
                           size="sm"
                           variant="outline"
                           onClick={() =>
-                            navigate(`/tests/${attempt.testId}/solutions/${attempt.id}`)
+                            navigate(`/exams/${attempt.testId}/solutions/${attempt.id}`)
                           }
                           leftIcon={<FileText className="w-3.5 h-3.5 text-brand-600" />}
                           className="font-bold text-xs flex-1 lg:flex-initial justify-center"
@@ -543,7 +543,7 @@ export const MyTests: React.FC = () => {
                           size="sm"
                           variant="secondary"
                           onClick={() =>
-                            navigate(`/tests/${attempt.testId}/results/${attempt.id}`)
+                            navigate(`/exams/${attempt.testId}/results/${attempt.id}`)
                           }
                           leftIcon={<BarChart3 className="w-3.5 h-3.5 text-slate-600" />}
                           className="font-bold text-xs flex-1 lg:flex-initial justify-center"
@@ -554,7 +554,7 @@ export const MyTests: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/tests/${attempt.testId}`)}
+                          onClick={() => navigate(`/exams/${attempt.testId}`)}
                           leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                           className="font-bold text-xs flex-1 lg:flex-initial justify-center border-slate-200 hover:bg-slate-50"
                         >

@@ -761,7 +761,7 @@ export const Practice: React.FC = () => {
                     here so you can practice and master them.
                   </p>
                   <Button
-                    onClick={() => navigate('/tests')}
+                    onClick={() => navigate('/exams')}
                     className="mt-4 font-bold text-xs sm:text-sm shadow-xs"
                     rightIcon={<ArrowRight className="w-4 h-4" />}
                   >
@@ -941,7 +941,7 @@ export const Practice: React.FC = () => {
                     quick revision here.
                   </p>
                   <Button
-                    onClick={() => navigate('/tests')}
+                    onClick={() => navigate('/exams')}
                     className="mt-4 font-bold text-xs sm:text-sm shadow-xs"
                     rightIcon={<ArrowRight className="w-4 h-4" />}
                   >

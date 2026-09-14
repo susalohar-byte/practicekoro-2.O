@@ -59,7 +59,7 @@ export const TestRunner: React.FC = () => {
 
         // If attempt is already completed, redirect to results immediately (idempotency)
         if (attemptData?.status === 'completed') {
-          navigate(`/tests/${testId}/results/${attemptId}`, { replace: true });
+          navigate(`/exams/${testId}/results/${attemptId}`, { replace: true });
           return;
         }
 
@@ -128,7 +128,7 @@ export const TestRunner: React.FC = () => {
         testId
       );
 
-      navigate(`/tests/${testId}/results/${attemptId}`, { replace: true });
+      navigate(`/exams/${testId}/results/${attemptId}`, { replace: true });
     } catch (err) {
       console.error('Submission failed:', err);
       alert('Error submitting test. Please try again.');

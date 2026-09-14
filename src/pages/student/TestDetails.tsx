@@ -56,7 +56,7 @@ export const TestDetails: React.FC = () => {
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <h2 className="text-lg font-bold text-slate-900">Mock Test Not Found</h2>
         <p className="text-xs text-slate-500 mt-1">The requested test may have been moved or removed.</p>
-        <Link to="/tests" className="mt-4 inline-block">
+        <Link to="/exams" className="mt-4 inline-block">
           <Button size="sm">Back to Tests</Button>
         </Link>
       </div>

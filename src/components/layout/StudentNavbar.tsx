@@ -29,9 +29,9 @@ export const StudentNavbar: React.FC = () => {
 
   const navLinks = [
     { label: 'Home', path: '/' },
-    { label: 'Tests', path: '/tests' },
+    { label: 'Exams', path: '/exams' },
     { label: 'Practice', path: '/practice' },
-    { label: 'My Tests', path: '/my-tests' },
+    { label: 'Results', path: '/results' },
     { label: 'Profile', path: '/profile' },
   ];
 
