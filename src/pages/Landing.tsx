@@ -19,93 +19,109 @@ import {
   FileText,
   LayoutDashboard,
   Wifi,
-  Battery
+  Battery,
+  Search,
+  LayoutGrid
 } from 'lucide-react';
+
+// West Bengal & Central Competitive Exams Coverage
+export const SUPPORTED_EXAM_CATEGORIES = [
+  'WBP Constable',
+  'Kolkata Police',
+  'WBCS Prelims',
+  'WBPSC Clerkship',
+  'Railway Group D',
+  'Primary & Upper Primary TET',
+];
 
 export const Landing: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const dashboardUrl = isAdmin ? '/admin' : '/dashboard';
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const exams = [
+  const examCategories = [
+    { id: 'all', label: 'All Exams' },
+    { id: 'west-bengal', label: 'West Bengal' },
+    { id: 'central', label: 'Central' },
+    { id: 'state', label: 'State' },
+    { id: 'teaching', label: 'Teaching' },
+  ];
+
+  const popularExams = [
     {
-      title: 'WBP Constable & Lady Constable',
-      category: 'পশ্চিমবঙ্গ পুলিশ',
-      icon: '/images/exams/icon_wbp_clean.png',
-      fallbackIcon: '👮',
-      questions: 85,
-      duration: '60 মিনিট',
-      negativeMarking: '-0.25',
-      badge: 'জনপ্রিয়',
-      badgeVariant: 'info' as const,
-      color: 'from-blue-600 to-indigo-700',
+      title: 'WBP Constable',
+      subtitle: 'West Bengal Police',
+      icon: '/images/exams/wbp_police.png',
+      route: '/exams/wbp-constable',
+      categories: ['all', 'west-bengal', 'state'],
     },
     {
-      title: 'Kolkata Police SI & Sergeant',
-      category: 'কলকাতা পুলিশ',
+      title: 'Kolkata Police',
+      subtitle: 'Kolkata Police',
       icon: '/images/exams/icon_kolkata_police.png',
-      fallbackIcon: '⭐',
-      questions: 100,
-      duration: '90 মিনিট',
-      negativeMarking: '-0.25',
-      badge: 'নতুন ভ্যাকেন্সি',
-      badgeVariant: 'success' as const,
-      color: 'from-emerald-600 to-teal-700',
+      route: '/exams/kp-police-si',
+      categories: ['all', 'west-bengal', 'state'],
     },
     {
-      title: 'WBCS Prelims (Executive)',
-      category: 'পশ্চিমবঙ্গ সিভিল সার্ভিস',
-      icon: '/images/exams/wbcs_emblem.png',
-      fallbackIcon: '🏛️',
-      questions: 200,
-      duration: '150 মিনিট',
-      negativeMarking: '-0.33',
-      badge: 'প্রিমিয়াম',
-      badgeVariant: 'warning' as const,
-      color: 'from-amber-600 to-orange-700',
+      title: 'Railway',
+      subtitle: 'Indian Railways',
+      icon: '/images/exams/icon_railway_exact.png',
+      route: '/exams/railway-group-d',
+      categories: ['all', 'central'],
     },
     {
-      title: 'WBPSC Clerkship & Miscellaneous',
-      category: 'পাবলিক সার্ভিস কমিশন',
-      icon: '/images/exams/icon_wbssc_clean.png',
-      fallbackIcon: '📝',
-      questions: 100,
-      duration: '90 মিনিট',
-      negativeMarking: '-0.25',
-      badge: 'সিলেবাস আপডেট',
-      badgeVariant: 'info' as const,
-      color: 'from-purple-600 to-indigo-700',
+      title: 'SSC GD',
+      subtitle: 'Staff Selection Commission',
+      icon: '/images/exams/icon_ssc_clean.png',
+      route: '/exams',
+      categories: ['all', 'central'],
     },
     {
-      title: 'Railway Group D & NTPC',
-      category: 'রেলওয়ে রিক্রুটমেন্ট বোর্ড',
-      icon: '/images/exams/icon_railway.png',
-      fallbackIcon: '🚆',
-      questions: 100,
-      duration: '90 মিনিট',
-      negativeMarking: '-0.33',
-      badge: 'অল ইন্ডিয়া',
-      badgeVariant: 'default' as const,
-      color: 'from-rose-600 to-red-700',
+      title: 'SSC MTS',
+      subtitle: 'Staff Selection Commission',
+      icon: '/images/exams/icon_ssc_clean.png',
+      route: '/exams',
+      categories: ['all', 'central'],
     },
     {
-      title: 'Primary & Upper Primary TET',
-      category: 'শিক্ষক নিয়োগ পরীক্ষা',
+      title: 'WBSSC',
+      subtitle: 'School Service Commission',
+      icon: '/images/exams/wbssc_emblem.png',
+      route: '/exams',
+      categories: ['all', 'west-bengal', 'teaching', 'state'],
+    },
+    {
+      title: 'Group C & D',
+      subtitle: 'West Bengal',
       icon: '/images/exams/icon_primary_tet.png',
-      fallbackIcon: '📚',
-      questions: 150,
-      duration: '150 মিনিট',
-      negativeMarking: 'কোনো নেগেটিভ নেই',
-      badge: 'টেট স্পেশাল',
-      badgeVariant: 'success' as const,
-      color: 'from-cyan-600 to-blue-700',
+      route: '/exams',
+      categories: ['all', 'west-bengal', 'state'],
+    },
+    {
+      title: 'More Exams',
+      subtitle: 'Explore other exams',
+      icon: '',
+      isCustomIcon: true,
+      route: '/exams',
+      categories: ['all', 'west-bengal', 'central', 'state', 'teaching'],
     },
   ];
+
+  const filteredPopularExams = popularExams.filter((exam) => {
+    const matchesCategory =
+      selectedCategory === 'all' || exam.categories.includes(selectedCategory);
+    const matchesSearch =
+      exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exam.subtitle.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const features = [
     {
@@ -532,77 +548,114 @@ export const Landing: React.FC = () => {
       {/* =========================================================================
           3. POPULAR EXAM CATEGORIES SECTION
           ========================================================================= */}
-      <section id="exams" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-            <Badge variant="info" className="font-bold px-3 py-1">
-              টার্গেট পরীক্ষা
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              পশ্চিমবঙ্গের শীর্ষ সরকারি চাকরির মক টেস্ট
+      <section id="exams" className="relative py-20 bg-slate-50/40 overflow-hidden border-b border-slate-100">
+        {/* Soft ambient corner blobs matching the design */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-sky-100/50 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-sky-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Top Header */}
+          <div className="text-center max-w-2xl mx-auto mb-4">
+            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-sky-100/80 text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">
+              POPULAR EXAMS
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
+              Explore <span className="text-blue-600">Your Exam</span>
             </h2>
-            <p className="text-sm sm:text-base text-slate-500">
-              নির্দিষ্ট সিলেবাস, লেটেস্ট কোয়েশ্চেন প্যাটার্ন এবং এক্সপার্টদের দ্বারা প্রস্তুত মক টেস্ট সিরিজ
+            <p className="text-slate-600 text-sm sm:text-base mt-3 font-normal leading-relaxed">
+              Choose your target exam and start practicing with topic-wise tests, PYQs and full mock tests.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {exams.map((exam, i) => (
+          {/* Filter Tabs & Search Bar Row */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 mb-8">
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto justify-center md:justify-start">
+              {examCategories.map((cat) => {
+                const isActive = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-xl transition-all ${
+                      isActive
+                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/25'
+                        : 'bg-white/90 hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200/80'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search exams..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm"
+              />
+            </div>
+          </div>
+
+          {/* 8 Exam Cards Grid (4 columns × 2 rows) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {filteredPopularExams.map((exam, index) => (
               <div
-                key={i}
-                className="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-xl hover:border-brand-300 transition-all duration-300 flex flex-col justify-between"
+                key={index}
+                onClick={() => navigate(exam.route)}
+                className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:shadow-lg hover:border-blue-200 transition-all duration-200 cursor-pointer flex flex-col justify-between"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-2 group-hover:scale-105 transition-transform">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 flex items-center justify-center">
+                    {exam.isCustomIcon ? (
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        <LayoutGrid className="w-6 h-6" />
+                      </div>
+                    ) : (
                       <img
                         src={exam.icon}
                         alt={exam.title}
-                        className="w-full h-full object-contain"
+                        className="w-12 h-12 object-contain group-hover:scale-105 transition-transform"
                         onError={(e) => {
-                          // Fallback to text icon if image fails
                           (e.target as HTMLElement).style.display = 'none';
                         }}
                       />
-                    </div>
-                    <Badge variant={exam.badgeVariant} className="font-bold text-[11px]">
-                      {exam.badge}
-                    </Badge>
+                    )}
                   </div>
-
-                  <p className="text-xs font-semibold text-brand-600 mb-1">
-                    {exam.category}
-                  </p>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors mb-3">
-                    {exam.title}
-                  </h3>
-
-                  <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 text-center my-3 bg-slate-50/60 rounded-xl">
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase">প্রশ্ন</p>
-                      <p className="text-xs font-bold text-slate-800">{exam.questions}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase">সময়</p>
-                      <p className="text-xs font-bold text-slate-800">{exam.duration}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase">নেগেটিভ</p>
-                      <p className="text-xs font-bold text-rose-600">{exam.negativeMarking}</p>
-                    </div>
+                  <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                    <ChevronRight className="w-4 h-4" />
                   </div>
                 </div>
-
-                <Button
-                  className="w-full mt-4 text-xs font-bold"
-                  variant="outline"
-                  onClick={() => navigate('/login')}
-                  rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                >
-                  মক টেস্ট শুরু করুন
-                </Button>
+                <div className="mt-4">
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight">
+                    {exam.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-medium mt-1">
+                    {exam.subtitle}
+                  </p>
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* Bottom CTA Button */}
+          <div className="text-center mt-10">
+            <Button
+              size="lg"
+              onClick={() => navigate('/exams')}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-8 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 inline-flex items-center gap-2 transition"
+            >
+              <span>View All Exams</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </section>
