@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { useExam } from '@/context/ExamContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Lock, Mail, User, ArrowRight } from 'lucide-react';
 
 export const Register: React.FC = () => {
   const { register } = useAuth();
-  const { exams, selectedExam, setSelectedExam } = useExam();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [targetExam, setTargetExam] = useState(selectedExam?.id || 'wbp-constable');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,8 +31,6 @@ export const Register: React.FC = () => {
     if (res.error) {
       setError(res.error.message);
     } else {
-      const match = exams.find((x) => x.id === targetExam);
-      if (match) setSelectedExam(match);
       navigate('/dashboard', { replace: true });
     }
   };
@@ -91,23 +86,6 @@ export const Register: React.FC = () => {
               leftIcon={<Lock className="w-4 h-4" />}
               required
             />
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Primary Target Exam
-              </label>
-              <select
-                value={targetExam}
-                onChange={(e) => setTargetExam(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              >
-                {exams.map((exam) => (
-                  <option key={exam.id} value={exam.id}>
-                    {exam.title}
-                  </option>
-                ))}
-              </select>
-            </div>
 
             <Button
               type="submit"

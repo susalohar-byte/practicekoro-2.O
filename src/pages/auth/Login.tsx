@@ -6,7 +6,7 @@ import { Input } from '@/components/common/Input';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { login, switchDemoRole } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,15 +39,6 @@ export const Login: React.FC = () => {
         const dest = from && from !== '/' ? from : '/dashboard';
         navigate(dest, { replace: true });
       }
-    }
-  };
-
-  const handleQuickDemo = (role: 'student' | 'admin') => {
-    switchDemoRole(role);
-    if (role === 'admin') {
-      navigate('/admin', { replace: true });
-    } else {
-      navigate('/dashboard', { replace: true });
     }
   };
 
@@ -117,29 +108,6 @@ export const Login: React.FC = () => {
               Sign In
             </Button>
           </form>
-
-          {/* Quick Demo Access Bar */}
-          <div className="mt-6 border-t border-slate-100 pt-5">
-            <p className="text-[11px] font-semibold text-center uppercase tracking-wider text-slate-400 mb-3">
-              One-Click Demo Logins
-            </p>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('student')}
-                className="py-2 px-3 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg transition-colors text-center border border-slate-200"
-              >
-                🎓 Student Account
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('admin')}
-                className="py-2 px-3 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-lg transition-colors text-center border border-indigo-200"
-              >
-                🛡️ Admin Console
-              </button>
-            </div>
-          </div>
 
           <div className="mt-6 text-center text-xs text-slate-600">
             Don&apos;t have an account?{' '}
