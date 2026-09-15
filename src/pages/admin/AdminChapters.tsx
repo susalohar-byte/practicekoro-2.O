@@ -60,7 +60,7 @@ export const AdminChapters: React.FC = () => {
 
   // When exam filter changes, auto-filter subjects
   const availableSubjects = selectedExamId
-    ? subjects.filter((s) => s.examId === selectedExamId)
+    ? subjects.filter((s) => !s.examId || s.examId === selectedExamId)
     : subjects;
 
   const openCreateModal = () => {
@@ -158,7 +158,8 @@ export const AdminChapters: React.FC = () => {
 
     const parentSubject = subjects.find((s) => s.id === c.subjectId);
     const matchesExam =
-      !selectedExamId || (parentSubject && parentSubject.examId === selectedExamId);
+      !selectedExamId ||
+      (parentSubject && (!parentSubject.examId || parentSubject.examId === selectedExamId));
     const matchesSubject = !selectedSubjectId || c.subjectId === selectedSubjectId;
 
     return matchesSearch && matchesExam && matchesSubject;
@@ -293,11 +294,9 @@ export const AdminChapters: React.FC = () => {
                           <p className="font-semibold text-emerald-400">
                             {parentSubject?.name || chap.subjectId}
                           </p>
-                          {parentExam && (
-                            <p className="text-[10px] text-indigo-400 font-medium">
-                              {parentExam.title}
-                            </p>
-                          )}
+                          <p className="text-[10px] text-indigo-400 font-medium">
+                            {parentExam ? parentExam.title : 'All Exams'}
+                          </p>
                         </div>
                       </td>
                       <td className="p-4">
@@ -385,7 +384,7 @@ export const AdminChapters: React.FC = () => {
                 >
                   {subjects.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({s.examId})
+                      {s.name} {s.examId ? `(${s.examId})` : '(All Exams)'}
                     </option>
                   ))}
                 </select>

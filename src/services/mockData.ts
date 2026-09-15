@@ -44,8 +44,6 @@ export const MOCK_EXAMS: Exam[] = [
     iconName: 'Shield',
     orderIndex: 1,
     isActive: true,
-    subjectsCount: 4,
-    testsCount: 48,
   },
   {
     id: 'kp-police-si',
@@ -56,8 +54,6 @@ export const MOCK_EXAMS: Exam[] = [
     iconName: 'Award',
     orderIndex: 2,
     isActive: true,
-    subjectsCount: 4,
-    testsCount: 36,
   },
   {
     id: 'wbcs-prelims',
@@ -68,8 +64,6 @@ export const MOCK_EXAMS: Exam[] = [
     iconName: 'FileCheck',
     orderIndex: 3,
     isActive: true,
-    subjectsCount: 8,
-    testsCount: 65,
   },
   {
     id: 'wbpsc-clerkship',
@@ -80,16 +74,13 @@ export const MOCK_EXAMS: Exam[] = [
     iconName: 'GraduationCap',
     orderIndex: 4,
     isActive: true,
-    subjectsCount: 3,
-    testsCount: 30,
   },
 ];
 
 export const MOCK_SUBJECTS: Record<string, Subject[]> = {
-  'wbp-constable': [
+  universal: [
     {
       id: 'wbp-history',
-      examId: 'wbp-constable',
       name: 'Indian History (ভারত ও বাংলার ইতিহাস)',
       slug: 'indian-history',
       description: 'Ancient, Medieval, and Modern Indian history with Bengal Renaissance.',
@@ -100,7 +91,6 @@ export const MOCK_SUBJECTS: Record<string, Subject[]> = {
     },
     {
       id: 'wbp-math',
-      examId: 'wbp-constable',
       name: 'Elementary Mathematics (পাটিগণিত)',
       slug: 'mathematics',
       description: 'Arithmetic, percentages, profit & loss, ratio & proportion, time & work.',
@@ -111,7 +101,6 @@ export const MOCK_SUBJECTS: Record<string, Subject[]> = {
     },
     {
       id: 'wbp-science',
-      examId: 'wbp-constable',
       name: 'General Science (সাধারণ বিজ্ঞান)',
       slug: 'general-science',
       description: 'Physics, Chemistry, and Life Sciences as per secondary level syllabus.',
@@ -122,7 +111,6 @@ export const MOCK_SUBJECTS: Record<string, Subject[]> = {
     },
     {
       id: 'wbp-polity',
-      examId: 'wbp-constable',
       name: 'Indian Constitution (ভারতের সংবিধান ও ভূগোল)',
       slug: 'indian-constitution',
       description: 'Preamble, Fundamental Rights, Parliament, and West Bengal Geography.',
@@ -144,7 +132,6 @@ export const MOCK_CHAPTERS: Record<string, Chapter[]> = {
       description: 'Harappa, Mohenjodaro, urban planning, seals, trade, and culture.',
       orderIndex: 1,
       isActive: true,
-      testsCount: 3,
     },
     {
       id: 'wbp-hist-vedic',
@@ -154,7 +141,6 @@ export const MOCK_CHAPTERS: Record<string, Chapter[]> = {
       description: 'Early and Later Vedic society, literature, Jainism, Buddhism councils.',
       orderIndex: 2,
       isActive: true,
-      testsCount: 2,
     },
     {
       id: 'wbp-hist-maurya',
@@ -164,7 +150,6 @@ export const MOCK_CHAPTERS: Record<string, Chapter[]> = {
       description: 'Chandragupta Maurya, Ashoka inscriptions, Samudragupta, golden age.',
       orderIndex: 3,
       isActive: true,
-      testsCount: 3,
     },
     {
       id: 'wbp-hist-freedom',
@@ -174,7 +159,6 @@ export const MOCK_CHAPTERS: Record<string, Chapter[]> = {
       description: 'Revolt of 1857, INA, Swadeshi movement, Gandhi era, partition.',
       orderIndex: 4,
       isActive: true,
-      testsCount: 4,
     },
   ],
 };

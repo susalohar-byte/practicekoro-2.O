@@ -115,7 +115,9 @@ export const AdminTests: React.FC = () => {
   }, [loadData]);
 
   // Hierarchical cascading for modal
-  const modalAvailableSubjects = examId ? subjects.filter((s) => s.examId === examId) : subjects;
+  const modalAvailableSubjects = examId
+    ? subjects.filter((s) => !s.examId || s.examId === examId)
+    : subjects;
   const modalAvailableChapters = subjectId
     ? chapters.filter((c) => c.subjectId === subjectId)
     : chapters;
@@ -127,7 +129,7 @@ export const AdminTests: React.FC = () => {
     setEditingTest(null);
     const initialExam = selectedExamId || exams[0]?.id || '';
     setExamId(initialExam);
-    const firstSub = subjects.find((s) => s.examId === initialExam);
+    const firstSub = subjects.find((s) => !s.examId || s.examId === initialExam);
     setSubjectId(firstSub?.id || '');
     const firstChap = chapters.find((c) => c.subjectId === firstSub?.id);
     setChapterId(firstChap?.id || '');
@@ -421,7 +423,7 @@ export const AdminTests: React.FC = () => {
             >
               <option value="">All Subjects</option>
               {(selectedExamId
-                ? subjects.filter((s) => s.examId === selectedExamId)
+                ? subjects.filter((s) => !s.examId || s.examId === selectedExamId)
                 : subjects
               ).map((s) => (
                 <option key={s.id} value={s.id}>

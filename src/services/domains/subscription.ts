@@ -1,18 +1,20 @@
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { MOCK_SUBSCRIPTION_PLANS } from './mockData';
-import type { Database } from '@/types/database';
+import { MOCK_SUBSCRIPTION_PLANS } from '@/services/mockData';
 import type {
   SubscriptionPlan,
   Payment,
   RazorpayOrderResponse,
   RazorpayVerificationPayload,
   StudentSubscriptionDetails,
-  AdminSubscriptionRow,
-  AdminPaymentRow,
 } from '@/types';
-type PlanRow = Database['public']['Tables']['subscription_plans']['Row'];
-export const paymentService = {
-  // Subscription Plans
+import type { PlanRow } from '@/services/domains/localStore';
+
+/**
+ * Student subscription plans, Razorpay checkout & payment history API.
+ * Methods extracted verbatim from the original src/services/api.ts.
+ */
+
+export const subscriptionApi = {
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     if (!isSupabaseConfigured) return MOCK_SUBSCRIPTION_PLANS;
     try {
@@ -41,11 +43,6 @@ export const paymentService = {
     }
   },
 
-  // ==========================================
-  // PHASE 4: SUBSCRIPTION & RAZORPAY API
-  // ==========================================
-
-  // Create Razorpay Order on server
   async createRazorpayOrder(planId: string): Promise<RazorpayOrderResponse> {
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.rpc('create_razorpay_order', {
@@ -91,7 +88,6 @@ export const paymentService = {
     };
   },
 
-  // Verify Razorpay payment on server
   async verifyRazorpayPayment(payload: RazorpayVerificationPayload): Promise<{
     success: boolean;
     subscriptionId: string;
@@ -172,7 +168,6 @@ export const paymentService = {
     };
   },
 
-  // Get student subscription details & days remaining
   async getStudentSubscriptionDetails(): Promise<StudentSubscriptionDetails> {
     if (isSupabaseConfigured) {
       try {
@@ -227,7 +222,6 @@ export const paymentService = {
     };
   },
 
-  // Get student payment history
   async getStudentPaymentHistory(): Promise<Payment[]> {
     if (isSupabaseConfigured) {
       try {
@@ -243,7 +237,7 @@ export const paymentService = {
             planId: d.plan_id,
             planTitle: d.subscription_plans?.title || 'Pro Pass',
             amount: Number(d.amount),
-            currency: 'INR',
+            currency: d.currency || 'INR',
             gateway: d.gateway || 'razorpay',
             orderId: d.order_id,
             razorpayOrderId: d.razorpay_order_id,
@@ -282,150 +276,5 @@ export const paymentService = {
     }
 
     return [];
-  },
-
-  // Admin: Get Subscriptions
-  async getAdminSubscriptions(
-    status?: string,
-    search?: string,
-    limit = 50,
-    offset = 0
-  ): Promise<AdminSubscriptionRow[]> {
-    if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase.rpc('get_admin_subscriptions', {
-          p_status: status || null,
-          p_search: search || null,
-          p_limit: limit,
-          p_offset: offset,
-        });
-
-        if (!error && Array.isArray(data)) {
-          return data.map((d) => ({
-            id: d.id,
-            userId: d.user_id,
-            studentName: d.student_name || 'Student Aspirant',
-            studentEmail: d.student_email || '',
-            studentPhone: d.student_phone || undefined,
-            planId: d.plan_id,
-            planTitle: d.plan_title || 'Pro Pass',
-            status: d.status,
-            startsAt: d.starts_at,
-            expiresAt: d.expires_at,
-            paymentId: d.payment_id || undefined,
-            daysRemaining: Number(d.days_remaining || 0),
-            createdAt: d.created_at,
-          }));
-        }
-      } catch (err) {
-        console.warn('Could not fetch admin subscriptions from RPC:', err);
-      }
-    }
-
-    // Fallback mock
-    return [
-      {
-        id: 'sub_admin_demo_1',
-        userId: 'student-free-01',
-        studentName: 'Subhas Chandra',
-        studentEmail: 'subhas@example.com',
-        studentPhone: '9876543210',
-        planId: 'pro_1_year',
-        planTitle: '1-Year All-Access Pro Pass',
-        status: 'active',
-        startsAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        expiresAt: new Date(Date.now() + 335 * 24 * 60 * 60 * 1000).toISOString(),
-        daysRemaining: 335,
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'sub_admin_demo_2',
-        userId: 'student-pro-02',
-        studentName: 'Amiya Mondal',
-        studentEmail: 'amiya@example.com',
-        planId: 'pro_6_month',
-        planTitle: '6-Month Exam Pass',
-        status: 'expired',
-        startsAt: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString(),
-        expiresAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-        daysRemaining: 0,
-        createdAt: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
-  },
-
-  // Admin: Get Payments
-  async getAdminPayments(
-    status?: string,
-    search?: string,
-    limit = 50,
-    offset = 0
-  ): Promise<AdminPaymentRow[]> {
-    if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase.rpc('get_admin_payments', {
-          p_status: status || null,
-          p_search: search || null,
-          p_limit: limit,
-          p_offset: offset,
-        });
-
-        if (!error && Array.isArray(data)) {
-          return data.map((d) => ({
-            id: d.id,
-            userId: d.user_id,
-            studentName: d.student_name || 'Student Aspirant',
-            studentEmail: d.student_email || '',
-            planId: d.plan_id || undefined,
-            planTitle: d.plan_title || 'Pro Pass',
-            amount: Number(d.amount),
-            currency: 'INR',
-            gateway: d.gateway || 'razorpay',
-            orderId: d.order_id || undefined,
-            razorpayOrderId: d.razorpay_order_id || undefined,
-            transactionId: d.transaction_id || undefined,
-            razorpayPaymentId: d.razorpay_payment_id || undefined,
-            status: d.status,
-            createdAt: d.created_at,
-          }));
-        }
-      } catch (err) {
-        console.warn('Could not fetch admin payments from RPC:', err);
-      }
-    }
-
-    // Fallback mock
-    return [
-      {
-        id: 'pm_admin_demo_1',
-        userId: 'student-free-01',
-        studentName: 'Subhas Chandra',
-        studentEmail: 'subhas@example.com',
-        planId: 'pro_1_year',
-        planTitle: '1-Year All-Access Pro Pass',
-        amount: 299,
-        currency: 'INR',
-        gateway: 'razorpay',
-        orderId: 'order_K8d72kd91',
-        razorpayPaymentId: 'pay_K8d7992j3l',
-        status: 'completed',
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'pm_admin_demo_2',
-        userId: 'student-pro-02',
-        studentName: 'Amiya Mondal',
-        studentEmail: 'amiya@example.com',
-        planId: 'pro_6_month',
-        planTitle: '6-Month Exam Pass',
-        amount: 199,
-        currency: 'INR',
-        gateway: 'razorpay',
-        orderId: 'order_F38h2kd90',
-        razorpayPaymentId: 'pay_F38h0192la',
-        status: 'completed',
-        createdAt: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
   },
 };

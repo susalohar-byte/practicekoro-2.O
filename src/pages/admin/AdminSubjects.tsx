@@ -11,22 +11,19 @@ import {
   XCircle,
   Search,
   FolderTree,
-  Filter,
   X,
 } from 'lucide-react';
-import type { Subject, Exam } from '@/types';
+import type { Subject } from '@/types';
 
 export const AdminSubjects: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form State
-  const [examId, setExamId] = useState('');
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
@@ -38,18 +35,14 @@ export const AdminSubjects: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [allExams, allSubjects] = await Promise.all([
-        api.getAllAdminExams(),
-        api.getAllAdminSubjects(selectedExamId || undefined),
-      ]);
-      setExams(allExams);
+      const allSubjects = await api.getAllAdminSubjects();
       setSubjects(allSubjects);
     } catch (err) {
       console.error('Error loading subjects:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedExamId]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -57,7 +50,6 @@ export const AdminSubjects: React.FC = () => {
 
   const openCreateModal = () => {
     setEditingSubject(null);
-    setExamId(selectedExamId || exams[0]?.id || '');
     setName('');
     setSlug('');
     setDescription('');
@@ -70,7 +62,6 @@ export const AdminSubjects: React.FC = () => {
 
   const openEditModal = (subject: Subject) => {
     setEditingSubject(subject);
-    setExamId(subject.examId);
     setName(subject.name);
     setSlug(subject.slug);
     setDescription(subject.description || '');
@@ -98,11 +89,9 @@ export const AdminSubjects: React.FC = () => {
       setFormError('Subject name is required.');
       return;
     }
-    if (!examId) {
-      setFormError('Target Exam must be selected.');
-      return;
-    }
 
+    setIsSaving(true);
+    setFormError('');
     try {
       if (editingSubject) {
         await api.updateSubject(editingSubject.id, {
@@ -115,7 +104,6 @@ export const AdminSubjects: React.FC = () => {
         });
       } else {
         await api.createSubject({
-          examId,
           name: name.trim(),
           slug:
             slug.trim() ||
@@ -133,7 +121,10 @@ export const AdminSubjects: React.FC = () => {
       setIsModalOpen(false);
       await loadData();
     } catch (err) {
+      console.error('Failed to save subject:', err);
       setFormError(getErrorMessage(err, 'Failed to save subject'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -143,14 +134,31 @@ export const AdminSubjects: React.FC = () => {
       await loadData();
     } catch (err) {
       console.error('Failed to toggle status:', err);
+      alert(getErrorMessage(err, 'Failed to toggle status'));
+    }
+  };
+
+  const handleDeleteSubject = async (subject: Subject) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete subject "${subject.name}"?\n\nThis action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsLoading(true);
+      await api.deleteSubject(subject.id);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to delete subject:', err);
+      alert(getErrorMessage(err, 'Failed to delete subject'));
+      setIsLoading(false);
     }
   };
 
   const filteredSubjects = subjects.filter(
     (s) =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.examId.toLowerCase().includes(searchTerm.toLowerCase())
+      s.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -168,8 +176,8 @@ export const AdminSubjects: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Subjects group syllabus topics under an exam (e.g. History, Math, Reasoning, General
-            Science).
+            Subjects represent core syllabus domains (e.g. History, Math, Reasoning, General
+            Science) and are universal across exams.
           </p>
         </div>
 
@@ -184,8 +192,8 @@ export const AdminSubjects: React.FC = () => {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="relative w-full sm:max-w-xs">
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative w-full sm:max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
@@ -194,22 +202,6 @@ export const AdminSubjects: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
           />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <select
-            value={selectedExamId}
-            onChange={(e) => setSelectedExamId(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="">All Target Exams</option>
-            {exams.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.title}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -220,7 +212,6 @@ export const AdminSubjects: React.FC = () => {
             <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold text-[10px] border-b border-slate-800">
               <tr>
                 <th className="p-4">Subject Name</th>
-                <th className="p-4">Target Exam</th>
                 <th className="p-4">Chapters</th>
                 <th className="p-4">Order</th>
                 <th className="p-4">Status</th>
@@ -230,19 +221,18 @@ export const AdminSubjects: React.FC = () => {
             <tbody className="divide-y divide-slate-800/60">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     Loading subjects...
                   </td>
                 </tr>
               ) : filteredSubjects.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     No subjects found for the selected criteria.
                   </td>
                 </tr>
               ) : (
                 filteredSubjects.map((sub) => {
-                  const parentExam = exams.find((e) => e.id === sub.examId);
                   return (
                     <tr key={sub.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="p-4">
@@ -255,11 +245,6 @@ export const AdminSubjects: React.FC = () => {
                             <p className="text-[11px] font-mono text-slate-500">{sub.slug}</p>
                           </div>
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                          {parentExam?.title || sub.examId}
-                        </span>
                       </td>
                       <td className="p-4">
                         <span className="flex items-center gap-1 text-slate-300 font-semibold">
@@ -280,24 +265,35 @@ export const AdminSubjects: React.FC = () => {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleToggleActive(sub)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              sub.isActive
+                                ? 'text-emerald-400 hover:text-amber-400 hover:bg-slate-800'
+                                : 'text-slate-500 hover:text-emerald-400 hover:bg-slate-800'
+                            }`}
+                            title={sub.isActive ? 'Deactivate Subject' : 'Activate Subject'}
+                          >
+                            {sub.isActive ? (
+                              <CheckCircle2 className="w-4 h-4" />
+                            ) : (
+                              <XCircle className="w-4 h-4" />
+                            )}
+                          </button>
                           <button
                             onClick={() => openEditModal(sub)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                             title="Edit Subject"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleToggleActive(sub)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
-                            title={sub.isActive ? 'Deactivate' : 'Activate'}
+                            onClick={() => handleDeleteSubject(sub)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                            title="Delete Subject"
                           >
-                            {sub.isActive ? (
-                              <Trash2 className="w-4 h-4" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4" />
-                            )}
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -333,24 +329,6 @@ export const AdminSubjects: React.FC = () => {
                   {formError}
                 </div>
               )}
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                  Target Exam *
-                </label>
-                <select
-                  disabled={Boolean(editingSubject)}
-                  value={examId}
-                  onChange={(e) => setExamId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
-                >
-                  {exams.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
@@ -432,9 +410,10 @@ export const AdminSubjects: React.FC = () => {
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
+                  disabled={isSaving}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold disabled:opacity-50"
                 >
-                  {editingSubject ? 'Save Changes' : 'Create Subject'}
+                  {isSaving ? 'Saving...' : editingSubject ? 'Save Changes' : 'Create Subject'}
                 </Button>
               </div>
             </form>

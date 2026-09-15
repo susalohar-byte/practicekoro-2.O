@@ -11,11 +11,23 @@ interface PaymentVerificationPayload {
 }
 
 Deno.serve(async (req: Request) => {
-  // 1. CORS headers
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+  // 1. CORS headers — restrict to configured origins when ALLOWED_ORIGINS is set
+  // (comma-separated list, e.g. "https://practicekoro.online,https://www.practicekoro.online").
+  // With no allow-list configured this keeps the previous permissive behavior.
+  const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const requestOrigin = req.headers.get('Origin');
+  const corsHeaders: Record<string, string> = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    Vary: 'Origin',
   };
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    corsHeaders['Access-Control-Allow-Origin'] = requestOrigin;
+  } else if (allowedOrigins.length === 0) {
+    corsHeaders['Access-Control-Allow-Origin'] = '*';
+  }
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });

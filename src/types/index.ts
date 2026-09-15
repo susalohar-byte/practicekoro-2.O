@@ -21,14 +21,15 @@ export interface Exam {
   bannerUrl?: string;
   orderIndex: number;
   isActive: boolean;
-  subjectsCount?: number;
-  testsCount?: number;
+  fullMockCount?: number;
+  pyqCount?: number;
+  topicTestCount?: number;
   totalVacancies?: number;
 }
 
 export interface Subject {
   id: string;
-  examId: string;
+  examId?: string;
   name: string;
   slug: string;
   description?: string;

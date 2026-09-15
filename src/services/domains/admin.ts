@@ -1,6 +1,16 @@
 import { getErrorMessage } from '@/lib/errors';
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { MOCK_ATTEMPTS } from './mockData';
+import type {
+  Exam,
+  Subject,
+  Chapter,
+  TestSeries,
+  MockTest,
+  Question,
+  TestQuestionAssignment,
+  PublishValidationResult,
+} from '@/types';
+import { parseQuestionsCsv } from '@/utils/csvParser';
 import {
   localExams,
   localSubjects,
@@ -9,84 +19,92 @@ import {
   localTests,
   localQuestions,
   localTestQuestions,
-} from './demoStore';
-import { catalogService } from './catalogService';
-import { parseQuestionsCsv } from '@/utils/csvParser';
-import type { Database } from '@/types/database';
+} from '@/services/domains/localStore';
 import type {
-  Exam,
-  Subject,
-  Chapter,
-  TestSeries,
-  MockTest,
-  Question,
-  AdminDashboardStats,
-  TestQuestionAssignment,
-  PublishValidationResult,
-} from '@/types';
-type ExamRow = Database['public']['Tables']['exams']['Row'];
-type SubjectRow = Database['public']['Tables']['subjects']['Row'];
-type ChapterRow = Database['public']['Tables']['chapters']['Row'];
-type TestRow = Database['public']['Tables']['tests']['Row'];
-type QuestionRow = Database['public']['Tables']['questions']['Row'];
-export const adminService = {
-  // ==========================================
-  // PHASE 3: ADMIN CONTENT MANAGEMENT API
-  // ==========================================
+  ChapterRow,
+  ExamRow,
+  QuestionRow,
+  SubjectRow,
+  TestRow,
+} from '@/services/domains/localStore';
+import { catalogApi } from '@/services/domains/catalog';
 
-  // Dashboard Statistics
-  async getAdminDashboardStats(): Promise<AdminDashboardStats> {
-    if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase.rpc('get_admin_dashboard_counts');
-        if (!error && data) {
-          return {
-            totalExams: Number(data.total_exams || 0),
-            activeExams: Number(data.total_exams || 0),
-            totalSubjects: Number(data.total_subjects || 0),
-            totalChapters: Number(data.total_chapters || 0),
-            totalTestSeries: Number(data.total_test_series || 0),
-            totalTests: Number(data.total_tests || 0),
-            publishedTests: Number(data.published_tests || 0),
-            draftTests: Number(data.draft_tests || 0),
-            archivedTests: Number(data.archived_tests || 0),
-            totalQuestions: Number(data.total_questions || 0),
-            activeQuestions: Number(data.total_questions || 0),
-            totalAttempts: Number(data.total_attempts || 0),
-            completedAttempts: Number(data.completed_attempts || 0),
-            totalStudents: Number(data.total_students || 0),
-          };
-        }
-      } catch (err) {
-        console.warn('Fallback to local stats calculation', err);
+/**
+ * Admin content-management API (exams, subjects, chapters, series, tests, questions).
+ * Methods extracted verbatim from the original src/services/api.ts.
+ */
+
+export const adminApi = {
+  // Per-exam content counts by test type. Topic tests are reusable across
+  // exams via the test_exams junction, so an exam's topic count includes
+  // tests associated through that junction (matching the student catalog).
+  async getExamContentCounts(): Promise<
+    Record<string, { fullMock: number; pyq: number; topic: number }>
+  > {
+    const counts: Record<string, { fullMock: number; pyq: number; topic: number }> = {};
+    const bump = (examId: string | null | undefined, kind: 'fullMock' | 'pyq' | 'topic') => {
+      if (!examId) return;
+      counts[examId] = counts[examId] || { fullMock: 0, pyq: 0, topic: 0 };
+      counts[examId][kind] += 1;
+    };
+    const classify = (type: string | null | undefined): 'fullMock' | 'pyq' | 'topic' | null => {
+      if (type === 'full_mock') return 'fullMock';
+      if (type === 'pyq') return 'pyq';
+      if (type === 'topic' || type === 'chapter_mock' || type === 'subject_mock') return 'topic';
+      return null;
+    };
+
+    if (!isSupabaseConfigured) {
+      for (const t of localTests) {
+        const kind = classify(t.testType);
+        if (kind) bump(t.examId, kind);
       }
+      return counts;
     }
 
-    return {
-      totalExams: localExams.length,
-      activeExams: localExams.filter((e) => e.isActive).length,
-      totalSubjects: localSubjects.length,
-      totalChapters: localChapters.length,
-      totalTestSeries: localTestSeries.length,
-      totalTests: localTests.length,
-      publishedTests: localTests.filter((t) => t.status === 'published').length,
-      draftTests: localTests.filter((t) => t.status === 'draft').length,
-      archivedTests: localTests.filter((t) => t.status === 'archived').length,
-      totalQuestions: localQuestions.length,
-      activeQuestions: localQuestions.filter((q) => q.isActive && q.status !== 'archived').length,
-      totalAttempts: MOCK_ATTEMPTS.length,
-      completedAttempts: MOCK_ATTEMPTS.filter((a) => a.status === 'completed').length,
-      totalStudents: 142,
-    };
+    try {
+      const { data: tests, error: testsError } = await supabase
+        .from('tests')
+        .select('id, exam_id, test_type');
+      if (testsError) return counts;
+
+      const { data: assoc, error: assocError } = await supabase
+        .from('test_exams')
+        .select('test_id, exam_id');
+
+      const seen = new Set<string>();
+      for (const row of tests ?? []) {
+        const kind = classify(row.test_type);
+        if (!kind) continue;
+        bump(row.exam_id, kind);
+        if (row.exam_id) seen.add(`${row.id}:${row.exam_id}`);
+      }
+      // Extra exam links from the junction (skip duplicates of the owning exam_id)
+      for (const row of assoc ?? []) {
+        if (assocError) break;
+        const kind = classify((tests ?? []).find((t) => t.id === row.test_id)?.test_type);
+        if (!kind) continue;
+        const key = `${row.test_id}:${row.exam_id}`;
+        if (!seen.has(key)) {
+          bump(row.exam_id, kind);
+          seen.add(key);
+        }
+      }
+    } catch {
+      // Fail soft: UI falls back to 0s
+    }
+    return counts;
   },
 
-  // Admin: Exams
   async getAllAdminExams(): Promise<Exam[]> {
+    const [contentCounts] = await Promise.all([this.getExamContentCounts()]);
+    const empty = { fullMock: 0, pyq: 0, topic: 0 };
     if (!isSupabaseConfigured) {
       return localExams.map((e) => ({
         ...e,
-        subjectsCount: localSubjects.filter((s) => s.examId === e.id).length,
-        testsCount: localTests.filter((t) => t.examId === e.id).length,
+        fullMockCount: contentCounts[e.id]?.fullMock ?? empty.fullMock,
+        pyqCount: contentCounts[e.id]?.pyq ?? empty.pyq,
+        topicTestCount: contentCounts[e.id]?.topic ?? empty.topic,
       }));
     }
     try {
@@ -98,8 +116,9 @@ export const adminService = {
       if (error || !data || data.length === 0) {
         return localExams.map((e) => ({
           ...e,
-          subjectsCount: localSubjects.filter((s) => s.examId === e.id).length,
-          testsCount: localTests.filter((t) => t.examId === e.id).length,
+          fullMockCount: contentCounts[e.id]?.fullMock ?? empty.fullMock,
+          pyqCount: contentCounts[e.id]?.pyq ?? empty.pyq,
+          topicTestCount: contentCounts[e.id]?.topic ?? empty.topic,
         }));
       }
 
@@ -113,8 +132,9 @@ export const adminService = {
         bannerUrl: item.banner_url ?? undefined,
         orderIndex: item.order_index,
         isActive: item.is_active,
-        subjectsCount: localSubjects.filter((s) => s.examId === item.id).length,
-        testsCount: localTests.filter((t) => t.examId === item.id).length,
+        fullMockCount: contentCounts[item.id]?.fullMock ?? empty.fullMock,
+        pyqCount: contentCounts[item.id]?.pyq ?? empty.pyq,
+        topicTestCount: contentCounts[item.id]?.topic ?? empty.topic,
       }));
     } catch {
       return localExams;
@@ -133,8 +153,9 @@ export const adminService = {
       id,
       ...examData,
       slug,
-      subjectsCount: 0,
-      testsCount: 0,
+      fullMockCount: 0,
+      pyqCount: 0,
+      topicTestCount: 0,
     };
 
     if (isSupabaseConfigured) {
@@ -213,28 +234,27 @@ export const adminService = {
     return true;
   },
 
-  // Admin: Subjects
   async getAllAdminSubjects(examId?: string): Promise<Subject[]> {
-    if (!isSupabaseConfigured) {
-      return localSubjects
-        .filter((s) => !examId || s.examId === examId)
+    const localFilter = () =>
+      localSubjects
+        .filter((s) => !examId || !s.examId || s.examId === examId)
         .map((s) => ({
           ...s,
           chaptersCount: localChapters.filter((c) => c.subjectId === s.id).length,
         }));
-    }
+    if (!isSupabaseConfigured) return localFilter();
     try {
       let query = supabase.from('subjects').select('*').order('order_index', { ascending: true });
-      if (examId) query = query.eq('exam_id', examId);
+      if (examId) query = query.or(`exam_id.eq.${examId},exam_id.is.null`);
       const { data, error } = await query;
 
       if (error || !data || data.length === 0) {
-        return localSubjects.filter((s) => !examId || s.examId === examId);
+        return localFilter();
       }
 
       return (data as SubjectRow[]).map((item) => ({
         id: item.id,
-        examId: item.exam_id,
+        examId: item.exam_id ?? undefined,
         name: item.name,
         slug: item.slug,
         description: item.description ?? undefined,
@@ -244,7 +264,7 @@ export const adminService = {
         chaptersCount: localChapters.filter((c) => c.subjectId === item.id).length,
       }));
     } catch {
-      return localSubjects.filter((s) => !examId || s.examId === examId);
+      return localFilter();
     }
   },
 
@@ -255,7 +275,9 @@ export const adminService = {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
-    const id = `${subjectData.examId}-${slug}`.slice(0, 50);
+    const id = subjectData.examId
+      ? `${subjectData.examId}-${slug}`.slice(0, 50)
+      : `sub-${slug}`.slice(0, 50);
     const newSubject: Subject = {
       id,
       ...subjectData,
@@ -267,7 +289,7 @@ export const adminService = {
       try {
         await supabase.from('subjects').insert({
           id,
-          exam_id: newSubject.examId,
+          exam_id: newSubject.examId || null,
           name: newSubject.name,
           slug: newSubject.slug,
           description: newSubject.description || null,
@@ -300,9 +322,14 @@ export const adminService = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await supabase.from('subjects').update(payload).eq('id', id);
+        const { error } = await supabase.from('subjects').update(payload).eq('id', id);
+        if (error) {
+          console.error('Supabase updateSubject error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase updateSubject error:', err);
+        throw err;
       }
     }
 
@@ -322,20 +349,24 @@ export const adminService = {
   async deleteSubject(id: string): Promise<boolean> {
     const idx = localSubjects.findIndex((s) => s.id === id);
     if (idx !== -1) {
-      localSubjects[idx].isActive = false;
+      localSubjects.splice(idx, 1);
     }
 
     if (isSupabaseConfigured) {
       try {
-        await supabase.from('subjects').update({ is_active: false }).eq('id', id);
+        const { error } = await supabase.from('subjects').delete().eq('id', id);
+        if (error) {
+          console.error('Supabase deleteSubject error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase deleteSubject error:', err);
+        throw err;
       }
     }
     return true;
   },
 
-  // Admin: Chapters
   async getAllAdminChapters(subjectId?: string): Promise<Chapter[]> {
     if (!isSupabaseConfigured) {
       return localChapters
@@ -446,7 +477,6 @@ export const adminService = {
     return true;
   },
 
-  // Admin & Student: Test Series
   async getTestSeries(examId?: string): Promise<TestSeries[]> {
     if (!isSupabaseConfigured) {
       return localTestSeries
@@ -596,7 +626,6 @@ export const adminService = {
     return true;
   },
 
-  // Admin: All Tests (including draft & archived)
   async getAllAdminTests(filter?: {
     examId?: string;
     subjectId?: string;
@@ -757,7 +786,7 @@ export const adminService = {
         await supabase.from('tests').update(payload).eq('id', id);
 
         if (updates.associatedExamIds !== undefined) {
-          await catalogService.syncTestExamAssociations(id, updates.associatedExamIds);
+          await catalogApi.syncTestExamAssociations(id, updates.associatedExamIds);
         }
       } catch (err) {
         console.error('Supabase updateTest error:', err);
@@ -894,7 +923,6 @@ export const adminService = {
     return { success: true };
   },
 
-  // Admin: Questions Bank
   async getAllAdminQuestions(filters?: {
     subjectId?: string;
     chapterId?: string;
@@ -1138,7 +1166,6 @@ export const adminService = {
     };
   },
 
-  // Admin: Test Question Assignments & Ordering
   async getTestAssignedQuestions(testId: string): Promise<TestQuestionAssignment[]> {
     if (isSupabaseConfigured) {
       try {

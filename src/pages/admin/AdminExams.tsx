@@ -11,7 +11,8 @@ import {
   XCircle,
   Search,
   BookOpen,
-  Layers,
+  Clock,
+  Target,
   X,
 } from 'lucide-react';
 import type { Exam } from '@/types';
@@ -160,7 +161,7 @@ export const AdminExams: React.FC = () => {
           </div>
           <p className="text-xs text-slate-400 mt-1">
             Top-level content entity. All subjects, chapters, test series and mock tests belong to
-            an Exam.
+            an Exam. Stats count Full Mock, PYQ and Topic tests linked to each exam.
           </p>
         </div>
 
@@ -242,13 +243,26 @@ export const AdminExams: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3 text-slate-400 text-[11px]">
-                        <span className="flex items-center gap-1">
+                        <span
+                          className="flex items-center gap-1"
+                          title="Full Mock Tests assigned to this exam"
+                        >
                           <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-                          {exam.subjectsCount ?? 0} Subjects
+                          {exam.fullMockCount ?? 0} Full Mock
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Layers className="w-3.5 h-3.5 text-amber-400" />
-                          {exam.testsCount ?? 0} Tests
+                        <span
+                          className="flex items-center gap-1"
+                          title="Previous Year Question papers assigned to this exam"
+                        >
+                          <Clock className="w-3.5 h-3.5 text-rose-400" />
+                          {exam.pyqCount ?? 0} PYQ
+                        </span>
+                        <span
+                          className="flex items-center gap-1"
+                          title="Topic / chapter-wise tests linked to this exam (shared across exams)"
+                        >
+                          <Target className="w-3.5 h-3.5 text-amber-400" />
+                          {exam.topicTestCount ?? 0} Topic Test
                         </span>
                       </div>
                     </td>

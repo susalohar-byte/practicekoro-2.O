@@ -124,7 +124,13 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // Convert paise to INR (29900 paise = 299.00 INR)
+  // Never guess payment amount; reject invalid events so Razorpay can retry.
+  if (!amountPaise || amountPaise <= 0) {
+    return new Response(JSON.stringify({ error: 'Missing payment amount in webhook payload' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const amountInr = paiseToRupees(amountPaise);
 
   // 8. Reconcile with authoritative PostgreSQL database
