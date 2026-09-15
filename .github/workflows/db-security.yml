@@ -1,0 +1,51 @@
+name: DB Security Assertions
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  rls-assertions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Run RLS/security assertions against Supabase
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          chmod +x scripts/supabase-sql.sh
+          ./scripts/supabase-sql.sh -f supabase/tests/rls_security.sql -t -A | tee rls-results.json
+          # Every assertion in every JSON row must be true
+          python3 - <<'EOF'
+          import json, sys
+          ok = True
+          for line in open('rls-results.json'):
+              line = line.strip()
+              if not line.startswith('{'):
+                  continue
+              row = json.loads(line)
+              failed = {k: v for k, v in row.items() if v is not True}
+              if failed:
+                  ok = False
+                  print('FAILED ASSERTIONS:', json.dumps(failed, indent=2))
+          if not ok:
+              sys.exit(1)
+          print('All DB security assertions passed.')
+          EOF
