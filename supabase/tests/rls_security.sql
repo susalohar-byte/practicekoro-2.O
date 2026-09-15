@@ -114,3 +114,10 @@ select jsonb_build_object(
 ) as views;
 
 rollback;
+
+-- ============================================================================
+-- POST-MIGRATION STATE PROBE (anon role via PostgREST)
+-- Run this against the live API to prove the policy state end-to-end:
+--   python3 scripts/prod-anon-probe.py
+-- (kept as documentation here; the script is the executable source of truth)
+-- ============================================================================
