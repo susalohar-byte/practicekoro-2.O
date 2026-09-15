@@ -69,8 +69,23 @@ test.describe('Routing guards', () => {
 });
 
 test('student can discover a topic test and open the runner in demo mode', async ({ page }) => {
-  await page.goto('/login');
-  await page.getByRole('button', { name: /Student Account/i }).click();
+  // The one-click demo buttons were removed from the login page (559124d).
+  // Seed the demo session the same way AuthContext's demo login did, then navigate.
+  await page.addInitScript(() => {
+    // Matches MOCK_STUDENT_USER (services/mockData.ts) so AuthContext restore works in demo mode
+    const demoUser = {
+      id: 'usr-student-001',
+      fullName: 'Subhamoy Banerjee',
+      email: 'student@practicekoro.com',
+      phone: '+91 98765 43210',
+      avatarUrl: '',
+      targetExamId: 'wbp-constable',
+      role: 'student',
+      createdAt: '2025-01-10T10:00:00Z',
+    };
+    localStorage.setItem('practicekoro_user', JSON.stringify(demoUser));
+  });
+  await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto('/practice');
   await page.getByRole('button', { name: /Topic Tests/i }).click();

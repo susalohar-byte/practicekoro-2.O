@@ -38,3 +38,282 @@
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* ============================================================================
+   DARK MODE COMPATIBILITY LAYER
+   The app was built light-only. Instead of touching hundreds of page-level
+   utility classes, `.dark` remaps the recurring Tailwind surface utilities to
+   dark equivalents. Scoped overrides; shared components (Button, Card, etc.)
+   and layouts additionally carry explicit `dark:` variants where needed.
+   ========================================================================= */
+@layer utilities {
+  /* Surfaces */
+  .dark .bg-white {
+    background-color: rgb(15 23 42);
+  } /* slate-900 */
+  .dark .bg-slate-50 {
+    background-color: rgb(2 6 23);
+  } /* slate-950 */
+  .dark .bg-slate-100 {
+    background-color: rgb(30 41 59);
+  } /* slate-800 */
+  .dark .bg-slate-50\/50 {
+    background-color: rgb(2 6 23 / 0.6);
+  }
+  .dark .bg-slate-50\/80 {
+    background-color: rgb(2 6 23 / 0.7);
+  }
+  .dark .bg-white\/90 {
+    background-color: rgb(15 23 42 / 0.9);
+  }
+  .dark .bg-white\/80 {
+    background-color: rgb(15 23 42 / 0.82);
+  }
+  .dark .bg-white\/70 {
+    background-color: rgb(15 23 42 / 0.72);
+  }
+  .dark .bg-white\/95 {
+    background-color: rgb(15 23 42 / 0.95);
+  }
+  .dark .bg-slate-100\/80 {
+    background-color: rgb(30 41 59 / 0.8);
+  }
+  .dark .bg-slate-100\/90 {
+    background-color: rgb(30 41 59 / 0.9);
+  }
+  .dark .bg-slate-200\/70 {
+    background-color: rgb(51 65 85 / 0.7);
+  }
+  .dark .bg-slate-200\/80 {
+    background-color: rgb(51 65 85 / 0.8);
+  }
+
+  /* Text */
+  .dark .text-slate-900 {
+    color: rgb(241 245 249);
+  } /* slate-100 */
+  .dark .text-slate-800 {
+    color: rgb(226 232 240);
+  }
+  .dark .text-slate-700 {
+    color: rgb(203 213 225);
+  }
+  .dark .text-slate-600 {
+    color: rgb(148 163 184);
+  } /* slate-400 */
+  .dark .text-slate-500 {
+    color: rgb(148 163 184);
+  }
+
+  /* Borders */
+  .dark .border-slate-200 {
+    border-color: rgb(30 41 59);
+  } /* slate-800 */
+  .dark .border-slate-200\/70 {
+    border-color: rgb(30 41 59 / 0.7);
+  }
+  .dark .border-slate-200\/80 {
+    border-color: rgb(30 41 59 / 0.8);
+  }
+  .dark .border-slate-200\/90 {
+    border-color: rgb(30 41 59 / 0.9);
+  }
+  .dark .border-slate-100 {
+    border-color: rgb(30 41 59);
+  }
+  .dark .border-slate-300 {
+    border-color: rgb(51 65 85);
+  }
+
+  /* Shadows: soften colored glows on dark */
+  .dark .shadow-blue-500\/20 {
+    --tw-shadow-color: rgb(37 99 235 / 0.35);
+  }
+  .dark .shadow-blue-500\/25 {
+    --tw-shadow-color: rgb(37 99 235 / 0.4);
+  }
+
+  /* Inputs keep readable text */
+  .dark .bg-white input {
+    color: rgb(241 245 249);
+  }
+  .dark input.bg-white,
+  .dark textarea.bg-white,
+  .dark select.bg-white {
+    background-color: rgb(15 23 42);
+  }
+
+  /* Light pastel gradients -> dark equivalent wash */
+  .dark .from-blue-50 {
+    --tw-gradient-from: rgb(30 41 59 / 0.55);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .dark .via-sky-50 {
+    --tw-gradient-stops: var(--tw-gradient-from), rgb(30 58 74 / 0.5), var(--tw-gradient-to);
+  }
+  .dark .from-blue-50\/25 {
+    --tw-gradient-from: rgb(30 41 59 / 0.35);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .dark .to-indigo-50\/20 {
+    --tw-gradient-to: rgb(49 46 129 / 0.25);
+  }
+  .dark .from-white {
+    --tw-gradient-from: rgb(15 23 42);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .dark .to-white {
+    --tw-gradient-to: rgb(15 23 42);
+  }
+  .dark .via-blue-50\/25 {
+    --tw-gradient-stops: var(--tw-gradient-from), rgb(30 41 59 / 0.5), var(--tw-gradient-to);
+  }
+  .dark .from-blue-50\/60 {
+    --tw-gradient-from: rgb(30 41 59 / 0.5);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .dark .to-sky-50\/40 {
+    --tw-gradient-to: rgb(15 23 42 / 0.6);
+  }
+  .dark .via-white {
+    --tw-gradient-stops: var(--tw-gradient-from), rgb(15 23 42), var(--tw-gradient-to);
+  }
+
+  /* Decorative blur glows dim on dark */
+  .dark .bg-blue-100\/40 {
+    background-color: rgb(37 99 235 / 0.12);
+  }
+
+  /* Tinted stat washes (emerald/amber/rose/sky 50s) -> dark equivalents */
+  .dark .bg-emerald-50 {
+    background-color: rgb(6 78 59 / 0.35);
+  }
+  .dark .bg-amber-50 {
+    background-color: rgb(120 53 15 / 0.3);
+  }
+  .dark .bg-rose-50 {
+    background-color: rgb(136 19 55 / 0.3);
+  }
+  .dark .bg-sky-50 {
+    background-color: rgb(7 89 133 / 0.35);
+  }
+  .dark .bg-blue-50 {
+    background-color: rgb(30 58 138 / 0.35);
+  }
+  .dark .bg-indigo-50 {
+    background-color: rgb(55 48 163 / 0.35);
+  }
+  .dark .bg-emerald-50\/40 {
+    background-color: rgb(6 78 59 / 0.28);
+  }
+  .dark .bg-emerald-50\/60 {
+    background-color: rgb(6 78 59 / 0.3);
+  }
+  .dark .bg-emerald-50\/80 {
+    background-color: rgb(6 78 59 / 0.4);
+  }
+  .dark .border-emerald-100 {
+    border-color: rgb(6 78 59 / 0.8);
+  }
+  .dark .border-emerald-200 {
+    border-color: rgb(6 95 70);
+  }
+  .dark .border-amber-100 {
+    border-color: rgb(120 53 15 / 0.8);
+  }
+  .dark .border-rose-100 {
+    border-color: rgb(136 19 55 / 0.8);
+  }
+  .dark .border-sky-100 {
+    border-color: rgb(7 89 133 / 0.8);
+  }
+  .dark .border-blue-100 {
+    border-color: rgb(30 58 138 / 0.8);
+  }
+  .dark .border-indigo-100 {
+    border-color: rgb(55 48 163 / 0.8);
+  }
+
+  /* Selected option cards (settings etc.) */
+  .dark .bg-brand-600\/5 {
+    background-color: rgb(37 99 235 / 0.12);
+  }
+  .dark .ring-brand-500\/30 {
+    --tw-ring-color: rgb(37 99 235 / 0.5);
+  }
+
+  /* Brand-tinted stat tiles */
+  .dark .bg-brand-50 {
+    background-color: rgb(30 58 138 / 0.3);
+  }
+  .dark .bg-brand-50\/40 {
+    background-color: rgb(30 58 138 / 0.25);
+  }
+  .dark .border-brand-100 {
+    border-color: rgb(30 58 138 / 0.8);
+  }
+  .dark .text-brand-600 {
+    color: rgb(147 197 253);
+  }
+  .dark .text-brand-700 {
+    color: rgb(147 197 253);
+  }
+  .dark .text-brand-800 {
+    color: rgb(191 219 254);
+  }
+
+  /* The washed light tiles on Results use slate-100-ish gradients */
+  .dark .bg-slate-200 {
+    background-color: rgb(30 41 59);
+  }
+  .dark .bg-gradient-to-br.from-slate-100 {
+    background-image: none;
+    background-color: rgb(30 41 59);
+  }
+
+  /* Dark text on tinted badges stays readable: lighten washed-badge text */
+  .dark .text-emerald-700 {
+    color: rgb(110 231 183);
+  }
+  .dark .text-emerald-600 {
+    color: rgb(110 231 183);
+  }
+  .dark .text-amber-700 {
+    color: rgb(252 211 77);
+  }
+  .dark .text-rose-700 {
+    color: rgb(253 164 175);
+  }
+  .dark .text-sky-700 {
+    color: rgb(125 211 252);
+  }
+  .dark .text-blue-700 {
+    color: rgb(147 197 253);
+  }
+  .dark .text-indigo-700 {
+    color: rgb(165 180 252);
+  }
+}
+
+/* Smooth theme transition: applied momentarily by ThemeContext during toggle */
+html.theme-anim,
+html.theme-anim *,
+html.theme-anim *::before,
+html.theme-anim *::after {
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 140ms ease,
+    fill 220ms ease,
+    stroke 220ms ease !important;
+  transition-delay: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-anim,
+  html.theme-anim *,
+  html.theme-anim *::before,
+  html.theme-anim *::after {
+    transition: none !important;
+  }
+}
