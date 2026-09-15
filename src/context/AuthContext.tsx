@@ -21,6 +21,7 @@ interface AuthContextType {
   ) => Promise<{ error: Error | null; role?: UserRole }>;
   logout: () => Promise<void>;
   switchDemoRole: (role: UserRole) => void;
+  updateProfile: (updates: { fullName?: string; phone?: string }) => Promise<{ error: Error | null; user?: UserProfile }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -254,6 +255,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('practicekoro_user', JSON.stringify(selectedUser));
   };
 
+  const updateProfile = async (updates: {
+    fullName?: string;
+    phone?: string;
+  }): Promise<{ error: Error | null; user?: UserProfile }> => {
+    if (!user) return { error: new Error('User is not logged in') };
+
+    const updatedFullName = updates.fullName !== undefined ? updates.fullName.trim() : user.fullName;
+    const updatedPhone = updates.phone !== undefined ? updates.phone.trim() : user.phone;
+
+    if (!updatedFullName) {
+      return { error: new Error('Full Name cannot be empty') };
+    }
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+
+    try {
+      if (isSupabaseConfigured && isUuid) {
+        // 1. Update profiles table
+        const { error: profileError } = await (supabase as any)
+          .from('profiles')
+          .update({
+            full_name: updatedFullName,
+            phone: updatedPhone || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+
+        if (profileError) {
+          return { error: profileError };
+        }
+
+        // 2. Also update user_metadata in Supabase auth
+        try {
+          await supabase.auth.updateUser({
+            data: { full_name: updatedFullName },
+          });
+        } catch (authErr) {
+          console.warn('Could not sync user_metadata in auth:', authErr);
+        }
+      }
+
+      // 3. Update local state and localStorage
+      const updatedUser: UserProfile = {
+        ...user,
+        fullName: updatedFullName,
+        phone: updatedPhone,
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('practicekoro_user', JSON.stringify(updatedUser));
+
+      return { error: null, user: updatedUser };
+    } catch (err: unknown) {
+      return { error: err as Error };
+    }
+  };
+
   const role = user?.role || 'student';
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
@@ -271,6 +329,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         switchDemoRole,
+        updateProfile,
       }}
     >
       {children}

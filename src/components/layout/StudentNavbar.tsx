@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
-import { isStudentNavActive } from '@/lib/utils';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import {
@@ -39,6 +38,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Canonical student navigation mapping (primary navigation rendered in StudentSidebar to avoid duplication)
   const navLinks = [
     { label: 'Home', path: '/dashboard' },
     { label: 'Exams', path: '/exams' },
@@ -46,6 +46,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
     { label: 'Results', path: '/results' },
     { label: 'Profile', path: '/profile' },
   ];
+  void navLinks;
 
   const getPageTitle = (path: string) => {
     if (path.startsWith('/dashboard') || path === '/') return 'Dashboard';
@@ -154,26 +155,6 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
               )}
             </div>
           </div>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex lg:hidden xl:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const isActive = isStudentNavActive(location.pathname, link.label);
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-700 font-bold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
 
           {/* Right Action & User Profile */}
           <div className="flex items-center gap-3">
