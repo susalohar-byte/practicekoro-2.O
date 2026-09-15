@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { FileQuestion, Plus, Edit2, Trash2, Search, Upload, X, Download } from 'lucide-react';
@@ -47,7 +47,7 @@ export const AdminQuestions: React.FC = () => {
     text: string;
   } | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [allSubjects, allChapters, allQuestions] = await Promise.all([
@@ -68,11 +68,11 @@ export const AdminQuestions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedSubjectId, selectedChapterId, selectedStatus, searchTerm]);
 
   useEffect(() => {
     loadData();
-  }, [selectedSubjectId, selectedChapterId, selectedStatus, searchTerm]);
+  }, [loadData]);
 
   // Modal cascaded chapters
   const modalChapters = subjectId ? chapters.filter((c) => c.subjectId === subjectId) : chapters;

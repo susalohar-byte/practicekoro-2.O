@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -34,7 +34,7 @@ export const AdminSubjects: React.FC = () => {
   const [isActive, setIsActive] = useState(true);
   const [formError, setFormError] = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [allExams, allSubjects] = await Promise.all([
@@ -48,11 +48,11 @@ export const AdminSubjects: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedExamId]);
 
   useEffect(() => {
     loadData();
-  }, [selectedExamId]);
+  }, [loadData]);
 
   const openCreateModal = () => {
     setEditingSubject(null);

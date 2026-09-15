@@ -44,6 +44,7 @@ export const TestRunner: React.FC = () => {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const submitTestRef = useRef<() => void>(() => undefined);
 
   // 1. Initialize Test Data, Questions, and Attempt
   useEffect(() => {
@@ -101,7 +102,7 @@ export const TestRunner: React.FC = () => {
 
         // If test time has already elapsed on load, submit immediately
         if (remainingSecs <= 0 && attemptData?.status === 'in_progress') {
-          handleSubmitTest();
+          submitTestRef.current();
         }
       } catch (err) {
         console.error('Failed to load test runner data:', err);
@@ -110,7 +111,7 @@ export const TestRunner: React.FC = () => {
       }
     }
     init();
-  }, [testId, attemptId, user]);
+  }, [testId, attemptId, user, navigate]);
 
   // Submit test handler (Server-authoritative identity via auth.uid())
   const handleSubmitTest = useCallback(async () => {
@@ -130,6 +131,8 @@ export const TestRunner: React.FC = () => {
       setSubmitting(false);
     }
   }, [submitting, user, testId, answers, attemptId, timeSpent, navigate]);
+
+  submitTestRef.current = handleSubmitTest;
 
   // 2. Countdown Timer
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
@@ -81,7 +81,7 @@ export const AdminTests: React.FC = () => {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [testToArchive, setTestToArchive] = useState<MockTest | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [allExams, allSubjects, allChapters, allSeries, allTests] = await Promise.all([
@@ -107,11 +107,11 @@ export const AdminTests: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedSeriesId, selectedStatus]);
 
   useEffect(() => {
     loadData();
-  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedSeriesId, selectedStatus]);
+  }, [loadData]);
 
   // Hierarchical cascading for modal
   const modalAvailableSubjects = examId ? subjects.filter((s) => s.examId === examId) : subjects;
