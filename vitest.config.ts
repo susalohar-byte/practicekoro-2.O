@@ -8,7 +8,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'supabase/functions/_shared/**/*.test.ts'],
     exclude: ['tests/e2e/**', 'node_modules/**', 'dist/**'],
     environment: 'jsdom',
     globals: true,

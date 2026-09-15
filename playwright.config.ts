@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+const localLaunchOptions = executablePath ? { launchOptions: { executablePath } } : {};
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -13,9 +16,10 @@ export default defineConfig({
     command: 'npm run build && npm run preview -- --host 127.0.0.1',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
+    env: { VITE_ENABLE_DEMO_MODE: 'true' },
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], ...localLaunchOptions } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 7'], ...localLaunchOptions } },
   ],
 });

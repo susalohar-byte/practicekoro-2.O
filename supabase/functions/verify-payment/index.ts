@@ -1,51 +1,13 @@
 // supabase/functions/verify-payment/index.ts
 // PracticeKoro 2.0 - Server-Side Payment Verification Edge Function
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
+import { buildPaymentSignaturePayload, verifyHmacSha256 } from '../_shared/razorpay-signature.ts';
 
 interface PaymentVerificationPayload {
   orderId: string;
   paymentId: string;
   signature: string;
   planId: string;
-}
-
-/**
- * Timing-safe HMAC-SHA256 signature verification
- */
-async function verifyRazorpaySignature(
-  orderId: string,
-  paymentId: string,
-  signature: string,
-  secret: string
-): Promise<boolean> {
-  try {
-    const rawPayload = `${orderId}|${paymentId}`;
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(rawPayload));
-    const calculatedHex = Array.from(new Uint8Array(signatureBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-
-    if (calculatedHex.length !== signature.length) {
-      return false;
-    }
-
-    let diff = 0;
-    for (let i = 0; i < calculatedHex.length; i++) {
-      diff |= calculatedHex.charCodeAt(i) ^ signature.charCodeAt(i);
-    }
-    return diff === 0;
-  } catch (err) {
-    console.error('Signature verification error:', err);
-    return false;
-  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -133,7 +95,11 @@ Deno.serve(async (req: Request) => {
   }
 
   // 5. Cryptographic signature verification
-  const isValid = await verifyRazorpaySignature(orderId, paymentId, signature, keySecret);
+  const isValid = await verifyHmacSha256(
+    buildPaymentSignaturePayload(orderId, paymentId),
+    signature,
+    keySecret
+  );
   if (!isValid) {
     console.warn('Invalid Razorpay payment signature attempt rejected');
     return new Response(JSON.stringify({ error: 'Invalid payment signature' }), {

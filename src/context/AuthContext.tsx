@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
+import {
+  supabaseRuntime as supabase,
+  isSupabaseConfigured,
+  isDemoModeEnabled,
+} from '@/lib/supabase';
+import { canRestoreCachedUser, resolveDemoRole } from '@/lib/authPolicy';
 import { MOCK_STUDENT_USER, MOCK_ADMIN_USER } from '@/services/mockData';
 import type { Database } from '@/types/database';
 import type { UserProfile, UserRole } from '@/types';
@@ -31,7 +36,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(() => {
-    // Check saved demo user or local profile
+    if (!canRestoreCachedUser(isDemoModeEnabled)) return null;
     const saved = localStorage.getItem('practicekoro_user');
     if (saved) {
       try {
@@ -141,8 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
-        // Mock fallback login
-        if (email.includes('admin')) {
+        if (!isDemoModeEnabled) return { error: new Error('Authentication is not configured') };
+        if (resolveDemoRole(email) === 'admin') {
           setUser(MOCK_ADMIN_USER);
           localStorage.setItem('practicekoro_user', JSON.stringify(MOCK_ADMIN_USER));
           return { error: null, role: 'admin' };
@@ -197,6 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
+        if (!isDemoModeEnabled) return { error: new Error('Authentication is not configured') };
         const newUser: UserProfile = {
           id: 'usr-' + Date.now(),
           fullName,
@@ -253,6 +259,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchDemoRole = (newRole: UserRole) => {
+    if (!isDemoModeEnabled) return;
     const selectedUser = newRole === 'admin' ? MOCK_ADMIN_USER : MOCK_STUDENT_USER;
     setUser(selectedUser);
     localStorage.setItem('practicekoro_user', JSON.stringify(selectedUser));

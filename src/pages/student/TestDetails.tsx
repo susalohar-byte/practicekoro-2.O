@@ -10,7 +10,8 @@ import { CheckCircle2, AlertTriangle, Play, Lock, ChevronLeft, FileCheck2 } from
 import type { MockTest } from '@/types';
 
 export const TestDetails: React.FC = () => {
-  const { testId } = useParams<{ testId: string }>();
+  const { id, testId: routeTestId } = useParams<{ id?: string; testId?: string }>();
+  const testId = routeTestId ?? id;
   const { user } = useAuth();
   const { hasAccessToTest } = useSubscription();
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export const TestDetails: React.FC = () => {
 
   const handleStartTest = async () => {
     if (!user) {
-      navigate('/login', { state: { from: { pathname: `/tests/${test.id}` } } });
+      navigate('/login', { state: { from: { pathname: `/exams/${test.id}` } } });
       return;
     }
 
@@ -75,7 +76,7 @@ export const TestDetails: React.FC = () => {
     setStarting(true);
     try {
       const attemptInfo = await api.startTestAttempt(test.id);
-      navigate(`/tests/${test.id}/runner?attemptId=${attemptInfo.attemptId}`);
+      navigate(`/exams/${test.id}/runner?attemptId=${attemptInfo.attemptId}`);
     } catch (err) {
       console.error('Failed to start attempt:', err);
       alert('Failed to initialize test attempt. Please try again.');

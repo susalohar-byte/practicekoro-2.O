@@ -1,6 +1,7 @@
 // supabase/functions/razorpay-webhook/index.ts
 // PracticeKoro 2.0 - Razorpay Webhook & Payment Reconciliation Edge Function
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
+import { paiseToRupees, verifyHmacSha256 } from '../_shared/razorpay-signature.ts';
 
 interface RazorpayWebhookPayload {
   entity: string;
@@ -32,44 +33,6 @@ interface RazorpayWebhookPayload {
     };
   };
   created_at?: number;
-}
-
-/**
- * Timing-safe HMAC-SHA256 signature verification
- */
-async function verifyRazorpaySignature(
-  rawBody: string,
-  signatureHeader: string,
-  secret: string
-): Promise<boolean> {
-  try {
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
-    const calculatedHex = Array.from(new Uint8Array(signatureBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-
-    if (calculatedHex.length !== signatureHeader.length) {
-      return false;
-    }
-
-    // Timing-safe comparison
-    let diff = 0;
-    for (let i = 0; i < calculatedHex.length; i++) {
-      diff |= calculatedHex.charCodeAt(i) ^ signatureHeader.charCodeAt(i);
-    }
-    return diff === 0;
-  } catch (err) {
-    console.error('Signature verification error:', err);
-    return false;
-  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -110,7 +73,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // 5. Cryptographic signature check
-  const isValid = await verifyRazorpaySignature(rawBody, signature, webhookSecret);
+  const isValid = await verifyHmacSha256(rawBody, signature, webhookSecret);
   if (!isValid) {
     console.warn('Invalid Razorpay webhook signature attempt rejected');
     return new Response(JSON.stringify({ error: 'Invalid webhook signature' }), {
@@ -152,17 +115,17 @@ Deno.serve(async (req: Request) => {
   const amountPaise = paymentEntity?.amount || orderEntity?.amount;
   const currency = paymentEntity?.currency || orderEntity?.currency || 'INR';
 
-  if (!orderId || !paymentId) {
+  if (!orderId || !paymentId || !amountPaise) {
     return new Response(
       JSON.stringify({
-        error: 'Missing required order_id or payment_id in webhook payload',
+        error: 'Missing required order_id, payment_id, or amount in webhook payload',
       }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
   // Convert paise to INR (29900 paise = 299.00 INR)
-  const amountInr = amountPaise ? amountPaise / 100 : 299.0;
+  const amountInr = paiseToRupees(amountPaise);
 
   // 8. Reconcile with authoritative PostgreSQL database
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
