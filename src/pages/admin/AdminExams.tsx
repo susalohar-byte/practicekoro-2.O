@@ -182,7 +182,8 @@ export const AdminExams: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Manage competitive exam categories. Configure Full Mock Tests and PYQs per target exam. Topic Tests are universal across all exams.
+            Manage competitive exam categories. Configure Full Mock Tests and PYQs per target exam.
+            Topic Tests are universal across all exams.
           </p>
         </div>
 
