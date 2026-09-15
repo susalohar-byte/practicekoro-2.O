@@ -2639,7 +2639,7 @@ export const api = {
           correct_option: newQuestion.correctOption,
           explanation: newQuestion.explanation || null,
           explanation_bengali: newQuestion.explanationBengali || null,
-          difficulty: newQuestion.difficulty,
+          difficulty: (newQuestion.difficulty as any) || 'medium',
           default_marks: newQuestion.defaultMarks,
           default_negative_marks: newQuestion.defaultNegativeMarks,
           is_active: newQuestion.isActive,

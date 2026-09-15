@@ -30,7 +30,6 @@ export const AdminTestQuestions: React.FC = () => {
   // Add Questions Modal State
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [bankSearch, setBankSearch] = useState('');
-  const [bankDifficulty, setBankDifficulty] = useState('');
   const [selectedBankIds, setSelectedBankIds] = useState<string[]>([]);
 
   const loadData = async () => {
@@ -116,7 +115,6 @@ export const AdminTestQuestions: React.FC = () => {
   const openBankModal = () => {
     setSelectedBankIds([]);
     setBankSearch('');
-    setBankDifficulty('');
     setIsBankModalOpen(true);
   };
 
@@ -135,7 +133,6 @@ export const AdminTestQuestions: React.FC = () => {
       negativeMarks: q.defaultNegativeMarks || 0.25,
       questionText: q.questionText,
       questionBengaliText: q.questionBengaliText,
-      difficulty: q.difficulty,
       correctOption: q.correctOption,
       optionA: q.optionA,
       optionB: q.optionB,
@@ -157,8 +154,7 @@ export const AdminTestQuestions: React.FC = () => {
       q.questionText.toLowerCase().includes(bankSearch.toLowerCase()) ||
       (q.questionBengaliText &&
         q.questionBengaliText.toLowerCase().includes(bankSearch.toLowerCase()));
-    const matchesDifficulty = !bankDifficulty || q.difficulty === bankDifficulty;
-    return !isAlreadyAssigned && matchesSearch && matchesDifficulty;
+    return !isAlreadyAssigned && matchesSearch;
   });
 
   const totalAssignedMarks = assignedQuestions.reduce((acc, q) => acc + (q.marks || 0), 0);
@@ -294,9 +290,6 @@ export const AdminTestQuestions: React.FC = () => {
               {/* Question Text & Options */}
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-800 text-slate-300">
-                    {q.difficulty || 'MEDIUM'}
-                  </span>
                   <span className="text-[10px] font-mono text-slate-500">ID: {q.questionId}</span>
                 </div>
 
@@ -426,17 +419,6 @@ export const AdminTestQuestions: React.FC = () => {
                   className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
-
-              <select
-                value={bankDifficulty}
-                onChange={(e) => setBankDifficulty(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-              >
-                <option value="">All Difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
             </div>
 
             {/* Scrollable Questions List */}
@@ -467,9 +449,6 @@ export const AdminTestQuestions: React.FC = () => {
                         />
                         <div className="space-y-1 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold uppercase text-purple-400">
-                              {q.difficulty}
-                            </span>
                             <span className="text-[10px] text-slate-500 font-mono">
                               +{q.defaultMarks} / -{q.defaultNegativeMarks}
                             </span>

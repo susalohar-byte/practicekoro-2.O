@@ -219,7 +219,7 @@ export interface Database {
           correct_option: string;
           explanation: string | null;
           explanation_bengali: string | null;
-          difficulty: DifficultyLevel;
+          difficulty?: DifficultyLevel | null;
           default_marks: number;
           default_negative_marks: number;
           is_active: boolean;
@@ -240,7 +240,7 @@ export interface Database {
           correct_option: string;
           explanation?: string | null;
           explanation_bengali?: string | null;
-          difficulty?: DifficultyLevel;
+          difficulty?: DifficultyLevel | null;
           default_marks?: number;
           default_negative_marks?: number;
           is_active?: boolean;

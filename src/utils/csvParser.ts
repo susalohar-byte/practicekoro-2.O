@@ -125,7 +125,6 @@ export function parseQuestionsCsv(
   const colCorrect = getCol(['correct_option', 'correctoption', 'answer', 'correct_answer']);
   const colExplanation = getCol(['explanation', 'explanation_text']);
   const colExplanationBengali = getCol(['explanation_bengali', 'explanationbengali']);
-  const colDifficulty = getCol(['difficulty', 'level']);
   const colMarks = getCol(['marks', 'default_marks', 'defaultmarks']);
   const colNegativeMarks = getCol(['negative_marks', 'default_negative_marks', 'negativemarking']);
   const colSubjectId = getCol(['subject_id', 'subjectid']);
@@ -176,7 +175,6 @@ export function parseQuestionsCsv(
     const rawCorrect = getVal(colCorrect).toUpperCase();
     const explanation = getVal(colExplanation);
     const explanationBengali = getVal(colExplanationBengali);
-    const rawDifficulty = getVal(colDifficulty).toLowerCase();
     const rawMarks = getVal(colMarks);
     const rawNegativeMarks = getVal(colNegativeMarks);
     const rowSubjectId = getVal(colSubjectId) || defaults?.defaultSubjectId;
@@ -197,11 +195,6 @@ export function parseQuestionsCsv(
       correctOption = rawCorrect as 'A' | 'B' | 'C' | 'D';
     }
 
-    let difficulty: 'easy' | 'medium' | 'hard' = 'medium';
-    if (rawDifficulty === 'easy' || rawDifficulty === 'medium' || rawDifficulty === 'hard') {
-      difficulty = rawDifficulty;
-    }
-
     const marks = rawMarks ? parseFloat(rawMarks) || 1.0 : 1.0;
     const negativeMarks = rawNegativeMarks ? parseFloat(rawNegativeMarks) || 0.25 : 0.25;
 
@@ -217,7 +210,6 @@ export function parseQuestionsCsv(
       correctOption,
       explanation: explanation || undefined,
       explanationBengali: explanationBengali || undefined,
-      difficulty,
       defaultMarks: marks,
       defaultNegativeMarks: negativeMarks,
       isActive: true,

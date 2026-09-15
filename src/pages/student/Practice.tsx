@@ -316,9 +316,6 @@ export const Practice: React.FC = () => {
                   {currentQuestion.chapterName}
                 </span>
               )}
-              <span className="ml-auto text-slate-400 capitalize">
-                {currentQuestion.difficulty}
-              </span>
             </div>
 
             {/* Question Text */}
