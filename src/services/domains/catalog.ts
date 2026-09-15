@@ -72,20 +72,29 @@ export const catalogApi = {
     return exams.find((e) => e.slug === slug || e.id === slug) || null;
   },
 
-  async getSubjects(examId: string): Promise<Subject[]> {
-    if (!isSupabaseConfigured) return MOCK_SUBJECTS[examId] || [];
+  async getSubjects(examId?: string): Promise<Subject[]> {
+    const fallback = () =>
+      (examId && MOCK_SUBJECTS[examId]
+        ? MOCK_SUBJECTS[examId]
+        : Object.values(MOCK_SUBJECTS).flat()) || [];
+    if (!isSupabaseConfigured) return fallback();
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('subjects')
         .select('*')
-        .eq('exam_id', examId)
         .eq('is_active', true)
         .order('order_index', { ascending: true });
 
-      if (error || !data || data.length === 0) return MOCK_SUBJECTS[examId] || [];
+      // Include universal subjects (exam_id IS NULL) alongside exam-specific ones
+      if (examId) {
+        query = query.or(`exam_id.eq.${examId},exam_id.is.null`);
+      }
+
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) return fallback();
       return (data as SubjectRow[]).map((item) => ({
         id: item.id,
-        examId: item.exam_id,
+        examId: item.exam_id ?? undefined,
         name: item.name,
         slug: item.slug,
         description: item.description ?? undefined,
@@ -94,7 +103,7 @@ export const catalogApi = {
         isActive: item.is_active,
       }));
     } catch {
-      return MOCK_SUBJECTS[examId] || [];
+      return fallback();
     }
   },
 

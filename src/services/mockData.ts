@@ -86,10 +86,9 @@ export const MOCK_EXAMS: Exam[] = [
 ];
 
 export const MOCK_SUBJECTS: Record<string, Subject[]> = {
-  'wbp-constable': [
+  universal: [
     {
       id: 'wbp-history',
-      examId: 'wbp-constable',
       name: 'Indian History (ভারত ও বাংলার ইতিহাস)',
       slug: 'indian-history',
       description: 'Ancient, Medieval, and Modern Indian history with Bengal Renaissance.',
@@ -100,7 +99,6 @@ export const MOCK_SUBJECTS: Record<string, Subject[]> = {
     },
     {
       id: 'wbp-math',
-      examId: 'wbp-constable',
       name: 'Elementary Mathematics (পাটিগণিত)',
       slug: 'mathematics',
       description: 'Arithmetic, percentages, profit & loss, ratio & proportion, time & work.',
@@ -111,7 +109,6 @@ export const MOCK_SUBJECTS: Record<string, Subject[]> = {
     },
     {
       id: 'wbp-science',
-      examId: 'wbp-constable',
       name: 'General Science (সাধারণ বিজ্ঞান)',
       slug: 'general-science',
       description: 'Physics, Chemistry, and Life Sciences as per secondary level syllabus.',
@@ -122,7 +119,6 @@ export const MOCK_SUBJECTS: Record<string, Subject[]> = {
     },
     {
       id: 'wbp-polity',
-      examId: 'wbp-constable',
       name: 'Indian Constitution (ভারতের সংবিধান ও ভূগোল)',
       slug: 'indian-constitution',
       description: 'Preamble, Fundamental Rights, Parliament, and West Bengal Geography.',
