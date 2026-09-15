@@ -151,8 +151,8 @@ export const AdminSubjects: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Subjects represent core syllabus domains (e.g. History, Math, Reasoning, General Science)
-            and are universal across exams.
+            Subjects represent core syllabus domains (e.g. History, Math, Reasoning, General
+            Science) and are universal across exams.
           </p>
         </div>
 

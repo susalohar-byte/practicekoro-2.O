@@ -1,0 +1,149 @@
+/* PracticeKoro Landing Redesign - "Exam Hall" visual system.
+   Fonts self-hosted via @fontsource; scoped to [data-landing] so the student
+   app styling is untouched. */
+
+@font-face {
+  font-family: 'Archivo Black';
+  font-display: swap;
+  src: url('@fontsource/archivo-black/files/archivo-black-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-display: swap;
+  src: url('@fontsource/archivo/files/archivo-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-display: swap;
+  src: url('@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+}
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-display: swap;
+  src: url('@fontsource/noto-sans-bengali/files/noto-sans-bengali-bengali-400-normal.woff2')
+    format('woff2');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-display: swap;
+  src: url('@fontsource/noto-sans-bengali/files/noto-sans-bengali-bengali-700-normal.woff2')
+    format('woff2');
+  font-weight: 700;
+}
+
+[data-landing] {
+  /* paper white + off-black ink + electric blue (single accent, locked) */
+  --lk-bg: #fafaf8;
+  --lk-paper: #ffffff;
+  --lk-ink: #101418;
+  --lk-ink-soft: #4a5361;
+  --lk-line: #e5e4df;
+  --lk-accent: #155dfc;
+  --lk-accent-deep: #0c3fbd;
+  --lk-accent-soft: #eaf1ff;
+
+  background: var(--lk-bg);
+  color: var(--lk-ink);
+  font-family:
+    'Archivo',
+    'Noto Sans Bengali',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-weight: 500;
+  scroll-behavior: smooth;
+}
+
+[data-landing] .lk-display {
+  font-family: 'Archivo Black', 'Archivo', 'Noto Sans Bengali', sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+[data-landing] .lk-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-weight: 700;
+}
+
+/* OMR bubble sheet backdrop for the hero rail */
+[data-landing] .lk-omr {
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(21, 93, 252, 0.08) 0 5px, transparent 6px),
+    radial-gradient(circle at 50% 50%, rgba(16, 20, 24, 0.05) 0 4px, transparent 5px);
+  background-size:
+    28px 28px,
+    28px 28px;
+  background-position:
+    0 0,
+    14px 14px;
+  mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+}
+
+/* exam name marquee */
+[data-landing] .lk-marquee {
+  overflow: hidden;
+  border-top: 1px solid var(--lk-line);
+  border-bottom: 1px solid var(--lk-line);
+  background: var(--lk-paper);
+}
+[data-landing] .lk-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: lk-scroll 38s linear infinite;
+}
+[data-landing] .lk-marquee:hover .lk-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes lk-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* hairline-ruled section, like ruled answer-sheet paper */
+[data-landing] .lk-ruled {
+  background-image: linear-gradient(var(--lk-line) 1px, transparent 1px);
+  background-size: 100% 56px;
+}
+
+/* stat strip counters use tabular mono */
+[data-landing] .lk-stat {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* dashed cut line like a hall ticket stub */
+[data-landing] .lk-stub {
+  border-top: 2px dashed var(--lk-line);
+}
+
+/* focus visibility for the redesign */
+[data-landing] a:focus-visible,
+[data-landing] button:focus-visible,
+[data-landing] input:focus-visible,
+[data-landing] [role='button']:focus-visible {
+  outline: 3px solid var(--lk-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* reduced motion: stop marquee */
+@media (prefers-reduced-motion: reduce) {
+  [data-landing] .lk-marquee-track {
+    animation: none;
+  }
+  [data-landing] {
+    scroll-behavior: auto;
+  }
+}

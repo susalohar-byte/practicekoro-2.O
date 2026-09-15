@@ -157,7 +157,8 @@ export const AdminChapters: React.FC = () => {
 
     const parentSubject = subjects.find((s) => s.id === c.subjectId);
     const matchesExam =
-      !selectedExamId || (parentSubject && (!parentSubject.examId || parentSubject.examId === selectedExamId));
+      !selectedExamId ||
+      (parentSubject && (!parentSubject.examId || parentSubject.examId === selectedExamId));
     const matchesSubject = !selectedSubjectId || c.subjectId === selectedSubjectId;
 
     return matchesSearch && matchesExam && matchesSubject;
