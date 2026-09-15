@@ -27,7 +27,7 @@ import {
   Calendar,
   X,
   CheckCircle2,
-  Phone
+  Phone,
 } from 'lucide-react';
 
 export const Profile: React.FC = () => {
@@ -515,9 +515,7 @@ export const Profile: React.FC = () => {
       {/* A5. Account Information */}
       <Card className="p-6 border-slate-200 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm sm:text-base font-bold text-slate-900">
-            Account Information
-          </h2>
+          <h2 className="text-sm sm:text-base font-bold text-slate-900">Account Information</h2>
           <button
             type="button"
             onClick={openNameEditor}
@@ -675,9 +673,7 @@ export const Profile: React.FC = () => {
                   <Pencil className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    Edit Student Profile
-                  </h3>
+                  <h3 className="text-base font-bold text-slate-900">Edit Student Profile</h3>
                   <p className="text-xs text-slate-500">
                     Update your name for mock tests and scorecard
                   </p>
@@ -705,7 +701,9 @@ export const Profile: React.FC = () => {
               {/* Avatar Live Preview */}
               <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-blue-50/40 border border-blue-100">
                 <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-sm">
-                  {nameInput.trim() ? nameInput.trim().charAt(0).toUpperCase() : (user?.fullName?.charAt(0) || 'U')}
+                  {nameInput.trim()
+                    ? nameInput.trim().charAt(0).toUpperCase()
+                    : user?.fullName?.charAt(0) || 'U'}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800">
@@ -734,7 +732,8 @@ export const Profile: React.FC = () => {
                   />
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Minimum 2 characters. Only genuine candidate names recommended for official scorecard alignment.
+                  Minimum 2 characters. Only genuine candidate names recommended for official
+                  scorecard alignment.
                 </p>
               </div>
 
@@ -774,7 +773,13 @@ export const Profile: React.FC = () => {
                   size="sm"
                   disabled={isSavingName || !nameInput.trim()}
                   className="text-xs font-bold"
-                  leftIcon={isSavingName ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  leftIcon={
+                    isSavingName ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )
+                  }
                 >
                   {isSavingName ? 'Saving...' : 'Save Changes'}
                 </Button>
