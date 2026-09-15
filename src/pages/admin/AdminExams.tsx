@@ -284,17 +284,14 @@ export const AdminExams: React.FC = () => {
                           <span>{exam.pyqCount ?? exam.pyqsCount ?? 0} PYQ</span>
                         </Link>
 
-                        {/* 3. Topic Test (Common for all Exam) */}
+                        {/* 3. Topic Test */}
                         <Link
                           to="/admin/tests"
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[11px] font-semibold hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-colors"
-                          title="Topic Tests are common syllabus drills shared across all competitive exams"
+                          title="Topic Tests shared across all exams"
                         >
                           <FolderTree className="w-3.5 h-3.5 text-emerald-400" />
                           <span>{exam.topicTestCount ?? exam.topicTestsCount ?? 0} Topic Test</span>
-                          <span className="text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            Common
-                          </span>
                         </Link>
                       </div>
                     </td>

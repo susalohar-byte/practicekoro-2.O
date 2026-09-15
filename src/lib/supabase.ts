@@ -12,7 +12,7 @@ export const isSupabaseConfigured = Boolean(
 );
 
 export const isDemoModeEnabled =
-  import.meta.env.VITE_ENABLE_DEMO_MODE === 'true' && !isSupabaseConfigured;
+  import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_MODE === 'true';
 
 // Create client with fallback dummy values to prevent crashing if unconfigured
 export const supabase = createClient<Database>(
