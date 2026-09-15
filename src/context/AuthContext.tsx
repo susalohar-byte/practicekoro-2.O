@@ -21,7 +21,10 @@ interface AuthContextType {
   ) => Promise<{ error: Error | null; role?: UserRole }>;
   logout: () => Promise<void>;
   switchDemoRole: (role: UserRole) => void;
-  updateProfile: (updates: { fullName?: string; phone?: string }) => Promise<{ error: Error | null; user?: UserProfile }>;
+  updateProfile: (updates: {
+    fullName?: string;
+    phone?: string;
+  }) => Promise<{ error: Error | null; user?: UserProfile }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -261,7 +264,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }): Promise<{ error: Error | null; user?: UserProfile }> => {
     if (!user) return { error: new Error('User is not logged in') };
 
-    const updatedFullName = updates.fullName !== undefined ? updates.fullName.trim() : user.fullName;
+    const updatedFullName =
+      updates.fullName !== undefined ? updates.fullName.trim() : user.fullName;
     const updatedPhone = updates.phone !== undefined ? updates.phone.trim() : user.phone;
 
     if (!updatedFullName) {
