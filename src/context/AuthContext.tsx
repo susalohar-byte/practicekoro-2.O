@@ -61,24 +61,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Fetch profile and authoritative user_roles in parallel to guarantee real admin role resolution
-    const resolveUserProfile = async (supabaseUser: { id: string; email?: string }): Promise<UserProfile> => {
+    const resolveUserProfile = async (supabaseUser: {
+      id: string;
+      email?: string;
+    }): Promise<UserProfile> => {
       try {
         const [profileRes, rolesRes] = await Promise.all([
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', supabaseUser.id)
-            .maybeSingle(),
-          supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', supabaseUser.id),
+          supabase.from('profiles').select('*').eq('id', supabaseUser.id).maybeSingle(),
+          supabase.from('user_roles').select('role').eq('user_id', supabaseUser.id),
         ]);
 
         const profile = profileRes.data as ProfileRow | null;
         const userRoles = (rolesRes.data as { role: string }[] | null) || [];
         const isAdminUser = userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
-        const effectiveRole: UserRole = isAdminUser ? 'admin' : (profile?.role || 'student');
+        const effectiveRole: UserRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
         return {
           id: profile?.id || supabaseUser.id,
@@ -170,21 +166,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let authenticatedRole: UserRole = 'student';
       if (data.user) {
         const [profileRes, rolesRes] = await Promise.all([
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .maybeSingle(),
-          supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.user.id),
+          supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle(),
+          supabase.from('user_roles').select('role').eq('user_id', data.user.id),
         ]);
 
         const profile = profileRes.data as ProfileRow | null;
         const userRoles = (rolesRes.data as { role: string }[] | null) || [];
         const isAdminUser = userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
-        authenticatedRole = isAdminUser ? 'admin' : (profile?.role || 'student');
+        authenticatedRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
         const userObj: UserProfile = {
           id: profile?.id || data.user.id,
