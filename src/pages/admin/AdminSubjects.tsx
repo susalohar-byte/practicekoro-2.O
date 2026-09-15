@@ -20,6 +20,7 @@ export const AdminSubjects: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form State
   const [name, setName] = useState('');
@@ -88,6 +89,8 @@ export const AdminSubjects: React.FC = () => {
       return;
     }
 
+    setIsSaving(true);
+    setFormError('');
     try {
       if (editingSubject) {
         await api.updateSubject(editingSubject.id, {
@@ -117,7 +120,10 @@ export const AdminSubjects: React.FC = () => {
       setIsModalOpen(false);
       await loadData();
     } catch (err: any) {
+      console.error('Failed to save subject:', err);
       setFormError(err.message || 'Failed to save subject');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -125,8 +131,26 @@ export const AdminSubjects: React.FC = () => {
     try {
       await api.updateSubject(subject.id, { isActive: !subject.isActive });
       await loadData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to toggle status:', err);
+      alert(err.message || 'Failed to toggle status');
+    }
+  };
+
+  const handleDeleteSubject = async (subject: Subject) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete subject "${subject.name}"?\n\nThis action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsLoading(true);
+      await api.deleteSubject(subject.id);
+      await loadData();
+    } catch (err: any) {
+      console.error('Failed to delete subject:', err);
+      alert(err.message || 'Failed to delete subject');
+      setIsLoading(false);
     }
   };
 
@@ -240,24 +264,35 @@ export const AdminSubjects: React.FC = () => {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleToggleActive(sub)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              sub.isActive
+                                ? 'text-emerald-400 hover:text-amber-400 hover:bg-slate-800'
+                                : 'text-slate-500 hover:text-emerald-400 hover:bg-slate-800'
+                            }`}
+                            title={sub.isActive ? 'Deactivate Subject' : 'Activate Subject'}
+                          >
+                            {sub.isActive ? (
+                              <CheckCircle2 className="w-4 h-4" />
+                            ) : (
+                              <XCircle className="w-4 h-4" />
+                            )}
+                          </button>
                           <button
                             onClick={() => openEditModal(sub)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                             title="Edit Subject"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleToggleActive(sub)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
-                            title={sub.isActive ? 'Deactivate' : 'Activate'}
+                            onClick={() => handleDeleteSubject(sub)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                            title="Delete Subject"
                           >
-                            {sub.isActive ? (
-                              <Trash2 className="w-4 h-4" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4" />
-                            )}
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -374,9 +409,10 @@ export const AdminSubjects: React.FC = () => {
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
+                  disabled={isSaving}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold disabled:opacity-50"
                 >
-                  {editingSubject ? 'Save Changes' : 'Create Subject'}
+                  {isSaving ? 'Saving...' : editingSubject ? 'Save Changes' : 'Create Subject'}
                 </Button>
               </div>
             </form>

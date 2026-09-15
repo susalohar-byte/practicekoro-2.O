@@ -254,9 +254,14 @@ export const adminApi = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await (supabase as any).from('subjects').update(payload).eq('id', id);
+        const { error } = await (supabase as any).from('subjects').update(payload).eq('id', id);
+        if (error) {
+          console.error('Supabase updateSubject error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase updateSubject error:', err);
+        throw err;
       }
     }
 
@@ -276,14 +281,19 @@ export const adminApi = {
   async deleteSubject(id: string): Promise<boolean> {
     const idx = localSubjects.findIndex((s) => s.id === id);
     if (idx !== -1) {
-      localSubjects[idx].isActive = false;
+      localSubjects.splice(idx, 1);
     }
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('subjects').update({ is_active: false }).eq('id', id);
+        const { error } = await (supabase as any).from('subjects').delete().eq('id', id);
+        if (error) {
+          console.error('Supabase deleteSubject error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase deleteSubject error:', err);
+        throw err;
       }
     }
     return true;
