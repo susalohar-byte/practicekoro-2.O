@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/services/api';
@@ -104,8 +105,8 @@ export const AdminTestQuestions: React.FC = () => {
       } else {
         setSaveError(res.error || 'Failed to save test questions');
       }
-    } catch (err: any) {
-      setSaveError(err.message || 'Error saving questions');
+    } catch (err) {
+      setSaveError(getErrorMessage(err, 'Error saving questions'));
     } finally {
       setIsSaving(false);
     }

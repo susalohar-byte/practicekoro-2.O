@@ -52,7 +52,7 @@ export const MyTests: React.FC = () => {
     try {
       const data = await api.getUserAttempts(user.id);
       setAttempts(data || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load user attempts:', err);
       setError('Unable to load test history. Please check your connection.');
     } finally {
@@ -401,7 +401,7 @@ export const MyTests: React.FC = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredAttempts.map((attempt: any) => {
+          {filteredAttempts.map((attempt) => {
             const isInProgress = attempt.status === 'in_progress';
             const percentage =
               attempt.totalMarks > 0 ? Math.round((attempt.score / attempt.totalMarks) * 100) : 0;

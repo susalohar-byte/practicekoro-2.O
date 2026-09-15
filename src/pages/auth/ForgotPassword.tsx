@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/common/Button';
@@ -26,8 +27,8 @@ export const ForgotPassword: React.FC = () => {
         }
       }
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to send reset instructions');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to send reset instructions'));
     } finally {
       setLoading(false);
     }

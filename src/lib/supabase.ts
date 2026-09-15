@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -23,3 +23,6 @@ export const supabase = createClient<Database>(
     },
   }
 );
+
+// Central compatibility boundary until generated Database types are refreshed from Supabase.
+export const supabaseRuntime = supabase as unknown as SupabaseClient;

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -123,9 +124,9 @@ export const Subscription: React.FC = () => {
             } else {
               setPaymentStatus('delayed');
             }
-          } catch (verifErr: any) {
+          } catch (verifErr) {
             console.error('Payment verification failed:', verifErr);
-            setErrorMessage(verifErr.message || 'Verification could not be completed.');
+            setErrorMessage(getErrorMessage(verifErr, 'Verification could not be completed.'));
             setPaymentStatus('failed');
           }
         },
@@ -142,9 +143,9 @@ export const Subscription: React.FC = () => {
         setErrorMessage(checkoutResult.error);
         setPaymentStatus('failed');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Order creation failed:', err);
-      setErrorMessage(err.message || 'Failed to initiate payment. Please try again.');
+      setErrorMessage(getErrorMessage(err, 'Failed to initiate payment. Please try again.'));
       setPaymentStatus('failed');
     }
   };

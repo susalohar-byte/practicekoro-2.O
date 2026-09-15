@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { MOCK_STUDENT_USER, MOCK_ADMIN_USER } from '@/services/mockData';
 import type { Database } from '@/types/database';
 import type { UserProfile, UserRole } from '@/types';
@@ -277,7 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (isSupabaseConfigured && isUuid) {
         // 1. Update profiles table
-        const { error: profileError } = await (supabase as any)
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({
             full_name: updatedFullName,

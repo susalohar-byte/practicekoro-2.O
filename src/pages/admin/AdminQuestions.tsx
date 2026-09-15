@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
@@ -164,8 +165,8 @@ export const AdminQuestions: React.FC = () => {
       }
       setIsModalOpen(false);
       await loadData();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save question');
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Failed to save question'));
     }
   };
 
@@ -226,8 +227,8 @@ export const AdminQuestions: React.FC = () => {
         }`,
       });
       await loadData();
-    } catch (err: any) {
-      setImportNotice({ type: 'error', text: err.message || 'Import failed' });
+    } catch (err) {
+      setImportNotice({ type: 'error', text: getErrorMessage(err, 'Import failed') });
     } finally {
       setIsImporting(false);
     }

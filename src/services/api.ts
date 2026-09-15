@@ -1,4 +1,5 @@
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
+import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import {
   MOCK_EXAMS,
   MOCK_SUBJECTS,
@@ -45,6 +46,12 @@ type SubjectRow = Database['public']['Tables']['subjects']['Row'];
 type ChapterRow = Database['public']['Tables']['chapters']['Row'];
 type TestRow = Database['public']['Tables']['tests']['Row'];
 type QuestionRow = Database['public']['Tables']['questions']['Row'];
+type QuestionWithContext = QuestionRow & {
+  chapters: {
+    name: string;
+    subjects: { name: string; exams: { title: string } | null } | null;
+  } | null;
+};
 type AttemptRow = Database['public']['Tables']['test_attempts']['Row'];
 type MistakeRow = Database['public']['Tables']['mistakes']['Row'];
 type BookmarkRow = Database['public']['Tables']['bookmarks']['Row'];
@@ -198,7 +205,7 @@ export const api = {
             .select('test_id')
             .eq('exam_id', examId);
           if (assocData && assocData.length > 0) {
-            assocTestIds = assocData.map((a: any) => a.test_id);
+            assocTestIds = assocData.map((a) => a.test_id);
           }
         } catch (e) {
           console.warn('Could not query test_exams table, fallback to exam_id', e);
@@ -229,7 +236,7 @@ export const api = {
             (!chapterId || t.chapterId === chapterId)
         );
       }
-      return data.map((item: any) => ({
+      return data.map((item) => ({
         id: item.id,
         examId: item.exam_id,
         subjectId: item.subject_id ?? undefined,
@@ -291,12 +298,12 @@ export const api = {
   async getTestExamAssociations(testId: string): Promise<string[]> {
     if (!isSupabaseConfigured) return [];
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('test_exams')
         .select('exam_id')
         .eq('test_id', testId);
       if (error || !data) return [];
-      return data.map((d: any) => d.exam_id);
+      return data.map((d) => d.exam_id);
     } catch {
       return [];
     }
@@ -305,7 +312,7 @@ export const api = {
   async associateTestWithExam(testId: string, examId: string): Promise<boolean> {
     if (!isSupabaseConfigured) return true;
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('test_exams')
         .upsert({ test_id: testId, exam_id: examId }, { onConflict: 'test_id,exam_id' });
       return !error;
@@ -317,7 +324,7 @@ export const api = {
   async dissociateTestFromExam(testId: string, examId: string): Promise<boolean> {
     if (!isSupabaseConfigured) return true;
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('test_exams')
         .delete()
         .eq('test_id', testId)
@@ -331,15 +338,12 @@ export const api = {
   async syncTestExamAssociations(testId: string, examIds: string[]): Promise<boolean> {
     if (!isSupabaseConfigured) return true;
     try {
-      const { error: delError } = await (supabase as any)
-        .from('test_exams')
-        .delete()
-        .eq('test_id', testId);
+      const { error: delError } = await supabase.from('test_exams').delete().eq('test_id', testId);
       if (delError) return false;
 
       if (examIds.length > 0) {
         const rows = examIds.map((eid) => ({ test_id: testId, exam_id: eid }));
-        const { error: insError } = await (supabase as any).from('test_exams').insert(rows);
+        const { error: insError } = await supabase.from('test_exams').insert(rows);
         if (insError) return false;
       }
       return true;
@@ -370,7 +374,7 @@ export const api = {
         slug: row.slug,
         description: row.description ?? undefined,
         testType: row.test_type,
-        year: (row as any).year ? Number((row as any).year) : undefined,
+        year: 'year' in row && row.year ? Number(row.year) : undefined,
         durationMinutes: row.duration_minutes,
         totalQuestions: row.total_questions,
         totalMarks: Number(row.total_marks),
@@ -379,7 +383,7 @@ export const api = {
         isPremium: row.is_premium,
         orderIndex: row.order_index,
         isActive: row.is_active,
-        status: (row as any).status || 'published',
+        status: row.status || 'published',
       };
     } catch {
       return mockFound || null;
@@ -389,7 +393,7 @@ export const api = {
   // Questions for active exam (Sanitized without answers or explanations)
   async getStudentTestQuestions(testId: string): Promise<StudentTestQuestion[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('get_student_exam_questions', {
+      const { data, error } = await supabase.rpc('get_student_exam_questions', {
         p_test_id: testId,
       });
       if (error) {
@@ -465,7 +469,7 @@ export const api = {
           questions: Record<string, unknown>;
         }>
       ).map((item) => {
-        const q = item.questions;
+        const q = item.questions as unknown as QuestionRow;
         return {
           id: String(q.id),
           chapterId: q.chapter_id ? String(q.chapter_id) : undefined,
@@ -506,7 +510,7 @@ export const api = {
     const durationMinutes = test.durationMinutes;
 
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('start_test_attempt', {
+      const { data, error } = await supabase.rpc('start_test_attempt', {
         p_test_id: testId,
       });
 
@@ -565,7 +569,7 @@ export const api = {
 
   async getTestAttempt(attemptId: string): Promise<TestAttempt | null> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('test_attempts')
         .select('*')
         .eq('id', attemptId)
@@ -609,7 +613,7 @@ export const api = {
   ): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).rpc('save_test_answers', {
+        await supabase.rpc('save_test_answers', {
           p_attempt_id: attemptId,
           p_answers: answers,
           p_time_spent_seconds: timeSpentSeconds,
@@ -653,7 +657,7 @@ export const api = {
     const test = await this.getTestById(testId);
 
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('submit_test_attempt', {
+      const { data, error } = await supabase.rpc('submit_test_attempt', {
         p_attempt_id: attemptId,
         p_answers: answers,
         p_time_spent_seconds: timeSpentSeconds,
@@ -781,7 +785,7 @@ export const api = {
 
   async getAttemptResult(attemptId: string): Promise<GradedResult | null> {
     if (isSupabaseConfigured) {
-      const { data: res, error } = await (supabase as any)
+      const { data: res, error } = await supabase
         .from('test_results')
         .select(
           `
@@ -813,7 +817,7 @@ export const api = {
       }
 
       if (res) {
-        const r = res as Record<string, any>;
+        const r = res as Record<string, unknown>;
         const attempt = r.test_attempts as {
           correct_count: number;
           wrong_count: number;
@@ -875,7 +879,7 @@ export const api = {
 
   async getAttemptSolutions(attemptId: string, testId: string): Promise<QuestionSolution[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('get_attempt_solutions', {
+      const { data, error } = await supabase.rpc('get_attempt_solutions', {
         p_attempt_id: attemptId,
       });
 
@@ -922,7 +926,7 @@ export const api = {
   async toggleBookmark(userId: string, questionId: string, note?: string): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        const { data: existing } = await (supabase as any)
+        const { data: existing } = await supabase
           .from('bookmarks')
           .select('id')
           .eq('user_id', userId)
@@ -930,13 +934,10 @@ export const api = {
           .maybeSingle();
 
         if (existing) {
-          await (supabase as any)
-            .from('bookmarks')
-            .delete()
-            .eq('id', (existing as any).id);
+          await supabase.from('bookmarks').delete().eq('id', existing.id);
           return false; // Removed
         } else {
-          await (supabase as any).from('bookmarks').insert({
+          await supabase.from('bookmarks').insert({
             user_id: userId,
             question_id: questionId,
             note: note || 'Bookmarked during practice review',
@@ -1010,7 +1011,7 @@ export const api = {
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return data.map((d: any) => {
+      return data.map((d) => {
         const test = d.tests;
         return {
           id: d.id,
@@ -1076,8 +1077,14 @@ export const api = {
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return (data as unknown as Array<MistakeRow & { questions: any }>).map((d) => {
-        const q = d.questions || {};
+      return (
+        data as unknown as Array<
+          MistakeRow & {
+            questions: Database['public']['Tables']['questions']['Row'] & { chapters?: unknown };
+          }
+        >
+      ).map((d) => {
+        const q = (d.questions ?? {}) as unknown as Partial<QuestionWithContext>;
         const ch = q.chapters;
         const sub = ch?.subjects;
         const ex = sub?.exams;
@@ -1126,7 +1133,7 @@ export const api = {
   async resolveMistake(mistakeId: string, isResolved: boolean = true): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('mistakes')
           .update({
             is_resolved: isResolved,
@@ -1177,8 +1184,14 @@ export const api = {
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return (data as unknown as Array<BookmarkRow & { questions: any }>).map((d) => {
-        const q = d.questions || {};
+      return (
+        data as unknown as Array<
+          BookmarkRow & {
+            questions: Database['public']['Tables']['questions']['Row'] & { chapters?: unknown };
+          }
+        >
+      ).map((d) => {
+        const q = (d.questions ?? {}) as unknown as Partial<QuestionWithContext>;
         const ch = q.chapters;
         const sub = ch?.subjects;
         const ex = sub?.exams;
@@ -1234,13 +1247,13 @@ export const api = {
       if (error || !data || data.length === 0) return MOCK_SUBSCRIPTION_PLANS;
       return (data as PlanRow[]).map((d) => ({
         id: d.id,
-        name: (d as any).name ?? undefined,
+        name: d.title ?? undefined,
         title: d.title,
         description: d.description ?? undefined,
         durationDays: d.duration_days,
         price: Number(d.price),
         originalPrice: d.original_price ? Number(d.original_price) : undefined,
-        currency: (d as any).currency || 'INR',
+        currency: 'INR',
         features: Array.isArray(d.features) ? (d.features as string[]) : [],
         isActive: d.is_active,
         orderIndex: d.order_index,
@@ -1257,7 +1270,7 @@ export const api = {
   // Create Razorpay Order on server
   async createRazorpayOrder(planId: string): Promise<RazorpayOrderResponse> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('create_razorpay_order', {
+      const { data, error } = await supabase.rpc('create_razorpay_order', {
         p_plan_id: planId,
       });
 
@@ -1311,7 +1324,7 @@ export const api = {
     planTitle?: string;
   }> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('verify_razorpay_payment', {
+      const { data, error } = await supabase.rpc('verify_razorpay_payment', {
         p_order_id: payload.orderId,
         p_payment_id: payload.paymentId,
         p_signature: payload.signature,
@@ -1385,7 +1398,7 @@ export const api = {
   async getStudentSubscriptionDetails(): Promise<StudentSubscriptionDetails> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_student_subscription_details');
+        const { data, error } = await supabase.rpc('get_student_subscription_details');
         if (!error && data) {
           return {
             hasSubscription: !!data.has_subscription,
@@ -1446,13 +1459,13 @@ export const api = {
           .order('created_at', { ascending: false });
 
         if (!error && data) {
-          return data.map((d: any) => ({
+          return data.map((d) => ({
             id: d.id,
             userId: d.user_id,
             planId: d.plan_id,
             planTitle: d.subscription_plans?.title || 'Pro Pass',
             amount: Number(d.amount),
-            currency: d.currency || 'INR',
+            currency: 'INR',
             gateway: d.gateway || 'razorpay',
             orderId: d.order_id,
             razorpayOrderId: d.razorpay_order_id,
@@ -1502,7 +1515,7 @@ export const api = {
   ): Promise<AdminSubscriptionRow[]> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_admin_subscriptions', {
+        const { data, error } = await supabase.rpc('get_admin_subscriptions', {
           p_status: status || null,
           p_search: search || null,
           p_limit: limit,
@@ -1510,7 +1523,7 @@ export const api = {
         });
 
         if (!error && Array.isArray(data)) {
-          return data.map((d: any) => ({
+          return data.map((d) => ({
             id: d.id,
             userId: d.user_id,
             studentName: d.student_name || 'Student Aspirant',
@@ -1572,7 +1585,7 @@ export const api = {
   ): Promise<AdminPaymentRow[]> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_admin_payments', {
+        const { data, error } = await supabase.rpc('get_admin_payments', {
           p_status: status || null,
           p_search: search || null,
           p_limit: limit,
@@ -1580,7 +1593,7 @@ export const api = {
         });
 
         if (!error && Array.isArray(data)) {
-          return data.map((d: any) => ({
+          return data.map((d) => ({
             id: d.id,
             userId: d.user_id,
             studentName: d.student_name || 'Student Aspirant',
@@ -1588,7 +1601,7 @@ export const api = {
             planId: d.plan_id || undefined,
             planTitle: d.plan_title || 'Pro Pass',
             amount: Number(d.amount),
-            currency: d.currency || 'INR',
+            currency: 'INR',
             gateway: d.gateway || 'razorpay',
             orderId: d.order_id || undefined,
             razorpayOrderId: d.razorpay_order_id || undefined,
@@ -1646,7 +1659,7 @@ export const api = {
   async getAdminDashboardStats(): Promise<AdminDashboardStats> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_admin_dashboard_counts');
+        const { data, error } = await supabase.rpc('get_admin_dashboard_counts');
         if (!error && data) {
           return {
             totalExams: Number(data.total_exams || 0),
@@ -1747,7 +1760,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any).from('exams').insert({
+        const { error } = await supabase.from('exams').insert({
           id,
           title: newExam.title,
           slug: newExam.slug,
@@ -1786,7 +1799,7 @@ export const api = {
         if (updates.orderIndex !== undefined) updatePayload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) updatePayload.is_active = updates.isActive;
 
-        await (supabase as any).from('exams').update(updatePayload).eq('id', id);
+        await supabase.from('exams').update(updatePayload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateExam error:', err);
       }
@@ -1813,7 +1826,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('exams').update({ is_active: false }).eq('id', id);
+        await supabase.from('exams').update({ is_active: false }).eq('id', id);
       } catch (err) {
         console.error('Supabase deleteExam error:', err);
       }
@@ -1873,7 +1886,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('subjects').insert({
+        await supabase.from('subjects').insert({
           id,
           exam_id: newSubject.examId,
           name: newSubject.name,
@@ -1908,7 +1921,7 @@ export const api = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await (supabase as any).from('subjects').update(payload).eq('id', id);
+        await supabase.from('subjects').update(payload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateSubject error:', err);
       }
@@ -1935,7 +1948,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('subjects').update({ is_active: false }).eq('id', id);
+        await supabase.from('subjects').update({ is_active: false }).eq('id', id);
       } catch (err) {
         console.error('Supabase deleteSubject error:', err);
       }
@@ -1994,7 +2007,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('chapters').insert({
+        await supabase.from('chapters').insert({
           id,
           subject_id: newChapter.subjectId,
           name: newChapter.name,
@@ -2027,7 +2040,7 @@ export const api = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await (supabase as any).from('chapters').update(payload).eq('id', id);
+        await supabase.from('chapters').update(payload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateChapter error:', err);
       }
@@ -2046,7 +2059,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('chapters').update({ is_active: false }).eq('id', id);
+        await supabase.from('chapters').update({ is_active: false }).eq('id', id);
       } catch (err) {
         console.error('Supabase deleteChapter error:', err);
       }
@@ -2083,7 +2096,7 @@ export const api = {
           });
       }
 
-      return (data as any[]).map((item) => {
+      return data.map((item) => {
         const exam = localExams.find((e) => e.id === item.exam_id);
         const count =
           Array.isArray(item.tests) && item.tests[0]?.count != null
@@ -2134,7 +2147,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('test_series').insert({
+        await supabase.from('test_series').insert({
           id,
           exam_id: newSeries.examId,
           title: newSeries.title,
@@ -2169,7 +2182,7 @@ export const api = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await (supabase as any).from('test_series').update(payload).eq('id', id);
+        await supabase.from('test_series').update(payload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateTestSeries error:', err);
       }
@@ -2196,7 +2209,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('test_series').update({ is_active: false }).eq('id', id);
+        await supabase.from('test_series').update({ is_active: false }).eq('id', id);
       } catch (err) {
         console.error('Supabase deleteTestSeries error:', err);
       }
@@ -2294,7 +2307,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('tests').insert({
+        await supabase.from('tests').insert({
           id,
           exam_id: newTest.examId,
           subject_id: newTest.subjectId || null,
@@ -2321,9 +2334,7 @@ export const api = {
         );
         if (allAssocExams.length > 0) {
           const assocRows = allAssocExams.map((eid) => ({ test_id: id, exam_id: eid }));
-          await (supabase as any)
-            .from('test_exams')
-            .upsert(assocRows, { onConflict: 'test_id,exam_id' });
+          await supabase.from('test_exams').upsert(assocRows, { onConflict: 'test_id,exam_id' });
         }
       } catch (err) {
         console.error('Supabase createTest error:', err);
@@ -2364,7 +2375,7 @@ export const api = {
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
         if (updates.status !== undefined) payload.status = updates.status;
 
-        await (supabase as any).from('tests').update(payload).eq('id', id);
+        await supabase.from('tests').update(payload).eq('id', id);
 
         if (updates.associatedExamIds !== undefined) {
           await this.syncTestExamAssociations(id, updates.associatedExamIds);
@@ -2405,8 +2416,8 @@ export const api = {
           .select('question_id, question_order, questions(*)')
           .eq('test_id', testId);
         if (data && data.length > 0) {
-          data.forEach((item: any, idx: number) => {
-            const q = item.questions;
+          data.forEach((item, idx: number) => {
+            const q = item.questions as unknown as QuestionRow | null;
             if (!q) {
               errors.push(`Question #${idx + 1} data is missing.`);
             } else {
@@ -2469,10 +2480,10 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any).rpc('publish_test', { p_test_id: testId });
+        const { error } = await supabase.rpc('publish_test', { p_test_id: testId });
         if (error) return { success: false, error: error.message };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Publish RPC failed' };
+      } catch (err) {
+        return { success: false, error: getErrorMessage(err, 'Publish RPC failed') };
       }
     }
 
@@ -2488,10 +2499,10 @@ export const api = {
   async archiveTest(testId: string): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any).rpc('archive_test', { p_test_id: testId });
+        const { error } = await supabase.rpc('archive_test', { p_test_id: testId });
         if (error) return { success: false, error: error.message };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Archive RPC failed' };
+      } catch (err) {
+        return { success: false, error: getErrorMessage(err, 'Archive RPC failed') };
       }
     }
 
@@ -2626,7 +2637,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('questions').insert({
+        await supabase.from('questions').insert({
           id,
           chapter_id: newQuestion.chapterId || null,
           subject_id: newQuestion.subjectId || null,
@@ -2639,7 +2650,7 @@ export const api = {
           correct_option: newQuestion.correctOption,
           explanation: newQuestion.explanation || null,
           explanation_bengali: newQuestion.explanationBengali || null,
-          difficulty: (newQuestion.difficulty as any) || 'medium',
+          difficulty: newQuestion.difficulty || 'medium',
           default_marks: newQuestion.defaultMarks,
           default_negative_marks: newQuestion.defaultNegativeMarks,
           is_active: newQuestion.isActive,
@@ -2683,7 +2694,7 @@ export const api = {
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
         if (updates.status !== undefined) payload.status = updates.status;
 
-        await (supabase as any).from('questions').update(payload).eq('id', id);
+        await supabase.from('questions').update(payload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateQuestion error:', err);
       }
@@ -2701,7 +2712,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any)
+        await supabase
           .from('questions')
           .update({ status: 'archived', is_active: false })
           .eq('id', id);
@@ -2734,9 +2745,9 @@ export const api = {
       try {
         await this.createQuestion(qData);
         successCount++;
-      } catch (err: any) {
+      } catch (err) {
         errors.push(
-          `Failed to save question "${qData.questionText.slice(0, 30)}...": ${err.message}`
+          `Failed to save question "${qData.questionText.slice(0, 30)}...": ${getErrorMessage(err, 'Unknown error')}`
         );
       }
     }
@@ -2767,22 +2778,22 @@ export const api = {
           .order('question_order', { ascending: true });
 
         if (!error && data && data.length > 0) {
-          return data.map((item: any) => {
-            const q = item.questions;
+          return data.map((item) => {
+            const q = item.questions as unknown as QuestionRow | null;
             return {
               questionId: item.question_id,
               questionOrder: item.question_order,
               marks: Number(item.marks),
               negativeMarks: Number(item.negative_marks),
-              questionText: q?.question_text,
-              questionBengaliText: q?.question_bengali_text,
-              difficulty: q?.difficulty,
-              correctOption: q?.correct_option,
-              optionA: q?.option_a,
-              optionB: q?.option_b,
-              optionC: q?.option_c,
-              optionD: q?.option_d,
-              explanation: q?.explanation,
+              questionText: q?.question_text ?? undefined,
+              questionBengaliText: q?.question_bengali_text ?? undefined,
+              difficulty: q?.difficulty ?? undefined,
+              correctOption: (q?.correct_option as 'A' | 'B' | 'C' | 'D' | null) ?? undefined,
+              optionA: q?.option_a ?? undefined,
+              optionB: q?.option_b ?? undefined,
+              optionC: q?.option_c ?? undefined,
+              optionD: q?.option_d ?? undefined,
+              explanation: q?.explanation ?? undefined,
             };
           });
         }
@@ -2805,13 +2816,13 @@ export const api = {
         negativeMarks: a.negativeMarks,
         questionText: q?.questionText,
         questionBengaliText: q?.questionBengaliText,
-        difficulty: q?.difficulty,
+        difficulty: q?.difficulty ?? undefined,
         correctOption: q?.correctOption,
         optionA: q?.optionA,
         optionB: q?.optionB,
         optionC: q?.optionC,
         optionD: q?.optionD,
-        explanation: q?.explanation,
+        explanation: q?.explanation ?? undefined,
       };
     });
   },
@@ -2829,14 +2840,14 @@ export const api = {
           negative_marks: q.negativeMarks ?? 0.25,
         }));
 
-        const { error } = await (supabase as any).rpc('save_test_questions', {
+        const { error } = await supabase.rpc('save_test_questions', {
           p_test_id: testId,
           p_questions: payload,
         });
 
         if (error) return { success: false, error: error.message };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Failed to save test questions RPC' };
+      } catch (err) {
+        return { success: false, error: getErrorMessage(err, 'Failed to save test questions RPC') };
       }
     }
 

@@ -82,7 +82,7 @@ export const Home: React.FC = () => {
         setMistakesCount(0);
         setBookmarksCount(0);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Home load error:', err);
       setError('Unable to load dashboard data. Please check your connection.');
     } finally {

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
@@ -136,8 +137,8 @@ export const AdminChapters: React.FC = () => {
       }
       setIsModalOpen(false);
       await loadData();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save chapter');
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Failed to save chapter'));
     }
   };
 
