@@ -60,6 +60,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    // Fetch profile and authoritative user_roles in parallel to guarantee real admin role resolution
+    const resolveUserProfile = async (supabaseUser: { id: string; email?: string }): Promise<UserProfile> => {
+      try {
+        const [profileRes, rolesRes] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', supabaseUser.id)
+            .maybeSingle(),
+          supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', supabaseUser.id),
+        ]);
+
+        const profile = profileRes.data as ProfileRow | null;
+        const userRoles = (rolesRes.data as { role: string }[] | null) || [];
+        const isAdminUser = userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
+        const effectiveRole: UserRole = isAdminUser ? 'admin' : (profile?.role || 'student');
+
+        return {
+          id: profile?.id || supabaseUser.id,
+          fullName: profile?.full_name || supabaseUser.email?.split('@')[0] || 'User',
+          email: profile?.email || supabaseUser.email || '',
+          phone: profile?.phone ?? undefined,
+          avatarUrl: profile?.avatar_url ?? undefined,
+          targetExamId: profile?.target_exam_id ?? undefined,
+          role: effectiveRole,
+          createdAt: profile?.created_at || new Date().toISOString(),
+        };
+      } catch (err) {
+        console.error('Supabase session load error:', err);
+        return {
+          id: supabaseUser.id,
+          fullName: supabaseUser.email?.split('@')[0] || 'User',
+          email: supabaseUser.email || '',
+          role: 'student',
+          createdAt: new Date().toISOString(),
+        };
+      }
+    };
+
     // Check active Supabase session
     const initAuth = async () => {
       try {
@@ -67,27 +109,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: { session },
         } = await supabase.auth.getSession();
         if (session?.user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (data) {
-            const profile = data as ProfileRow;
-            const userObj: UserProfile = {
-              id: profile.id,
-              fullName: profile.full_name,
-              email: profile.email || session.user.email || '',
-              phone: profile.phone ?? undefined,
-              avatarUrl: profile.avatar_url ?? undefined,
-              targetExamId: profile.target_exam_id ?? undefined,
-              role: profile.role,
-              createdAt: profile.created_at,
-            };
-            setUser(userObj);
-            localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
-          }
+          const userObj = await resolveUserProfile(session.user);
+          setUser(userObj);
+          localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
         }
       } catch (err) {
         console.error('Supabase session load error:', err);
@@ -102,27 +126,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle();
-
-        if (data) {
-          const profile = data as ProfileRow;
-          const userObj: UserProfile = {
-            id: profile.id,
-            fullName: profile.full_name,
-            email: profile.email || session.user.email || '',
-            phone: profile.phone ?? undefined,
-            avatarUrl: profile.avatar_url ?? undefined,
-            targetExamId: profile.target_exam_id ?? undefined,
-            role: profile.role,
-            createdAt: profile.created_at,
-          };
-          setUser(userObj);
-          localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
-        }
+        const userObj = await resolveUserProfile(session.user);
+        setUser(userObj);
+        localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
       } else {
         if (isSupabaseConfigured) {
           const saved = localStorage.getItem('practicekoro_user');
@@ -163,28 +169,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       let authenticatedRole: UserRole = 'student';
       if (data.user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .maybeSingle();
+        const [profileRes, rolesRes] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .maybeSingle(),
+          supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id),
+        ]);
 
-        if (profileData) {
-          const profile = profileData as ProfileRow;
-          const userObj: UserProfile = {
-            id: profile.id,
-            fullName: profile.full_name,
-            email: profile.email || data.user.email || '',
-            phone: profile.phone ?? undefined,
-            avatarUrl: profile.avatar_url ?? undefined,
-            targetExamId: profile.target_exam_id ?? undefined,
-            role: profile.role,
-            createdAt: profile.created_at,
-          };
-          authenticatedRole = profile.role;
-          setUser(userObj);
-          localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
-        }
+        const profile = profileRes.data as ProfileRow | null;
+        const userRoles = (rolesRes.data as { role: string }[] | null) || [];
+        const isAdminUser = userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
+        authenticatedRole = isAdminUser ? 'admin' : (profile?.role || 'student');
+
+        const userObj: UserProfile = {
+          id: profile?.id || data.user.id,
+          fullName: profile?.full_name || data.user.email?.split('@')[0] || 'User',
+          email: profile?.email || data.user.email || '',
+          phone: profile?.phone ?? undefined,
+          avatarUrl: profile?.avatar_url ?? undefined,
+          targetExamId: profile?.target_exam_id ?? undefined,
+          role: authenticatedRole,
+          createdAt: profile?.created_at || new Date().toISOString(),
+        };
+
+        setUser(userObj);
+        localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
       }
       return { error: null, role: authenticatedRole };
     } catch (err: unknown) {
