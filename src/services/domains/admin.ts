@@ -186,7 +186,7 @@ export const adminApi = {
 
       return (data as SubjectRow[]).map((item) => ({
         id: item.id,
-        examId: item.exam_id,
+        examId: item.exam_id ?? undefined,
         name: item.name,
         slug: item.slug,
         description: item.description ?? undefined,

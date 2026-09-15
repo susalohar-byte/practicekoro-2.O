@@ -7,7 +7,7 @@ test.describe('Landing page', () => {
     await expect(page.locator('body')).toContainText(/PracticeKoro/i);
   });
 
-  test('renders hero headline and dual CTAs', async ({ page }) => {
+  test('renders hero headline and CTAs', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Login', exact: true })).toBeVisible();
@@ -20,33 +20,35 @@ test.describe('Landing page', () => {
     await expect(search).toBeVisible();
 
     await search.fill('WBP');
-    const firstCardTitle = page.locator('section:has(#pricing) h3').first();
-    // WBP Constable must survive the filter; Railway/SSC GD must not be visible
     await expect(page.getByText('WBP Constable', { exact: false }).first()).toBeVisible();
     await expect(page.getByText('Railway (RRB)')).toHaveCount(0);
 
+    // empty state with a way out
     await search.fill('zzz-no-match');
-    await expect(firstCardTitle).toHaveCount(0);
+    await expect(page.getByText('No exams match')).toBeVisible();
+    await page.getByRole('button', { name: 'Clear filters' }).click();
+    await expect(page.getByText('Railway (RRB)')).toBeVisible();
   });
 });
 
 test.describe('FAQ accordion', () => {
-  test('expands exactly one answer at a time and toggles closed on re-click', async ({ page }) => {
+  test('first question open by default, exclusive-open and re-click toggle', async ({ page }) => {
     await page.goto('/');
     const faqButtons = page.locator('section:has-text("Frequently Asked Questions") button');
     const first = faqButtons.nth(0);
     const second = faqButtons.nth(1);
 
     await expect(first).toContainText('Mistakes Notebook');
-    await expect(first).toHaveAttribute('aria-expanded', 'false');
-    await first.click();
     await expect(first).toHaveAttribute('aria-expanded', 'true');
 
-    await expect(second).toHaveAttribute('aria-expanded', 'false');
     await second.click();
     await expect(second).toHaveAttribute('aria-expanded', 'true');
     // First answer must have collapsed when the second opened
     await expect(first).toHaveAttribute('aria-expanded', 'false');
+
+    // Re-click closes it
+    await second.click();
+    await expect(second).toHaveAttribute('aria-expanded', 'false');
   });
 });
 
