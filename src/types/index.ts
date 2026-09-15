@@ -21,8 +21,9 @@ export interface Exam {
   bannerUrl?: string;
   orderIndex: number;
   isActive: boolean;
-  subjectsCount?: number;
-  testsCount?: number;
+  fullMockCount?: number;
+  pyqCount?: number;
+  topicTestCount?: number;
   totalVacancies?: number;
 }
 

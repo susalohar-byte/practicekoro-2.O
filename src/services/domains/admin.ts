@@ -34,12 +34,76 @@ import { catalogApi } from '@/services/domains/catalog';
  */
 
 export const adminApi = {
+  // Per-exam content counts by test type. Topic tests are reusable across
+  // exams via the test_exams junction, so an exam's topic count includes
+  // tests associated through that junction (matching the student catalog).
+  async getExamContentCounts(): Promise<
+    Record<string, { fullMock: number; pyq: number; topic: number }>
+  > {
+    const counts: Record<string, { fullMock: number; pyq: number; topic: number }> = {};
+    const bump = (examId: string | null | undefined, kind: 'fullMock' | 'pyq' | 'topic') => {
+      if (!examId) return;
+      counts[examId] = counts[examId] || { fullMock: 0, pyq: 0, topic: 0 };
+      counts[examId][kind] += 1;
+    };
+    const classify = (type: string | null | undefined): 'fullMock' | 'pyq' | 'topic' | null => {
+      if (type === 'full_mock') return 'fullMock';
+      if (type === 'pyq') return 'pyq';
+      if (type === 'topic' || type === 'chapter_mock' || type === 'subject_mock') return 'topic';
+      return null;
+    };
+
+    if (!isSupabaseConfigured) {
+      for (const t of localTests) {
+        const kind = classify((t as any).testType);
+        if (kind) bump(t.examId, kind);
+      }
+      return counts;
+    }
+
+    try {
+      const { data: tests, error: testsError } = await (supabase as any)
+        .from('tests')
+        .select('id, exam_id, test_type');
+      if (testsError) return counts;
+
+      const { data: assoc, error: assocError } = await (supabase as any)
+        .from('test_exams')
+        .select('test_id, exam_id');
+
+      const seen = new Set<string>();
+      for (const row of tests ?? []) {
+        const kind = classify(row.test_type);
+        if (!kind) continue;
+        bump(row.exam_id, kind);
+        if (row.exam_id) seen.add(`${row.id}:${row.exam_id}`);
+      }
+      // Extra exam links from the junction (skip duplicates of the owning exam_id)
+      for (const row of assoc ?? []) {
+        if (assocError) break;
+        const kind = classify((tests ?? []).find((t: any) => t.id === row.test_id)?.test_type);
+        if (!kind) continue;
+        const key = `${row.test_id}:${row.exam_id}`;
+        if (!seen.has(key)) {
+          bump(row.exam_id, kind);
+          seen.add(key);
+        }
+      }
+    } catch {
+      // Fail soft: UI falls back to 0s
+    }
+    return counts;
+  },
+
   async getAllAdminExams(): Promise<Exam[]> {
+    const [contentCounts] = await Promise.all([this.getExamContentCounts()]);
+    const empty = { fullMock: 0, pyq: 0, topic: 0 };
     if (!isSupabaseConfigured) {
       return localExams.map((e) => ({
         ...e,
-        subjectsCount: localSubjects.filter((s) => s.examId === e.id).length,
-        testsCount: localTests.filter((t) => t.examId === e.id).length,
+        fullMockCount: contentCounts[e.id]?.fullMock ?? empty.fullMock,
+        pyqCount: contentCounts[e.id]?.pyq ?? empty.pyq,
+        topicTestCount: contentCounts[e.id]?.topic ?? empty.topic,
       }));
     }
     try {
@@ -51,8 +115,9 @@ export const adminApi = {
       if (error || !data || data.length === 0) {
         return localExams.map((e) => ({
           ...e,
-          subjectsCount: localSubjects.filter((s) => s.examId === e.id).length,
-          testsCount: localTests.filter((t) => t.examId === e.id).length,
+          fullMockCount: contentCounts[e.id]?.fullMock ?? empty.fullMock,
+          pyqCount: contentCounts[e.id]?.pyq ?? empty.pyq,
+          topicTestCount: contentCounts[e.id]?.topic ?? empty.topic,
         }));
       }
 
@@ -66,8 +131,9 @@ export const adminApi = {
         bannerUrl: item.banner_url ?? undefined,
         orderIndex: item.order_index,
         isActive: item.is_active,
-        subjectsCount: localSubjects.filter((s) => s.examId === item.id).length,
-        testsCount: localTests.filter((t) => t.examId === item.id).length,
+        fullMockCount: contentCounts[item.id]?.fullMock ?? empty.fullMock,
+        pyqCount: contentCounts[item.id]?.pyq ?? empty.pyq,
+        topicTestCount: contentCounts[item.id]?.topic ?? empty.topic,
       }));
     } catch {
       return localExams;
@@ -86,8 +152,9 @@ export const adminApi = {
       id,
       ...examData,
       slug,
-      subjectsCount: 0,
-      testsCount: 0,
+      fullMockCount: 0,
+      pyqCount: 0,
+      topicTestCount: 0,
     };
 
     if (isSupabaseConfigured) {
