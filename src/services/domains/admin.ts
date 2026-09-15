@@ -782,6 +782,10 @@ export const adminApi = {
           description: newTest.description || null,
           test_type: newTest.testType,
           year: newTest.year || null,
+          paper_name: newTest.paperName || null,
+          shift: newTest.shift || null,
+          set_name: newTest.setName || null,
+          exam_date: newTest.examDate || null,
           duration_minutes: newTest.durationMinutes,
           total_questions: newTest.totalQuestions || 0,
           total_marks: newTest.totalMarks || 0,
@@ -820,13 +824,22 @@ export const adminApi = {
         const payload: Record<string, unknown> = {};
         if (updates.examId !== undefined) payload.exam_id = updates.examId;
         if (updates.subjectId !== undefined) payload.subject_id = updates.subjectId;
-        if (updates.chapterId !== undefined) payload.chapter_id = updates.chapterId;
+        if (updates.chapterId !== undefined) {
+          payload.chapter_id = updates.chapterId;
+        }
+        if (updates.topicId !== undefined) {
+          payload.chapter_id = updates.topicId;
+        }
         if (updates.testSeriesId !== undefined) payload.test_series_id = updates.testSeriesId;
         if (updates.title !== undefined) payload.title = updates.title;
         if (updates.slug !== undefined) payload.slug = updates.slug;
         if (updates.description !== undefined) payload.description = updates.description;
         if (updates.testType !== undefined) payload.test_type = updates.testType;
         if (updates.year !== undefined) payload.year = updates.year;
+        if (updates.paperName !== undefined) payload.paper_name = updates.paperName;
+        if (updates.shift !== undefined) payload.shift = updates.shift;
+        if (updates.setName !== undefined) payload.set_name = updates.setName;
+        if (updates.examDate !== undefined) payload.exam_date = updates.examDate;
         if (updates.durationMinutes !== undefined)
           payload.duration_minutes = updates.durationMinutes;
         if (updates.totalQuestions !== undefined) payload.total_questions = updates.totalQuestions;
@@ -982,7 +995,9 @@ export const adminApi = {
   async getAllAdminQuestions(filters?: {
     subjectId?: string;
     chapterId?: string;
+    topicId?: string;
     difficulty?: string;
+    sourceType?: string;
     search?: string;
     status?: string;
   }): Promise<Question[]> {
@@ -995,15 +1010,18 @@ export const adminApi = {
           .select('*')
           .order('created_at', { ascending: false });
         if (filters?.subjectId) query = query.eq('subject_id', filters.subjectId);
-        if (filters?.chapterId) query = query.eq('chapter_id', filters.chapterId);
+        const chapId = filters?.topicId || filters?.chapterId;
+        if (chapId) query = query.or(`chapter_id.eq.${chapId},topic_id.eq.${chapId}`);
         if (filters?.difficulty) query = query.eq('difficulty', filters.difficulty);
+        if (filters?.sourceType) query = query.eq('source_type', filters.sourceType);
         if (filters?.status) query = query.eq('status', filters.status);
 
         const { data, error } = await query;
         if (!error && data && data.length > 0) {
           questions = (data as QuestionRow[]).map((q) => ({
             id: q.id,
-            chapterId: q.chapter_id ?? undefined,
+            chapterId: q.chapter_id ?? q.topic_id ?? undefined,
+            topicId: q.topic_id ?? q.chapter_id ?? undefined,
             subjectId: q.subject_id ?? undefined,
             questionText: q.question_text,
             questionBengaliText: q.question_bengali_text ?? undefined,
@@ -1017,6 +1035,12 @@ export const adminApi = {
             difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
             defaultMarks: Number(q.default_marks || 1),
             defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+            questionType: q.question_type || 'mcq',
+            sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
+            sourceYear: q.source_year ? Number(q.source_year) : undefined,
+            sourceExam: q.source_exam ?? undefined,
+            sourcePaper: q.source_paper ?? undefined,
+            sourceShift: q.source_shift ?? undefined,
             isActive: q.is_active,
             status: (q.status as 'active' | 'archived' | 'draft') || 'active',
           }));
@@ -1028,9 +1052,12 @@ export const adminApi = {
 
     if (filters) {
       if (filters.subjectId) questions = questions.filter((q) => q.subjectId === filters.subjectId);
-      if (filters.chapterId) questions = questions.filter((q) => q.chapterId === filters.chapterId);
+      if (filters.chapterId) questions = questions.filter((q) => q.chapterId === filters.chapterId || q.topicId === filters.chapterId);
+      if (filters.topicId) questions = questions.filter((q) => q.topicId === filters.topicId || q.chapterId === filters.topicId);
       if (filters.difficulty)
         questions = questions.filter((q) => q.difficulty === filters.difficulty);
+      if (filters.sourceType)
+        questions = questions.filter((q) => q.sourceType === filters.sourceType);
       if (filters.status) questions = questions.filter((q) => q.status === filters.status);
       if (filters.search) {
         const term = filters.search.toLowerCase();
@@ -1044,11 +1071,12 @@ export const adminApi = {
 
     return questions.map((q) => {
       const subject = localSubjects.find((s) => s.id === q.subjectId);
-      const chapter = localChapters.find((c) => c.id === q.chapterId);
+      const chapter = localChapters.find((c) => c.id === (q.topicId || q.chapterId));
       return {
         ...q,
         subjectName: subject?.name,
         chapterName: chapter?.name,
+        topicName: chapter?.name,
       };
     });
   },
@@ -1067,7 +1095,8 @@ export const adminApi = {
       const q = data as QuestionRow;
       return {
         id: q.id,
-        chapterId: q.chapter_id ?? undefined,
+        chapterId: q.chapter_id ?? q.topic_id ?? undefined,
+        topicId: q.topic_id ?? q.chapter_id ?? undefined,
         subjectId: q.subject_id ?? undefined,
         questionText: q.question_text,
         questionBengaliText: q.question_bengali_text ?? undefined,
@@ -1081,6 +1110,12 @@ export const adminApi = {
         difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
         defaultMarks: Number(q.default_marks || 1),
         defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+        questionType: q.question_type || 'mcq',
+        sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
+        sourceYear: q.source_year ? Number(q.source_year) : undefined,
+        sourceExam: q.source_exam ?? undefined,
+        sourcePaper: q.source_paper ?? undefined,
+        sourceShift: q.source_shift ?? undefined,
         isActive: q.is_active,
         status: (q.status as 'active' | 'archived' | 'draft') || 'active',
       };
@@ -1091,9 +1126,13 @@ export const adminApi = {
 
   async createQuestion(qData: Omit<Question, 'id'>): Promise<Question> {
     const id = `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const effectiveTopicId = qData.topicId || qData.chapterId || null;
     const newQuestion: Question = {
       id,
       ...qData,
+      topicId: effectiveTopicId || undefined,
+      chapterId: effectiveTopicId || undefined,
+      sourceType: qData.sourceType || 'topic',
       isActive: qData.isActive ?? true,
       status: qData.status || 'active',
     };
@@ -1102,7 +1141,8 @@ export const adminApi = {
       try {
         await supabase.from('questions').insert({
           id,
-          chapter_id: newQuestion.chapterId || null,
+          chapter_id: effectiveTopicId,
+          topic_id: effectiveTopicId,
           subject_id: newQuestion.subjectId || null,
           question_text: newQuestion.questionText,
           question_bengali_text: newQuestion.questionBengaliText || null,
@@ -1116,6 +1156,12 @@ export const adminApi = {
           difficulty: newQuestion.difficulty || 'medium',
           default_marks: newQuestion.defaultMarks,
           default_negative_marks: newQuestion.defaultNegativeMarks,
+          question_type: newQuestion.questionType || 'mcq',
+          source_type: newQuestion.sourceType || 'topic',
+          source_year: newQuestion.sourceYear || null,
+          source_exam: newQuestion.sourceExam || null,
+          source_paper: newQuestion.sourcePaper || null,
+          source_shift: newQuestion.sourceShift || null,
           is_active: newQuestion.isActive,
           status: newQuestion.status,
         });
@@ -1152,8 +1198,21 @@ export const adminApi = {
         if (updates.defaultMarks !== undefined) payload.default_marks = updates.defaultMarks;
         if (updates.defaultNegativeMarks !== undefined)
           payload.default_negative_marks = updates.defaultNegativeMarks;
-        if (updates.chapterId !== undefined) payload.chapter_id = updates.chapterId;
+        if (updates.topicId !== undefined) {
+          payload.topic_id = updates.topicId;
+          payload.chapter_id = updates.topicId;
+        }
+        if (updates.chapterId !== undefined) {
+          payload.chapter_id = updates.chapterId;
+          payload.topic_id = updates.chapterId;
+        }
         if (updates.subjectId !== undefined) payload.subject_id = updates.subjectId;
+        if (updates.questionType !== undefined) payload.question_type = updates.questionType;
+        if (updates.sourceType !== undefined) payload.source_type = updates.sourceType;
+        if (updates.sourceYear !== undefined) payload.source_year = updates.sourceYear;
+        if (updates.sourceExam !== undefined) payload.source_exam = updates.sourceExam;
+        if (updates.sourcePaper !== undefined) payload.source_paper = updates.sourcePaper;
+        if (updates.sourceShift !== undefined) payload.source_shift = updates.sourceShift;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
         if (updates.status !== undefined) payload.status = updates.status;
 
@@ -1164,6 +1223,33 @@ export const adminApi = {
     }
 
     return localQuestions[idx] || (updates as Question);
+  },
+
+  async getExamTopicMappings(examId: string): Promise<string[]> {
+    return catalogApi.getExamTopicMappings(examId);
+  },
+
+  async saveExamTopicMappings(examId: string, topicIds: string[]): Promise<boolean> {
+    if (!isSupabaseConfigured) return true;
+    try {
+      await supabase.from('exam_topics').delete().eq('exam_id', examId);
+      if (topicIds.length > 0) {
+        const rows = topicIds.map((tid, idx) => ({
+          exam_id: examId,
+          topic_id: tid,
+          order_index: idx + 1,
+        }));
+        const { error } = await supabase.from('exam_topics').insert(rows);
+        if (error) {
+          console.error('Error saving exam_topics:', error);
+          return false;
+        }
+      }
+      return true;
+    } catch (err) {
+      console.error('saveExamTopicMappings exception:', err);
+      return false;
+    }
   },
 
   async archiveQuestion(id: string): Promise<boolean> {

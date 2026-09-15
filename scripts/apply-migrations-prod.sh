@@ -20,6 +20,7 @@ FILES=(
   "supabase/migrations/011_make_subject_exam_id_optional.sql"
   "supabase/migrations/011_role_source_of_truth.sql"
   "supabase/migrations/013_fix_user_test_access_view.sql"
+  "supabase/migrations/014_canonical_question_bank_architecture.sql"
 )
 
 echo "Applying ${#FILES[@]} migrations to project ${SUPABASE_PROJECT_REF}..."

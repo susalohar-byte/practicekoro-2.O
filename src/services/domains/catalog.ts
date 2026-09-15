@@ -140,6 +140,77 @@ export const catalogApi = {
     }
   },
 
+  async getAllChapters(): Promise<Chapter[]> {
+    if (!isSupabaseConfigured) {
+      return Object.values(MOCK_CHAPTERS).flat();
+    }
+    try {
+      const { data, error } = await supabase
+        .from('chapters')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+      if (error || !data || data.length === 0) return Object.values(MOCK_CHAPTERS).flat();
+      return (data as ChapterRow[]).map((item) => ({
+        id: item.id,
+        subjectId: item.subject_id,
+        name: item.name,
+        slug: item.slug,
+        description: item.description ?? undefined,
+        parentId: item.parent_id ?? undefined,
+        orderIndex: item.order_index,
+        isActive: item.is_active,
+      }));
+    } catch {
+      return Object.values(MOCK_CHAPTERS).flat();
+    }
+  },
+
+  async getExamTopicMappings(examId: string): Promise<string[]> {
+    if (!isSupabaseConfigured) return [];
+    try {
+      const { data, error } = await supabase
+        .from('exam_topics')
+        .select('topic_id')
+        .eq('exam_id', examId)
+        .order('order_index', { ascending: true });
+      if (error || !data) return [];
+      return data.map((r: { topic_id: string }) => r.topic_id);
+    } catch {
+      return [];
+    }
+  },
+
+  async getExamSubjectsWithTopics(examId: string): Promise<{
+    subject: Subject;
+    topics: Chapter[];
+  }[]> {
+    try {
+      const [allSubjects, allChapters, mappedTopicIds] = await Promise.all([
+        this.getSubjects(examId),
+        this.getAllChapters(),
+        this.getExamTopicMappings(examId),
+      ]);
+
+      const mappedSet = new Set(mappedTopicIds);
+      const hasMappings = mappedTopicIds.length > 0;
+
+      const result: { subject: Subject; topics: Chapter[] }[] = [];
+      for (const subject of allSubjects) {
+        const subChapters = allChapters.filter(
+          (c) => c.subjectId === subject.id && (!hasMappings || mappedSet.has(c.id))
+        );
+        if (subChapters.length > 0) {
+          result.push({ subject, topics: subChapters });
+        }
+      }
+      return result;
+    } catch (err) {
+      console.error('Error in getExamSubjectsWithTopics:', err);
+      return [];
+    }
+  },
+
   async getTests(chapterId?: string, examId?: string): Promise<MockTest[]> {
     if (!isSupabaseConfigured) {
       return localTests.filter(
@@ -195,12 +266,17 @@ export const catalogApi = {
         examId: item.exam_id,
         subjectId: item.subject_id ?? undefined,
         chapterId: item.chapter_id ?? undefined,
+        topicId: item.chapter_id ?? undefined,
         testSeriesId: item.test_series_id ?? undefined,
         title: item.title,
         slug: item.slug,
         description: item.description ?? undefined,
         testType: item.test_type,
         year: item.year ? Number(item.year) : undefined,
+        paperName: item.paper_name ?? undefined,
+        shift: item.shift ?? undefined,
+        setName: item.set_name ?? undefined,
+        examDate: item.exam_date ?? undefined,
         durationMinutes: item.duration_minutes,
         totalQuestions: item.total_questions,
         totalMarks: Number(item.total_marks),
@@ -213,6 +289,7 @@ export const catalogApi = {
         examTitle: item.exams?.title,
         subjectName: item.subjects?.name,
         chapterName: item.chapters?.name,
+        topicName: item.chapters?.name,
         testSeriesTitle: item.test_series?.title,
       }));
     } catch {

@@ -66,6 +66,9 @@ const AdminSubjects = React.lazy(() =>
 const AdminChapters = React.lazy(() =>
   import('@/pages/admin/AdminChapters').then((module) => ({ default: module.AdminChapters }))
 );
+const AdminExamTopics = React.lazy(() =>
+  import('@/pages/admin/AdminExamTopics').then((module) => ({ default: module.AdminExamTopics }))
+);
 const AdminTestSeries = React.lazy(() =>
   import('@/pages/admin/AdminTestSeries').then((module) => ({ default: module.AdminTestSeries }))
 );
@@ -231,7 +234,9 @@ export const App: React.FC = () => {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="exams" element={<AdminExams />} />
+          <Route path="exam-topics" element={<AdminExamTopics />} />
           <Route path="subjects" element={<AdminSubjects />} />
+          <Route path="topics" element={<AdminChapters />} />
           <Route path="chapters" element={<AdminChapters />} />
           <Route path="test-series" element={<AdminTestSeries />} />
           <Route path="tests" element={<AdminTests />} />

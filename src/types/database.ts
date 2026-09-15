@@ -113,6 +113,7 @@ export interface Database {
           name: string;
           slug: string;
           description: string | null;
+          parent_id: string | null;
           order_index: number;
           is_active: boolean;
           created_at: string;
@@ -124,12 +125,30 @@ export interface Database {
           name: string;
           slug: string;
           description?: string | null;
+          parent_id?: string | null;
           order_index?: number;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['chapters']['Insert']>;
+      };
+      exam_topics: {
+        Row: {
+          id: string;
+          exam_id: string;
+          topic_id: string;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          exam_id: string;
+          topic_id: string;
+          order_index?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['exam_topics']['Insert']>;
       };
       test_series: {
         Row: {
@@ -175,6 +194,11 @@ export interface Database {
           passing_marks: number;
           negative_marking: number;
           is_premium: boolean;
+          year: number | null;
+          paper_name: string | null;
+          shift: string | null;
+          set_name: string | null;
+          exam_date: string | null;
           order_index: number;
           is_active: boolean;
           status: 'draft' | 'published' | 'archived';
@@ -197,6 +221,11 @@ export interface Database {
           passing_marks?: number;
           negative_marking?: number;
           is_premium?: boolean;
+          year?: number | null;
+          paper_name?: string | null;
+          shift?: string | null;
+          set_name?: string | null;
+          exam_date?: string | null;
           order_index?: number;
           is_active?: boolean;
           status?: 'draft' | 'published' | 'archived';
@@ -209,6 +238,7 @@ export interface Database {
         Row: {
           id: string;
           chapter_id: string | null;
+          topic_id: string | null;
           subject_id: string | null;
           question_text: string;
           question_bengali_text: string | null;
@@ -222,6 +252,12 @@ export interface Database {
           difficulty?: DifficultyLevel | null;
           default_marks: number;
           default_negative_marks: number;
+          question_type: string | null;
+          source_type: 'topic' | 'pyq' | 'other' | null;
+          source_year: number | null;
+          source_exam: string | null;
+          source_paper: string | null;
+          source_shift: string | null;
           is_active: boolean;
           status: 'active' | 'archived' | 'draft';
           created_at: string;
@@ -230,6 +266,7 @@ export interface Database {
         Insert: {
           id?: string;
           chapter_id?: string | null;
+          topic_id?: string | null;
           subject_id?: string | null;
           question_text: string;
           question_bengali_text?: string | null;
@@ -243,6 +280,12 @@ export interface Database {
           difficulty?: DifficultyLevel | null;
           default_marks?: number;
           default_negative_marks?: number;
+          question_type?: string | null;
+          source_type?: 'topic' | 'pyq' | 'other' | null;
+          source_year?: number | null;
+          source_exam?: string | null;
+          source_paper?: string | null;
+          source_shift?: string | null;
           is_active?: boolean;
           status?: 'active' | 'archived' | 'draft';
           created_at?: string;

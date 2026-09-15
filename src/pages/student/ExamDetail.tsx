@@ -20,7 +20,7 @@ import {
   FileCheck2,
   Calendar,
 } from 'lucide-react';
-import type { MockTest, Subject } from '@/types';
+import type { MockTest, Subject, Chapter } from '@/types';
 
 type ExamTab = 'full-mock' | 'pyq' | 'topic-tests';
 
@@ -44,8 +44,15 @@ export const ExamDetail: React.FC = () => {
     }
   }, [currentExam, selectedExam, setSelectedExam]);
 
-  // Active Tab: from URL search params or default to full-mock
-  const tabParam = searchParams.get('tab') as ExamTab;
+  // Active Tab: from URL pathname, search params, or default to full-mock
+  const pathTab = location.pathname.endsWith('/pyq')
+    ? 'pyq'
+    : location.pathname.endsWith('/topic-tests')
+    ? 'topic-tests'
+    : location.pathname.endsWith('/full-mock')
+    ? 'full-mock'
+    : null;
+  const tabParam = (searchParams.get('tab') as ExamTab) || pathTab;
   const [activeTab, setActiveTab] = useState<ExamTab>(
     tabParam === 'pyq' || tabParam === 'topic-tests' ? tabParam : 'full-mock'
   );
@@ -61,6 +68,9 @@ export const ExamDetail: React.FC = () => {
   const [pyqTests, setPyqTests] = useState<MockTest[]>([]);
   const [topicTests, setTopicTests] = useState<MockTest[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [examSubjectsWithTopics, setExamSubjectsWithTopics] = useState<
+    { subject: Subject; topics: Chapter[] }[]
+  >([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
 
@@ -68,23 +78,25 @@ export const ExamDetail: React.FC = () => {
   const [selectedLockedTest, setSelectedLockedTest] = useState<MockTest | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  // Load all tests for this exam
+  // Load all tests and mapped topics for this exam
   useEffect(() => {
     async function loadExamData() {
       if (!currentExam) return;
       setLoading(true);
       try {
-        const [fullMocks, pyqs, topics, subList] = await Promise.all([
+        const [fullMocks, pyqs, topics, subList, mappedSubjects] = await Promise.all([
           api.getTestsForExam(currentExam.id, 'full_mock'),
           api.getTestsForExam(currentExam.id, 'pyq'),
           api.getTestsForExam(currentExam.id, 'topic'),
           api.getSubjects(currentExam.id),
+          api.getExamSubjectsWithTopics(currentExam.id),
         ]);
 
         setFullMockTests(fullMocks);
         setPyqTests(pyqs);
         setTopicTests(topics);
-        setSubjects(subList);
+        setSubjects(mappedSubjects.length > 0 ? mappedSubjects.map((m) => m.subject) : subList);
+        setExamSubjectsWithTopics(mappedSubjects);
       } catch (err) {
         console.error('Failed to load tests for exam:', err);
       } finally {
@@ -115,6 +127,11 @@ export const ExamDetail: React.FC = () => {
     if (selectedSubjectId === 'all') return topicTests;
     return topicTests.filter((t) => t.subjectId === selectedSubjectId);
   }, [topicTests, selectedSubjectId]);
+
+  const visibleSubjectGroups = useMemo(() => {
+    if (selectedSubjectId === 'all') return examSubjectsWithTopics;
+    return examSubjectsWithTopics.filter((item) => item.subject.id === selectedSubjectId);
+  }, [examSubjectsWithTopics, selectedSubjectId]);
 
   const handleTestClick = (test: MockTest) => {
     const isLocked = test.isPremium && !isPro && user?.role !== 'admin';
@@ -595,101 +612,183 @@ export const ExamDetail: React.FC = () => {
                   <div key={n} className="h-28 bg-slate-200 animate-pulse rounded-2xl" />
                 ))}
               </div>
-            ) : filteredTopicTests.length === 0 ? (
+            ) : filteredTopicTests.length === 0 && visibleSubjectGroups.length === 0 ? (
               <EmptyState
                 title="No topic tests available for this selection"
                 description="Topic tests for this subject are being linked to this exam curriculum."
               />
             ) : (
-              <div className="space-y-3">
-                {filteredTopicTests.map((test) => {
-                  const isLocked = test.isPremium && !isPro && user?.role !== 'admin';
+              <div className="space-y-6">
+                {/* Configured Topic Tests */}
+                {filteredTopicTests.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Standardized Topic Mock Tests ({filteredTopicTests.length})
+                    </h3>
+                    {filteredTopicTests.map((test) => {
+                      const isLocked = test.isPremium && !isPro && user?.role !== 'admin';
 
-                  return (
-                    <Card
-                      key={test.id}
-                      hoverable
-                      onClick={() => handleTestClick(test)}
-                      className={`p-5 transition-all cursor-pointer border ${
-                        isLocked
-                          ? 'border-amber-200/80 hover:border-amber-300'
-                          : 'border-slate-200 hover:border-blue-300'
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="space-y-2 max-w-xl">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                              📚 TOPIC TEST
-                            </span>
-                            {test.subjectName && (
-                              <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                                {test.subjectName}
-                              </span>
-                            )}
-                            {test.chapterName && (
-                              <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                                {test.chapterName}
-                              </span>
-                            )}
-                            {test.isPremium ? (
-                              <Badge variant="premium" className="text-[10px] py-0 px-2">
-                                <Crown className="w-2.5 h-2.5 inline mr-1" />
-                                Pro Pass
-                              </Badge>
-                            ) : (
-                              <Badge variant="free" className="text-[10px] py-0 px-2">
-                                Free Topic Test
-                              </Badge>
-                            )}
+                      return (
+                        <Card
+                          key={test.id}
+                          hoverable
+                          onClick={() => handleTestClick(test)}
+                          className={`p-5 transition-all cursor-pointer border ${
+                            isLocked
+                              ? 'border-amber-200/80 hover:border-amber-300'
+                              : 'border-slate-200 hover:border-blue-300'
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="space-y-2 max-w-xl">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                                  📚 TOPIC TEST
+                                </span>
+                                {test.subjectName && (
+                                  <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                                    {test.subjectName}
+                                  </span>
+                                )}
+                                {test.chapterName && (
+                                  <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                                    {test.chapterName}
+                                  </span>
+                                )}
+                                {test.isPremium ? (
+                                  <Badge variant="premium" className="text-[10px] py-0 px-2">
+                                    <Crown className="w-2.5 h-2.5 inline mr-1" />
+                                    Pro Pass
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="free" className="text-[10px] py-0 px-2">
+                                    Free Topic Test
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                                {test.title}
+                              </h3>
+
+                              <div className="flex items-center gap-4 text-xs text-slate-500 font-medium flex-wrap">
+                                <span className="flex items-center gap-1">
+                                  <FileCheck2 className="w-3.5 h-3.5 text-slate-400" />
+                                  {test.totalQuestions} Questions
+                                </span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                  {test.durationMinutes} Mins
+                                </span>
+                                <span>•</span>
+                                <span>{test.totalMarks} Marks</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {isLocked ? (
+                                <Button
+                                  variant="pro"
+                                  size="sm"
+                                  className="w-full sm:w-auto font-bold gap-1 text-xs"
+                                  onClick={(e) => handleStartRunner(test, e)}
+                                >
+                                  <Lock className="w-3.5 h-3.5" />
+                                  Unlock Topic
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  className="w-full sm:w-auto font-bold gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                                  onClick={(e) => handleStartRunner(test, e)}
+                                >
+                                  <Play className="w-3.5 h-3.5 fill-current" />
+                                  Practice Topic
+                                </Button>
+                              )}
+                            </div>
                           </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
 
-                          <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                            {test.title}
-                          </h3>
+                {/* Mapped Curriculum Topics Grid */}
+                {visibleSubjectGroups.length > 0 && (
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                        Mapped Syllabus Topics ({visibleSubjectGroups.reduce((acc, g) => acc + g.topics.length, 0)} Topics)
+                      </h3>
+                      <span className="text-[11px] text-slate-400">
+                        Concept-level questions from question bank
+                      </span>
+                    </div>
 
-                          <div className="flex items-center gap-4 text-xs text-slate-500 font-medium flex-wrap">
-                            <span className="flex items-center gap-1">
-                              <FileCheck2 className="w-3.5 h-3.5 text-slate-400" />
-                              {test.totalQuestions} Questions
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5 text-slate-400" />
-                              {test.durationMinutes} Mins
-                            </span>
-                            <span>•</span>
-                            <span>{test.totalMarks} Marks</span>
-                          </div>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {visibleSubjectGroups.flatMap((group) =>
+                        group.topics.map((topic) => {
+                          const topicTest = topicTests.find(
+                            (t) => t.chapterId === topic.id || t.topicId === topic.id
+                          );
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isLocked ? (
-                            <Button
-                              variant="pro"
-                              size="sm"
-                              className="w-full sm:w-auto font-bold gap-1 text-xs"
-                              onClick={(e) => handleStartRunner(test, e)}
+                          return (
+                            <div
+                              key={topic.id}
+                              className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-400 transition-all flex flex-col justify-between gap-3 shadow-xs"
                             >
-                              <Lock className="w-3.5 h-3.5" />
-                              Unlock Topic
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              className="w-full sm:w-auto font-bold gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                              onClick={(e) => handleStartRunner(test, e)}
-                            >
-                              <Play className="w-3.5 h-3.5 fill-current" />
-                              Practice Topic
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700">
+                                    {group.subject.name}
+                                  </span>
+                                  {topicTest && (
+                                    <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                      {topicTest.totalQuestions} Qs
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 className="text-sm font-bold text-slate-900 leading-snug">{topic.name}</h4>
+                                {topic.description && (
+                                  <p className="text-xs text-slate-500 line-clamp-1">{topic.description}</p>
+                                )}
+                              </div>
+
+                              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <span className="text-[11px] text-slate-400 font-medium">
+                                  {topicTest ? `${topicTest.durationMinutes}m test` : 'Topic Bank'}
+                                </span>
+                                {topicTest ? (
+                                  <Button
+                                    size="sm"
+                                    variant="primary"
+                                    className="text-xs py-1 px-3 bg-blue-600 hover:bg-blue-700"
+                                    onClick={(e) => handleStartRunner(topicTest, e)}
+                                  >
+                                    <Play className="w-3 h-3 fill-current" /> Start Drill
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs py-1 px-3 border-blue-200 text-blue-600 hover:bg-blue-50"
+                                    onClick={() => navigate(`/practice?chapterId=${topic.id}`)}
+                                  >
+                                    Practice Drill
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

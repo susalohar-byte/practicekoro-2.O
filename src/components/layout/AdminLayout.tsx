@@ -16,6 +16,7 @@ import {
   X,
   Sparkles,
   ExternalLink,
+  Network,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,11 +28,12 @@ export const AdminLayout: React.FC = () => {
   const adminNav = [
     { label: 'Overview', path: '/admin', icon: LayoutDashboard, end: true },
     { label: 'Manage Exams', path: '/admin/exams', icon: Shield },
+    { label: 'Exam Topics Map', path: '/admin/exam-topics', icon: Network },
     { label: 'Subjects', path: '/admin/subjects', icon: BookOpen },
-    { label: 'Chapters', path: '/admin/chapters', icon: FolderTree },
-    { label: 'Test Series', path: '/admin/test-series', icon: ListOrdered },
-    { label: 'Mock Tests', path: '/admin/tests', icon: Layers },
+    { label: 'Topics Bank', path: '/admin/topics', icon: FolderTree },
     { label: 'Questions Bank', path: '/admin/questions', icon: FileQuestion },
+    { label: 'Mock Tests & PYQ', path: '/admin/tests', icon: Layers },
+    { label: 'Test Series', path: '/admin/test-series', icon: ListOrdered },
     { label: 'Subscriptions', path: '/admin/subscriptions', icon: CreditCard },
   ];
 

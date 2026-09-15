@@ -15,6 +15,8 @@ export const AdminQuestions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+  const [selectedSourceType, setSelectedSourceType] = useState<'all' | 'topic' | 'pyq'>('all');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,6 +25,12 @@ export const AdminQuestions: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [sourceType, setSourceType] = useState<'topic' | 'pyq'>('topic');
+  const [sourceYear, setSourceYear] = useState('');
+  const [sourceExam, setSourceExam] = useState('');
+  const [sourcePaper, setSourcePaper] = useState('');
+  const [sourceShift, setSourceShift] = useState('');
   const [questionText, setQuestionText] = useState('');
   const [questionBengaliText, setQuestionBengaliText] = useState('');
   const [optionA, setOptionA] = useState('');
@@ -57,6 +65,8 @@ export const AdminQuestions: React.FC = () => {
         api.getAllAdminQuestions({
           subjectId: selectedSubjectId || undefined,
           chapterId: selectedChapterId || undefined,
+          difficulty: selectedDifficulty !== 'all' ? selectedDifficulty : undefined,
+          sourceType: selectedSourceType !== 'all' ? selectedSourceType : undefined,
           status: selectedStatus || undefined,
           search: searchTerm || undefined,
         }),
@@ -69,7 +79,7 @@ export const AdminQuestions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedSubjectId, selectedChapterId, selectedStatus, searchTerm]);
+  }, [selectedSubjectId, selectedChapterId, selectedDifficulty, selectedSourceType, selectedStatus, searchTerm]);
 
   useEffect(() => {
     loadData();
@@ -82,6 +92,12 @@ export const AdminQuestions: React.FC = () => {
     setEditingQuestion(null);
     setSubjectId(selectedSubjectId || subjects[0]?.id || '');
     setChapterId(selectedChapterId || '');
+    setDifficulty('medium');
+    setSourceType('topic');
+    setSourceYear('');
+    setSourceExam('');
+    setSourcePaper('');
+    setSourceShift('');
     setQuestionText('');
     setQuestionBengaliText('');
     setOptionA('');
@@ -100,7 +116,15 @@ export const AdminQuestions: React.FC = () => {
   const openEditModal = (q: Question) => {
     setEditingQuestion(q);
     setSubjectId(q.subjectId || '');
-    setChapterId(q.chapterId || '');
+    setChapterId(q.chapterId || q.topicId || '');
+    setDifficulty(
+      q.difficulty === 'easy' || q.difficulty === 'hard' ? q.difficulty : 'medium'
+    );
+    setSourceType(q.sourceType === 'pyq' ? 'pyq' : 'topic');
+    setSourceYear(q.sourceYear ? String(q.sourceYear) : '');
+    setSourceExam(q.sourceExam || '');
+    setSourcePaper(q.sourcePaper || '');
+    setSourceShift(q.sourceShift || '');
     setQuestionText(q.questionText);
     setQuestionBengaliText(q.questionBengaliText || '');
     setOptionA(q.optionA);
@@ -128,10 +152,18 @@ export const AdminQuestions: React.FC = () => {
     }
 
     try {
+      const parsedYear = sourceType === 'pyq' && sourceYear.trim() ? parseInt(sourceYear.trim(), 10) : undefined;
       if (editingQuestion) {
         await api.updateQuestion(editingQuestion.id, {
           subjectId: subjectId || undefined,
           chapterId: chapterId || undefined,
+          topicId: chapterId || undefined,
+          difficulty,
+          sourceType,
+          sourceYear: parsedYear && !isNaN(parsedYear) ? parsedYear : undefined,
+          sourceExam: sourceType === 'pyq' && sourceExam.trim() ? sourceExam.trim() : undefined,
+          sourcePaper: sourceType === 'pyq' && sourcePaper.trim() ? sourcePaper.trim() : undefined,
+          sourceShift: sourceType === 'pyq' && sourceShift.trim() ? sourceShift.trim() : undefined,
           questionText: questionText.trim(),
           questionBengaliText: questionBengaliText.trim() || undefined,
           optionA: optionA.trim(),
@@ -148,6 +180,13 @@ export const AdminQuestions: React.FC = () => {
         await api.createQuestion({
           subjectId: subjectId || undefined,
           chapterId: chapterId || undefined,
+          topicId: chapterId || undefined,
+          difficulty,
+          sourceType,
+          sourceYear: parsedYear && !isNaN(parsedYear) ? parsedYear : undefined,
+          sourceExam: sourceType === 'pyq' && sourceExam.trim() ? sourceExam.trim() : undefined,
+          sourcePaper: sourceType === 'pyq' && sourcePaper.trim() ? sourcePaper.trim() : undefined,
+          sourceShift: sourceType === 'pyq' && sourceShift.trim() ? sourceShift.trim() : undefined,
           questionText: questionText.trim(),
           questionBengaliText: questionBengaliText.trim() || undefined,
           optionA: optionA.trim(),
@@ -292,9 +331,9 @@ export const AdminQuestions: React.FC = () => {
 
       {/* Filters Bar */}
       <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {/* Search */}
-          <div className="lg:col-span-2 relative">
+          <div className="sm:col-span-2 md:col-span-3 lg:col-span-2 relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
@@ -324,14 +363,14 @@ export const AdminQuestions: React.FC = () => {
             </select>
           </div>
 
-          {/* Chapter Filter */}
+          {/* Chapter / Topic Filter */}
           <div>
             <select
               value={selectedChapterId}
               onChange={(e) => setSelectedChapterId(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
             >
-              <option value="">All Chapters</option>
+              <option value="">All Topics / Chapters</option>
               {(selectedSubjectId
                 ? chapters.filter((c) => c.subjectId === selectedSubjectId)
                 : chapters
@@ -343,8 +382,35 @@ export const AdminQuestions: React.FC = () => {
             </select>
           </div>
 
-          {/* Status Filter */}
+          {/* Difficulty Filter */}
           <div>
+            <select
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="all">All Difficulties</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+
+          {/* Source Type Filter */}
+          <div>
+            <select
+              value={selectedSourceType}
+              onChange={(e) => setSelectedSourceType(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="all">All Sources</option>
+              <option value="topic">Topic Questions</option>
+              <option value="pyq">PYQ (Previous Year)</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="sm:col-span-2 md:col-span-1 lg:col-span-1">
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
@@ -382,13 +448,38 @@ export const AdminQuestions: React.FC = () => {
             >
               {/* Question Header */}
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="w-6 h-6 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-400 font-mono font-bold text-xs flex items-center justify-center">
                     #{idx + 1}
                   </span>
                   <span className="text-[11px] font-mono text-slate-400">
                     +{q.defaultMarks} / -{q.defaultNegativeMarks} Marks
                   </span>
+
+                  {/* Difficulty Badge */}
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                      q.difficulty === 'easy'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : q.difficulty === 'hard'
+                        ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    }`}
+                  >
+                    {q.difficulty || 'medium'}
+                  </span>
+
+                  {/* Source Type / PYQ Badge */}
+                  {q.sourceType === 'pyq' ? (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                      📜 PYQ {q.sourceYear || ''} {q.sourceExam ? `• ${q.sourceExam}` : ''} {q.sourceShift ? `(${q.sourceShift})` : ''}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      📚 Topic
+                    </span>
+                  )}
+
                   {q.subjectName && (
                     <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
                       {q.subjectName}
@@ -538,7 +629,7 @@ export const AdminQuestions: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    Chapter (Optional)
+                    Topic / Chapter (Optional)
                   </label>
                   <select
                     value={chapterId}
@@ -554,6 +645,114 @@ export const AdminQuestions: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              {/* Difficulty & Source Type */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                    Difficulty Level
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['easy', 'medium', 'hard'] as const).map((diff) => (
+                      <button
+                        key={diff}
+                        type="button"
+                        onClick={() => setDifficulty(diff)}
+                        className={`py-2 rounded-xl font-bold text-xs capitalize border transition-all ${
+                          difficulty === diff
+                            ? diff === 'easy'
+                              ? 'bg-emerald-600 text-white border-emerald-500'
+                              : diff === 'hard'
+                              ? 'bg-rose-600 text-white border-rose-500'
+                              : 'bg-amber-600 text-white border-amber-500'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {diff}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                    Question Origin / Source
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSourceType('topic')}
+                      className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                        sourceType === 'topic'
+                          ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      📚 Topic Bank
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSourceType('pyq')}
+                      className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                        sourceType === 'pyq'
+                          ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      📜 PYQ Paper
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conditional PYQ Fields */}
+              {sourceType === 'pyq' && (
+                <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                      Previous Year Question (PYQ) Details
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Exam Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. WBCS Prelims, KP Constable"
+                        value={sourceExam}
+                        onChange={(e) => setSourceExam(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Year
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 2024"
+                        value={sourceYear}
+                        onChange={(e) => setSourceYear(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Shift / Session
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Shift 1"
+                        value={sourceShift}
+                        onChange={(e) => setSourceShift(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Question Texts */}
               <div>

@@ -50,9 +50,23 @@ export interface Chapter {
   name: string;
   slug: string;
   description?: string;
+  parentId?: string;
   orderIndex: number;
   isActive: boolean;
   testsCount?: number;
+}
+
+export type Topic = Chapter;
+
+export interface ExamTopicMapping {
+  id?: string;
+  examId: string;
+  topicId: string;
+  orderIndex?: number;
+  createdAt?: string;
+  topicName?: string;
+  subjectName?: string;
+  subjectId?: string;
 }
 
 export interface TestSeries {
@@ -75,6 +89,7 @@ export interface MockTest {
   examId: string;
   subjectId?: string;
   chapterId?: string;
+  topicId?: string;
   testSeriesId?: string;
   title: string;
   slug: string;
@@ -87,6 +102,10 @@ export interface MockTest {
   negativeMarking: number;
   isPremium: boolean;
   year?: number;
+  paperName?: string;
+  shift?: string;
+  setName?: string;
+  examDate?: string;
   associatedExamIds?: string[];
   orderIndex: number;
   isActive: boolean;
@@ -94,12 +113,14 @@ export interface MockTest {
   examTitle?: string;
   subjectName?: string;
   chapterName?: string;
+  topicName?: string;
   testSeriesTitle?: string;
 }
 
 export interface Question {
   id: string;
   chapterId?: string;
+  topicId?: string;
   subjectId?: string;
   questionText: string;
   questionBengaliText?: string;
@@ -113,10 +134,17 @@ export interface Question {
   difficulty?: 'easy' | 'medium' | 'hard' | string;
   defaultMarks: number;
   defaultNegativeMarks: number;
+  questionType?: string;
+  sourceType?: 'topic' | 'pyq' | 'other';
+  sourceYear?: number;
+  sourceExam?: string;
+  sourcePaper?: string;
+  sourceShift?: string;
   isActive: boolean;
   status?: 'active' | 'archived' | 'draft';
   subjectName?: string;
   chapterName?: string;
+  topicName?: string;
 }
 
 export interface AdminDashboardStats {

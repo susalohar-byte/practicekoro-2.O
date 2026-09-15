@@ -59,6 +59,10 @@ export const AdminTests: React.FC = () => {
     'chapter_mock' | 'full_mock' | 'subject_mock' | 'pyq' | 'topic'
   >('chapter_mock');
   const [year, setYear] = useState<number | ''>('');
+  const [paperName, setPaperName] = useState('');
+  const [shift, setShift] = useState('');
+  const [setName, setSetName] = useState('');
+  const [examDate, setExamDate] = useState('');
   const [associatedExamIds, setAssociatedExamIds] = useState<string[]>([]);
   const [durationMinutes, setDurationMinutes] = useState(15);
   const [totalMarks, setTotalMarks] = useState(25);
@@ -139,6 +143,10 @@ export const AdminTests: React.FC = () => {
     setDescription('');
     setTestType('full_mock');
     setYear('');
+    setPaperName('');
+    setShift('');
+    setSetName('');
+    setExamDate('');
     setAssociatedExamIds(initialExam ? [initialExam] : []);
     setDurationMinutes(15);
     setTotalMarks(25);
@@ -161,6 +169,10 @@ export const AdminTests: React.FC = () => {
     setDescription(t.description || '');
     setTestType(t.testType);
     setYear(t.year || '');
+    setPaperName(t.paperName || '');
+    setShift(t.shift || '');
+    setSetName(t.setName || '');
+    setExamDate(t.examDate || '');
     setAssociatedExamIds([t.examId]);
     api.getTestExamAssociations(t.id).then((assocs) => {
       if (assocs && assocs.length > 0) {
@@ -215,6 +227,10 @@ export const AdminTests: React.FC = () => {
           description: description.trim() || undefined,
           testType,
           year: testType === 'pyq' && year ? Number(year) : undefined,
+          paperName: testType === 'pyq' && paperName.trim() ? paperName.trim() : undefined,
+          shift: testType === 'pyq' && shift.trim() ? shift.trim() : undefined,
+          setName: testType === 'pyq' && setName.trim() ? setName.trim() : undefined,
+          examDate: testType === 'pyq' && examDate.trim() ? examDate.trim() : undefined,
           associatedExamIds,
           durationMinutes: Number(durationMinutes),
           totalMarks: Number(totalMarks),
@@ -240,6 +256,10 @@ export const AdminTests: React.FC = () => {
           description: description.trim() || undefined,
           testType,
           year: testType === 'pyq' && year ? Number(year) : undefined,
+          paperName: testType === 'pyq' && paperName.trim() ? paperName.trim() : undefined,
+          shift: testType === 'pyq' && shift.trim() ? shift.trim() : undefined,
+          setName: testType === 'pyq' && setName.trim() ? setName.trim() : undefined,
+          examDate: testType === 'pyq' && examDate.trim() ? examDate.trim() : undefined,
           associatedExamIds,
           durationMinutes: Number(durationMinutes),
           totalQuestions: 0,
@@ -509,9 +529,23 @@ export const AdminTests: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-4 capitalize text-slate-300">
-                      <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] font-medium">
-                        {test.testType.replace('_', ' ')}
-                      </span>
+                      {test.testType === 'pyq' ? (
+                        <span className="px-2 py-0.5 rounded-md bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold">
+                          📜 PYQ {test.year || ''} {test.paperName ? `• ${test.paperName}` : ''} {test.shift ? `(${test.shift})` : ''}
+                        </span>
+                      ) : test.testType === 'full_mock' ? (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+                          🎯 Full Mock
+                        </span>
+                      ) : test.testType === 'topic' ? (
+                        <span className="px-2 py-0.5 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[10px] font-bold">
+                          📚 Topic Test
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] font-medium">
+                          {test.testType.replace('_', ' ')}
+                        </span>
+                      )}
                     </td>
                     <td className="p-4 font-mono text-[11px]">
                       <div className="space-y-0.5 text-slate-300">
@@ -560,10 +594,10 @@ export const AdminTests: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/admin/tests/${test.id}/questions`}
-                          className="px-2.5 py-1 rounded-lg bg-indigo-600/15 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/30 font-bold text-[11px] flex items-center gap-1"
-                          title="Manage Questions"
+                          className="px-2.5 py-1 rounded-lg bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-600/40 font-bold text-[11px] flex items-center gap-1 shadow-sm"
+                          title="Build & manage questions for this test"
                         >
-                          <FileQuestion className="w-3.5 h-3.5" /> Questions
+                          <FileQuestion className="w-3.5 h-3.5" /> Build Questions
                         </Link>
 
                         <button
@@ -758,23 +792,57 @@ export const AdminTests: React.FC = () => {
                 </div>
               </div>
 
-              {/* PYQ Year Field */}
+              {/* PYQ Details Grid */}
               {testType === 'pyq' && (
-                <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-800/60">
-                  <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
-                    PYQ Exam Year *
-                  </label>
-                  <input
-                    type="number"
-                    min={1990}
-                    max={2030}
-                    value={year}
-                    onChange={(e) => setYear(parseInt(e.target.value) || '')}
-                    placeholder="e.g. 2024"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-                  />
-                  <p className="text-[11px] text-amber-300/80 mt-1">
-                    Enter the official year when this past paper was conducted.
+                <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-800/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider">
+                      📜 Previous Year Paper (PYQ) Details *
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Exam Year *
+                      </label>
+                      <input
+                        type="number"
+                        min={1990}
+                        max={2030}
+                        value={year}
+                        onChange={(e) => setYear(parseInt(e.target.value) || '')}
+                        placeholder="e.g. 2024"
+                        required
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-purple-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Paper / Stage Name
+                      </label>
+                      <input
+                        type="text"
+                        value={paperName}
+                        onChange={(e) => setPaperName(e.target.value)}
+                        placeholder="e.g. Prelims Paper 1"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Shift / Session
+                      </label>
+                      <input
+                        type="text"
+                        value={shift}
+                        onChange={(e) => setShift(e.target.value)}
+                        placeholder="e.g. Shift 1"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-purple-300/80">
+                    Target past year question paper info. Individual questions attached to this paper will be categorized as PYQ.
                   </p>
                 </div>
               )}
