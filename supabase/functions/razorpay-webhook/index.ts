@@ -161,8 +161,19 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // Convert paise to INR (29900 paise = 299.00 INR)
-  const amountInr = amountPaise ? amountPaise / 100 : 299.0;
+  // Convert paise to INR (29900 paise = 299.00 INR).
+  // Never guess the amount: reject events without one so Razorpay retries
+  // and reconciliation stays authoritative (the RPC also amount-checks).
+  if (!amountPaise || amountPaise <= 0) {
+    console.error(
+      `Webhook event ${event} for order ${orderId} is missing a valid amount; rejecting`
+    );
+    return new Response(JSON.stringify({ error: 'Missing payment amount in webhook payload' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const amountInr = amountPaise / 100;
 
   // 8. Reconcile with authoritative PostgreSQL database
   const supabaseUrl = Deno.env.get('SUPABASE_URL');

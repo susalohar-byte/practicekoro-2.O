@@ -1,0 +1,1156 @@
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import {
+  MOCK_EXAMS,
+  MOCK_SUBJECTS,
+  MOCK_CHAPTERS,
+  MOCK_QUESTIONS,
+  MOCK_ATTEMPTS,
+  MOCK_MISTAKES,
+  MOCK_BOOKMARKS,
+} from '@/services/mockData';
+import type { AttemptStatus } from '@/types/database';
+import type {
+  Exam,
+  Subject,
+  Chapter,
+  MockTest,
+  Question,
+  StudentTestQuestion,
+  AttemptAnswerState,
+  TestAttempt,
+  GradedResult,
+  QuestionSolution,
+  MistakeItem,
+  BookmarkItem,
+} from '@/types';
+import { calculateScore } from '@/utils/scoring';
+import { localAttemptsStore, localTests } from '@/services/domains/localStore';
+import type {
+  AttemptRow,
+  BookmarkRow,
+  ChapterRow,
+  ExamRow,
+  MistakeRow,
+  SubjectRow,
+  TestRow,
+} from '@/services/domains/localStore';
+
+/**
+ * Student catalog, test-taking, attempts, mistakes & bookmarks API.
+ * Methods extracted verbatim from the original src/services/api.ts.
+ */
+
+export const catalogApi = {
+  async getExams(): Promise<Exam[]> {
+    if (!isSupabaseConfigured) return MOCK_EXAMS;
+    try {
+      const { data, error } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+      if (error || !data || data.length === 0) return MOCK_EXAMS;
+      return (data as ExamRow[]).map((item) => ({
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        description: item.description ?? undefined,
+        category: item.category,
+        iconName: item.icon_name,
+        bannerUrl: item.banner_url ?? undefined,
+        orderIndex: item.order_index,
+        isActive: item.is_active,
+      }));
+    } catch {
+      return MOCK_EXAMS;
+    }
+  },
+
+  async getExamBySlug(slug: string): Promise<Exam | null> {
+    const exams = await this.getExams();
+    return exams.find((e) => e.slug === slug || e.id === slug) || null;
+  },
+
+  async getSubjects(examId: string): Promise<Subject[]> {
+    if (!isSupabaseConfigured) return MOCK_SUBJECTS[examId] || [];
+    try {
+      const { data, error } = await supabase
+        .from('subjects')
+        .select('*')
+        .eq('exam_id', examId)
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+      if (error || !data || data.length === 0) return MOCK_SUBJECTS[examId] || [];
+      return (data as SubjectRow[]).map((item) => ({
+        id: item.id,
+        examId: item.exam_id,
+        name: item.name,
+        slug: item.slug,
+        description: item.description ?? undefined,
+        iconName: item.icon_name,
+        orderIndex: item.order_index,
+        isActive: item.is_active,
+      }));
+    } catch {
+      return MOCK_SUBJECTS[examId] || [];
+    }
+  },
+
+  async getChapters(subjectId: string): Promise<Chapter[]> {
+    if (!isSupabaseConfigured) return MOCK_CHAPTERS[subjectId] || [];
+    try {
+      const { data, error } = await supabase
+        .from('chapters')
+        .select('*')
+        .eq('subject_id', subjectId)
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+      if (error || !data || data.length === 0) return MOCK_CHAPTERS[subjectId] || [];
+      return (data as ChapterRow[]).map((item) => ({
+        id: item.id,
+        subjectId: item.subject_id,
+        name: item.name,
+        slug: item.slug,
+        description: item.description ?? undefined,
+        orderIndex: item.order_index,
+        isActive: item.is_active,
+      }));
+    } catch {
+      return MOCK_CHAPTERS[subjectId] || [];
+    }
+  },
+
+  async getTests(chapterId?: string, examId?: string): Promise<MockTest[]> {
+    if (!isSupabaseConfigured) {
+      return localTests.filter(
+        (t) =>
+          t.isActive &&
+          (t.status === 'published' || !t.status) &&
+          (!examId || t.examId === examId) &&
+          (!chapterId || t.chapterId === chapterId)
+      );
+    }
+    try {
+      let assocTestIds: string[] = [];
+      if (examId) {
+        try {
+          const { data: assocData } = await supabase
+            .from('test_exams')
+            .select('test_id')
+            .eq('exam_id', examId);
+          if (assocData && assocData.length > 0) {
+            assocTestIds = assocData.map((a: any) => a.test_id);
+          }
+        } catch (e) {
+          console.warn('Could not query test_exams table, fallback to exam_id', e);
+        }
+      }
+
+      let query = supabase
+        .from('tests')
+        .select('*, exams(title), subjects(name), chapters(name), test_series(title)')
+        .eq('is_active', true)
+        .eq('status', 'published');
+      if (chapterId) query = query.eq('chapter_id', chapterId);
+      if (examId) {
+        if (assocTestIds.length > 0) {
+          query = query.or(`id.in.(${assocTestIds.join(',')}),exam_id.eq.${examId}`);
+        } else {
+          query = query.eq('exam_id', examId);
+        }
+      }
+      const { data, error } = await query.order('order_index', { ascending: true });
+
+      if (error || !data || data.length === 0) {
+        return localTests.filter(
+          (t) =>
+            t.isActive &&
+            (t.status === 'published' || !t.status) &&
+            (!examId || t.examId === examId) &&
+            (!chapterId || t.chapterId === chapterId)
+        );
+      }
+      return data.map((item: any) => ({
+        id: item.id,
+        examId: item.exam_id,
+        subjectId: item.subject_id ?? undefined,
+        chapterId: item.chapter_id ?? undefined,
+        testSeriesId: item.test_series_id ?? undefined,
+        title: item.title,
+        slug: item.slug,
+        description: item.description ?? undefined,
+        testType: item.test_type,
+        year: item.year ? Number(item.year) : undefined,
+        durationMinutes: item.duration_minutes,
+        totalQuestions: item.total_questions,
+        totalMarks: Number(item.total_marks),
+        passingMarks: Number(item.passing_marks),
+        negativeMarking: Number(item.negative_marking),
+        isPremium: item.is_premium,
+        orderIndex: item.order_index,
+        isActive: item.is_active,
+        status: (item.status as 'draft' | 'published' | 'archived') || 'published',
+        examTitle: item.exams?.title,
+        subjectName: item.subjects?.name,
+        chapterName: item.chapters?.name,
+        testSeriesTitle: item.test_series?.title,
+      }));
+    } catch {
+      return localTests.filter(
+        (t) =>
+          t.isActive &&
+          (t.status === 'published' || !t.status) &&
+          (!examId || t.examId === examId) &&
+          (!chapterId || t.chapterId === chapterId)
+      );
+    }
+  },
+
+  async getTestsForExam(
+    examId: string,
+    category?: 'full_mock' | 'pyq' | 'topic'
+  ): Promise<MockTest[]> {
+    const allTests = await this.getTests(undefined, examId);
+    if (!category) return allTests;
+
+    if (category === 'full_mock') {
+      return allTests.filter((t) => t.testType === 'full_mock');
+    }
+    if (category === 'pyq') {
+      return allTests.filter((t) => t.testType === 'pyq');
+    }
+    if (category === 'topic') {
+      return allTests.filter(
+        (t) =>
+          t.testType === 'topic' || t.testType === 'chapter_mock' || t.testType === 'subject_mock'
+      );
+    }
+    return allTests;
+  },
+
+  async getTestExamAssociations(testId: string): Promise<string[]> {
+    if (!isSupabaseConfigured) return [];
+    try {
+      const { data, error } = await (supabase as any)
+        .from('test_exams')
+        .select('exam_id')
+        .eq('test_id', testId);
+      if (error || !data) return [];
+      return data.map((d: any) => d.exam_id);
+    } catch {
+      return [];
+    }
+  },
+
+  async associateTestWithExam(testId: string, examId: string): Promise<boolean> {
+    if (!isSupabaseConfigured) return true;
+    try {
+      const { error } = await (supabase as any)
+        .from('test_exams')
+        .upsert({ test_id: testId, exam_id: examId }, { onConflict: 'test_id,exam_id' });
+      return !error;
+    } catch {
+      return false;
+    }
+  },
+
+  async dissociateTestFromExam(testId: string, examId: string): Promise<boolean> {
+    if (!isSupabaseConfigured) return true;
+    try {
+      const { error } = await (supabase as any)
+        .from('test_exams')
+        .delete()
+        .eq('test_id', testId)
+        .eq('exam_id', examId);
+      return !error;
+    } catch {
+      return false;
+    }
+  },
+
+  async syncTestExamAssociations(testId: string, examIds: string[]): Promise<boolean> {
+    if (!isSupabaseConfigured) return true;
+    try {
+      const { error: delError } = await (supabase as any)
+        .from('test_exams')
+        .delete()
+        .eq('test_id', testId);
+      if (delError) return false;
+
+      if (examIds.length > 0) {
+        const rows = examIds.map((eid) => ({ test_id: testId, exam_id: eid }));
+        const { error: insError } = await (supabase as any).from('test_exams').insert(rows);
+        if (insError) return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  async getTestById(testId: string): Promise<MockTest | null> {
+    const mockFound = localTests.find((t) => t.id === testId);
+    if (!isSupabaseConfigured) return mockFound || null;
+
+    try {
+      const { data, error } = await supabase
+        .from('tests')
+        .select('*')
+        .eq('id', testId)
+        .maybeSingle();
+      if (error || !data) return mockFound || null;
+      const row = data as TestRow;
+      return {
+        id: row.id,
+        examId: row.exam_id,
+        subjectId: row.subject_id ?? undefined,
+        chapterId: row.chapter_id ?? undefined,
+        testSeriesId: row.test_series_id ?? undefined,
+        title: row.title,
+        slug: row.slug,
+        description: row.description ?? undefined,
+        testType: row.test_type,
+        year: (row as any).year ? Number((row as any).year) : undefined,
+        durationMinutes: row.duration_minutes,
+        totalQuestions: row.total_questions,
+        totalMarks: Number(row.total_marks),
+        passingMarks: Number(row.passing_marks),
+        negativeMarking: Number(row.negative_marking),
+        isPremium: row.is_premium,
+        orderIndex: row.order_index,
+        isActive: row.is_active,
+        status: (row as any).status || 'published',
+      };
+    } catch {
+      return mockFound || null;
+    }
+  },
+
+  async getStudentTestQuestions(testId: string): Promise<StudentTestQuestion[]> {
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any).rpc('get_student_exam_questions', {
+        p_test_id: testId,
+      });
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch exam questions');
+      }
+      if (Array.isArray(data)) {
+        return data as StudentTestQuestion[];
+      }
+      return [];
+    }
+
+    // Local / Demo Fallback: Sanitize MOCK_QUESTIONS without answers
+    const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
+    return questions.map((q, idx) => ({
+      id: q.id,
+      questionOrder: idx + 1,
+      questionText: q.questionText,
+      questionBengaliText: q.questionBengaliText,
+      optionA: q.optionA,
+      optionB: q.optionB,
+      optionC: q.optionC,
+      optionD: q.optionD,
+      marks: q.defaultMarks,
+      negativeMarks: q.defaultNegativeMarks,
+      difficulty: q.difficulty,
+    }));
+  },
+
+  async getTestQuestions(testId: string): Promise<Question[]> {
+    if (!isSupabaseConfigured) {
+      return MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
+    }
+    try {
+      const { data, error } = await supabase
+        .from('test_questions')
+        .select(
+          `
+          question_order,
+          marks,
+          negative_marks,
+          questions (
+            id,
+            chapter_id,
+            question_text,
+            question_bengali_text,
+            option_a,
+            option_b,
+            option_c,
+            option_d,
+            correct_option,
+            explanation,
+            explanation_bengali,
+            difficulty,
+            default_marks,
+            default_negative_marks,
+            is_active
+          )
+        `
+        )
+        .eq('test_id', testId)
+        .order('question_order', { ascending: true });
+
+      if (error || !data || data.length === 0) {
+        return MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
+      }
+
+      return (
+        data as unknown as Array<{
+          question_order: number;
+          marks: number;
+          negative_marks: number;
+          questions: Record<string, unknown>;
+        }>
+      ).map((item) => {
+        const q = item.questions;
+        return {
+          id: String(q.id),
+          chapterId: q.chapter_id ? String(q.chapter_id) : undefined,
+          questionText: String(q.question_text),
+          questionBengaliText: q.question_bengali_text
+            ? String(q.question_bengali_text)
+            : undefined,
+          optionA: String(q.option_a),
+          optionB: String(q.option_b),
+          optionC: String(q.option_c),
+          optionD: String(q.option_d),
+          correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+          explanation: q.explanation ? String(q.explanation) : undefined,
+          explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
+          difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+          defaultMarks: Number(item.marks || q.default_marks || 1),
+          defaultNegativeMarks: Number(item.negative_marks || q.default_negative_marks || 0.25),
+          isActive: Boolean(q.is_active),
+        };
+      });
+    } catch {
+      return MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
+    }
+  },
+
+  async startTestAttempt(testId: string): Promise<{
+    attemptId: string;
+    startTime: string;
+    durationMinutes: number;
+  }> {
+    const test = await this.getTestById(testId);
+    if (!test) throw new Error('Mock Test not found');
+
+    const durationMinutes = test.durationMinutes;
+
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any).rpc('start_test_attempt', {
+        p_test_id: testId,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to initialize exam session');
+      }
+
+      if (data && typeof data === 'object') {
+        const res = data as { attempt_id: string; start_time: string; duration_minutes?: number };
+        return {
+          attemptId: res.attempt_id,
+          startTime: res.start_time,
+          durationMinutes: res.duration_minutes || durationMinutes,
+        };
+      }
+    }
+
+    // Local / Demo Fallback (Only active in development when Supabase is unconfigured)
+    const existing = Object.values(localAttemptsStore).find(
+      (a) => a.attempt.testId === testId && a.attempt.status === 'in_progress'
+    );
+
+    if (existing) {
+      return {
+        attemptId: existing.attempt.id,
+        startTime: existing.attempt.startTime,
+        durationMinutes,
+      };
+    }
+
+    const attemptId = 'att-' + Date.now();
+    const startTime = new Date().toISOString();
+
+    localAttemptsStore[attemptId] = {
+      attempt: {
+        id: attemptId,
+        userId: 'dev-student',
+        testId,
+        testTitle: test.title,
+        status: 'in_progress',
+        startTime,
+        timeSpentSeconds: 0,
+        score: 0,
+        totalMarks: test.totalMarks,
+        correctCount: 0,
+        wrongCount: 0,
+        skippedCount: 0,
+        accuracy: 0,
+        createdAt: startTime,
+      },
+      answers: {},
+    };
+
+    return { attemptId, startTime, durationMinutes };
+  },
+
+  async getTestAttempt(attemptId: string): Promise<TestAttempt | null> {
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any)
+        .from('test_attempts')
+        .select('*')
+        .eq('id', attemptId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch test attempt');
+      }
+
+      if (data) {
+        const d = data as AttemptRow;
+        return {
+          id: d.id,
+          userId: d.user_id,
+          testId: d.test_id,
+          status: d.status as AttemptStatus,
+          startTime: d.start_time,
+          endTime: d.end_time ?? undefined,
+          timeSpentSeconds: d.time_spent_seconds,
+          score: d.score,
+          totalMarks: d.total_marks,
+          correctCount: d.correct_count,
+          wrongCount: d.wrong_count,
+          skippedCount: d.skipped_count,
+          accuracy: d.accuracy,
+          rank: d.rank ?? undefined,
+          percentile: d.percentile ?? undefined,
+          createdAt: d.created_at,
+        };
+      }
+      return null;
+    }
+
+    return localAttemptsStore[attemptId]?.attempt || null;
+  },
+
+  async saveAnswers(
+    attemptId: string,
+    answers: AttemptAnswerState[],
+    timeSpentSeconds: number
+  ): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      try {
+        await (supabase as any).rpc('save_test_answers', {
+          p_attempt_id: attemptId,
+          p_answers: answers,
+          p_time_spent_seconds: timeSpentSeconds,
+        });
+      } catch (err) {
+        console.warn('Autosave RPC failed:', err);
+      }
+    }
+
+    // Local in-memory sync
+    if (localAttemptsStore[attemptId]) {
+      localAttemptsStore[attemptId].attempt.timeSpentSeconds = timeSpentSeconds;
+      answers.forEach((ans) => {
+        localAttemptsStore[attemptId].answers[ans.questionId] = ans;
+      });
+    }
+
+    // Persist in localStorage for complete page refresh recovery
+    try {
+      localStorage.setItem(
+        `practicekoro_attempt_${attemptId}`,
+        JSON.stringify({
+          answers,
+          timeSpentSeconds,
+          updatedAt: Date.now(),
+        })
+      );
+    } catch {
+      // localStorage fallback
+    }
+
+    return true;
+  },
+
+  async submitTestAttempt(
+    attemptId: string,
+    answers: AttemptAnswerState[],
+    timeSpentSeconds: number,
+    testId: string
+  ): Promise<GradedResult> {
+    const test = await this.getTestById(testId);
+
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any).rpc('submit_test_attempt', {
+        p_attempt_id: attemptId,
+        p_answers: answers,
+        p_time_spent_seconds: timeSpentSeconds,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Submission failed on server');
+      }
+
+      if (data && typeof data === 'object') {
+        const res = data as Record<string, unknown>;
+        return {
+          attemptId,
+          testId,
+          testTitle: test?.title,
+          score: Number(res.score || 0),
+          totalMarks: Number(res.total_marks || test?.totalMarks || 5),
+          percentage: Number(res.percentage || 0),
+          accuracy: Number(res.accuracy || 0),
+          correctCount: Number(res.correct_count || 0),
+          wrongCount: Number(res.wrong_count || 0),
+          skippedCount: Number(res.skipped_count || 0),
+          timeSpentSeconds,
+          rank: res.rank !== undefined && res.rank !== null ? Number(res.rank) : null,
+          totalCandidates: Number(res.total_candidates || 1),
+          percentile:
+            res.percentile !== undefined && res.percentile !== null ? Number(res.percentile) : null,
+          passed: Boolean(res.passed),
+        };
+      }
+    }
+
+    // Local / Demo Authoritative fallback (only active when Supabase is unconfigured)
+    const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
+    const answersMap = new Map(answers.map((a) => [a.questionId, a.selectedOption]));
+    const totalMarks = test ? test.totalMarks : 5;
+    const passingMarks = test?.passingMarks || 2;
+    const scoreSummary = calculateScore(
+      questions.map((q) => ({
+        id: q.id,
+        correctOption: q.correctOption,
+        marks: q.defaultMarks || 1,
+        negativeMarks: q.defaultNegativeMarks || 0.25,
+      })),
+      answers,
+      totalMarks,
+      passingMarks
+    );
+
+    // AUTOMATIC MISTAKES NOTEBOOK POPULATION (Local demo)
+    questions.forEach((q) => {
+      const selected = answersMap.get(q.id);
+      if (selected && selected !== q.correctOption) {
+        const existingMistake = MOCK_MISTAKES.find((m) => m.questionId === q.id);
+        if (existingMistake) {
+          existingMistake.wrongCount++;
+          existingMistake.isResolved = false;
+          existingMistake.lastReviewedAt = new Date().toISOString();
+        } else {
+          MOCK_MISTAKES.unshift({
+            id: 'mst-' + Date.now() + '-' + q.id.slice(-4),
+            userId: 'dev-student',
+            questionId: q.id,
+            question: q,
+            wrongCount: 1,
+            isResolved: false,
+            createdAt: new Date().toISOString(),
+          });
+        }
+      }
+    });
+
+    const gradedResult: GradedResult = {
+      attemptId,
+      testId,
+      testTitle: test?.title,
+      score: scoreSummary.score,
+      totalMarks,
+      percentage: scoreSummary.percentage,
+      accuracy: scoreSummary.accuracy,
+      correctCount: scoreSummary.correctCount,
+      wrongCount: scoreSummary.wrongCount,
+      skippedCount: scoreSummary.skippedCount,
+      timeSpentSeconds,
+      rank: null,
+      totalCandidates: 1,
+      percentile: null,
+      passed: scoreSummary.passed,
+    };
+
+    // Store in localAttemptsStore
+    localAttemptsStore[attemptId] = {
+      attempt: {
+        id: attemptId,
+        userId: 'dev-student',
+        testId,
+        testTitle: test?.title,
+        status: 'completed',
+        startTime: new Date(Date.now() - timeSpentSeconds * 1000).toISOString(),
+        endTime: new Date().toISOString(),
+        timeSpentSeconds,
+        score: gradedResult.score,
+        totalMarks: gradedResult.totalMarks,
+        correctCount: scoreSummary.correctCount,
+        wrongCount: scoreSummary.wrongCount,
+        skippedCount: scoreSummary.skippedCount,
+        accuracy: scoreSummary.accuracy,
+        rank: null,
+        percentile: null,
+        createdAt: new Date().toISOString(),
+      },
+      answers: Object.fromEntries(answers.map((a) => [a.questionId, a])),
+      result: gradedResult,
+    };
+
+    // Clean up local cache
+    try {
+      localStorage.removeItem(`practicekoro_attempt_${attemptId}`);
+    } catch {
+      // ignore
+    }
+
+    return gradedResult;
+  },
+
+  async getAttemptResult(attemptId: string): Promise<GradedResult | null> {
+    if (isSupabaseConfigured) {
+      const { data: res, error } = await (supabase as any)
+        .from('test_results')
+        .select(
+          `
+          score,
+          total_marks,
+          percentage,
+          accuracy,
+          rank,
+          total_candidates,
+          percentile,
+          passed,
+          test_id,
+          test_attempts (
+            correct_count,
+            wrong_count,
+            skipped_count,
+            time_spent_seconds
+          ),
+          tests (
+            title
+          )
+        `
+        )
+        .eq('attempt_id', attemptId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch test result');
+      }
+
+      if (res) {
+        const r = res as Record<string, any>;
+        const attempt = r.test_attempts as {
+          correct_count: number;
+          wrong_count: number;
+          skipped_count: number;
+          time_spent_seconds: number;
+        } | null;
+        const test = r.tests as { title: string } | null;
+
+        return {
+          attemptId,
+          testId: String(r.test_id),
+          testTitle: test?.title,
+          score: Number(r.score),
+          totalMarks: Number(r.total_marks),
+          percentage: Number(r.percentage || 0),
+          accuracy: Number(r.accuracy || 0),
+          correctCount: Number(attempt?.correct_count || 0),
+          wrongCount: Number(attempt?.wrong_count || 0),
+          skippedCount: Number(attempt?.skipped_count || 0),
+          timeSpentSeconds: Number(attempt?.time_spent_seconds || 0),
+          rank: r.rank !== null && r.rank !== undefined ? Number(r.rank) : null,
+          totalCandidates: Number(r.total_candidates || 1),
+          percentile:
+            r.percentile !== null && r.percentile !== undefined ? Number(r.percentile) : null,
+          passed: Boolean(r.passed),
+        };
+      }
+      return null;
+    }
+
+    if (localAttemptsStore[attemptId]?.result) {
+      return localAttemptsStore[attemptId].result!;
+    }
+
+    // Check attempts in mock list
+    const attempt = MOCK_ATTEMPTS.find((a) => a.id === attemptId);
+    if (attempt) {
+      return {
+        attemptId: attempt.id,
+        testId: attempt.testId,
+        testTitle: attempt.testTitle,
+        score: attempt.score,
+        totalMarks: attempt.totalMarks,
+        percentage: Number(((attempt.score / attempt.totalMarks) * 100).toFixed(1)),
+        accuracy: attempt.accuracy,
+        correctCount: attempt.correctCount,
+        wrongCount: attempt.wrongCount,
+        skippedCount: attempt.skippedCount,
+        timeSpentSeconds: attempt.timeSpentSeconds,
+        rank: attempt.rank ?? null,
+        totalCandidates: 1,
+        percentile: attempt.percentile ?? null,
+        passed: attempt.score >= 2,
+      };
+    }
+
+    return null;
+  },
+
+  async getAttemptSolutions(attemptId: string, testId: string): Promise<QuestionSolution[]> {
+    if (isSupabaseConfigured) {
+      const { data, error } = await (supabase as any).rpc('get_attempt_solutions', {
+        p_attempt_id: attemptId,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch solutions');
+      }
+
+      if (Array.isArray(data)) {
+        return data as QuestionSolution[];
+      }
+      return [];
+    }
+
+    // Local / Demo fallback
+    const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
+    const answersMap = localAttemptsStore[attemptId]?.answers || {};
+
+    return questions.map((q, idx) => {
+      const ans = answersMap[q.id];
+      const selected = ans?.selectedOption || null; // Strictly real answer or null; never guess
+      const isCorrect = selected !== null && selected === q.correctOption;
+      const marksAwarded = isCorrect ? q.defaultMarks : selected ? -q.defaultNegativeMarks : 0;
+
+      return {
+        id: q.id,
+        questionOrder: idx + 1,
+        questionText: q.questionText,
+        questionBengaliText: q.questionBengaliText,
+        optionA: q.optionA,
+        optionB: q.optionB,
+        optionC: q.optionC,
+        optionD: q.optionD,
+        selectedOption: selected,
+        correctOption: q.correctOption,
+        isCorrect,
+        marksAwarded,
+        explanation: q.explanation,
+        explanationBengali: q.explanationBengali,
+        isBookmarked: MOCK_BOOKMARKS.some((b) => b.questionId === q.id),
+      };
+    });
+  },
+
+  async toggleBookmark(userId: string, questionId: string, note?: string): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      try {
+        const { data: existing } = await (supabase as any)
+          .from('bookmarks')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('question_id', questionId)
+          .maybeSingle();
+
+        if (existing) {
+          await (supabase as any)
+            .from('bookmarks')
+            .delete()
+            .eq('id', (existing as any).id);
+          return false; // Removed
+        } else {
+          await (supabase as any).from('bookmarks').insert({
+            user_id: userId,
+            question_id: questionId,
+            note: note || 'Bookmarked during practice review',
+          });
+          return true; // Added
+        }
+      } catch (err) {
+        console.error('Supabase toggleBookmark error:', err);
+      }
+    }
+
+    const existingIndex = MOCK_BOOKMARKS.findIndex(
+      (b) => b.questionId === questionId && b.userId === userId
+    );
+
+    if (existingIndex >= 0) {
+      MOCK_BOOKMARKS.splice(existingIndex, 1);
+      return false; // Removed
+    } else {
+      const q = Object.values(MOCK_QUESTIONS)
+        .flat()
+        .find((item) => item.id === questionId);
+      if (q) {
+        MOCK_BOOKMARKS.unshift({
+          id: 'bm-' + Date.now(),
+          userId,
+          questionId,
+          question: q,
+          note: note || 'Bookmarked during mock test review',
+          createdAt: new Date().toISOString(),
+        });
+      }
+      return true; // Added
+    }
+  },
+
+  async getUserAttempts(userId: string): Promise<TestAttempt[]> {
+    // Merge any live session attempts with mock attempts if not on Supabase
+    const sessionAttempts = Object.values(localAttemptsStore)
+      .filter((a) => a.attempt.userId === userId && a.attempt.status === 'completed')
+      .map((a) => a.attempt);
+
+    if (!isSupabaseConfigured) {
+      const combined = [...sessionAttempts, ...MOCK_ATTEMPTS];
+      const unique = Array.from(new Map(combined.map((item) => [item.id, item])).values());
+      return unique;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('test_attempts')
+        .select(
+          `
+          *,
+          tests (
+            title,
+            duration_minutes,
+            total_questions,
+            total_marks,
+            is_premium,
+            test_type,
+            year,
+            exams (title),
+            subjects (name),
+            chapters (name)
+          )
+        `
+        )
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) return [];
+      return data.map((d: any) => {
+        const test = d.tests;
+        return {
+          id: d.id,
+          userId: d.user_id,
+          testId: d.test_id,
+          testTitle: test?.title || d.test_id,
+          examTitle: test?.exams?.title,
+          subjectName: test?.subjects?.name,
+          chapterName: test?.chapters?.name,
+          durationMinutes: test?.duration_minutes ? Number(test.duration_minutes) : undefined,
+          totalQuestions: test?.total_questions ? Number(test.total_questions) : undefined,
+          isPremium: Boolean(test?.is_premium),
+          testType: test?.test_type,
+          year: test?.year ? Number(test.year) : undefined,
+          status: d.status,
+          startTime: d.start_time,
+          endTime: d.end_time ?? undefined,
+          timeSpentSeconds: d.time_spent_seconds,
+          score: Number(d.score),
+          totalMarks: Number(d.total_marks || test?.total_marks || 0),
+          correctCount: d.correct_count,
+          wrongCount: d.wrong_count,
+          skippedCount: d.skipped_count,
+          accuracy: Number(d.accuracy),
+          rank: d.rank ?? undefined,
+          percentile: d.percentile ? Number(d.percentile) : undefined,
+          createdAt: d.created_at,
+        };
+      });
+    } catch {
+      return [];
+    }
+  },
+
+  async getMistakes(userId: string): Promise<MistakeItem[]> {
+    if (!isSupabaseConfigured) return MOCK_MISTAKES.filter((m) => m.userId === userId || !m.userId);
+    try {
+      const { data, error } = await supabase
+        .from('mistakes')
+        .select(
+          `
+          id,
+          user_id,
+          question_id,
+          wrong_count,
+          is_resolved,
+          last_reviewed_at,
+          created_at,
+          questions (
+            *,
+            chapters (
+              name,
+              subjects (
+                name,
+                exams (title)
+              )
+            )
+          )
+        `
+        )
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) return [];
+      return (data as unknown as Array<MistakeRow & { questions: any }>).map((d) => {
+        const q = d.questions || {};
+        const ch = q.chapters;
+        const sub = ch?.subjects;
+        const ex = sub?.exams;
+        return {
+          id: d.id,
+          userId: d.user_id,
+          questionId: d.question_id,
+          wrongCount: d.wrong_count,
+          isResolved: d.is_resolved,
+          lastReviewedAt: d.last_reviewed_at ?? undefined,
+          createdAt: d.created_at,
+          examTitle: ex?.title,
+          subjectName: sub?.name,
+          chapterName: ch?.name,
+          question: {
+            id: String(q.id),
+            chapterId: q.chapter_id ?? undefined,
+            subjectId: q.subject_id ?? undefined,
+            questionText: String(q.question_text),
+            questionBengaliText: q.question_bengali_text
+              ? String(q.question_bengali_text)
+              : undefined,
+            optionA: String(q.option_a),
+            optionB: String(q.option_b),
+            optionC: String(q.option_c),
+            optionD: String(q.option_d),
+            correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+            explanation: q.explanation ? String(q.explanation) : undefined,
+            explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
+            difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+            defaultMarks: Number(q.default_marks || 1),
+            defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+            isActive: Boolean(q.is_active),
+            examTitle: ex?.title,
+            subjectName: sub?.name,
+            chapterName: ch?.name,
+          },
+        };
+      });
+    } catch {
+      return [];
+    }
+  },
+
+  async resolveMistake(mistakeId: string, isResolved: boolean = true): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await (supabase as any)
+          .from('mistakes')
+          .update({
+            is_resolved: isResolved,
+            last_reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', mistakeId);
+        if (!error) return true;
+      } catch (err) {
+        console.error('resolveMistake Supabase error:', err);
+      }
+    }
+    const idx = MOCK_MISTAKES.findIndex((m) => m.id === mistakeId);
+    if (idx !== -1) {
+      MOCK_MISTAKES[idx].isResolved = isResolved;
+      MOCK_MISTAKES[idx].lastReviewedAt = new Date().toISOString();
+      return true;
+    }
+    return false;
+  },
+
+  async getBookmarks(userId: string): Promise<BookmarkItem[]> {
+    if (!isSupabaseConfigured)
+      return MOCK_BOOKMARKS.filter((b) => b.userId === userId || !b.userId);
+    try {
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select(
+          `
+          id,
+          user_id,
+          question_id,
+          note,
+          created_at,
+          questions (
+            *,
+            chapters (
+              name,
+              subjects (
+                name,
+                exams (title)
+              )
+            )
+          )
+        `
+        )
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) return [];
+      return (data as unknown as Array<BookmarkRow & { questions: any }>).map((d) => {
+        const q = d.questions || {};
+        const ch = q.chapters;
+        const sub = ch?.subjects;
+        const ex = sub?.exams;
+        return {
+          id: d.id,
+          userId: d.user_id,
+          questionId: d.question_id,
+          note: d.note ?? undefined,
+          createdAt: d.created_at,
+          examTitle: ex?.title,
+          subjectName: sub?.name,
+          chapterName: ch?.name,
+          question: {
+            id: String(q.id),
+            chapterId: q.chapter_id ?? undefined,
+            subjectId: q.subject_id ?? undefined,
+            questionText: String(q.question_text),
+            questionBengaliText: q.question_bengali_text
+              ? String(q.question_bengali_text)
+              : undefined,
+            optionA: String(q.option_a),
+            optionB: String(q.option_b),
+            optionC: String(q.option_c),
+            optionD: String(q.option_d),
+            correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+            explanation: q.explanation ? String(q.explanation) : undefined,
+            explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
+            difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+            defaultMarks: Number(q.default_marks || 1),
+            defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+            isActive: Boolean(q.is_active),
+            examTitle: ex?.title,
+            subjectName: sub?.name,
+            chapterName: ch?.name,
+          },
+        };
+      });
+    } catch {
+      return [];
+    }
+  },
+};
