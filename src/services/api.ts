@@ -128,7 +128,7 @@ export const api = {
   // Subjects
   async getSubjects(examId?: string): Promise<Subject[]> {
     if (!isSupabaseConfigured)
-      return (examId ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
+      return (examId && MOCK_SUBJECTS[examId] ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
     try {
       let query = supabase
         .from('subjects')
@@ -142,7 +142,7 @@ export const api = {
 
       const { data, error } = await query;
       if (error || !data || data.length === 0)
-        return (examId ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
+        return (examId && MOCK_SUBJECTS[examId] ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
       return (data as SubjectRow[]).map((item) => ({
         id: item.id,
         examId: item.exam_id ?? undefined,
@@ -154,7 +154,7 @@ export const api = {
         isActive: item.is_active,
       }));
     } catch {
-      return (examId ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
+      return (examId && MOCK_SUBJECTS[examId] ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
     }
   },
 

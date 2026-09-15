@@ -10,15 +10,12 @@ import {
   XCircle,
   Search,
   FolderTree,
-  Filter,
   X,
 } from 'lucide-react';
-import type { Subject, Exam } from '@/types';
+import type { Subject } from '@/types';
 
 export const AdminSubjects: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
@@ -36,11 +33,7 @@ export const AdminSubjects: React.FC = () => {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [allExams, allSubjects] = await Promise.all([
-        api.getAllAdminExams(),
-        api.getAllAdminSubjects(selectedExamId || undefined),
-      ]);
-      setExams(allExams);
+      const allSubjects = await api.getAllAdminSubjects();
       setSubjects(allSubjects);
     } catch (err) {
       console.error('Error loading subjects:', err);
@@ -51,7 +44,7 @@ export const AdminSubjects: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedExamId]);
+  }, []);
 
   const openCreateModal = () => {
     setEditingSubject(null);
@@ -140,8 +133,7 @@ export const AdminSubjects: React.FC = () => {
   const filteredSubjects = subjects.filter(
     (s) =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.examId ? s.examId.toLowerCase().includes(searchTerm.toLowerCase()) : false)
+      s.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -175,8 +167,8 @@ export const AdminSubjects: React.FC = () => {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="relative w-full sm:max-w-xs">
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative w-full sm:max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
@@ -185,22 +177,6 @@ export const AdminSubjects: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
           />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <select
-            value={selectedExamId}
-            onChange={(e) => setSelectedExamId(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="">All Target Exams</option>
-            {exams.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.title}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -211,7 +187,6 @@ export const AdminSubjects: React.FC = () => {
             <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold text-[10px] border-b border-slate-800">
               <tr>
                 <th className="p-4">Subject Name</th>
-                <th className="p-4">Target Exam</th>
                 <th className="p-4">Chapters</th>
                 <th className="p-4">Order</th>
                 <th className="p-4">Status</th>
@@ -221,19 +196,18 @@ export const AdminSubjects: React.FC = () => {
             <tbody className="divide-y divide-slate-800/60">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     Loading subjects...
                   </td>
                 </tr>
               ) : filteredSubjects.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     No subjects found for the selected criteria.
                   </td>
                 </tr>
               ) : (
                 filteredSubjects.map((sub) => {
-                  const parentExam = exams.find((e) => e.id === sub.examId);
                   return (
                     <tr key={sub.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="p-4">
@@ -246,17 +220,6 @@ export const AdminSubjects: React.FC = () => {
                             <p className="text-[11px] font-mono text-slate-500">{sub.slug}</p>
                           </div>
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
-                            sub.examId
-                              ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
-                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          }`}
-                        >
-                          {parentExam?.title || (sub.examId ? sub.examId : 'All Exams (Universal)')}
-                        </span>
                       </td>
                       <td className="p-4">
                         <span className="flex items-center gap-1 text-slate-300 font-semibold">

@@ -5,3 +5,6 @@
 -- ============================================================================
 
 ALTER TABLE public.subjects ALTER COLUMN exam_id DROP NOT NULL;
+
+-- Remove target exam association from existing subjects to make them universal
+UPDATE public.subjects SET exam_id = NULL;
