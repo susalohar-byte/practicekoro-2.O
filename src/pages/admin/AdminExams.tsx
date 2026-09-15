@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
@@ -123,8 +124,8 @@ export const AdminExams: React.FC = () => {
       }
       setIsModalOpen(false);
       await loadExams();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save exam');
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Failed to save exam'));
     }
   };
 

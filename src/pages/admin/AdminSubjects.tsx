@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/lib/errors';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -31,7 +32,7 @@ export const AdminSubjects: React.FC = () => {
   const [isActive, setIsActive] = useState(true);
   const [formError, setFormError] = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const allSubjects = await api.getAllAdminSubjects();
@@ -41,11 +42,11 @@ export const AdminSubjects: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const openCreateModal = () => {
     setEditingSubject(null);
@@ -119,9 +120,9 @@ export const AdminSubjects: React.FC = () => {
       }
       setIsModalOpen(false);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to save subject:', err);
-      setFormError(err.message || 'Failed to save subject');
+      setFormError(getErrorMessage(err, 'Failed to save subject'));
     } finally {
       setIsSaving(false);
     }
@@ -131,9 +132,9 @@ export const AdminSubjects: React.FC = () => {
     try {
       await api.updateSubject(subject.id, { isActive: !subject.isActive });
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to toggle status:', err);
-      alert(err.message || 'Failed to toggle status');
+      alert(getErrorMessage(err, 'Failed to toggle status'));
     }
   };
 
@@ -147,9 +148,9 @@ export const AdminSubjects: React.FC = () => {
       setIsLoading(true);
       await api.deleteSubject(subject.id);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to delete subject:', err);
-      alert(err.message || 'Failed to delete subject');
+      alert(getErrorMessage(err, 'Failed to delete subject'));
       setIsLoading(false);
     }
   };

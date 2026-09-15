@@ -1,12 +1,23 @@
+import { getErrorMessage } from '@/lib/errors';
+
 /**
  * PracticeKoro Razorpay Integration Utility
  * Safe client-side checkout loader.
  * NOTE: Key secrets are NEVER stored or accessed in client-side code.
  */
 
+interface RazorpayFailureResponse {
+  error?: { code?: string; description?: string; reason?: string };
+}
+interface RazorpayInstance {
+  on(event: 'payment.failed', handler: (response: RazorpayFailureResponse) => void): void;
+  open(): void;
+}
+type RazorpayConstructor = new (options: RazorpayCheckoutOptions) => RazorpayInstance;
+
 declare global {
   interface Window {
-    Razorpay?: any;
+    Razorpay?: RazorpayConstructor;
   }
 }
 
@@ -78,13 +89,13 @@ export async function openRazorpayCheckout(
 
   try {
     const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', function (response: any) {
+    rzp.on('payment.failed', function (response: RazorpayFailureResponse) {
       console.error('Razorpay Payment Failed:', response.error);
     });
     rzp.open();
     return {};
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error opening Razorpay modal:', err);
-    return { error: err.message || 'Failed to open Razorpay modal' };
+    return { error: getErrorMessage(err, 'Failed to open Razorpay modal') };
   }
 }

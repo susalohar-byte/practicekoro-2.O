@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -10,6 +10,9 @@ export const isSupabaseConfigured = Boolean(
   supabaseUrl.startsWith('http') &&
   !supabaseUrl.includes('your-project-ref')
 );
+
+export const isDemoModeEnabled =
+  import.meta.env.VITE_ENABLE_DEMO_MODE === 'true' && !isSupabaseConfigured;
 
 // Create client with fallback dummy values to prevent crashing if unconfigured
 export const supabase = createClient<Database>(
@@ -23,3 +26,6 @@ export const supabase = createClient<Database>(
     },
   }
 );
+
+// Central compatibility boundary until generated Database types are refreshed from Supabase.
+export const supabaseRuntime = supabase as unknown as SupabaseClient;

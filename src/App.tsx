@@ -128,7 +128,9 @@ export const App: React.FC = () => {
           {/* Exams Hub & Catalog */}
           <Route path="exams" element={<ExamsCatalog />} />
           <Route path="exams/:id" element={<ExamOrTestDispatcher />} />
-          <Route path="exams/:examId/:tab" element={<ExamDetail />} />
+          <Route path="exams/:examId/full-mock" element={<ExamDetail />} />
+          <Route path="exams/:examId/pyq" element={<ExamDetail />} />
+          <Route path="exams/:examId/topic-tests" element={<ExamDetail />} />
 
           {/* Legacy redirects */}
           <Route path="tests" element={<Navigate to="/exams" replace />} />

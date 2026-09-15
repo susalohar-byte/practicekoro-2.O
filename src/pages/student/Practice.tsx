@@ -73,7 +73,7 @@ export const Practice: React.FC = () => {
       ]);
       setMistakes(mList || []);
       setBookmarks(bList || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load practice data:', err);
       setError('Unable to load revision items. Please check your connection.');
     } finally {

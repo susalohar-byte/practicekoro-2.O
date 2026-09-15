@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/lib/errors';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
@@ -32,7 +33,7 @@ export const AdminTestQuestions: React.FC = () => {
   const [bankSearch, setBankSearch] = useState('');
   const [selectedBankIds, setSelectedBankIds] = useState<string[]>([]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!testId) return;
     try {
       setIsLoading(true);
@@ -49,11 +50,11 @@ export const AdminTestQuestions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [testId]);
 
   useEffect(() => {
     loadData();
-  }, [testId]);
+  }, [loadData]);
 
   // Reordering functions
   const moveQuestion = (fromIndex: number, toIndex: number) => {
@@ -104,8 +105,8 @@ export const AdminTestQuestions: React.FC = () => {
       } else {
         setSaveError(res.error || 'Failed to save test questions');
       }
-    } catch (err: any) {
-      setSaveError(err.message || 'Error saving questions');
+    } catch (err) {
+      setSaveError(getErrorMessage(err, 'Error saving questions'));
     } finally {
       setIsSaving(false);
     }

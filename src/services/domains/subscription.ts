@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { MOCK_SUBSCRIPTION_PLANS } from '@/services/mockData';
 import type {
   SubscriptionPlan,
@@ -27,13 +27,13 @@ export const subscriptionApi = {
       if (error || !data || data.length === 0) return MOCK_SUBSCRIPTION_PLANS;
       return (data as PlanRow[]).map((d) => ({
         id: d.id,
-        name: (d as any).name ?? undefined,
+        name: d.title ?? undefined,
         title: d.title,
         description: d.description ?? undefined,
         durationDays: d.duration_days,
         price: Number(d.price),
         originalPrice: d.original_price ? Number(d.original_price) : undefined,
-        currency: (d as any).currency || 'INR',
+        currency: 'INR',
         features: Array.isArray(d.features) ? (d.features as string[]) : [],
         isActive: d.is_active,
         orderIndex: d.order_index,
@@ -45,7 +45,7 @@ export const subscriptionApi = {
 
   async createRazorpayOrder(planId: string): Promise<RazorpayOrderResponse> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('create_razorpay_order', {
+      const { data, error } = await supabase.rpc('create_razorpay_order', {
         p_plan_id: planId,
       });
 
@@ -98,7 +98,7 @@ export const subscriptionApi = {
     planTitle?: string;
   }> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('verify_razorpay_payment', {
+      const { data, error } = await supabase.rpc('verify_razorpay_payment', {
         p_order_id: payload.orderId,
         p_payment_id: payload.paymentId,
         p_signature: payload.signature,
@@ -171,7 +171,7 @@ export const subscriptionApi = {
   async getStudentSubscriptionDetails(): Promise<StudentSubscriptionDetails> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_student_subscription_details');
+        const { data, error } = await supabase.rpc('get_student_subscription_details');
         if (!error && data) {
           return {
             hasSubscription: !!data.has_subscription,
@@ -231,7 +231,7 @@ export const subscriptionApi = {
           .order('created_at', { ascending: false });
 
         if (!error && data) {
-          return data.map((d: any) => ({
+          return data.map((d) => ({
             id: d.id,
             userId: d.user_id,
             planId: d.plan_id,

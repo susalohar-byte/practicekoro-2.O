@@ -79,10 +79,14 @@ describe('openRazorpayCheckout', () => {
   it('opens checkout and registers the payment.failed handler', async () => {
     const registered: string[] = [];
     const openSpy = vi.fn();
-    (window as unknown as { Razorpay: unknown }).Razorpay = vi.fn().mockImplementation(() => ({
-      on: (event: string) => registered.push(event),
-      open: openSpy,
-    }));
+    (window as unknown as { Razorpay: unknown }).Razorpay = class {
+      on(event: string) {
+        registered.push(event);
+      }
+      open() {
+        openSpy();
+      }
+    };
 
     const result = await openRazorpayCheckout({ key: 'rzp_test_x', amount: 29900 } as never);
     expect(result.error).toBeUndefined();
@@ -91,9 +95,11 @@ describe('openRazorpayCheckout', () => {
   });
 
   it('surfaces constructor errors as { error } instead of throwing', async () => {
-    (window as unknown as { Razorpay: unknown }).Razorpay = vi.fn().mockImplementation(() => {
-      throw new Error('boom');
-    });
+    (window as unknown as { Razorpay: unknown }).Razorpay = class {
+      constructor() {
+        throw new Error('boom');
+      }
+    };
     const result = await openRazorpayCheckout({ key: 'rzp_test_x' } as never);
     expect(result.error).toBe('boom');
   });

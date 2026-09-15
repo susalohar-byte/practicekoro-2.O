@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { MOCK_ATTEMPTS } from '@/services/mockData';
 import type { AdminSubscriptionRow, AdminPaymentRow, AdminDashboardStats } from '@/types';
 import {
@@ -24,7 +24,7 @@ export const adminCommerceApi = {
   ): Promise<AdminSubscriptionRow[]> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_admin_subscriptions', {
+        const { data, error } = await supabase.rpc('get_admin_subscriptions', {
           p_status: status || null,
           p_search: search || null,
           p_limit: limit,
@@ -32,7 +32,7 @@ export const adminCommerceApi = {
         });
 
         if (!error && Array.isArray(data)) {
-          return data.map((d: any) => ({
+          return data.map((d) => ({
             id: d.id,
             userId: d.user_id,
             studentName: d.student_name || 'Student Aspirant',
@@ -93,7 +93,7 @@ export const adminCommerceApi = {
   ): Promise<AdminPaymentRow[]> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_admin_payments', {
+        const { data, error } = await supabase.rpc('get_admin_payments', {
           p_status: status || null,
           p_search: search || null,
           p_limit: limit,
@@ -101,7 +101,7 @@ export const adminCommerceApi = {
         });
 
         if (!error && Array.isArray(data)) {
-          return data.map((d: any) => ({
+          return data.map((d) => ({
             id: d.id,
             userId: d.user_id,
             studentName: d.student_name || 'Student Aspirant',
@@ -162,7 +162,7 @@ export const adminCommerceApi = {
   async getAdminDashboardStats(): Promise<AdminDashboardStats> {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await (supabase as any).rpc('get_admin_dashboard_counts');
+        const { data, error } = await supabase.rpc('get_admin_dashboard_counts');
         if (!error && data) {
           return {
             totalExams: Number(data.total_exams || 0),

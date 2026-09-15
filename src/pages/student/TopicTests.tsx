@@ -308,7 +308,7 @@ export const TopicTests: React.FC = () => {
                       size="sm"
                       variant={test.isPremium ? 'pro' : 'primary'}
                       rightIcon={<ArrowRight className="h-4 w-4" />}
-                      onClick={() => navigate(`/tests/${test.id}`)}
+                      onClick={() => navigate(`/exams/${test.id}`)}
                     >
                       View Test
                     </Button>

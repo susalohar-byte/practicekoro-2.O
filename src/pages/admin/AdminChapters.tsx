@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/lib/errors';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -35,7 +36,7 @@ export const AdminChapters: React.FC = () => {
   const [isActive, setIsActive] = useState(true);
   const [formError, setFormError] = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [allExams, allSubjects, allChapters] = await Promise.all([
@@ -51,11 +52,11 @@ export const AdminChapters: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedSubjectId]);
 
   useEffect(() => {
     loadData();
-  }, [selectedSubjectId]);
+  }, [loadData]);
 
   // When exam filter changes, auto-filter subjects
   const availableSubjects = selectedExamId
@@ -136,8 +137,8 @@ export const AdminChapters: React.FC = () => {
       }
       setIsModalOpen(false);
       await loadData();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save chapter');
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Failed to save chapter'));
     }
   };
 

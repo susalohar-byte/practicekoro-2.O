@@ -1,4 +1,5 @@
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
+import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type {
   Exam,
   Subject,
@@ -55,19 +56,19 @@ export const adminApi = {
 
     if (!isSupabaseConfigured) {
       for (const t of localTests) {
-        const kind = classify((t as any).testType);
+        const kind = classify(t.testType);
         if (kind) bump(t.examId, kind);
       }
       return counts;
     }
 
     try {
-      const { data: tests, error: testsError } = await (supabase as any)
+      const { data: tests, error: testsError } = await supabase
         .from('tests')
         .select('id, exam_id, test_type');
       if (testsError) return counts;
 
-      const { data: assoc, error: assocError } = await (supabase as any)
+      const { data: assoc, error: assocError } = await supabase
         .from('test_exams')
         .select('test_id, exam_id');
 
@@ -81,7 +82,7 @@ export const adminApi = {
       // Extra exam links from the junction (skip duplicates of the owning exam_id)
       for (const row of assoc ?? []) {
         if (assocError) break;
-        const kind = classify((tests ?? []).find((t: any) => t.id === row.test_id)?.test_type);
+        const kind = classify((tests ?? []).find((t) => t.id === row.test_id)?.test_type);
         if (!kind) continue;
         const key = `${row.test_id}:${row.exam_id}`;
         if (!seen.has(key)) {
@@ -159,7 +160,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any).from('exams').insert({
+        const { error } = await supabase.from('exams').insert({
           id,
           title: newExam.title,
           slug: newExam.slug,
@@ -198,7 +199,7 @@ export const adminApi = {
         if (updates.orderIndex !== undefined) updatePayload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) updatePayload.is_active = updates.isActive;
 
-        await (supabase as any).from('exams').update(updatePayload).eq('id', id);
+        await supabase.from('exams').update(updatePayload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateExam error:', err);
       }
@@ -225,7 +226,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('exams').update({ is_active: false }).eq('id', id);
+        await supabase.from('exams').update({ is_active: false }).eq('id', id);
       } catch (err) {
         console.error('Supabase deleteExam error:', err);
       }
@@ -286,7 +287,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('subjects').insert({
+        await supabase.from('subjects').insert({
           id,
           exam_id: newSubject.examId || null,
           name: newSubject.name,
@@ -321,7 +322,7 @@ export const adminApi = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        const { error } = await (supabase as any).from('subjects').update(payload).eq('id', id);
+        const { error } = await supabase.from('subjects').update(payload).eq('id', id);
         if (error) {
           console.error('Supabase updateSubject error:', error);
           throw new Error(error.message);
@@ -353,7 +354,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any).from('subjects').delete().eq('id', id);
+        const { error } = await supabase.from('subjects').delete().eq('id', id);
         if (error) {
           console.error('Supabase deleteSubject error:', error);
           throw new Error(error.message);
@@ -416,7 +417,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('chapters').insert({
+        await supabase.from('chapters').insert({
           id,
           subject_id: newChapter.subjectId,
           name: newChapter.name,
@@ -449,7 +450,7 @@ export const adminApi = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await (supabase as any).from('chapters').update(payload).eq('id', id);
+        await supabase.from('chapters').update(payload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateChapter error:', err);
       }
@@ -468,7 +469,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('chapters').update({ is_active: false }).eq('id', id);
+        await supabase.from('chapters').update({ is_active: false }).eq('id', id);
       } catch (err) {
         console.error('Supabase deleteChapter error:', err);
       }
@@ -504,7 +505,7 @@ export const adminApi = {
           });
       }
 
-      return (data as any[]).map((item) => {
+      return data.map((item) => {
         const exam = localExams.find((e) => e.id === item.exam_id);
         const count =
           Array.isArray(item.tests) && item.tests[0]?.count != null
@@ -555,7 +556,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('test_series').insert({
+        await supabase.from('test_series').insert({
           id,
           exam_id: newSeries.examId,
           title: newSeries.title,
@@ -590,7 +591,7 @@ export const adminApi = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await (supabase as any).from('test_series').update(payload).eq('id', id);
+        await supabase.from('test_series').update(payload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateTestSeries error:', err);
       }
@@ -617,7 +618,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('test_series').update({ is_active: false }).eq('id', id);
+        await supabase.from('test_series').update({ is_active: false }).eq('id', id);
       } catch (err) {
         console.error('Supabase deleteTestSeries error:', err);
       }
@@ -714,7 +715,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('tests').insert({
+        await supabase.from('tests').insert({
           id,
           exam_id: newTest.examId,
           subject_id: newTest.subjectId || null,
@@ -741,9 +742,7 @@ export const adminApi = {
         );
         if (allAssocExams.length > 0) {
           const assocRows = allAssocExams.map((eid) => ({ test_id: id, exam_id: eid }));
-          await (supabase as any)
-            .from('test_exams')
-            .upsert(assocRows, { onConflict: 'test_id,exam_id' });
+          await supabase.from('test_exams').upsert(assocRows, { onConflict: 'test_id,exam_id' });
         }
       } catch (err) {
         console.error('Supabase createTest error:', err);
@@ -784,7 +783,7 @@ export const adminApi = {
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
         if (updates.status !== undefined) payload.status = updates.status;
 
-        await (supabase as any).from('tests').update(payload).eq('id', id);
+        await supabase.from('tests').update(payload).eq('id', id);
 
         if (updates.associatedExamIds !== undefined) {
           await catalogApi.syncTestExamAssociations(id, updates.associatedExamIds);
@@ -825,8 +824,8 @@ export const adminApi = {
           .select('question_id, question_order, questions(*)')
           .eq('test_id', testId);
         if (data && data.length > 0) {
-          data.forEach((item: any, idx: number) => {
-            const q = item.questions;
+          data.forEach((item, idx: number) => {
+            const q = item.questions as unknown as QuestionRow | null;
             if (!q) {
               errors.push(`Question #${idx + 1} data is missing.`);
             } else {
@@ -889,10 +888,10 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any).rpc('publish_test', { p_test_id: testId });
+        const { error } = await supabase.rpc('publish_test', { p_test_id: testId });
         if (error) return { success: false, error: error.message };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Publish RPC failed' };
+      } catch (err) {
+        return { success: false, error: getErrorMessage(err, 'Publish RPC failed') };
       }
     }
 
@@ -908,10 +907,10 @@ export const adminApi = {
   async archiveTest(testId: string): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any).rpc('archive_test', { p_test_id: testId });
+        const { error } = await supabase.rpc('archive_test', { p_test_id: testId });
         if (error) return { success: false, error: error.message };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Archive RPC failed' };
+      } catch (err) {
+        return { success: false, error: getErrorMessage(err, 'Archive RPC failed') };
       }
     }
 
@@ -1045,7 +1044,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('questions').insert({
+        await supabase.from('questions').insert({
           id,
           chapter_id: newQuestion.chapterId || null,
           subject_id: newQuestion.subjectId || null,
@@ -1058,7 +1057,7 @@ export const adminApi = {
           correct_option: newQuestion.correctOption,
           explanation: newQuestion.explanation || null,
           explanation_bengali: newQuestion.explanationBengali || null,
-          difficulty: (newQuestion.difficulty as any) || 'medium',
+          difficulty: newQuestion.difficulty || 'medium',
           default_marks: newQuestion.defaultMarks,
           default_negative_marks: newQuestion.defaultNegativeMarks,
           is_active: newQuestion.isActive,
@@ -1102,7 +1101,7 @@ export const adminApi = {
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
         if (updates.status !== undefined) payload.status = updates.status;
 
-        await (supabase as any).from('questions').update(payload).eq('id', id);
+        await supabase.from('questions').update(payload).eq('id', id);
       } catch (err) {
         console.error('Supabase updateQuestion error:', err);
       }
@@ -1120,7 +1119,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any)
+        await supabase
           .from('questions')
           .update({ status: 'archived', is_active: false })
           .eq('id', id);
@@ -1153,9 +1152,9 @@ export const adminApi = {
       try {
         await this.createQuestion(qData);
         successCount++;
-      } catch (err: any) {
+      } catch (err) {
         errors.push(
-          `Failed to save question "${qData.questionText.slice(0, 30)}...": ${err.message}`
+          `Failed to save question "${qData.questionText.slice(0, 30)}...": ${getErrorMessage(err, 'Unknown error')}`
         );
       }
     }
@@ -1185,22 +1184,22 @@ export const adminApi = {
           .order('question_order', { ascending: true });
 
         if (!error && data && data.length > 0) {
-          return data.map((item: any) => {
-            const q = item.questions;
+          return data.map((item) => {
+            const q = item.questions as unknown as QuestionRow | null;
             return {
               questionId: item.question_id,
               questionOrder: item.question_order,
               marks: Number(item.marks),
               negativeMarks: Number(item.negative_marks),
-              questionText: q?.question_text,
-              questionBengaliText: q?.question_bengali_text,
-              difficulty: q?.difficulty,
-              correctOption: q?.correct_option,
-              optionA: q?.option_a,
-              optionB: q?.option_b,
-              optionC: q?.option_c,
-              optionD: q?.option_d,
-              explanation: q?.explanation,
+              questionText: q?.question_text ?? undefined,
+              questionBengaliText: q?.question_bengali_text ?? undefined,
+              difficulty: q?.difficulty ?? undefined,
+              correctOption: (q?.correct_option as 'A' | 'B' | 'C' | 'D' | null) ?? undefined,
+              optionA: q?.option_a ?? undefined,
+              optionB: q?.option_b ?? undefined,
+              optionC: q?.option_c ?? undefined,
+              optionD: q?.option_d ?? undefined,
+              explanation: q?.explanation ?? undefined,
             };
           });
         }
@@ -1223,13 +1222,13 @@ export const adminApi = {
         negativeMarks: a.negativeMarks,
         questionText: q?.questionText,
         questionBengaliText: q?.questionBengaliText,
-        difficulty: q?.difficulty,
+        difficulty: q?.difficulty ?? undefined,
         correctOption: q?.correctOption,
         optionA: q?.optionA,
         optionB: q?.optionB,
         optionC: q?.optionC,
         optionD: q?.optionD,
-        explanation: q?.explanation,
+        explanation: q?.explanation ?? undefined,
       };
     });
   },
@@ -1247,14 +1246,14 @@ export const adminApi = {
           negative_marks: q.negativeMarks ?? 0.25,
         }));
 
-        const { error } = await (supabase as any).rpc('save_test_questions', {
+        const { error } = await supabase.rpc('save_test_questions', {
           p_test_id: testId,
           p_questions: payload,
         });
 
         if (error) return { success: false, error: error.message };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Failed to save test questions RPC' };
+      } catch (err) {
+        return { success: false, error: getErrorMessage(err, 'Failed to save test questions RPC') };
       }
     }
 

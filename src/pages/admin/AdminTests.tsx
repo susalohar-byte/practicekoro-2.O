@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/lib/errors';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
@@ -81,7 +82,7 @@ export const AdminTests: React.FC = () => {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [testToArchive, setTestToArchive] = useState<MockTest | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [allExams, allSubjects, allChapters, allSeries, allTests] = await Promise.all([
@@ -107,11 +108,11 @@ export const AdminTests: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedSeriesId, selectedStatus]);
 
   useEffect(() => {
     loadData();
-  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedSeriesId, selectedStatus]);
+  }, [loadData]);
 
   // Hierarchical cascading for modal
   const modalAvailableSubjects = examId
@@ -253,8 +254,8 @@ export const AdminTests: React.FC = () => {
       }
       setIsModalOpen(false);
       await loadData();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save test');
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Failed to save test'));
     }
   };
 
@@ -268,10 +269,10 @@ export const AdminTests: React.FC = () => {
     try {
       const result = await api.validateTestForPublish(test.id);
       setValidationResult(result);
-    } catch (err: any) {
+    } catch (err) {
       setValidationResult({
         isValid: false,
-        errors: [err.message || 'Error validating test'],
+        errors: [getErrorMessage(err, 'Error validating test')],
       });
     } finally {
       setIsValidating(false);
@@ -291,8 +292,8 @@ export const AdminTests: React.FC = () => {
       } else {
         setPublishMessage({ type: 'error', text: res.error || 'Failed to publish test.' });
       }
-    } catch (err: any) {
-      setPublishMessage({ type: 'error', text: err.message || 'Unexpected publish error' });
+    } catch (err) {
+      setPublishMessage({ type: 'error', text: getErrorMessage(err, 'Unexpected publish error') });
     }
   };
 
@@ -743,7 +744,7 @@ export const AdminTests: React.FC = () => {
                   </label>
                   <select
                     value={testType}
-                    onChange={(e) => setTestType(e.target.value as any)}
+                    onChange={(e) => setTestType(e.target.value as MockTest['testType'])}
                     className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                   >
                     <option value="full_mock">

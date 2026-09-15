@@ -54,7 +54,7 @@ export const Tests: React.FC = () => {
       }
     }
     loadSubjects();
-  }, [selectedExam]);
+  }, [selectedExam, searchParams]);
 
   // Load Chapters when selectedSubject changes
   useEffect(() => {
@@ -75,7 +75,7 @@ export const Tests: React.FC = () => {
       }
     }
     loadChapters();
-  }, [selectedSubject]);
+  }, [selectedSubject, searchParams]);
 
   // Load Tests when selectedChapter changes
   useEffect(() => {

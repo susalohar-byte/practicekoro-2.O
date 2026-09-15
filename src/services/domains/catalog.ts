@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import {
   MOCK_EXAMS,
   MOCK_SUBJECTS,
@@ -33,7 +33,15 @@ import type {
   MistakeRow,
   SubjectRow,
   TestRow,
+  QuestionRow,
 } from '@/services/domains/localStore';
+
+type QuestionWithContext = QuestionRow & {
+  chapters?: {
+    name?: string;
+    subjects?: { name?: string; exams?: { title?: string } | null } | null;
+  } | null;
+};
 
 /**
  * Student catalog, test-taking, attempts, mistakes & bookmarks API.
@@ -151,7 +159,7 @@ export const catalogApi = {
             .select('test_id')
             .eq('exam_id', examId);
           if (assocData && assocData.length > 0) {
-            assocTestIds = assocData.map((a: any) => a.test_id);
+            assocTestIds = assocData.map((a) => a.test_id);
           }
         } catch (e) {
           console.warn('Could not query test_exams table, fallback to exam_id', e);
@@ -182,7 +190,7 @@ export const catalogApi = {
             (!chapterId || t.chapterId === chapterId)
         );
       }
-      return data.map((item: any) => ({
+      return data.map((item) => ({
         id: item.id,
         examId: item.exam_id,
         subjectId: item.subject_id ?? undefined,
@@ -243,12 +251,12 @@ export const catalogApi = {
   async getTestExamAssociations(testId: string): Promise<string[]> {
     if (!isSupabaseConfigured) return [];
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('test_exams')
         .select('exam_id')
         .eq('test_id', testId);
       if (error || !data) return [];
-      return data.map((d: any) => d.exam_id);
+      return data.map((d) => d.exam_id);
     } catch {
       return [];
     }
@@ -257,7 +265,7 @@ export const catalogApi = {
   async associateTestWithExam(testId: string, examId: string): Promise<boolean> {
     if (!isSupabaseConfigured) return true;
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('test_exams')
         .upsert({ test_id: testId, exam_id: examId }, { onConflict: 'test_id,exam_id' });
       return !error;
@@ -269,7 +277,7 @@ export const catalogApi = {
   async dissociateTestFromExam(testId: string, examId: string): Promise<boolean> {
     if (!isSupabaseConfigured) return true;
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('test_exams')
         .delete()
         .eq('test_id', testId)
@@ -283,15 +291,12 @@ export const catalogApi = {
   async syncTestExamAssociations(testId: string, examIds: string[]): Promise<boolean> {
     if (!isSupabaseConfigured) return true;
     try {
-      const { error: delError } = await (supabase as any)
-        .from('test_exams')
-        .delete()
-        .eq('test_id', testId);
+      const { error: delError } = await supabase.from('test_exams').delete().eq('test_id', testId);
       if (delError) return false;
 
       if (examIds.length > 0) {
         const rows = examIds.map((eid) => ({ test_id: testId, exam_id: eid }));
-        const { error: insError } = await (supabase as any).from('test_exams').insert(rows);
+        const { error: insError } = await supabase.from('test_exams').insert(rows);
         if (insError) return false;
       }
       return true;
@@ -322,7 +327,7 @@ export const catalogApi = {
         slug: row.slug,
         description: row.description ?? undefined,
         testType: row.test_type,
-        year: (row as any).year ? Number((row as any).year) : undefined,
+        year: 'year' in row && row.year ? Number(row.year) : undefined,
         durationMinutes: row.duration_minutes,
         totalQuestions: row.total_questions,
         totalMarks: Number(row.total_marks),
@@ -331,7 +336,7 @@ export const catalogApi = {
         isPremium: row.is_premium,
         orderIndex: row.order_index,
         isActive: row.is_active,
-        status: (row as any).status || 'published',
+        status: row.status || 'published',
       };
     } catch {
       return mockFound || null;
@@ -340,7 +345,7 @@ export const catalogApi = {
 
   async getStudentTestQuestions(testId: string): Promise<StudentTestQuestion[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('get_student_exam_questions', {
+      const { data, error } = await supabase.rpc('get_student_exam_questions', {
         p_test_id: testId,
       });
       if (error) {
@@ -452,7 +457,7 @@ export const catalogApi = {
     const durationMinutes = test.durationMinutes;
 
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('start_test_attempt', {
+      const { data, error } = await supabase.rpc('start_test_attempt', {
         p_test_id: testId,
       });
 
@@ -511,7 +516,7 @@ export const catalogApi = {
 
   async getTestAttempt(attemptId: string): Promise<TestAttempt | null> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('test_attempts')
         .select('*')
         .eq('id', attemptId)
@@ -555,7 +560,7 @@ export const catalogApi = {
   ): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).rpc('save_test_answers', {
+        await supabase.rpc('save_test_answers', {
           p_attempt_id: attemptId,
           p_answers: answers,
           p_time_spent_seconds: timeSpentSeconds,
@@ -599,7 +604,7 @@ export const catalogApi = {
     const test = await this.getTestById(testId);
 
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('submit_test_attempt', {
+      const { data, error } = await supabase.rpc('submit_test_attempt', {
         p_attempt_id: attemptId,
         p_answers: answers,
         p_time_spent_seconds: timeSpentSeconds,
@@ -727,7 +732,7 @@ export const catalogApi = {
 
   async getAttemptResult(attemptId: string): Promise<GradedResult | null> {
     if (isSupabaseConfigured) {
-      const { data: res, error } = await (supabase as any)
+      const { data: res, error } = await supabase
         .from('test_results')
         .select(
           `
@@ -759,7 +764,7 @@ export const catalogApi = {
       }
 
       if (res) {
-        const r = res as Record<string, any>;
+        const r = res as Record<string, unknown>;
         const attempt = r.test_attempts as {
           correct_count: number;
           wrong_count: number;
@@ -821,7 +826,7 @@ export const catalogApi = {
 
   async getAttemptSolutions(attemptId: string, testId: string): Promise<QuestionSolution[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await (supabase as any).rpc('get_attempt_solutions', {
+      const { data, error } = await supabase.rpc('get_attempt_solutions', {
         p_attempt_id: attemptId,
       });
 
@@ -868,7 +873,7 @@ export const catalogApi = {
   async toggleBookmark(userId: string, questionId: string, note?: string): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        const { data: existing } = await (supabase as any)
+        const { data: existing } = await supabase
           .from('bookmarks')
           .select('id')
           .eq('user_id', userId)
@@ -876,13 +881,10 @@ export const catalogApi = {
           .maybeSingle();
 
         if (existing) {
-          await (supabase as any)
-            .from('bookmarks')
-            .delete()
-            .eq('id', (existing as any).id);
+          await supabase.from('bookmarks').delete().eq('id', existing.id);
           return false; // Removed
         } else {
-          await (supabase as any).from('bookmarks').insert({
+          await supabase.from('bookmarks').insert({
             user_id: userId,
             question_id: questionId,
             note: note || 'Bookmarked during practice review',
@@ -955,7 +957,7 @@ export const catalogApi = {
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return data.map((d: any) => {
+      return data.map((d) => {
         const test = d.tests;
         return {
           id: d.id,
@@ -1020,47 +1022,49 @@ export const catalogApi = {
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return (data as unknown as Array<MistakeRow & { questions: any }>).map((d) => {
-        const q = d.questions || {};
-        const ch = q.chapters;
-        const sub = ch?.subjects;
-        const ex = sub?.exams;
-        return {
-          id: d.id,
-          userId: d.user_id,
-          questionId: d.question_id,
-          wrongCount: d.wrong_count,
-          isResolved: d.is_resolved,
-          lastReviewedAt: d.last_reviewed_at ?? undefined,
-          createdAt: d.created_at,
-          examTitle: ex?.title,
-          subjectName: sub?.name,
-          chapterName: ch?.name,
-          question: {
-            id: String(q.id),
-            chapterId: q.chapter_id ?? undefined,
-            subjectId: q.subject_id ?? undefined,
-            questionText: String(q.question_text),
-            questionBengaliText: q.question_bengali_text
-              ? String(q.question_bengali_text)
-              : undefined,
-            optionA: String(q.option_a),
-            optionB: String(q.option_b),
-            optionC: String(q.option_c),
-            optionD: String(q.option_d),
-            correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
-            explanation: q.explanation ? String(q.explanation) : undefined,
-            explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
-            difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
-            defaultMarks: Number(q.default_marks || 1),
-            defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
-            isActive: Boolean(q.is_active),
+      return (data as unknown as Array<MistakeRow & { questions: QuestionWithContext }>).map(
+        (d) => {
+          const q = d.questions || {};
+          const ch = q.chapters;
+          const sub = ch?.subjects;
+          const ex = sub?.exams;
+          return {
+            id: d.id,
+            userId: d.user_id,
+            questionId: d.question_id,
+            wrongCount: d.wrong_count,
+            isResolved: d.is_resolved,
+            lastReviewedAt: d.last_reviewed_at ?? undefined,
+            createdAt: d.created_at,
             examTitle: ex?.title,
             subjectName: sub?.name,
             chapterName: ch?.name,
-          },
-        };
-      });
+            question: {
+              id: String(q.id),
+              chapterId: q.chapter_id ?? undefined,
+              subjectId: q.subject_id ?? undefined,
+              questionText: String(q.question_text),
+              questionBengaliText: q.question_bengali_text
+                ? String(q.question_bengali_text)
+                : undefined,
+              optionA: String(q.option_a),
+              optionB: String(q.option_b),
+              optionC: String(q.option_c),
+              optionD: String(q.option_d),
+              correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+              explanation: q.explanation ? String(q.explanation) : undefined,
+              explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
+              difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+              defaultMarks: Number(q.default_marks || 1),
+              defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+              isActive: Boolean(q.is_active),
+              examTitle: ex?.title,
+              subjectName: sub?.name,
+              chapterName: ch?.name,
+            },
+          };
+        }
+      );
     } catch {
       return [];
     }
@@ -1069,7 +1073,7 @@ export const catalogApi = {
   async resolveMistake(mistakeId: string, isResolved: boolean = true): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('mistakes')
           .update({
             is_resolved: isResolved,
@@ -1119,45 +1123,47 @@ export const catalogApi = {
         .order('created_at', { ascending: false });
 
       if (error || !data || data.length === 0) return [];
-      return (data as unknown as Array<BookmarkRow & { questions: any }>).map((d) => {
-        const q = d.questions || {};
-        const ch = q.chapters;
-        const sub = ch?.subjects;
-        const ex = sub?.exams;
-        return {
-          id: d.id,
-          userId: d.user_id,
-          questionId: d.question_id,
-          note: d.note ?? undefined,
-          createdAt: d.created_at,
-          examTitle: ex?.title,
-          subjectName: sub?.name,
-          chapterName: ch?.name,
-          question: {
-            id: String(q.id),
-            chapterId: q.chapter_id ?? undefined,
-            subjectId: q.subject_id ?? undefined,
-            questionText: String(q.question_text),
-            questionBengaliText: q.question_bengali_text
-              ? String(q.question_bengali_text)
-              : undefined,
-            optionA: String(q.option_a),
-            optionB: String(q.option_b),
-            optionC: String(q.option_c),
-            optionD: String(q.option_d),
-            correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
-            explanation: q.explanation ? String(q.explanation) : undefined,
-            explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
-            difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
-            defaultMarks: Number(q.default_marks || 1),
-            defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
-            isActive: Boolean(q.is_active),
+      return (data as unknown as Array<BookmarkRow & { questions: QuestionWithContext }>).map(
+        (d) => {
+          const q = d.questions || {};
+          const ch = q.chapters;
+          const sub = ch?.subjects;
+          const ex = sub?.exams;
+          return {
+            id: d.id,
+            userId: d.user_id,
+            questionId: d.question_id,
+            note: d.note ?? undefined,
+            createdAt: d.created_at,
             examTitle: ex?.title,
             subjectName: sub?.name,
             chapterName: ch?.name,
-          },
-        };
-      });
+            question: {
+              id: String(q.id),
+              chapterId: q.chapter_id ?? undefined,
+              subjectId: q.subject_id ?? undefined,
+              questionText: String(q.question_text),
+              questionBengaliText: q.question_bengali_text
+                ? String(q.question_bengali_text)
+                : undefined,
+              optionA: String(q.option_a),
+              optionB: String(q.option_b),
+              optionC: String(q.option_c),
+              optionD: String(q.option_d),
+              correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+              explanation: q.explanation ? String(q.explanation) : undefined,
+              explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
+              difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+              defaultMarks: Number(q.default_marks || 1),
+              defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+              isActive: Boolean(q.is_active),
+              examTitle: ex?.title,
+              subjectName: sub?.name,
+              chapterName: ch?.name,
+            },
+          };
+        }
+      );
     } catch {
       return [];
     }
