@@ -82,7 +82,7 @@ export interface Database {
       subjects: {
         Row: {
           id: string;
-          exam_id: string;
+          exam_id: string | null;
           name: string;
           slug: string;
           description: string | null;
@@ -94,7 +94,7 @@ export interface Database {
         };
         Insert: {
           id: string;
-          exam_id: string;
+          exam_id?: string | null;
           name: string;
           slug: string;
           description?: string | null;

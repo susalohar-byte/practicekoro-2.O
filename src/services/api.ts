@@ -126,20 +126,26 @@ export const api = {
   },
 
   // Subjects
-  async getSubjects(examId: string): Promise<Subject[]> {
-    if (!isSupabaseConfigured) return MOCK_SUBJECTS[examId] || [];
+  async getSubjects(examId?: string): Promise<Subject[]> {
+    if (!isSupabaseConfigured)
+      return (examId ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('subjects')
         .select('*')
-        .eq('exam_id', examId)
         .eq('is_active', true)
         .order('order_index', { ascending: true });
 
-      if (error || !data || data.length === 0) return MOCK_SUBJECTS[examId] || [];
+      if (examId) {
+        query = query.or(`exam_id.eq.${examId},exam_id.is.null`);
+      }
+
+      const { data, error } = await query;
+      if (error || !data || data.length === 0)
+        return (examId ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
       return (data as SubjectRow[]).map((item) => ({
         id: item.id,
-        examId: item.exam_id,
+        examId: item.exam_id ?? undefined,
         name: item.name,
         slug: item.slug,
         description: item.description ?? undefined,
@@ -148,7 +154,7 @@ export const api = {
         isActive: item.is_active,
       }));
     } catch {
-      return MOCK_SUBJECTS[examId] || [];
+      return (examId ? MOCK_SUBJECTS[examId] : Object.values(MOCK_SUBJECTS).flat()) || [];
     }
   },
 
@@ -1825,7 +1831,7 @@ export const api = {
   async getAllAdminSubjects(examId?: string): Promise<Subject[]> {
     if (!isSupabaseConfigured) {
       return localSubjects
-        .filter((s) => !examId || s.examId === examId)
+        .filter((s) => !examId || !s.examId || s.examId === examId)
         .map((s) => ({
           ...s,
           chaptersCount: localChapters.filter((c) => c.subjectId === s.id).length,
@@ -1833,16 +1839,21 @@ export const api = {
     }
     try {
       let query = supabase.from('subjects').select('*').order('order_index', { ascending: true });
-      if (examId) query = query.eq('exam_id', examId);
+      if (examId) query = query.or(`exam_id.eq.${examId},exam_id.is.null`);
       const { data, error } = await query;
 
       if (error || !data || data.length === 0) {
-        return localSubjects.filter((s) => !examId || s.examId === examId);
+        return localSubjects
+          .filter((s) => !examId || !s.examId || s.examId === examId)
+          .map((s) => ({
+            ...s,
+            chaptersCount: localChapters.filter((c) => c.subjectId === s.id).length,
+          }));
       }
 
       return (data as SubjectRow[]).map((item) => ({
         id: item.id,
-        examId: item.exam_id,
+        examId: item.exam_id ?? undefined,
         name: item.name,
         slug: item.slug,
         description: item.description ?? undefined,
@@ -1852,7 +1863,12 @@ export const api = {
         chaptersCount: localChapters.filter((c) => c.subjectId === item.id).length,
       }));
     } catch {
-      return localSubjects.filter((s) => !examId || s.examId === examId);
+      return localSubjects
+        .filter((s) => !examId || !s.examId || s.examId === examId)
+        .map((s) => ({
+          ...s,
+          chaptersCount: localChapters.filter((c) => c.subjectId === s.id).length,
+        }));
     }
   },
 
@@ -1863,7 +1879,9 @@ export const api = {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
-    const id = `${subjectData.examId}-${slug}`.slice(0, 50);
+    const id = subjectData.examId
+      ? `${subjectData.examId}-${slug}`.slice(0, 50)
+      : `sub-${slug}`.slice(0, 50);
     const newSubject: Subject = {
       id,
       ...subjectData,
@@ -1875,7 +1893,7 @@ export const api = {
       try {
         await (supabase as any).from('subjects').insert({
           id,
-          exam_id: newSubject.examId,
+          exam_id: newSubject.examId || null,
           name: newSubject.name,
           slug: newSubject.slug,
           description: newSubject.description || null,

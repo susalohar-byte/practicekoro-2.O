@@ -28,7 +28,7 @@ export interface Exam {
 
 export interface Subject {
   id: string;
-  examId: string;
+  examId?: string;
   name: string;
   slug: string;
   description?: string;
