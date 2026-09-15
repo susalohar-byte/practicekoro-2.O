@@ -1,5 +1,6 @@
 import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -10,9 +11,9 @@ import {
   CheckCircle2,
   XCircle,
   Search,
-  BookOpen,
-  Clock,
-  Target,
+  FileCheck,
+  History,
+  FolderTree,
   X,
 } from 'lucide-react';
 import type { Exam } from '@/types';
@@ -23,6 +24,7 @@ export const AdminExams: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -95,6 +97,8 @@ export const AdminExams: React.FC = () => {
     }
 
     try {
+      setIsSaving(true);
+      setFormError('');
       if (editingExam) {
         await api.updateExam(editingExam.id, {
           title: title.trim(),
@@ -126,6 +130,8 @@ export const AdminExams: React.FC = () => {
       await loadExams();
     } catch (err) {
       setFormError(getErrorMessage(err, 'Failed to save exam'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -135,6 +141,22 @@ export const AdminExams: React.FC = () => {
       await loadExams();
     } catch (err) {
       console.error('Failed to toggle status:', err);
+    }
+  };
+
+  const handleDeleteExam = async (exam: Exam) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete exam "${exam.title}"?\n\nWarning: This action will remove this exam from the system.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsLoading(true);
+      await api.deleteExam(exam.id);
+      await loadExams();
+    } catch (err) {
+      alert(getErrorMessage(err, 'Failed to delete exam'));
+      setIsLoading(false);
     }
   };
 
@@ -160,8 +182,7 @@ export const AdminExams: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Top-level content entity. All subjects, chapters, test series and mock tests belong to
-            an Exam. Stats count Full Mock, PYQ and Topic tests linked to each exam.
+            Manage competitive exam categories. Configure Full Mock Tests and PYQs per target exam. Topic Tests are universal across all exams.
           </p>
         </div>
 
@@ -242,28 +263,39 @@ export const AdminExams: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center gap-3 text-slate-400 text-[11px]">
-                        <span
-                          className="flex items-center gap-1"
-                          title="Full Mock Tests assigned to this exam"
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* 1. Full Mock Test */}
+                        <Link
+                          to={`/admin/tests?examId=${exam.id}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[11px] font-semibold hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-colors"
+                          title={`Full Mock Tests for ${exam.title}`}
                         >
-                          <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-                          {exam.fullMockCount ?? 0} Full Mock
-                        </span>
-                        <span
-                          className="flex items-center gap-1"
-                          title="Previous Year Question papers assigned to this exam"
+                          <FileCheck className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>{exam.fullMockCount ?? exam.fullMocksCount ?? 0} Full Mock</span>
+                        </Link>
+
+                        {/* 2. PYQ (Previous Year Question) */}
+                        <Link
+                          to={`/admin/tests?examId=${exam.id}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[11px] font-semibold hover:bg-amber-500/20 hover:border-amber-500/40 transition-colors"
+                          title={`Previous Year Question Papers for ${exam.title}`}
                         >
-                          <Clock className="w-3.5 h-3.5 text-rose-400" />
-                          {exam.pyqCount ?? 0} PYQ
-                        </span>
-                        <span
-                          className="flex items-center gap-1"
-                          title="Topic / chapter-wise tests linked to this exam (shared across exams)"
+                          <History className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{exam.pyqCount ?? exam.pyqsCount ?? 0} PYQ</span>
+                        </Link>
+
+                        {/* 3. Topic Test (Common for all Exam) */}
+                        <Link
+                          to="/admin/tests"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[11px] font-semibold hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-colors"
+                          title="Topic Tests are common syllabus drills shared across all competitive exams"
                         >
-                          <Target className="w-3.5 h-3.5 text-amber-400" />
-                          {exam.topicTestCount ?? 0} Topic Test
-                        </span>
+                          <FolderTree className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>{exam.topicTestCount ?? exam.topicTestsCount ?? 0} Topic Test</span>
+                          <span className="text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Common
+                          </span>
+                        </Link>
                       </div>
                     </td>
                     <td className="p-4 font-bold text-indigo-400">#{exam.orderIndex}</td>
@@ -279,24 +311,35 @@ export const AdminExams: React.FC = () => {
                       )}
                     </td>
                     <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleToggleActive(exam)}
+                          className={`p-1.5 rounded-lg border transition-colors ${
+                            exam.isActive
+                              ? 'text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20'
+                              : 'text-slate-400 hover:text-slate-200 bg-slate-800/60 border-slate-700 hover:bg-slate-800'
+                          }`}
+                          title={exam.isActive ? 'Deactivate Exam' : 'Activate Exam'}
+                        >
+                          {exam.isActive ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                        </button>
                         <button
                           onClick={() => openEditModal(exam)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 transition-colors"
                           title="Edit Exam"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleToggleActive(exam)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
-                          title={exam.isActive ? 'Deactivate Exam' : 'Activate Exam'}
+                          onClick={() => handleDeleteExam(exam)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-colors"
+                          title="Delete Exam"
                         >
-                          {exam.isActive ? (
-                            <Trash2 className="w-4 h-4" />
-                          ) : (
-                            <CheckCircle2 className="w-4 h-4" />
-                          )}
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -429,9 +472,10 @@ export const AdminExams: React.FC = () => {
                 <Button
                   type="submit"
                   size="sm"
+                  disabled={isSaving}
                   className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
                 >
-                  {editingExam ? 'Save Changes' : 'Create Exam'}
+                  {isSaving ? 'Saving...' : editingExam ? 'Save Changes' : 'Create Exam'}
                 </Button>
               </div>
             </form>

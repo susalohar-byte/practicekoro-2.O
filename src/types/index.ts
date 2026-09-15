@@ -24,6 +24,11 @@ export interface Exam {
   fullMockCount?: number;
   pyqCount?: number;
   topicTestCount?: number;
+  fullMocksCount?: number;
+  pyqsCount?: number;
+  topicTestsCount?: number;
+  testsCount?: number;
+  subjectsCount?: number;
   totalVacancies?: number;
 }
 

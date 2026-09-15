@@ -55,9 +55,17 @@ export const adminApi = {
     };
 
     if (!isSupabaseConfigured) {
+      const commonTopicCount = localTests.filter(
+        (t) => classify((t as any).testType) === 'topic'
+      ).length;
+
       for (const t of localTests) {
-        const kind = classify(t.testType);
-        if (kind) bump(t.examId, kind);
+        const kind = classify((t as any).testType);
+        if (kind && kind !== 'topic') bump(t.examId, kind);
+      }
+      for (const e of localExams) {
+        counts[e.id] = counts[e.id] || { fullMock: 0, pyq: 0, topic: 0 };
+        counts[e.id].topic = commonTopicCount;
       }
       return counts;
     }
@@ -72,11 +80,18 @@ export const adminApi = {
         .from('test_exams')
         .select('test_id, exam_id');
 
+      // Total topic tests available across the platform (common for all exams)
+      const commonTopicCount = (tests ?? []).filter(
+        (t: any) => classify(t.test_type) === 'topic'
+      ).length;
+
       const seen = new Set<string>();
       for (const row of tests ?? []) {
         const kind = classify(row.test_type);
         if (!kind) continue;
-        bump(row.exam_id, kind);
+        if (kind !== 'topic') {
+          bump(row.exam_id, kind);
+        }
         if (row.exam_id) seen.add(`${row.id}:${row.exam_id}`);
       }
       // Extra exam links from the junction (skip duplicates of the owning exam_id)
@@ -84,11 +99,20 @@ export const adminApi = {
         if (assocError) break;
         const kind = classify((tests ?? []).find((t) => t.id === row.test_id)?.test_type);
         if (!kind) continue;
-        const key = `${row.test_id}:${row.exam_id}`;
-        if (!seen.has(key)) {
-          bump(row.exam_id, kind);
-          seen.add(key);
+        if (kind !== 'topic') {
+          const key = `${row.test_id}:${row.exam_id}`;
+          if (!seen.has(key)) {
+            bump(row.exam_id, kind);
+            seen.add(key);
+          }
         }
+      }
+
+      // Ensure every exam receives the common topic count
+      const { data: allExams } = await (supabase as any).from('exams').select('id');
+      for (const ex of (allExams ?? []) as any[]) {
+        counts[ex.id] = counts[ex.id] || { fullMock: 0, pyq: 0, topic: 0 };
+        counts[ex.id].topic = commonTopicCount;
       }
     } catch {
       // Fail soft: UI falls back to 0s
@@ -100,12 +124,21 @@ export const adminApi = {
     const [contentCounts] = await Promise.all([this.getExamContentCounts()]);
     const empty = { fullMock: 0, pyq: 0, topic: 0 };
     if (!isSupabaseConfigured) {
-      return localExams.map((e) => ({
-        ...e,
-        fullMockCount: contentCounts[e.id]?.fullMock ?? empty.fullMock,
-        pyqCount: contentCounts[e.id]?.pyq ?? empty.pyq,
-        topicTestCount: contentCounts[e.id]?.topic ?? empty.topic,
-      }));
+      return localExams.map((e) => {
+        const fullMock = contentCounts[e.id]?.fullMock ?? empty.fullMock;
+        const pyq = contentCounts[e.id]?.pyq ?? empty.pyq;
+        const topic = contentCounts[e.id]?.topic ?? empty.topic;
+        return {
+          ...e,
+          fullMockCount: fullMock,
+          pyqCount: pyq,
+          topicTestCount: topic,
+          fullMocksCount: fullMock,
+          pyqsCount: pyq,
+          topicTestsCount: topic,
+          testsCount: fullMock + pyq + topic,
+        };
+      });
     }
     try {
       const { data, error } = await supabase
@@ -114,28 +147,46 @@ export const adminApi = {
         .order('order_index', { ascending: true });
 
       if (error || !data || data.length === 0) {
-        return localExams.map((e) => ({
-          ...e,
-          fullMockCount: contentCounts[e.id]?.fullMock ?? empty.fullMock,
-          pyqCount: contentCounts[e.id]?.pyq ?? empty.pyq,
-          topicTestCount: contentCounts[e.id]?.topic ?? empty.topic,
-        }));
+        return localExams.map((e) => {
+          const fullMock = contentCounts[e.id]?.fullMock ?? empty.fullMock;
+          const pyq = contentCounts[e.id]?.pyq ?? empty.pyq;
+          const topic = contentCounts[e.id]?.topic ?? empty.topic;
+          return {
+            ...e,
+            fullMockCount: fullMock,
+            pyqCount: pyq,
+            topicTestCount: topic,
+            fullMocksCount: fullMock,
+            pyqsCount: pyq,
+            topicTestsCount: topic,
+            testsCount: fullMock + pyq + topic,
+          };
+        });
       }
 
-      return (data as ExamRow[]).map((item) => ({
-        id: item.id,
-        title: item.title,
-        slug: item.slug,
-        description: item.description ?? undefined,
-        category: item.category,
-        iconName: item.icon_name,
-        bannerUrl: item.banner_url ?? undefined,
-        orderIndex: item.order_index,
-        isActive: item.is_active,
-        fullMockCount: contentCounts[item.id]?.fullMock ?? empty.fullMock,
-        pyqCount: contentCounts[item.id]?.pyq ?? empty.pyq,
-        topicTestCount: contentCounts[item.id]?.topic ?? empty.topic,
-      }));
+      return (data as ExamRow[]).map((item) => {
+        const fullMock = contentCounts[item.id]?.fullMock ?? empty.fullMock;
+        const pyq = contentCounts[item.id]?.pyq ?? empty.pyq;
+        const topic = contentCounts[item.id]?.topic ?? empty.topic;
+        return {
+          id: item.id,
+          title: item.title,
+          slug: item.slug,
+          description: item.description ?? undefined,
+          category: item.category,
+          iconName: item.icon_name,
+          bannerUrl: item.banner_url ?? undefined,
+          orderIndex: item.order_index,
+          isActive: item.is_active,
+          fullMockCount: fullMock,
+          pyqCount: pyq,
+          topicTestCount: topic,
+          fullMocksCount: fullMock,
+          pyqsCount: pyq,
+          topicTestsCount: topic,
+          testsCount: fullMock + pyq + topic,
+        };
+      });
     } catch {
       return localExams;
     }
@@ -221,14 +272,19 @@ export const adminApi = {
   async deleteExam(id: string): Promise<boolean> {
     const idx = localExams.findIndex((e) => e.id === id);
     if (idx !== -1) {
-      localExams[idx].isActive = false;
+      localExams.splice(idx, 1);
     }
 
     if (isSupabaseConfigured) {
       try {
-        await supabase.from('exams').update({ is_active: false }).eq('id', id);
+        const { error } = await (supabase as any).from('exams').delete().eq('id', id);
+        if (error) {
+          console.error('Supabase deleteExam error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase deleteExam error:', err);
+        throw err;
       }
     }
     return true;
