@@ -368,9 +368,6 @@ export const TestRunner: React.FC = () => {
                     Marked for Review
                   </Badge>
                 )}
-                <span className="text-[11px] font-bold text-slate-400 uppercase">
-                  {currentQ.difficulty}
-                </span>
               </div>
             </div>
 

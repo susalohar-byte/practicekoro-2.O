@@ -14,7 +14,6 @@ export const AdminQuestions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,7 +31,6 @@ export const AdminQuestions: React.FC = () => {
   const [correctOption, setCorrectOption] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const [explanation, setExplanation] = useState('');
   const [explanationBengali, setExplanationBengali] = useState('');
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [defaultMarks, setDefaultMarks] = useState(1.0);
   const [defaultNegativeMarks, setDefaultNegativeMarks] = useState(0.25);
   const [formError, setFormError] = useState('');
@@ -58,7 +56,6 @@ export const AdminQuestions: React.FC = () => {
         api.getAllAdminQuestions({
           subjectId: selectedSubjectId || undefined,
           chapterId: selectedChapterId || undefined,
-          difficulty: selectedDifficulty || undefined,
           status: selectedStatus || undefined,
           search: searchTerm || undefined,
         }),
@@ -75,7 +72,7 @@ export const AdminQuestions: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedSubjectId, selectedChapterId, selectedDifficulty, selectedStatus, searchTerm]);
+  }, [selectedSubjectId, selectedChapterId, selectedStatus, searchTerm]);
 
   // Modal cascaded chapters
   const modalChapters = subjectId ? chapters.filter((c) => c.subjectId === subjectId) : chapters;
@@ -93,7 +90,6 @@ export const AdminQuestions: React.FC = () => {
     setCorrectOption('A');
     setExplanation('');
     setExplanationBengali('');
-    setDifficulty('medium');
     setDefaultMarks(1.0);
     setDefaultNegativeMarks(0.25);
     setFormError('');
@@ -113,7 +109,6 @@ export const AdminQuestions: React.FC = () => {
     setCorrectOption(q.correctOption);
     setExplanation(q.explanation || '');
     setExplanationBengali(q.explanationBengali || '');
-    setDifficulty(q.difficulty);
     setDefaultMarks(q.defaultMarks);
     setDefaultNegativeMarks(q.defaultNegativeMarks);
     setFormError('');
@@ -145,7 +140,6 @@ export const AdminQuestions: React.FC = () => {
           correctOption,
           explanation: explanation.trim() || undefined,
           explanationBengali: explanationBengali.trim() || undefined,
-          difficulty,
           defaultMarks: Number(defaultMarks),
           defaultNegativeMarks: Number(defaultNegativeMarks),
         });
@@ -162,7 +156,6 @@ export const AdminQuestions: React.FC = () => {
           correctOption,
           explanation: explanation.trim() || undefined,
           explanationBengali: explanationBengali.trim() || undefined,
-          difficulty,
           defaultMarks: Number(defaultMarks),
           defaultNegativeMarks: Number(defaultNegativeMarks),
           isActive: true,
@@ -240,9 +233,9 @@ export const AdminQuestions: React.FC = () => {
     }
   };
 
-  const sampleCsvText = `question_text,question_bengali_text,option_a,option_b,option_c,option_d,correct_option,explanation,explanation_bengali,difficulty,marks,negative_marks
-"Who founded the Maurya Empire in 322 BCE?","কে ৩২২ খ্রিস্টপূর্বাব্দে মৌর্য সাম্রাজ্য প্রতিষ্ঠা করেছিলেন?","Chandragupta Maurya","Bindusara","Ashoka the Great","Brihadratha","A","Chandragupta Maurya founded the Maurya Empire with Chanakya's guidance.","চাণক্যের সহায়তায় চন্দ্রগুপ্ত মৌর্য নন্দ বংশ ধ্বংস করে মৌর্য সাম্রাজ্য প্রতিষ্ঠা করেন।","easy",1.0,0.25
-"Which Harappan site had an artificial tidal dockyard?","সিন্ধু সভ্যতার কোন স্থানে একটি কৃত্রিম পোতাশ্রয় ছিল?","Harappa","Lothal","Mohenjodaro","Kalibangan","B","Lothal in modern Gujarat had the world's earliest known tidal dockyard.","লোথাল গুজরাটের একটি প্রাচীন বন্দর নগরী ছিল।","medium",1.0,0.25`;
+  const sampleCsvText = `question_text,question_bengali_text,option_a,option_b,option_c,option_d,correct_option,explanation,explanation_bengali,marks,negative_marks
+"Who founded the Maurya Empire in 322 BCE?","কে ৩২২ খ্রিস্টপূর্বাব্দে মৌর্য সাম্রাজ্য প্রতিষ্ঠা করেছিলেন?","Chandragupta Maurya","Bindusara","Ashoka the Great","Brihadratha","A","Chandragupta Maurya founded the Maurya Empire with Chanakya's guidance.","চাণক্যের সহায়তায় চন্দ্রগুপ্ত মৌর্য নন্দ বংশ ধ্বংস করে মৌর্য সাম্রাজ্য প্রতিষ্ঠা করেন।",1.0,0.25
+"Which Harappan site had an artificial tidal dockyard?","সিন্ধু সভ্যতার কোন স্থানে একটি কৃত্রিম পোতাশ্রয় ছিল?","Harappa","Lothal","Mohenjodaro","Kalibangan","B","Lothal in modern Gujarat had the world's earliest known tidal dockyard.","লোথাল গুজরাটের একটি প্রাচীন বন্দর নগরী ছিল।",1.0,0.25`;
 
   const downloadSampleCsv = () => {
     const blob = new Blob([sampleCsvText], { type: 'text/csv;charset=utf-8;' });
@@ -349,20 +342,6 @@ export const AdminQuestions: React.FC = () => {
             </select>
           </div>
 
-          {/* Difficulty Filter */}
-          <div>
-            <select
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-            >
-              <option value="">All Difficulties</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
-
           {/* Status Filter */}
           <div>
             <select
@@ -405,17 +384,6 @@ export const AdminQuestions: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-400 font-mono font-bold text-xs flex items-center justify-center">
                     #{idx + 1}
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                      q.difficulty === 'easy'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : q.difficulty === 'hard'
-                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                    }`}
-                  >
-                    {q.difficulty}
                   </span>
                   <span className="text-[11px] font-mono text-slate-400">
                     +{q.defaultMarks} / -{q.defaultNegativeMarks} Marks
@@ -722,21 +690,7 @@ export const AdminQuestions: React.FC = () => {
               </div>
 
               {/* Parameters */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    Difficulty
-                  </label>
-                  <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
                     Default Marks

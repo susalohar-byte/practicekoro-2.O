@@ -104,7 +104,7 @@ export interface Question {
   correctOption: 'A' | 'B' | 'C' | 'D';
   explanation?: string;
   explanationBengali?: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty?: 'easy' | 'medium' | 'hard' | string;
   defaultMarks: number;
   defaultNegativeMarks: number;
   isActive: boolean;
@@ -137,7 +137,7 @@ export interface TestQuestionAssignment {
   negativeMarks: number;
   questionText?: string;
   questionBengaliText?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: 'easy' | 'medium' | 'hard' | string;
   correctOption?: 'A' | 'B' | 'C' | 'D';
   optionA?: string;
   optionB?: string;
@@ -164,7 +164,7 @@ export interface StudentTestQuestion {
   optionD: string;
   marks: number;
   negativeMarks: number;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty?: 'easy' | 'medium' | 'hard' | string;
 }
 
 export interface AttemptAnswerState {
