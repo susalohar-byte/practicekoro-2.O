@@ -136,7 +136,8 @@ export const AdminDashboard: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Manage competitive exams, question bank, test series, and track candidate mock test activities.
+            Manage competitive exams, question bank, test series, and track candidate mock test
+            activities.
           </p>
         </div>
 
@@ -220,7 +221,8 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <h3 className="text-sm font-bold text-white">Target Exams & Syllabus</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Manage WBCS, WBP Constable, KP, Food SI, and other exams, subject domains, and chapter modules.
+                  Manage WBCS, WBP Constable, KP, Food SI, and other exams, subject domains, and
+                  chapter modules.
                 </p>
               </div>
               <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
@@ -260,7 +262,8 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <h3 className="text-sm font-bold text-white">Question Bank & Import</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Add bilingual questions, Bengali & English text, verified answer keys, and bulk upload via CSV.
+                  Add bilingual questions, Bengali & English text, verified answer keys, and bulk
+                  upload via CSV.
                 </p>
               </div>
               <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
@@ -293,7 +296,8 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <h3 className="text-sm font-bold text-white">Mock Test Studio</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Assemble Full Mock Tests, Previous Year Questions (PYQ), and Topic Tests. Configure timer and negative marking.
+                  Assemble Full Mock Tests, Previous Year Questions (PYQ), and Topic Tests.
+                  Configure timer and negative marking.
                 </p>
               </div>
               <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
@@ -326,7 +330,8 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <h3 className="text-sm font-bold text-white">Candidates & Subscriptions</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Monitor registered aspirants, pass renewals, test completions, and revenue transactions.
+                  Monitor registered aspirants, pass renewals, test completions, and revenue
+                  transactions.
                 </p>
               </div>
               <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
@@ -446,7 +451,9 @@ export const AdminDashboard: React.FC = () => {
           <div className="p-8 text-center">
             <Layers className="w-8 h-8 text-slate-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-slate-300">No mock tests created yet</p>
-            <p className="text-xs text-slate-500 mt-1">Get started by creating your first mock test or PYQ paper.</p>
+            <p className="text-xs text-slate-500 mt-1">
+              Get started by creating your first mock test or PYQ paper.
+            </p>
             <Link to="/admin/tests" className="inline-block mt-4">
               <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold">
                 Create Mock Test
@@ -457,81 +464,83 @@ export const AdminDashboard: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-300">
               <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold text-[10px] border-b border-slate-800">
-              <tr>
-                <th className="p-4">Test Title</th>
-                <th className="p-4">Exam / Domain</th>
-                <th className="p-4">Duration & Marks</th>
-                <th className="p-4">Questions</th>
-                <th className="p-4">Access Tier</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {recentTests.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-900/40">
-                  <td className="p-4 font-bold text-white">{t.title}</td>
-                  <td className="p-4 text-slate-400">
-                    <span className="text-indigo-400 font-semibold">{t.examTitle || t.examId}</span>
-                    {t.chapterName && <span className="text-slate-500"> • {t.chapterName}</span>}
-                  </td>
-                  <td className="p-4 font-mono">
-                    <span className="flex items-center gap-1 text-slate-300">
-                      <Clock className="w-3 h-3 text-slate-500" /> {t.durationMinutes}m •{' '}
-                      {t.totalMarks} Marks
-                    </span>
-                  </td>
-                  <td className="p-4 font-bold text-indigo-400">{t.totalQuestions} Qs</td>
-                  <td className="p-4">
-                    {t.isPremium ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        PRO PASS
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        FREE
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    {t.status === 'published' && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                        Published
-                      </span>
-                    )}
-                    {t.status === 'draft' && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                        Draft
-                      </span>
-                    )}
-                    {t.status === 'archived' && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700/50 text-slate-400 border border-slate-600/40">
-                        Archived
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        to={`/admin/tests/${t.id}/questions`}
-                        className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
-                      >
-                        Questions
-                      </Link>
-                      <span className="text-slate-600">•</span>
-                      <Link
-                        to="/admin/tests"
-                        className="text-xs text-slate-400 hover:text-white font-semibold"
-                      >
-                        Edit
-                      </Link>
-                    </div>
-                  </td>
+                <tr>
+                  <th className="p-4">Test Title</th>
+                  <th className="p-4">Exam / Domain</th>
+                  <th className="p-4">Duration & Marks</th>
+                  <th className="p-4">Questions</th>
+                  <th className="p-4">Access Tier</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {recentTests.map((t) => (
+                  <tr key={t.id} className="hover:bg-slate-900/40">
+                    <td className="p-4 font-bold text-white">{t.title}</td>
+                    <td className="p-4 text-slate-400">
+                      <span className="text-indigo-400 font-semibold">
+                        {t.examTitle || t.examId}
+                      </span>
+                      {t.chapterName && <span className="text-slate-500"> • {t.chapterName}</span>}
+                    </td>
+                    <td className="p-4 font-mono">
+                      <span className="flex items-center gap-1 text-slate-300">
+                        <Clock className="w-3 h-3 text-slate-500" /> {t.durationMinutes}m •{' '}
+                        {t.totalMarks} Marks
+                      </span>
+                    </td>
+                    <td className="p-4 font-bold text-indigo-400">{t.totalQuestions} Qs</td>
+                    <td className="p-4">
+                      {t.isPremium ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          PRO PASS
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          FREE
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {t.status === 'published' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          Published
+                        </span>
+                      )}
+                      {t.status === 'draft' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                          Draft
+                        </span>
+                      )}
+                      {t.status === 'archived' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700/50 text-slate-400 border border-slate-600/40">
+                          Archived
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          to={`/admin/tests/${t.id}/questions`}
+                          className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                        >
+                          Questions
+                        </Link>
+                        <span className="text-slate-600">•</span>
+                        <Link
+                          to="/admin/tests"
+                          className="text-xs text-slate-400 hover:text-white font-semibold"
+                        >
+                          Edit
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

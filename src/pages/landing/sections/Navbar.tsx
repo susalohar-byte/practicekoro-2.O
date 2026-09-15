@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 
 export const Navbar: React.FC = () => {
   const { user, isAdmin } = useAuth();
@@ -16,7 +17,7 @@ export const Navbar: React.FC = () => {
           1. NAVBAR
           ========================================================================= */}
       <header className="sticky top-3 sm:top-4 z-50 w-full px-4 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
-        <div className="w-full max-w-6xl bg-white/90 backdrop-blur-xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl sm:rounded-full px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between pointer-events-auto transition-all">
+        <div className="w-full max-w-6xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl sm:rounded-full px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between pointer-events-auto transition-all">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
             <img
@@ -47,6 +48,10 @@ export const Navbar: React.FC = () => {
 
           {/* Auth / Dashboard CTA */}
           <div className="flex items-center gap-3">
+            {/* Theme Switcher */}
+            <div className="pointer-events-auto">
+              <ThemeToggle />
+            </div>
             {user ? (
               <InteractiveHoverButton
                 text="Dashboard"
