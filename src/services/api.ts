@@ -1838,11 +1838,14 @@ export const api = {
         }));
     }
     try {
-      let query = supabase.from('subjects').select('*').order('order_index', { ascending: true });
+      let query = supabase
+        .from('subjects')
+        .select('*, chapters(count)')
+        .order('order_index', { ascending: true });
       if (examId) query = query.or(`exam_id.eq.${examId},exam_id.is.null`);
       const { data, error } = await query;
 
-      if (error || !data || data.length === 0) {
+      if (error || !data) {
         return localSubjects
           .filter((s) => !examId || !s.examId || s.examId === examId)
           .map((s) => ({
@@ -1851,17 +1854,28 @@ export const api = {
           }));
       }
 
-      return (data as SubjectRow[]).map((item) => ({
-        id: item.id,
-        examId: item.exam_id ?? undefined,
-        name: item.name,
-        slug: item.slug,
-        description: item.description ?? undefined,
-        iconName: item.icon_name,
-        orderIndex: item.order_index,
-        isActive: item.is_active,
-        chaptersCount: localChapters.filter((c) => c.subjectId === item.id).length,
-      }));
+      const subjectsList: Subject[] = (data as any[]).map((item) => {
+        const dbChaptersCount =
+          Array.isArray(item.chapters) && item.chapters[0] ? item.chapters[0].count : 0;
+        return {
+          id: item.id,
+          examId: item.exam_id ?? undefined,
+          name: item.name,
+          slug: item.slug,
+          description: item.description ?? undefined,
+          iconName: item.icon_name,
+          orderIndex: item.order_index,
+          isActive: item.is_active,
+          chaptersCount:
+            dbChaptersCount ?? localChapters.filter((c) => c.subjectId === item.id).length,
+        };
+      });
+
+      // Synchronize in-memory cache
+      localSubjects.length = 0;
+      localSubjects.push(...subjectsList);
+
+      return subjectsList;
     } catch {
       return localSubjects
         .filter((s) => !examId || !s.examId || s.examId === examId)
@@ -1878,10 +1892,15 @@ export const api = {
       subjectData.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-    const id = subjectData.examId
+        .replace(/(^-|-$)/g, '') ||
+      'subject';
+    const baseId = subjectData.examId
       ? `${subjectData.examId}-${slug}`.slice(0, 50)
       : `sub-${slug}`.slice(0, 50);
+
+    const existing = localSubjects.some((s) => s.id === baseId);
+    const id = existing ? `${baseId.slice(0, 42)}-${Date.now().toString(36)}` : baseId;
+
     const newSubject: Subject = {
       id,
       ...subjectData,
@@ -1891,7 +1910,7 @@ export const api = {
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('subjects').insert({
+        const { error } = await (supabase as any).from('subjects').insert({
           id,
           exam_id: newSubject.examId || null,
           name: newSubject.name,
@@ -1901,8 +1920,13 @@ export const api = {
           order_index: newSubject.orderIndex || 0,
           is_active: newSubject.isActive ?? true,
         });
+        if (error) {
+          console.error('Supabase createSubject error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase createSubject error:', err);
+        throw err;
       }
     }
 
@@ -1926,9 +1950,14 @@ export const api = {
         if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
 
-        await (supabase as any).from('subjects').update(payload).eq('id', id);
+        const { error } = await (supabase as any).from('subjects').update(payload).eq('id', id);
+        if (error) {
+          console.error('Supabase updateSubject error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase updateSubject error:', err);
+        throw err;
       }
     }
 
@@ -1936,11 +1965,11 @@ export const api = {
       localSubjects[idx] || {
         id,
         examId: '',
-        name: '',
-        slug: '',
-        iconName: '',
-        orderIndex: 0,
-        isActive: true,
+        name: updates.name || '',
+        slug: updates.slug || '',
+        iconName: updates.iconName || '',
+        orderIndex: updates.orderIndex || 0,
+        isActive: updates.isActive ?? true,
       }
     );
   },
@@ -1948,14 +1977,19 @@ export const api = {
   async deleteSubject(id: string): Promise<boolean> {
     const idx = localSubjects.findIndex((s) => s.id === id);
     if (idx !== -1) {
-      localSubjects[idx].isActive = false;
+      localSubjects.splice(idx, 1);
     }
 
     if (isSupabaseConfigured) {
       try {
-        await (supabase as any).from('subjects').update({ is_active: false }).eq('id', id);
+        const { error } = await (supabase as any).from('subjects').delete().eq('id', id);
+        if (error) {
+          console.error('Supabase deleteSubject error:', error);
+          throw new Error(error.message);
+        }
       } catch (err) {
         console.error('Supabase deleteSubject error:', err);
+        throw err;
       }
     }
     return true;
