@@ -11,9 +11,6 @@ import {
   CheckCircle2,
   XCircle,
   Search,
-  FileCheck,
-  History,
-  FolderTree,
   Network,
   X,
 } from 'lucide-react';
@@ -239,7 +236,6 @@ export const AdminExams: React.FC = () => {
                 <th className="p-4">Exam Title</th>
                 <th className="p-4">Slug / ID</th>
                 <th className="p-4">Category</th>
-                <th className="p-4">Content Stats</th>
                 <th className="p-4">Order</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
@@ -248,13 +244,13 @@ export const AdminExams: React.FC = () => {
             <tbody className="divide-y divide-slate-800/60">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
                     Loading competitive exams...
                   </td>
                 </tr>
               ) : filteredExams.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
                     No competitive exams found.
                   </td>
                 </tr>
@@ -281,39 +277,6 @@ export const AdminExams: React.FC = () => {
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-800 text-slate-300">
                         {exam.category}
                       </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* 1. Full Mock Test */}
-                        <Link
-                          to={`/admin/tests?examId=${exam.id}`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[11px] font-semibold hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-colors"
-                          title={`Full Mock Tests for ${exam.title}`}
-                        >
-                          <FileCheck className="w-3.5 h-3.5 text-indigo-400" />
-                          <span>{exam.fullMockCount ?? exam.fullMocksCount ?? 0} Full Mock</span>
-                        </Link>
-
-                        {/* 2. PYQ (Previous Year Question) */}
-                        <Link
-                          to={`/admin/tests?examId=${exam.id}`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[11px] font-semibold hover:bg-amber-500/20 hover:border-amber-500/40 transition-colors"
-                          title={`Previous Year Question Papers for ${exam.title}`}
-                        >
-                          <History className="w-3.5 h-3.5 text-amber-400" />
-                          <span>{exam.pyqCount ?? exam.pyqsCount ?? 0} PYQ</span>
-                        </Link>
-
-                        {/* 3. Topic Test */}
-                        <Link
-                          to="/admin/tests"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[11px] font-semibold hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-colors"
-                          title="Topic Tests shared across all exams"
-                        >
-                          <FolderTree className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>{exam.topicTestCount ?? exam.topicTestsCount ?? 0} Topic Test</span>
-                        </Link>
-                      </div>
                     </td>
                     <td className="p-4 font-bold text-indigo-400">#{exam.orderIndex}</td>
                     <td className="p-4">

@@ -1,545 +1,526 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
-  Shield,
-  BookOpen,
-  FolderTree,
-  Layers,
-  FileQuestion,
+  IndianRupee,
   Users,
-  CheckCircle2,
-  Clock,
-  Plus,
-  ArrowRight,
-  Upload,
-  Activity,
-  Check,
+  UserPlus,
+  FileQuestion,
+  FileText,
+  Shield,
+  CreditCard,
+  Crown,
+  TrendingUp,
   Sparkles,
-  ChevronRight,
+  ArrowUpRight,
+  BookOpen,
+  Layers,
+  ScrollText,
+  Activity,
+  Plus,
+  RefreshCw,
 } from 'lucide-react';
-import type { AdminDashboardStats, MockTest } from '@/types';
+import type { AdminDashboardV2Stats } from '@/types';
 
 export const AdminDashboard: React.FC = () => {
-  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
-  const [recentTests, setRecentTests] = useState<MockTest[]>([]);
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<AdminDashboardV2Stats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setIsLoading(true);
-        const [dashboardStats, allTests] = await Promise.all([
-          api.getAdminDashboardStats(),
-          api.getAllAdminTests(),
-        ]);
-        setStats(dashboardStats);
-        setRecentTests(allTests.slice(0, 5));
-      } catch (err) {
-        console.error('Admin overview error:', err);
-      } finally {
-        setIsLoading(false);
-      }
+  const loadData = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      const data = await api.getAdminDashboardV2Stats();
+      setStats(data);
+    } catch (err) {
+      console.error('Error loading dashboard stats:', err);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
     }
-    loadData();
   }, []);
 
-  const statCards = [
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const topStatCards = [
     {
-      label: 'Target Exams',
-      value: stats?.totalExams ?? 0,
-      subValue: `${stats?.activeExams ?? 0} active exams`,
-      icon: Shield,
-      color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
-      link: '/admin/exams',
-    },
-    {
-      label: 'Mock Tests',
-      value: stats?.totalTests ?? 0,
-      subValue: `${stats?.publishedTests ?? 0} live • ${stats?.draftTests ?? 0} draft`,
-      icon: Layers,
-      color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-      link: '/admin/tests',
-    },
-    {
-      label: 'Question Bank',
-      value: stats?.totalQuestions ?? 0,
-      subValue: `${stats?.activeQuestions ?? 0} verified questions`,
-      icon: FileQuestion,
-      color: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-      link: '/admin/questions',
-    },
-    {
-      label: 'Registered Aspirants',
-      value: stats?.totalStudents ?? 0,
-      subValue: 'WB exam candidates',
-      icon: Users,
-      color: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+      label: 'Total Revenue',
+      value: `₹${(stats?.totalRevenue ?? 0).toLocaleString('en-IN')}`,
+      subLabel: `₹${(stats?.monthRevenue ?? 0).toLocaleString('en-IN')} this month`,
+      icon: IndianRupee,
+      color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
       link: '/admin/subscriptions',
     },
     {
-      label: 'Mock Tests & PYQ',
-      value: stats?.totalTests ?? 0,
-      subValue: 'Live mock papers',
-      icon: Layers,
-      color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-      link: '/admin/tests',
-    },
-    {
-      label: 'Student Attempts',
-      value: stats?.totalAttempts ?? 0,
-      subValue: `${stats?.completedAttempts ?? 0} completed`,
-      icon: CheckCircle2,
-      color: 'text-teal-400 bg-teal-500/10 border-teal-500/20',
-      link: '/admin/tests',
-    },
-    {
-      label: 'Subjects',
-      value: stats?.totalSubjects ?? 0,
-      subValue: 'Syllabus domains',
-      icon: BookOpen,
-      color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-      link: '/admin/subjects',
-    },
-    {
-      label: 'Chapters',
-      value: stats?.totalChapters ?? 0,
-      subValue: 'Topic modules',
-      icon: FolderTree,
+      label: 'Total Students',
+      value: (stats?.totalStudents ?? 0).toLocaleString('en-IN'),
+      subLabel: `${stats?.freeStudents ?? 0} Free Aspirants`,
+      icon: Users,
       color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-      link: '/admin/chapters',
+      link: '/admin/subscriptions',
+    },
+    {
+      label: 'New Students (30d)',
+      value: (stats?.newStudents ?? 0).toLocaleString('en-IN'),
+      subLabel: 'Recent registrations',
+      icon: UserPlus,
+      color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+      link: '/admin/subscriptions',
+    },
+    {
+      label: 'Pro Students',
+      value: (stats?.proStudents ?? 0).toLocaleString('en-IN'),
+      subLabel: 'Active subscribers',
+      icon: Crown,
+      color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+      link: '/admin/subscriptions',
+    },
+    {
+      label: 'Active Subscriptions',
+      value: (stats?.activeSubscriptions ?? 0).toLocaleString('en-IN'),
+      subLabel: 'Active passes running',
+      icon: CreditCard,
+      color: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+      link: '/admin/subscriptions',
+    },
+    {
+      label: 'Total Questions',
+      value: (stats?.totalQuestions ?? 0).toLocaleString('en-IN'),
+      subLabel: `${stats?.topicQuestions ?? 0} Topic • ${stats?.pyqQuestions ?? 0} PYQ`,
+      icon: FileQuestion,
+      color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
+      link: '/admin/question-bank',
+    },
+    {
+      label: 'Total Mock Tests',
+      value: (stats?.totalTests ?? 0).toLocaleString('en-IN'),
+      subLabel: `${stats?.fullMockTests ?? 0} Full • ${stats?.topicTests ?? 0} Topic`,
+      icon: FileText,
+      color: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+      link: '/admin/tests',
+    },
+    {
+      label: 'Total Exams',
+      value: (stats?.totalExams ?? 0).toLocaleString('en-IN'),
+      subLabel: 'Active exam categories',
+      icon: Shield,
+      color: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+      link: '/admin/exams',
     },
   ];
 
-  const publishedPercent = stats?.totalTests
-    ? Math.round(((stats.publishedTests ?? 0) / stats.totalTests) * 100)
-    : 0;
-
-  const attemptCompletionPercent = stats?.totalAttempts
-    ? Math.round(((stats.completedAttempts ?? 0) / stats.totalAttempts) * 100)
-    : 0;
+  // Maximum value for revenue trend chart calculation
+  const maxTrend = Math.max(...(stats?.revenueTrend?.map((t) => t.amount) || [100]), 100);
 
   return (
     <div className="space-y-7">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      {/* Header with Title & Quick Refresh */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              Platform Overview & Control Center
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
+              PracticeKoro Admin Command Center
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              Live
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              Live Database Metrics
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage competitive exams, question bank, test series, and track candidate mock test
-            activities.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Real-time platform overview: Revenue, student growth, question repository, and test
+            performance.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <Link to="/admin/questions">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-slate-700 hover:bg-slate-800 text-xs font-semibold text-slate-300"
-              leftIcon={<Upload className="w-3.5 h-3.5" />}
-            >
-              CSV Bulk Import
-            </Button>
-          </Link>
-          <Link to="/admin/tests">
-            <Button
-              size="sm"
-              className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
-              leftIcon={<Plus className="w-3.5 h-3.5" />}
-            >
-              Create Mock Test
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((s, idx) => {
-          const Icon = s.icon;
-          return (
-            <Link
-              key={idx}
-              to={s.link}
-              className="p-5 rounded-2xl bg-slate-950 border border-slate-800/90 shadow-sm hover:border-slate-700 transition-all group relative overflow-hidden"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
-                    {s.label}
-                  </p>
-                  <p className="text-2xl font-black text-white mt-1">
-                    {isLoading ? '...' : s.value}
-                  </p>
-                  <p className="text-[11px] text-slate-500 mt-1 font-medium">{s.subValue}</p>
-                </div>
-                <div
-                  className={`p-3 rounded-xl border ${s.color} transition-transform group-hover:scale-105`}
-                >
-                  <Icon className="w-5 h-5" />
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Operations Hub & Platform Health Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Core Management Hub */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              Quick Management Hub
-            </h2>
-            <span className="text-[11px] text-slate-400">Direct Actions & Operations</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Card 1: Exam & Syllabus */}
-            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
-                    <Shield className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
-                    {stats?.totalExams ?? 0} Exams
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-white">Target Exams & Syllabus</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Manage WBCS, WBP Constable, KP, Food SI, and other exams, subject domains, and
-                  chapter modules.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
-                <Link
-                  to="/admin/exams"
-                  className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
-                >
-                  Exams <ChevronRight className="w-3 h-3" />
-                </Link>
-                <span className="text-slate-700">•</span>
-                <Link
-                  to="/admin/subjects"
-                  className="text-xs font-semibold text-slate-400 hover:text-slate-200"
-                >
-                  Subjects
-                </Link>
-                <span className="text-slate-700">•</span>
-                <Link
-                  to="/admin/chapters"
-                  className="text-xs font-semibold text-slate-400 hover:text-slate-200"
-                >
-                  Chapters
-                </Link>
-              </div>
-            </div>
-
-            {/* Card 2: Question Bank */}
-            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
-                    <FileQuestion className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
-                    {stats?.totalQuestions ?? 0} Questions
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-white">Question Bank & Import</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Add bilingual questions, Bengali & English text, verified answer keys, and bulk
-                  upload via CSV.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
-                <Link
-                  to="/admin/questions"
-                  className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1"
-                >
-                  Questions Pool <ChevronRight className="w-3 h-3" />
-                </Link>
-                <span className="text-slate-700">•</span>
-                <Link
-                  to="/admin/questions"
-                  className="text-xs font-semibold text-slate-400 hover:text-slate-200"
-                >
-                  CSV Import
-                </Link>
-              </div>
-            </div>
-
-            {/* Card 3: Mock Test Studio */}
-            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                    <Layers className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
-                    {stats?.publishedTests ?? 0} Live
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-white">Mock Test Studio</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Assemble Full Mock Tests, Previous Year Questions (PYQ), and Topic Tests.
-                  Configure timer and negative marking.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
-                <Link
-                  to="/admin/tests"
-                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1"
-                >
-                  Mock Tests & PYQ <ChevronRight className="w-3 h-3" />
-                </Link>
-                <span className="text-slate-700">•</span>
-                <Link
-                  to="/admin/questions"
-                  className="text-xs font-semibold text-slate-400 hover:text-slate-200"
-                >
-                  Question Bank
-                </Link>
-              </div>
-            </div>
-
-            {/* Card 4: Subscriptions & Aspirants */}
-            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
-                    {stats?.totalStudents ?? 0} Students
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-white">Candidates & Subscriptions</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Monitor registered aspirants, pass renewals, test completions, and revenue
-                  transactions.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-900">
-                <Link
-                  to="/admin/subscriptions"
-                  className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1"
-                >
-                  Aspirants & Passes <ChevronRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Readiness & Platform Health */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-emerald-400" />
-              Content Readiness & Health
-            </h2>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between space-y-6">
-            <div className="space-y-5">
-              {/* Test Publishing Progress */}
-              <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="font-semibold text-slate-300">Mock Tests Live Ratio</span>
-                  <span className="font-bold text-emerald-400">{publishedPercent}%</span>
-                </div>
-                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(publishedPercent, 100)}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5 font-medium">
-                  <span>{stats?.publishedTests ?? 0} Published</span>
-                  <span>{stats?.draftTests ?? 0} in Draft</span>
-                </div>
-              </div>
-
-              {/* Student Attempt Completion Rate */}
-              <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="font-semibold text-slate-300">Attempt Completion Rate</span>
-                  <span className="font-bold text-cyan-400">{attemptCompletionPercent}%</span>
-                </div>
-                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-cyan-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(attemptCompletionPercent, 100)}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5 font-medium">
-                  <span>{stats?.completedAttempts ?? 0} Completed</span>
-                  <span>{stats?.totalAttempts ?? 0} Total</span>
-                </div>
-              </div>
-
-              {/* Quick Checklist Highlights */}
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80 space-y-2">
-                <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
-                  Content Quality Standards
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-300">
-                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>Verified 4-option MCQs with Answer Key</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-300">
-                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>Timed tests with negative marking</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-300">
-                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>Bilingual support (Bengali / English)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick action button */}
-            <Link to="/admin/tests" className="w-full">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full border-slate-700 text-xs text-slate-300 hover:bg-slate-900"
-              >
-                Go to Tests Manager
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Tests Table */}
-      <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-amber-400" />
-              Recently Created / Managed Mock Tests
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Quick oversight of tests across all exams
-            </p>
-          </div>
-          <Link
-            to="/admin/tests"
-            className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm"
           >
-            Manage All Tests <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
+        </div>
+      </div>
+
+      {/* 1. TOP STAT CARDS (8 CARDS) */}
+      <div>
+        <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+          Key Platform Statistics
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+          {topStatCards.map((c) => {
+            const Icon = c.icon;
+            return (
+              <Link
+                key={c.label}
+                to={c.link}
+                className="group relative bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm dark:shadow-none hover:shadow-md"
+              >
+                <div className="flex items-start justify-between">
+                  <div className={`p-2 rounded-xl border ${c.color}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors" />
+                </div>
+                <div className="mt-3">
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    {c.label}
+                  </p>
+                  <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
+                    {isLoading ? '...' : c.value}
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-1 truncate">{c.subLabel}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 2. QUICK ACTIONS */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-white to-white dark:from-indigo-950/40 dark:via-slate-950 dark:to-slate-950 border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+              <Plus className="w-4 h-4" />
+              Quick Creation Actions
+            </span>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+              Directly jump into creating content or tests in the appropriate console.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => navigate('/admin/question-bank?action=add-question')}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm"
+            >
+              <FileQuestion className="w-3.5 h-3.5 mr-1" />
+              Add Questions
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/admin/tests?create=topic')}
+              className="border-slate-200 dark:border-slate-700 bg-white dark:bg-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold shadow-sm"
+            >
+              <Layers className="w-3.5 h-3.5 mr-1 text-emerald-500 dark:text-emerald-400" />
+              Create Topic Test
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/admin/tests?create=full_mock')}
+              className="border-slate-200 dark:border-slate-700 bg-white dark:bg-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold shadow-sm"
+            >
+              <BookOpen className="w-3.5 h-3.5 mr-1 text-indigo-500 dark:text-indigo-400" />
+              Create Full Mock
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/admin/tests?create=pyq')}
+              className="border-slate-200 dark:border-slate-700 bg-white dark:bg-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold shadow-sm"
+            >
+              <ScrollText className="w-3.5 h-3.5 mr-1 text-amber-500 dark:text-amber-400" />
+              Create PYQ
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/admin/exams?action=create')}
+              className="border-slate-200 dark:border-slate-700 bg-white dark:bg-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold shadow-sm"
+            >
+              <Shield className="w-3.5 h-3.5 mr-1 text-rose-500 dark:text-rose-400" />
+              Add Exam
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. REVENUE OVERVIEW & TREND CHART */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Revenue Numbers Breakdown */}
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-none">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <IndianRupee className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+              Revenue Overview
+            </h2>
+            <Link
+              to="/admin/subscriptions"
+              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex items-center gap-1"
+            >
+              View All <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                Total Revenue
+              </span>
+              <span className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+                ₹{(stats?.totalRevenue ?? 0).toLocaleString('en-IN')}
+              </span>
+              <span className="text-[10px] text-slate-500">All-time transactions</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                Today's Revenue
+              </span>
+              <span className="text-base font-black text-slate-900 dark:text-white mt-1 block">
+                ₹{(stats?.todayRevenue ?? 0).toLocaleString('en-IN')}
+              </span>
+              <span className="text-[10px] text-slate-500">Recorded since 00:00</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                This Month
+              </span>
+              <span className="text-base font-black text-cyan-600 dark:text-cyan-400 mt-1 block">
+                ₹{(stats?.monthRevenue ?? 0).toLocaleString('en-IN')}
+              </span>
+              <span className="text-[10px] text-slate-500">Current calendar month</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                This Year
+              </span>
+              <span className="text-base font-black text-indigo-600 dark:text-indigo-400 mt-1 block">
+                ₹{(stats?.yearRevenue ?? 0).toLocaleString('en-IN')}
+              </span>
+              <span className="text-[10px] text-slate-500">Current financial year</span>
+            </div>
+          </div>
         </div>
 
-        {recentTests.length === 0 ? (
-          <div className="p-8 text-center">
-            <Layers className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-slate-300">No mock tests created yet</p>
-            <p className="text-xs text-slate-500 mt-1">
-              Get started by creating your first mock test or PYQ paper.
-            </p>
-            <Link to="/admin/tests" className="inline-block mt-4">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold">
-                Create Mock Test
-              </Button>
+        {/* Real Revenue Trend Chart (Last 7 Days) */}
+        <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-none">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                Revenue Trend (Last 7 Days)
+              </h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Daily completed subscriptions volume verified via payment records.
+              </p>
+            </div>
+            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+              ₹
+              {(
+                stats?.revenueTrend?.reduce((acc, curr) => acc + curr.amount, 0) ?? 0
+              ).toLocaleString('en-IN')}{' '}
+              7d Total
+            </span>
+          </div>
+
+          <div className="h-44 flex items-end justify-between gap-3 pt-6 px-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+            {stats?.revenueTrend && stats.revenueTrend.length > 0 ? (
+              stats.revenueTrend.map((point) => {
+                const heightPercent = Math.max(8, Math.round((point.amount / maxTrend) * 100));
+                return (
+                  <div key={point.date} className="flex-1 flex flex-col items-center gap-2 group">
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      ₹{point.amount}
+                    </span>
+                    <div className="w-full max-w-[36px] bg-slate-100 dark:bg-slate-900 rounded-t-lg overflow-hidden flex items-end h-32 border border-slate-200 dark:border-slate-800 group-hover:border-indigo-500/50 transition-colors">
+                      <div
+                        style={{ height: `${heightPercent}%` }}
+                        className="w-full bg-gradient-to-t from-indigo-600 to-indigo-400 group-hover:from-emerald-600 group-hover:to-emerald-400 transition-all duration-300 rounded-t-md"
+                      />
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300">
+                      {point.label}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="w-full text-center text-xs text-slate-500 py-10">
+                No recent payment transactions recorded yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. STUDENT OVERVIEW & CONTENT OVERVIEW */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Student Overview */}
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-none">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-850 pb-3">
+            <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Users className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+              Student Overview
+            </h2>
+            <Link
+              to="/admin/subscriptions"
+              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex items-center gap-1"
+            >
+              Manage Subscriptions & Users <ArrowUpRight className="w-3 h-3" />
             </Link>
+          </div>
+
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                Total Registered Students
+              </span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">
+                {stats?.totalStudents ?? 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                New Registrations (Last 30 Days)
+              </span>
+              <span className="text-xs font-black text-cyan-600 dark:text-cyan-400">
+                +{stats?.newStudents ?? 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                Active Practicing Students
+              </span>
+              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                {stats?.activeStudents ?? 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                Free Tier Aspirants
+              </span>
+              <span className="text-xs font-black text-slate-600 dark:text-slate-400">
+                {stats?.freeStudents ?? 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                Pro Subscribed Students
+              </span>
+              <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                {stats?.proStudents ?? 0}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Overview */}
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-none">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-850 pb-3">
+            <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+              Content & Question Bank Overview
+            </h2>
+            <Link
+              to="/admin/question-bank"
+              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex items-center gap-1"
+            >
+              Open Question Bank <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                Topic Test Questions
+              </span>
+              <span className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                {stats?.topicQuestions ?? 0}
+              </span>
+              <span className="text-[10px] text-slate-500">
+                {stats?.topicTests ?? 0} Topic Tests
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                Full Mock Questions
+              </span>
+              <span className="text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5 block">
+                {stats?.fullMockQuestions ?? 0}
+              </span>
+              <span className="text-[10px] text-slate-500">
+                {stats?.fullMockTests ?? 0} Full Mock Tests
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                PYQ Questions
+              </span>
+              <span className="text-base font-black text-amber-600 dark:text-amber-400 mt-0.5 block">
+                {stats?.pyqQuestions ?? 0}
+              </span>
+              <span className="text-[10px] text-slate-500">{stats?.pyqTests ?? 0} PYQ Papers</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-850">
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block">
+                Total Active Exams
+              </span>
+              <span className="text-base font-black text-rose-600 dark:text-rose-400 mt-0.5 block">
+                {stats?.totalExams ?? 0}
+              </span>
+              <span className="text-[10px] text-slate-500">State exam targets</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. RECENT ACTIVITY FEED */}
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-none">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-850 pb-3">
+          <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <Activity className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+            Recent Platform Activity
+          </h2>
+          <span className="text-[11px] text-slate-500">Live operational events</span>
+        </div>
+
+        {stats?.recentActivity && stats.recentActivity.length > 0 ? (
+          <div className="divide-y divide-slate-100 dark:divide-slate-850">
+            {stats.recentActivity.map((act) => (
+              <div key={act.id} className="py-3 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-2 h-2 rounded-full shrink-0 ${
+                      act.type === 'payment'
+                        ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                        : act.type === 'registration'
+                          ? 'bg-blue-500'
+                          : act.type === 'test_created'
+                            ? 'bg-indigo-500'
+                            : 'bg-amber-500'
+                    }`}
+                  />
+                  <p className="text-slate-800 dark:text-slate-200 font-medium">
+                    {act.description}
+                  </p>
+                </div>
+                <span className="text-[11px] text-slate-500 font-mono shrink-0">
+                  {new Date(act.timestamp).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold text-[10px] border-b border-slate-800">
-                <tr>
-                  <th className="p-4">Test Title</th>
-                  <th className="p-4">Exam / Domain</th>
-                  <th className="p-4">Duration & Marks</th>
-                  <th className="p-4">Questions</th>
-                  <th className="p-4">Access Tier</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {recentTests.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-900/40">
-                    <td className="p-4 font-bold text-white">{t.title}</td>
-                    <td className="p-4 text-slate-400">
-                      <span className="text-indigo-400 font-semibold">
-                        {t.examTitle || t.examId}
-                      </span>
-                      {t.chapterName && <span className="text-slate-500"> • {t.chapterName}</span>}
-                    </td>
-                    <td className="p-4 font-mono">
-                      <span className="flex items-center gap-1 text-slate-300">
-                        <Clock className="w-3 h-3 text-slate-500" /> {t.durationMinutes}m •{' '}
-                        {t.totalMarks} Marks
-                      </span>
-                    </td>
-                    <td className="p-4 font-bold text-indigo-400">{t.totalQuestions} Qs</td>
-                    <td className="p-4">
-                      {t.isPremium ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          PRO PASS
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          FREE
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {t.status === 'published' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                          Published
-                        </span>
-                      )}
-                      {t.status === 'draft' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                          Draft
-                        </span>
-                      )}
-                      {t.status === 'archived' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700/50 text-slate-400 border border-slate-600/40">
-                          Archived
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/admin/tests/${t.id}/questions`}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
-                        >
-                          Questions
-                        </Link>
-                        <span className="text-slate-600">•</span>
-                        <Link
-                          to="/admin/tests"
-                          className="text-xs text-slate-400 hover:text-white font-semibold"
-                        >
-                          Edit
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p className="text-xs text-slate-500 py-6 text-center">
+            No recent platform activity logged yet.
+          </p>
         )}
       </div>
     </div>

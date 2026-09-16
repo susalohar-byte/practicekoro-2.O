@@ -293,6 +293,133 @@
   .dark .text-indigo-700 {
     color: rgb(165 180 252);
   }
+
+  /* ============================================================================
+     ADMIN CONSOLE LIGHT MODE (OFF-WHITE & WHITE SURFACES)
+     When light mode is active (html is not .dark), elements within .admin-scope
+     that use dark utility classes automatically remap to crisp off-white (#f8fafc),
+     card white (#ffffff), subtle borders (#e2e8f0), and readable slate typography.
+     Colored buttons & badges preserve their intentional white text.
+     ========================================================================= */
+  html:not(.dark) .admin-scope .bg-slate-950 {
+    background-color: #ffffff;
+  }
+  html:not(.dark) .admin-scope .bg-slate-950\/95 {
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  html:not(.dark) .admin-scope .bg-slate-950\/80 {
+    background-color: rgba(255, 255, 255, 0.85);
+  }
+  html:not(.dark) .admin-scope .bg-slate-900 {
+    background-color: #f8fafc;
+  }
+  html:not(.dark) .admin-scope .bg-slate-900\/90 {
+    background-color: rgba(248, 250, 252, 0.9);
+  }
+  html:not(.dark) .admin-scope .bg-slate-900\/80 {
+    background-color: rgba(248, 250, 252, 0.8);
+  }
+  html:not(.dark) .admin-scope .bg-slate-900\/60 {
+    background-color: rgba(241, 245, 249, 0.7);
+  }
+  html:not(.dark) .admin-scope .bg-slate-900\/50 {
+    background-color: rgba(241, 245, 249, 0.6);
+  }
+  html:not(.dark) .admin-scope .bg-slate-900\/40 {
+    background-color: rgba(241, 245, 249, 0.5);
+  }
+  html:not(.dark) .admin-scope .border-slate-800 {
+    border-color: #e2e8f0;
+  }
+  html:not(.dark) .admin-scope .border-slate-800\/80 {
+    border-color: rgba(226, 232, 240, 0.8);
+  }
+  html:not(.dark) .admin-scope .border-slate-800\/90 {
+    border-color: rgba(226, 232, 240, 0.9);
+  }
+  html:not(.dark) .admin-scope .border-slate-850 {
+    border-color: #e2e8f0;
+  }
+  html:not(.dark) .admin-scope .border-slate-700 {
+    border-color: #cbd5e1;
+  }
+  html:not(.dark) .admin-scope .divide-slate-800,
+  html:not(.dark) .admin-scope .divide-slate-850 {
+    border-color: #e2e8f0;
+  }
+  html:not(.dark) .admin-scope .text-white {
+    color: #0f172a;
+  }
+  html:not(.dark) .admin-scope .text-slate-100 {
+    color: #0f172a;
+  }
+  html:not(.dark) .admin-scope .text-slate-200 {
+    color: #1e293b;
+  }
+  html:not(.dark) .admin-scope .text-slate-300 {
+    color: #334155;
+  }
+  html:not(.dark) .admin-scope .text-slate-400 {
+    color: #64748b;
+  }
+  html:not(.dark) .admin-scope input,
+  html:not(.dark) .admin-scope select,
+  html:not(.dark) .admin-scope textarea {
+    color: #0f172a;
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+  }
+  html:not(.dark) .admin-scope input::placeholder,
+  html:not(.dark) .admin-scope textarea::placeholder {
+    color: #94a3b8;
+  }
+  html:not(.dark) .admin-scope select option {
+    background-color: #ffffff;
+    color: #0f172a;
+  }
+
+  /* Status Badges & Washes in Light Mode */
+  html:not(.dark) .admin-scope .bg-emerald-950,
+  html:not(.dark) .admin-scope .bg-emerald-950\/80 {
+    background-color: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+  }
+  html:not(.dark) .admin-scope .bg-amber-950,
+  html:not(.dark) .admin-scope .bg-amber-950\/80 {
+    background-color: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+  }
+  html:not(.dark) .admin-scope .bg-rose-950,
+  html:not(.dark) .admin-scope .bg-rose-950\/80 {
+    background-color: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+  }
+  html:not(.dark) .admin-scope .bg-blue-950,
+  html:not(.dark) .admin-scope .bg-blue-950\/80 {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
+  html:not(.dark) .admin-scope .bg-purple-950,
+  html:not(.dark) .admin-scope .bg-purple-950\/80 {
+    background-color: #faf5ff;
+    color: #7e22ce;
+    border-color: #e9d5ff;
+  }
+
+  /* Preserve white text on solid colored primary action buttons & badges */
+  html:not(.dark) .admin-scope button.bg-indigo-600,
+  html:not(.dark) .admin-scope a.bg-indigo-600,
+  html:not(.dark) .admin-scope button.bg-emerald-600,
+  html:not(.dark) .admin-scope a.bg-emerald-600,
+  html:not(.dark) .admin-scope button.bg-rose-600,
+  html:not(.dark) .admin-scope button.bg-amber-600,
+  html:not(.dark) .admin-scope .admin-btn-primary {
+    color: #ffffff !important;
+  }
 }
 
 /* Smooth theme transition: applied momentarily by ThemeContext during toggle */

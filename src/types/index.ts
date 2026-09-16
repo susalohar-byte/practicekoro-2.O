@@ -86,7 +86,7 @@ export interface TestSeries {
 
 export interface MockTest {
   id: string;
-  examId: string;
+  examId?: string;
   subjectId?: string;
   chapterId?: string;
   topicId?: string;
@@ -145,6 +145,8 @@ export interface Question {
   subjectName?: string;
   chapterName?: string;
   topicName?: string;
+  testId?: string;
+  testTitle?: string;
 }
 
 export interface AdminDashboardStats {
@@ -178,6 +180,7 @@ export interface TestQuestionAssignment {
   optionC?: string;
   optionD?: string;
   explanation?: string;
+  explanationBengali?: string;
   chapterName?: string;
 }
 
@@ -408,4 +411,107 @@ export interface AdminPaymentRow {
   razorpayPaymentId?: string;
   status: PaymentStatus;
   createdAt: string;
+}
+
+export interface RevenueTrendPoint {
+  date: string;
+  label: string;
+  amount: number;
+}
+
+export interface AdminActivityItem {
+  id: string;
+  type: 'payment' | 'registration' | 'test_created' | 'exam_created' | string;
+  description: string;
+  timestamp: string;
+}
+
+export interface AdminDashboardV2Stats {
+  totalRevenue: number;
+  todayRevenue: number;
+  monthRevenue: number;
+  yearRevenue: number;
+  revenueTrend: RevenueTrendPoint[];
+  totalStudents: number;
+  newStudents: number;
+  activeStudents: number;
+  freeStudents: number;
+  proStudents: number;
+  activeSubscriptions: number;
+  totalExams: number;
+  totalTests: number;
+  topicTests: number;
+  fullMockTests: number;
+  pyqTests: number;
+  totalQuestions: number;
+  topicQuestions: number;
+  fullMockQuestions: number;
+  pyqQuestions: number;
+  recentActivity: AdminActivityItem[];
+}
+
+export interface AdminStudentRow {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+  createdAt: string;
+  planTitle: string;
+  planId: string;
+  subscriptionStatus: 'active' | 'expired' | 'none' | string;
+  isPro: boolean;
+  expiresAt?: string;
+  totalAttempts: number;
+  lastActive: string;
+}
+
+export interface AdminStudentDetails extends AdminStudentRow {
+  recentAttempts: TestAttempt[];
+  paymentHistory: AdminPaymentRow[];
+  subscriptionHistory: AdminSubscriptionRow[];
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  targetAudience: 'all' | 'free' | 'pro' | string;
+  channel: 'in_app' | 'push' | 'both';
+  status: 'draft' | 'sent' | 'scheduled';
+  sentAt?: string;
+  createdAt: string;
+  createdBy?: string;
+}
+
+export interface SupportTicketItem {
+  id: string;
+  userId?: string;
+  studentName: string;
+  studentEmail: string;
+  subject: string;
+  issue: string;
+  category:
+    | 'Account Issue'
+    | 'Payment Issue'
+    | 'Subscription Issue'
+    | 'Test Issue'
+    | 'Result Issue'
+    | 'Technical Issue'
+    | 'Other';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'open' | 'pending' | 'resolved' | 'closed';
+  assignedTo?: string;
+  resolutionNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppSettingItem {
+  id: string;
+  category: string;
+  key: string;
+  value: unknown;
+  description?: string;
+  updatedAt: string;
 }

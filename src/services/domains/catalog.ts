@@ -398,7 +398,7 @@ export const catalogApi = {
       const row = data as TestRow;
       return {
         id: row.id,
-        examId: row.exam_id,
+        examId: row.exam_id ?? undefined,
         subjectId: row.subject_id ?? undefined,
         chapterId: row.chapter_id ?? undefined,
         testSeriesId: row.test_series_id ?? undefined,

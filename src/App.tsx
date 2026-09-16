@@ -80,22 +80,30 @@ const AdminTestQuestions = React.lazy(() =>
     default: module.AdminTestQuestions,
   }))
 );
-const AdminQuestions = React.lazy(() =>
-  import('@/pages/admin/AdminQuestions').then((module) => ({ default: module.AdminQuestions }))
-);
-const AdminFullMockQuestions = React.lazy(() =>
-  import('@/pages/admin/AdminFullMockQuestions').then((module) => ({
-    default: module.AdminFullMockQuestions,
-  }))
-);
-const AdminPyqQuestions = React.lazy(() =>
-  import('@/pages/admin/AdminPyqQuestions').then((module) => ({
-    default: module.AdminPyqQuestions,
-  }))
-);
 const AdminSubscriptions = React.lazy(() =>
   import('@/pages/admin/AdminSubscriptions').then((module) => ({
     default: module.AdminSubscriptions,
+  }))
+);
+
+const AdminQuestionBank = React.lazy(() =>
+  import('@/pages/admin/AdminQuestionBank').then((module) => ({
+    default: module.AdminQuestionBank,
+  }))
+);
+const AdminNotifications = React.lazy(() =>
+  import('@/pages/admin/AdminNotifications').then((module) => ({
+    default: module.AdminNotifications,
+  }))
+);
+const AdminSupport = React.lazy(() =>
+  import('@/pages/admin/AdminSupport').then((module) => ({
+    default: module.AdminSupport,
+  }))
+);
+const AdminSettings = React.lazy(() =>
+  import('@/pages/admin/AdminSettings').then((module) => ({
+    default: module.AdminSettings,
   }))
 );
 
@@ -242,19 +250,47 @@ export const App: React.FC = () => {
             </AdminRoute>
           }
         >
+          {/* 1. Dashboard (Consolidated Home + Analytics) */}
           <Route index element={<AdminDashboard />} />
+
+          {/* 2. Question Bank */}
+          <Route path="question-bank" element={<AdminQuestionBank />} />
+
+          {/* 3. Manage Exams */}
           <Route path="exams" element={<AdminExams />} />
           <Route path="exam-topics" element={<AdminExamTopics />} />
+
+          {/* 4. Mock Test Management */}
+          <Route path="tests" element={<AdminTests />} />
+          <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
+
+          {/* 5. Subscriptions & Pro Users */}
+          <Route path="subscriptions" element={<AdminSubscriptions />} />
+
+          {/* 6. Notifications */}
+          <Route path="notifications" element={<AdminNotifications />} />
+
+          {/* 7. Support & Help */}
+          <Route path="support" element={<AdminSupport />} />
+
+          {/* 8. Settings */}
+          <Route path="settings" element={<AdminSettings />} />
+
+          {/* Backward compatibility & Consolidation Redirects */}
+          <Route path="students" element={<Navigate to="/admin/subscriptions" replace />} />
+          <Route path="pro-users" element={<Navigate to="/admin/subscriptions" replace />} />
+          <Route path="analytics" element={<Navigate to="/admin" replace />} />
+          <Route path="overview" element={<Navigate to="/admin" replace />} />
+          <Route path="questions" element={<Navigate to="/admin/question-bank" replace />} />
+          <Route
+            path="full-mock-questions"
+            element={<Navigate to="/admin/question-bank" replace />}
+          />
+          <Route path="pyq-questions" element={<Navigate to="/admin/question-bank" replace />} />
           <Route path="subjects" element={<AdminSubjects />} />
           <Route path="topics" element={<AdminChapters />} />
           <Route path="chapters" element={<AdminChapters />} />
           <Route path="test-series" element={<AdminTestSeries />} />
-          <Route path="tests" element={<AdminTests />} />
-          <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
-          <Route path="questions" element={<AdminQuestions />} />
-          <Route path="full-mock-questions" element={<AdminFullMockQuestions />} />
-          <Route path="pyq-questions" element={<AdminPyqQuestions />} />
-          <Route path="subscriptions" element={<AdminSubscriptions />} />
         </Route>
 
         {/* Fallback */}

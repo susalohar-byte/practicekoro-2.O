@@ -180,7 +180,7 @@ export interface Database {
       tests: {
         Row: {
           id: string;
-          exam_id: string;
+          exam_id: string | null;
           subject_id: string | null;
           chapter_id: string | null;
           test_series_id: string | null;
@@ -207,7 +207,7 @@ export interface Database {
         };
         Insert: {
           id: string;
-          exam_id: string;
+          exam_id?: string | null;
           subject_id?: string | null;
           chapter_id?: string | null;
           test_series_id?: string | null;
