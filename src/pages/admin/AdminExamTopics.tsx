@@ -117,10 +117,7 @@ export const AdminExamTopics: React.FC = () => {
     try {
       setIsSaving(true);
       setErrorMessage('');
-      const success = await api.saveExamTopicMappings(
-        selectedExamId,
-        Array.from(mappedTopicIds)
-      );
+      const success = await api.saveExamTopicMappings(selectedExamId, Array.from(mappedTopicIds));
       if (success) {
         setInitialMappedIds(new Set(mappedTopicIds));
         setSaveSuccess(true);
@@ -141,18 +138,20 @@ export const AdminExamTopics: React.FC = () => {
     Array.from(mappedTopicIds).some((id) => !initialMappedIds.has(id));
 
   // Filter topics and subjects by search term
-  const filteredSubjects = subjects.map((sub) => {
-    const subTopics = chapters.filter((c) => c.subjectId === sub.id);
-    const matches = subTopics.filter(
-      (t) =>
-        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    return {
-      subject: sub,
-      topics: matches,
-    };
-  }).filter((group) => group.topics.length > 0 || searchTerm === '');
+  const filteredSubjects = subjects
+    .map((sub) => {
+      const subTopics = chapters.filter((c) => c.subjectId === sub.id);
+      const matches = subTopics.filter(
+        (t) =>
+          t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          sub.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      return {
+        subject: sub,
+        topics: matches,
+      };
+    })
+    .filter((group) => group.topics.length > 0 || searchTerm === '');
 
   return (
     <div className="space-y-6">
@@ -168,7 +167,8 @@ export const AdminExamTopics: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs text-slate-400">
-            Define which centralized Question Bank topics & syllabus items belong to each competitive examination.
+            Define which centralized Question Bank topics & syllabus items belong to each
+            competitive examination.
           </p>
         </div>
 

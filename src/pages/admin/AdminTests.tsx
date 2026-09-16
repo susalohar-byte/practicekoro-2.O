@@ -531,7 +531,8 @@ export const AdminTests: React.FC = () => {
                     <td className="p-4 capitalize text-slate-300">
                       {test.testType === 'pyq' ? (
                         <span className="px-2 py-0.5 rounded-md bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold">
-                          📜 PYQ {test.year || ''} {test.paperName ? `• ${test.paperName}` : ''} {test.shift ? `(${test.shift})` : ''}
+                          📜 PYQ {test.year || ''} {test.paperName ? `• ${test.paperName}` : ''}{' '}
+                          {test.shift ? `(${test.shift})` : ''}
                         </span>
                       ) : test.testType === 'full_mock' ? (
                         <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
@@ -842,7 +843,8 @@ export const AdminTests: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-[11px] text-purple-300/80">
-                    Target past year question paper info. Individual questions attached to this paper will be categorized as PYQ.
+                    Target past year question paper info. Individual questions attached to this
+                    paper will be categorized as PYQ.
                   </p>
                 </div>
               )}

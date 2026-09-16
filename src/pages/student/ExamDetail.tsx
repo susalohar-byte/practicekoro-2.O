@@ -48,10 +48,10 @@ export const ExamDetail: React.FC = () => {
   const pathTab = location.pathname.endsWith('/pyq')
     ? 'pyq'
     : location.pathname.endsWith('/topic-tests')
-    ? 'topic-tests'
-    : location.pathname.endsWith('/full-mock')
-    ? 'full-mock'
-    : null;
+      ? 'topic-tests'
+      : location.pathname.endsWith('/full-mock')
+        ? 'full-mock'
+        : null;
   const tabParam = (searchParams.get('tab') as ExamTab) || pathTab;
   const [activeTab, setActiveTab] = useState<ExamTab>(
     tabParam === 'pyq' || tabParam === 'topic-tests' ? tabParam : 'full-mock'
@@ -722,7 +722,8 @@ export const ExamDetail: React.FC = () => {
                     <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                         <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-                        Mapped Syllabus Topics ({visibleSubjectGroups.reduce((acc, g) => acc + g.topics.length, 0)} Topics)
+                        Mapped Syllabus Topics (
+                        {visibleSubjectGroups.reduce((acc, g) => acc + g.topics.length, 0)} Topics)
                       </h3>
                       <span className="text-[11px] text-slate-400">
                         Concept-level questions from question bank
@@ -752,9 +753,13 @@ export const ExamDetail: React.FC = () => {
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-sm font-bold text-slate-900 leading-snug">{topic.name}</h4>
+                                <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                                  {topic.name}
+                                </h4>
                                 {topic.description && (
-                                  <p className="text-xs text-slate-500 line-clamp-1">{topic.description}</p>
+                                  <p className="text-xs text-slate-500 line-clamp-1">
+                                    {topic.description}
+                                  </p>
                                 )}
                               </div>
 

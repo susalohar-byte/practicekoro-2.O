@@ -1052,8 +1052,14 @@ export const adminApi = {
 
     if (filters) {
       if (filters.subjectId) questions = questions.filter((q) => q.subjectId === filters.subjectId);
-      if (filters.chapterId) questions = questions.filter((q) => q.chapterId === filters.chapterId || q.topicId === filters.chapterId);
-      if (filters.topicId) questions = questions.filter((q) => q.topicId === filters.topicId || q.chapterId === filters.topicId);
+      if (filters.chapterId)
+        questions = questions.filter(
+          (q) => q.chapterId === filters.chapterId || q.topicId === filters.chapterId
+        );
+      if (filters.topicId)
+        questions = questions.filter(
+          (q) => q.topicId === filters.topicId || q.chapterId === filters.topicId
+        );
       if (filters.difficulty)
         questions = questions.filter((q) => q.difficulty === filters.difficulty);
       if (filters.sourceType)

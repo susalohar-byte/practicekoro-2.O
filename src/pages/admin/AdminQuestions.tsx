@@ -15,7 +15,9 @@ export const AdminQuestions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>(
+    'all'
+  );
   const [selectedSourceType, setSelectedSourceType] = useState<'all' | 'topic' | 'pyq'>('all');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -79,7 +81,14 @@ export const AdminQuestions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedSubjectId, selectedChapterId, selectedDifficulty, selectedSourceType, selectedStatus, searchTerm]);
+  }, [
+    selectedSubjectId,
+    selectedChapterId,
+    selectedDifficulty,
+    selectedSourceType,
+    selectedStatus,
+    searchTerm,
+  ]);
 
   useEffect(() => {
     loadData();
@@ -117,9 +126,7 @@ export const AdminQuestions: React.FC = () => {
     setEditingQuestion(q);
     setSubjectId(q.subjectId || '');
     setChapterId(q.chapterId || q.topicId || '');
-    setDifficulty(
-      q.difficulty === 'easy' || q.difficulty === 'hard' ? q.difficulty : 'medium'
-    );
+    setDifficulty(q.difficulty === 'easy' || q.difficulty === 'hard' ? q.difficulty : 'medium');
     setSourceType(q.sourceType === 'pyq' ? 'pyq' : 'topic');
     setSourceYear(q.sourceYear ? String(q.sourceYear) : '');
     setSourceExam(q.sourceExam || '');
@@ -152,7 +159,8 @@ export const AdminQuestions: React.FC = () => {
     }
 
     try {
-      const parsedYear = sourceType === 'pyq' && sourceYear.trim() ? parseInt(sourceYear.trim(), 10) : undefined;
+      const parsedYear =
+        sourceType === 'pyq' && sourceYear.trim() ? parseInt(sourceYear.trim(), 10) : undefined;
       if (editingQuestion) {
         await api.updateQuestion(editingQuestion.id, {
           subjectId: subjectId || undefined,
@@ -462,8 +470,8 @@ export const AdminQuestions: React.FC = () => {
                       q.difficulty === 'easy'
                         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                         : q.difficulty === 'hard'
-                        ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     }`}
                   >
                     {q.difficulty || 'medium'}
@@ -472,7 +480,8 @@ export const AdminQuestions: React.FC = () => {
                   {/* Source Type / PYQ Badge */}
                   {q.sourceType === 'pyq' ? (
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
-                      📜 PYQ {q.sourceYear || ''} {q.sourceExam ? `• ${q.sourceExam}` : ''} {q.sourceShift ? `(${q.sourceShift})` : ''}
+                      📜 PYQ {q.sourceYear || ''} {q.sourceExam ? `• ${q.sourceExam}` : ''}{' '}
+                      {q.sourceShift ? `(${q.sourceShift})` : ''}
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
@@ -663,8 +672,8 @@ export const AdminQuestions: React.FC = () => {
                             ? diff === 'easy'
                               ? 'bg-emerald-600 text-white border-emerald-500'
                               : diff === 'hard'
-                              ? 'bg-rose-600 text-white border-rose-500'
-                              : 'bg-amber-600 text-white border-amber-500'
+                                ? 'bg-rose-600 text-white border-rose-500'
+                                : 'bg-amber-600 text-white border-amber-500'
                             : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
                         }`}
                       >

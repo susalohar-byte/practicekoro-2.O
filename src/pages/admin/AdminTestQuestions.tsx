@@ -206,7 +206,9 @@ export const AdminTestQuestions: React.FC = () => {
 
   const targetCount = test?.totalQuestions || 0;
   const progressPct =
-    targetCount > 0 ? Math.min(100, Math.round((assignedQuestions.length / targetCount) * 100)) : 100;
+    targetCount > 0
+      ? Math.min(100, Math.round((assignedQuestions.length / targetCount) * 100))
+      : 100;
   const easyCount = assignedQuestions.filter((q) => {
     const b = bankQuestions.find((bk) => bk.id === q.questionId);
     return b?.difficulty === 'easy';
@@ -343,8 +345,8 @@ export const AdminTestQuestions: React.FC = () => {
                 assignedQuestions.length === targetCount
                   ? 'bg-emerald-500'
                   : assignedQuestions.length > targetCount
-                  ? 'bg-rose-500'
-                  : 'bg-indigo-500'
+                    ? 'bg-rose-500'
+                    : 'bg-indigo-500'
               }`}
               style={{ width: `${progressPct}%` }}
             />
@@ -601,7 +603,8 @@ export const AdminTestQuestions: React.FC = () => {
               {/* Bulk Actions Header */}
               <div className="flex items-center justify-between text-xs pt-1">
                 <span className="text-slate-400">
-                  Showing <strong className="text-white">{availableBankQuestions.length}</strong> available questions
+                  Showing <strong className="text-white">{availableBankQuestions.length}</strong>{' '}
+                  available questions
                 </span>
                 <div className="flex items-center gap-3">
                   <button
@@ -632,7 +635,9 @@ export const AdminTestQuestions: React.FC = () => {
             <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
               {availableBankQuestions.length === 0 ? (
                 <div className="p-12 text-center text-xs text-slate-500 space-y-1">
-                  <p className="font-semibold text-slate-400">No questions found matching filter.</p>
+                  <p className="font-semibold text-slate-400">
+                    No questions found matching filter.
+                  </p>
                   <p>Try broadening your search or selecting different topics.</p>
                 </div>
               ) : (
@@ -668,8 +673,8 @@ export const AdminTestQuestions: React.FC = () => {
                                 q.difficulty === 'easy'
                                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                   : q.difficulty === 'hard'
-                                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                               }`}
                             >
                               {q.difficulty || 'medium'}
@@ -678,7 +683,8 @@ export const AdminTestQuestions: React.FC = () => {
                             {/* Source */}
                             {q.sourceType === 'pyq' ? (
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
-                                📜 PYQ {q.sourceYear || ''} {q.sourceExam ? `• ${q.sourceExam}` : ''}
+                                📜 PYQ {q.sourceYear || ''}{' '}
+                                {q.sourceExam ? `• ${q.sourceExam}` : ''}
                               </span>
                             ) : (
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
@@ -701,7 +707,9 @@ export const AdminTestQuestions: React.FC = () => {
                           {/* Texts */}
                           <p className="font-semibold text-white leading-snug">{q.questionText}</p>
                           {q.questionBengaliText && (
-                            <p className="text-slate-400 text-[11px] leading-snug">{q.questionBengaliText}</p>
+                            <p className="text-slate-400 text-[11px] leading-snug">
+                              {q.questionBengaliText}
+                            </p>
                           )}
                           <p className="text-[10px] text-emerald-400 font-mono pt-0.5">
                             Correct: Option {q.correctOption}
@@ -717,7 +725,8 @@ export const AdminTestQuestions: React.FC = () => {
             {/* Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-slate-800 shrink-0">
               <span className="text-xs text-slate-400 font-semibold">
-                <strong className="text-indigo-400 font-mono">{selectedBankIds.length}</strong> questions selected
+                <strong className="text-indigo-400 font-mono">{selectedBankIds.length}</strong>{' '}
+                questions selected
               </span>
               <div className="flex items-center gap-2">
                 <Button

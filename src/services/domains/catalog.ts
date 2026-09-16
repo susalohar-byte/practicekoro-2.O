@@ -181,10 +181,12 @@ export const catalogApi = {
     }
   },
 
-  async getExamSubjectsWithTopics(examId: string): Promise<{
-    subject: Subject;
-    topics: Chapter[];
-  }[]> {
+  async getExamSubjectsWithTopics(examId: string): Promise<
+    {
+      subject: Subject;
+      topics: Chapter[];
+    }[]
+  > {
     try {
       const [allSubjects, allChapters, mappedTopicIds] = await Promise.all([
         this.getSubjects(examId),
