@@ -161,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           fullName: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
           email: supabaseUser.email || '',
           avatarUrl: meta.avatar_url || meta.picture || undefined,
-          role: 'student',
+          role: isAdminEmail(supabaseUser.email) ? 'admin' : 'student',
           createdAt: new Date().toISOString(),
         };
       }
@@ -346,17 +346,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
-        if (!isDemoModeEnabled) return { error: new Error('Authentication is not configured') };
+        const isEmailAdmin = isAdminEmail(email);
+        const registeredRole: UserRole = isEmailAdmin ? 'admin' : 'student';
         const newUser: UserProfile = {
           id: 'usr-' + Date.now(),
           fullName,
           email,
-          role: 'student',
+          role: registeredRole,
           createdAt: new Date().toISOString(),
         };
         setUser(newUser);
         localStorage.setItem('practicekoro_user', JSON.stringify(newUser));
-        return { error: null, role: 'student' };
+        return { error: null, role: registeredRole };
       }
 
       const { data, error } = await supabase.auth.signUp({
@@ -369,18 +370,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) return { error };
 
+      const isEmailAdmin = isAdminEmail(email);
+      const registeredRole: UserRole = isEmailAdmin ? 'admin' : 'student';
+
       if (data.user) {
+        if (isEmailAdmin) {
+          try {
+            await Promise.all([
+              supabase
+                .from('user_roles')
+                .upsert({ user_id: data.user.id, role: 'admin' }, { onConflict: 'user_id,role' }),
+              supabase.from('profiles').update({ role: 'admin' }).eq('id', data.user.id),
+            ]);
+          } catch (promoteErr) {
+            console.warn('Auto admin promotion sync warning on register:', promoteErr);
+          }
+        }
+
         const newUser: UserProfile = {
           id: data.user.id,
           fullName,
           email,
-          role: 'student',
+          role: registeredRole,
           createdAt: new Date().toISOString(),
         };
         setUser(newUser);
         localStorage.setItem('practicekoro_user', JSON.stringify(newUser));
       }
-      return { error: null, role: 'student' };
+      return { error: null, role: registeredRole };
     } catch (err: unknown) {
       return { error: err as Error };
     } finally {
@@ -467,7 +484,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const role = user?.role || 'student';
+  const role: UserRole = isAdminEmail(user?.email) ? 'admin' : user?.role || 'student';
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
 
