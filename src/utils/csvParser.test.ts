@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseCsvRaw, parseQuestionsCsv } from './csvParser';
+import { parseCsvRaw, parseQuestionsCsv, parseQuestionsText } from './csvParser';
 
 describe('parseCsvRaw', () => {
   it('supports quoted commas and escaped quotes', () => {
@@ -42,5 +42,58 @@ describe('parseQuestionsCsv', () => {
 
     expect(result.invalidCount).toBe(1);
     expect(result.parsedRows[0].errors[0]).toContain('Invalid correct option');
+  });
+});
+
+describe('parseQuestionsText (formatted text blocks)', () => {
+  const sampleText = `1. সিন্ধু সভ্যতার কোন নগরটি তার উন্নত জল নিষ্কাশন ব্যবস্থার জন্য বিশেষভাবে পরিচিত?
+(a) হরপ্পা
+(b) মহেঞ্জোদারো
+(c) লোথাল
+(d) কালীবঙ্গান
+সঠিক উত্তর: (b) মহেঞ্জোদারো
+
+Explanation:
+- মহেঞ্জোদারো সিন্ধু সভ্যতার অন্যতম গুরুত্বপূর্ণ নগরকেন্দ্র ছিল।
+- এখানে উন্নত পয়ঃনিষ্কাশন ও নিকাশি নালার ব্যবস্থা ছিল।
+
+2. Which Harappan site had an artificial tidal dockyard?
+a) Harappa
+b) Lothal
+c) Mohenjodaro
+d) Kalibangan
+Answer: b
+
+Explanation:
+- Lothal in Gujarat had the world's earliest known tidal dockyard.`;
+
+  it('parses Bengali and English blocks with answer and explanation', () => {
+    const result = parseQuestionsText(sampleText);
+
+    expect(result.totalRows).toBe(2);
+    expect(result.validCount).toBe(2);
+    expect(result.questions[0].questionText).toContain('সিন্ধু সভ্যতার কোন নগরটি');
+    expect(result.questions[0].optionB).toBe('মহেঞ্জোদারো');
+    expect(result.questions[0].correctOption).toBe('B');
+    expect(result.questions[0].explanation).toContain('পয়ঃনিষ্কাশন');
+    expect(result.questions[1].correctOption).toBe('B');
+    expect(result.questions[1].explanation).toContain('tidal dockyard');
+  });
+
+  it('applies default subject/chapter', () => {
+    const result = parseQuestionsText('Q?\n(a) 1\n(b) 2\n(c) 3\n(d) 4\nAnswer: a', {
+      defaultSubjectId: 'subj-1',
+      defaultChapterId: 'ch-1',
+    });
+
+    expect(result.questions[0].subjectId).toBe('subj-1');
+    expect(result.questions[0].chapterId).toBe('ch-1');
+  });
+
+  it('flags blocks with missing answers', () => {
+    const result = parseQuestionsText('Q without answer?\n(a) 1\n(b) 2\n(c) 3\n(d) 4');
+
+    expect(result.validCount).toBe(0);
+    expect(result.parsedRows[0].errors[0]).toContain('Correct answer missing');
   });
 });

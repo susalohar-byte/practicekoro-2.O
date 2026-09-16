@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import {
   LayoutDashboard,
   Shield,
   BookOpen,
-  FolderTree,
-  ListOrdered,
   FileQuestion,
   Layers,
   CreditCard,
@@ -15,29 +13,79 @@ import {
   Menu,
   X,
   Sparkles,
-  Network,
-  Target,
-  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface AdminNavItem {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  end?: boolean;
+  altPaths?: string[];
+}
+
+interface AdminNavSection {
+  title: string;
+  items: AdminNavItem[];
+}
 
 export const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const adminNav = [
-    { label: 'Overview', path: '/admin', icon: LayoutDashboard, end: true },
-    { label: 'Manage Exams', path: '/admin/exams', icon: Shield },
-    { label: 'Exam Topics Map', path: '/admin/exam-topics', icon: Network },
-    { label: 'Subjects', path: '/admin/subjects', icon: BookOpen },
-    { label: 'Topics', path: '/admin/topics', icon: FolderTree },
-    { label: 'Question Bank', path: '/admin/questions', icon: FileQuestion },
-    { label: '🎯 Full Mock Questions', path: '/admin/full-mock-questions', icon: Target },
-    { label: '📜 PYQ Questions', path: '/admin/pyq-questions', icon: ScrollText },
-    { label: '🎯 Full Mocks & 📜 PYQ', path: '/admin/tests', icon: Layers },
-    { label: 'Test Series', path: '/admin/test-series', icon: ListOrdered },
-    { label: 'Subscriptions', path: '/admin/subscriptions', icon: CreditCard },
+  const navSections: AdminNavSection[] = [
+    {
+      title: 'CONTENT & QUESTION BANK',
+      items: [
+        {
+          label: 'Subjects & Topics',
+          path: '/admin/subjects',
+          altPaths: ['/admin/topics', '/admin/chapters'],
+          icon: BookOpen,
+        },
+        {
+          label: 'Universal Question Bank',
+          path: '/admin/questions',
+          altPaths: ['/admin/full-mock-questions', '/admin/pyq-questions'],
+          icon: FileQuestion,
+        },
+      ],
+    },
+    {
+      title: 'TEST MANAGEMENT',
+      items: [
+        {
+          label: 'Manage Exams',
+          path: '/admin/exams',
+          altPaths: ['/admin/exam-topics'],
+          icon: Shield,
+        },
+        {
+          label: 'Mock Tests & PYQ',
+          path: '/admin/tests',
+          altPaths: ['/admin/tests/'],
+          icon: Layers,
+        },
+      ],
+    },
+    {
+      title: 'COMMERCE & ADMIN',
+      items: [
+        {
+          label: 'Subscriptions & Pro Users',
+          path: '/admin/subscriptions',
+          icon: CreditCard,
+        },
+        {
+          label: 'Overview / Analytics',
+          path: '/admin',
+          icon: LayoutDashboard,
+          end: true,
+        },
+      ],
+    },
   ];
 
   return (
@@ -91,49 +139,54 @@ export const AdminLayout: React.FC = () => {
             </button>
           </div>
 
-          {/* Navigation - No scroll on desktop */}
-          <div className="py-3 px-3 space-y-1 overflow-y-auto lg:overflow-hidden">
-            <div className="px-3 pb-1.5">
-              <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                Platform Control
-              </p>
-            </div>
-            {adminNav.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.end}
-                  onClick={() => setSidebarOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group relative',
-                      isActive
-                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold shadow-md shadow-indigo-600/30'
-                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/80'
-                    )
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
+          {/* Navigation - Grouped cleanly into 3 sections */}
+          <div className="py-3 px-3 space-y-4 overflow-y-auto lg:overflow-hidden">
+            {navSections.map((section) => (
+              <div key={section.title} className="space-y-1">
+                <div className="px-3 pb-1">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                    {section.title}
+                  </p>
+                </div>
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const isItemActive = item.end
+                    ? location.pathname === item.path
+                    : location.pathname === item.path ||
+                      Boolean(item.altPaths?.some((p) => location.pathname.startsWith(p)));
+
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      end={item.end}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group relative',
+                        isItemActive
+                          ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold shadow-md shadow-indigo-600/30'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/80'
+                      )}
+                    >
                       <div className="flex items-center gap-3">
                         <Icon
                           className={cn(
                             'w-4 h-4 shrink-0 transition-transform group-hover:scale-110',
-                            isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'
+                            isItemActive
+                              ? 'text-white'
+                              : 'text-slate-400 group-hover:text-indigo-400'
                           )}
                         />
                         <span className="truncate">{item.label}</span>
                       </div>
-                      {isActive && (
+                      {isItemActive && (
                         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       )}
-                    </>
-                  )}
-                </NavLink>
-              );
-            })}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
 

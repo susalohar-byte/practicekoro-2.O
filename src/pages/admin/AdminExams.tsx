@@ -14,6 +14,7 @@ import {
   FileCheck,
   History,
   FolderTree,
+  Network,
   X,
 } from 'lucide-react';
 import type { Exam } from '@/types';
@@ -169,6 +170,24 @@ export const AdminExams: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Sub-Navigation Tabs: Manage Exams & Syllabus Mapping */}
+      <div className="flex items-center gap-2 border-b border-slate-800/80 pb-3">
+        <Link
+          to="/admin/exams"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+        >
+          <Shield className="w-3.5 h-3.5" />
+          Exams List ({exams.length})
+        </Link>
+        <Link
+          to="/admin/exam-topics"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80"
+        >
+          <Network className="w-3.5 h-3.5" />
+          Syllabus & Topics Mapping
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>

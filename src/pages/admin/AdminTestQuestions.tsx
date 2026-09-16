@@ -52,7 +52,6 @@ export const AdminTestQuestions: React.FC = () => {
   const [newCorrectOption, setNewCorrectOption] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const [newExplanation, setNewExplanation] = useState('');
   const [newExplanationBengali, setNewExplanationBengali] = useState('');
-  const [newDifficulty, setNewDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [newMarks, setNewMarks] = useState(1.0);
   const [newNegativeMarks, setNewNegativeMarks] = useState(0.25);
   const [newSubjectId, setNewSubjectId] = useState(''); // OPTIONAL metadata
@@ -214,7 +213,6 @@ export const AdminTestQuestions: React.FC = () => {
     setNewCorrectOption('A');
     setNewExplanation('');
     setNewExplanationBengali('');
-    setNewDifficulty('medium');
     setNewMarks(1.0);
     setNewNegativeMarks(0.25);
     setNewSubjectId('');
@@ -250,7 +248,7 @@ export const AdminTestQuestions: React.FC = () => {
         correctOption: newCorrectOption,
         explanation: newExplanation.trim() || undefined,
         explanationBengali: newExplanationBengali.trim() || undefined,
-        difficulty: newDifficulty,
+        difficulty: 'medium',
         defaultMarks: newMarks,
         defaultNegativeMarks: newNegativeMarks,
         isActive: true,
@@ -933,8 +931,8 @@ export const AdminTestQuestions: React.FC = () => {
               />
             </div>
 
-            {/* Scoring & Difficulty */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* Scoring */}
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
                   Marks
@@ -958,20 +956,6 @@ export const AdminTestQuestions: React.FC = () => {
                   onChange={(e) => setNewNegativeMarks(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
                 />
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  Difficulty
-                </label>
-                <select
-                  value={newDifficulty}
-                  onChange={(e) => setNewDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
               </div>
             </div>
 

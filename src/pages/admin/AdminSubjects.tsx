@@ -1,5 +1,6 @@
 import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -60,14 +61,14 @@ export const AdminSubjects: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (subject: Subject) => {
-    setEditingSubject(subject);
-    setName(subject.name);
-    setSlug(subject.slug);
-    setDescription(subject.description || '');
-    setIconName(subject.iconName || 'BookOpen');
-    setOrderIndex(subject.orderIndex);
-    setIsActive(subject.isActive);
+  const openEditModal = (sub: Subject) => {
+    setEditingSubject(sub);
+    setName(sub.name);
+    setSlug(sub.slug);
+    setDescription(sub.description || '');
+    setIconName(sub.iconName || 'BookOpen');
+    setOrderIndex(sub.orderIndex);
+    setIsActive(sub.isActive);
     setFormError('');
     setIsModalOpen(true);
   };
@@ -89,67 +90,62 @@ export const AdminSubjects: React.FC = () => {
       setFormError('Subject name is required.');
       return;
     }
+    if (!slug.trim()) {
+      setFormError('Subject slug is required.');
+      return;
+    }
 
-    setIsSaving(true);
-    setFormError('');
     try {
+      setIsSaving(true);
+      setFormError('');
       if (editingSubject) {
         await api.updateSubject(editingSubject.id, {
           name: name.trim(),
-          slug: slug.trim() || undefined,
+          slug: slug.trim(),
           description: description.trim() || undefined,
-          iconName: iconName.trim(),
-          orderIndex: Number(orderIndex),
+          iconName,
+          orderIndex,
           isActive,
         });
       } else {
         await api.createSubject({
           name: name.trim(),
-          slug:
-            slug.trim() ||
-            name
-              .trim()
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/(^-|-$)/g, ''),
+          slug: slug.trim(),
           description: description.trim() || undefined,
-          iconName: iconName.trim(),
-          orderIndex: Number(orderIndex),
+          iconName,
+          orderIndex,
           isActive,
         });
       }
       setIsModalOpen(false);
       await loadData();
     } catch (err) {
-      console.error('Failed to save subject:', err);
       setFormError(getErrorMessage(err, 'Failed to save subject'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleToggleActive = async (subject: Subject) => {
+  const handleToggleActive = async (sub: Subject) => {
     try {
-      await api.updateSubject(subject.id, { isActive: !subject.isActive });
+      await api.updateSubject(sub.id, { isActive: !sub.isActive });
       await loadData();
     } catch (err) {
       console.error('Failed to toggle status:', err);
-      alert(getErrorMessage(err, 'Failed to toggle status'));
     }
   };
 
-  const handleDeleteSubject = async (subject: Subject) => {
+  const handleDeleteSubject = async (sub: Subject) => {
     const confirmed = window.confirm(
-      `Are you sure you want to permanently delete subject "${subject.name}"?\n\nThis action cannot be undone.`
+      `Are you sure you want to delete subject "${sub.name}"?\n\nWarning: Chapters belonging to this subject will also be affected.`
     );
     if (!confirmed) return;
 
     try {
       setIsLoading(true);
-      await api.deleteSubject(subject.id);
+      await api.deleteSubject(sub.id);
       await loadData();
     } catch (err) {
-      console.error('Failed to delete subject:', err);
       alert(getErrorMessage(err, 'Failed to delete subject'));
       setIsLoading(false);
     }
@@ -163,6 +159,24 @@ export const AdminSubjects: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Sub-Navigation Tabs: Subjects & Topics */}
+      <div className="flex items-center gap-2 border-b border-slate-800/80 pb-3">
+        <Link
+          to="/admin/subjects"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          Subjects ({subjects.length})
+        </Link>
+        <Link
+          to="/admin/topics"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80"
+        >
+          <FolderTree className="w-3.5 h-3.5" />
+          Topics & Chapters
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>

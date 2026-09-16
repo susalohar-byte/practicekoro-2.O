@@ -16,6 +16,8 @@ export interface CsvParseResult {
   errors: string[];
 }
 
+export type QuestionImportFormat = 'csv' | 'text';
+
 /**
  * Parses raw CSV text handling RFC 4180 quotes, commas, and newlines inside fields.
  */
@@ -243,5 +245,183 @@ export function parseQuestionsCsv(
       invalidCount > 0
         ? [`${invalidCount} out of ${parsedRows.length} rows have validation errors.`]
         : [],
+  };
+}
+
+/**
+ * Parses "formatted text" question blocks — the common study-material style:
+ *
+ *   1. প্রশ্ন টেক্সট?
+ *   (a) Option 1
+ *   (b) Option 2
+ *   (c) Option 3
+ *   (d) Option 4
+ *   সঠিক উত্তর: (b)
+ *
+ *   Explanation:
+ *   - line one
+ *   - line two
+ *
+ * Rules:
+ *  - Blocks are separated by one or more blank lines.
+ *  - Option lines: (a)/(b)/(c)/(d) with ). or : separators, case-insensitive.
+ *  - Answer line: contains "সঠিক উত্তর", "উত্তর", "correct answer" or "answer"
+ *    with the letter inside (x) or after a separator.
+ *  - Explanation: everything after an "Explanation"/"ব্যাখ্যা" marker line.
+ *  - Leading question numbering ("1.", "12)") is stripped.
+ */
+export function parseQuestionsText(
+  text: string,
+  defaults?: { defaultSubjectId?: string; defaultChapterId?: string }
+): CsvParseResult {
+  const rawBlocks = text
+    .replace(/\r\n/g, '\n')
+    .split(/\n\s*\n+/)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0);
+
+  // If a block starts with "Explanation:" or "ব্যাখ্যা:", merge it into the preceding question block
+  const blocks: string[] = [];
+  for (const b of rawBlocks) {
+    if (blocks.length > 0 && /^(explanation|ব্যাখ্যা)/i.test(b)) {
+      blocks[blocks.length - 1] += '\n\n' + b;
+    } else {
+      blocks.push(b);
+    }
+  }
+
+  const parsedRows: ParsedCsvQuestion[] = [];
+  const validQuestions: Omit<Question, 'id'>[] = [];
+  const globalErrors: string[] = [];
+
+  blocks.forEach((block, blockIdx) => {
+    const lines = block.split('\n').map((l) => l.trim());
+    const rowErrors: string[] = [];
+
+    const questionLines: string[] = [];
+    const options: Record<'A' | 'B' | 'C' | 'D', string> = { A: '', B: '', C: '', D: '' };
+    let correctOption: 'A' | 'B' | 'C' | 'D' | null = null;
+    const explanationLines: string[] = [];
+    let inExplanation = false;
+    const seenOptions = new Set<string>();
+
+    const optionRegex = /^\(?([a-dA-D])\s*[).:-]\s*(.*)$/;
+    const answerRegex = /^\s*(সঠিক\s*উত্তর|উত্তর|correct\s*answer|ans\b|answer\b)\s*[:\-–\s]/i;
+
+    for (const line of lines) {
+      if (!line) continue;
+
+      // Explanation marker line
+      if (
+        /^(explanation|ব্যাখ্যা)\s*[:-]?$/i.test(line) ||
+        /^(explanation|ব্যাখ্যা)\s*[:-]/i.test(line)
+      ) {
+        inExplanation = true;
+        const inline = line.replace(/^(explanation|ব্যাখ্যা)\s*[:-]?\s*/i, '').trim();
+        if (inline) explanationLines.push(inline);
+        continue;
+      }
+
+      // Answer line
+      const answerMatch = line.match(answerRegex);
+      if (answerMatch && !inExplanation) {
+        const letterMatch =
+          line.match(/\(\s*([a-dA-D])\s*\)/) ||
+          line.match(/[:-–\s]\s*\(?([a-dA-D])\s*\)?\s*$/) ||
+          line.match(/([a-dA-D])\s*[).]\s*$/);
+        if (letterMatch) {
+          correctOption = letterMatch[1].toUpperCase() as 'A' | 'B' | 'C' | 'D';
+        } else {
+          rowErrors.push(`Could not read the correct answer from: "${line.slice(0, 40)}"`);
+        }
+        continue;
+      }
+
+      // Option line
+      const optionMatch = line.match(optionRegex);
+      if (optionMatch && !inExplanation) {
+        const key = optionMatch[1].toUpperCase() as 'A' | 'B' | 'C' | 'D';
+        if (seenOptions.has(key)) {
+          rowErrors.push(`Duplicate option "${key}"`);
+        }
+        seenOptions.add(key);
+        options[key] = optionMatch[2].trim();
+        continue;
+      }
+
+      if (inExplanation) {
+        explanationLines.push(line.replace(/^[-•*]\s*/, ''));
+      } else {
+        questionLines.push(line);
+      }
+    }
+
+    // Join question text and strip leading numbering ("1." / "12)")
+    const questionText = questionLines
+      .join(' ')
+      .replace(/^\s*\d+\s*[.)]\s*/, '')
+      .trim();
+
+    // Validation
+    if (!questionText) {
+      rowErrors.push('Question text is empty');
+    }
+    (['A', 'B', 'C', 'D'] as const).forEach((k) => {
+      if (!options[k]) rowErrors.push(`Option ${k} is empty`);
+    });
+    if (!correctOption) {
+      rowErrors.push('Correct answer missing — add a line like "সঠিক উত্তর: (b)"');
+    }
+
+    // Duplicate-block safety: identical question text in the same paste
+    if (questionText && validQuestions.some((q) => q.questionText === questionText)) {
+      rowErrors.push('Duplicate question text within this import');
+    }
+
+    const data: Omit<Question, 'id'> = {
+      subjectId: defaults?.defaultSubjectId || undefined,
+      chapterId: defaults?.defaultChapterId || undefined,
+      questionText,
+      optionA: options.A,
+      optionB: options.B,
+      optionC: options.C,
+      optionD: options.D,
+      correctOption: (correctOption || 'A') as 'A' | 'B' | 'C' | 'D',
+      explanation: explanationLines.join('\n').trim() || undefined,
+      defaultMarks: 1.0,
+      defaultNegativeMarks: 0.25,
+      isActive: true,
+      status: 'active',
+    };
+
+    const isValid = rowErrors.length === 0;
+    parsedRows.push({
+      rowNumber: blockIdx + 1,
+      data,
+      isValid,
+      errors: rowErrors,
+    });
+    if (isValid) validQuestions.push(data);
+  });
+
+  if (blocks.length === 0) {
+    globalErrors.push('No question blocks found. Separate each question with a blank line.');
+  }
+
+  const validCount = parsedRows.filter((p) => p.isValid).length;
+  const invalidCount = parsedRows.filter((p) => !p.isValid).length;
+
+  return {
+    questions: validQuestions,
+    parsedRows,
+    totalRows: parsedRows.length,
+    validCount,
+    invalidCount,
+    errors: [
+      ...globalErrors,
+      ...(invalidCount > 0
+        ? [`${invalidCount} out of ${parsedRows.length} blocks have validation errors.`]
+        : []),
+    ],
   };
 }

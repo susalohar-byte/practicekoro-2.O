@@ -38,7 +38,7 @@ export const AdminTests: React.FC = () => {
   const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [selectedChapterId, setSelectedChapterId] = useState<string>('');
-  const [selectedSeriesId, setSelectedSeriesId] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -98,7 +98,7 @@ export const AdminTests: React.FC = () => {
           examId: selectedExamId || undefined,
           subjectId: selectedSubjectId || undefined,
           chapterId: selectedChapterId || undefined,
-          testSeriesId: selectedSeriesId || undefined,
+          testType: selectedType || undefined,
           status: selectedStatus || undefined,
         }),
       ]);
@@ -112,7 +112,7 @@ export const AdminTests: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedSeriesId, selectedStatus]);
+  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedType, selectedStatus]);
 
   useEffect(() => {
     loadData();
@@ -379,7 +379,7 @@ export const AdminTests: React.FC = () => {
           {(selectedExamId ||
             selectedSubjectId ||
             selectedChapterId ||
-            selectedSeriesId ||
+            selectedType ||
             selectedStatus ||
             searchTerm) && (
             <button
@@ -387,7 +387,7 @@ export const AdminTests: React.FC = () => {
                 setSelectedExamId('');
                 setSelectedSubjectId('');
                 setSelectedChapterId('');
-                setSelectedSeriesId('');
+                setSelectedType('');
                 setSelectedStatus('');
                 setSearchTerm('');
               }}
@@ -453,19 +453,17 @@ export const AdminTests: React.FC = () => {
             </select>
           </div>
 
-          {/* Series Filter */}
+          {/* Test Type Filter */}
           <div>
             <select
-              value={selectedSeriesId}
-              onChange={(e) => setSelectedSeriesId(e.target.value)}
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
             >
-              <option value="">All Test Series</option>
-              {testSeriesList.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
-              ))}
+              <option value="">All Test Types</option>
+              <option value="full_mock">🎯 Full Mock Tests</option>
+              <option value="pyq">📜 Previous Year Papers (PYQ)</option>
+              <option value="chapter_mock">📚 Topic Tests</option>
             </select>
           </div>
 

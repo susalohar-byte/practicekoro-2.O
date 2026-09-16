@@ -6,7 +6,6 @@ import {
   Shield,
   BookOpen,
   FolderTree,
-  ListOrdered,
   Layers,
   FileQuestion,
   Users,
@@ -80,12 +79,12 @@ export const AdminDashboard: React.FC = () => {
       link: '/admin/subscriptions',
     },
     {
-      label: 'Test Series',
-      value: stats?.totalTestSeries ?? 0,
-      subValue: 'Bundled series',
-      icon: ListOrdered,
+      label: 'Mock Tests & PYQ',
+      value: stats?.totalTests ?? 0,
+      subValue: 'Live mock papers',
+      icon: Layers,
       color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-      link: '/admin/test-series',
+      link: '/admin/tests',
     },
     {
       label: 'Student Attempts',
@@ -305,14 +304,14 @@ export const AdminDashboard: React.FC = () => {
                   to="/admin/tests"
                   className="text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1"
                 >
-                  Manage Tests <ChevronRight className="w-3 h-3" />
+                  Mock Tests & PYQ <ChevronRight className="w-3 h-3" />
                 </Link>
                 <span className="text-slate-700">•</span>
                 <Link
-                  to="/admin/test-series"
+                  to="/admin/questions"
                   className="text-xs font-semibold text-slate-400 hover:text-slate-200"
                 >
-                  Test Series
+                  Question Bank
                 </Link>
               </div>
             </div>

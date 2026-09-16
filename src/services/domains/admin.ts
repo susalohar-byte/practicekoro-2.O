@@ -10,7 +10,7 @@ import type {
   TestQuestionAssignment,
   PublishValidationResult,
 } from '@/types';
-import { parseQuestionsCsv } from '@/utils/csvParser';
+import { parseQuestionsCsv, parseQuestionsText } from '@/utils/csvParser';
 import {
   localExams,
   localSubjects,
@@ -687,6 +687,7 @@ export const adminApi = {
     subjectId?: string;
     chapterId?: string;
     testSeriesId?: string;
+    testType?: string;
     status?: string;
   }): Promise<MockTest[]> {
     let tests = [...localTests];
@@ -698,6 +699,7 @@ export const adminApi = {
         if (filter?.subjectId) query = query.eq('subject_id', filter.subjectId);
         if (filter?.chapterId) query = query.eq('chapter_id', filter.chapterId);
         if (filter?.testSeriesId) query = query.eq('test_series_id', filter.testSeriesId);
+        if (filter?.testType) query = query.eq('test_type', filter.testType);
         if (filter?.status) query = query.eq('status', filter.status);
 
         const { data, error } = await query;
@@ -733,6 +735,7 @@ export const adminApi = {
       if (filter.subjectId) tests = tests.filter((t) => t.subjectId === filter.subjectId);
       if (filter.chapterId) tests = tests.filter((t) => t.chapterId === filter.chapterId);
       if (filter.testSeriesId) tests = tests.filter((t) => t.testSeriesId === filter.testSeriesId);
+      if (filter.testType) tests = tests.filter((t) => t.testType === filter.testType);
       if (filter.status) tests = tests.filter((t) => t.status === filter.status);
     }
 
@@ -1289,6 +1292,51 @@ export const adminApi = {
     defaultChapterId?: string
   ): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
     const parsed = parseQuestionsCsv(csvContent, { defaultSubjectId, defaultChapterId });
+
+    if (parsed.errors.length > 0 && parsed.questions.length === 0) {
+      return {
+        successCount: 0,
+        errorCount: parsed.totalRows,
+        errors: parsed.errors,
+      };
+    }
+
+    let successCount = 0;
+    const errors: string[] = [...parsed.errors];
+
+    for (const qData of parsed.questions) {
+      try {
+        await this.createQuestion(qData);
+        successCount++;
+      } catch (err) {
+        errors.push(
+          `Failed to save question "${qData.questionText.slice(0, 30)}...": ${getErrorMessage(err, 'Unknown error')}`
+        );
+      }
+    }
+
+    return {
+      successCount,
+      errorCount: parsed.invalidCount,
+      errors,
+    };
+  },
+
+  /**
+   * Bulk import from "formatted text" blocks (study-material style):
+   * question, (a)-(d) options, "সঠিক উত্তর: (b)" and "Explanation:" sections,
+   * separated by blank lines. Questions land in the Topic Question Bank with
+   * the given default Subject/Chapter.
+   */
+  async importQuestionsText(
+    text: string,
+    defaultSubjectId?: string,
+    defaultChapterId?: string
+  ): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
+    const parsed = parseQuestionsText(text, {
+      defaultSubjectId,
+      defaultChapterId,
+    });
 
     if (parsed.errors.length > 0 && parsed.questions.length === 0) {
       return {

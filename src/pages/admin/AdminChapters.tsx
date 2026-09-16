@@ -1,9 +1,11 @@
 import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
   FolderTree,
+  BookOpen,
   Plus,
   Edit2,
   Trash2,
@@ -167,6 +169,24 @@ export const AdminChapters: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Sub-Navigation Tabs: Subjects & Topics */}
+      <div className="flex items-center gap-2 border-b border-slate-800/80 pb-3">
+        <Link
+          to="/admin/subjects"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          Subjects ({subjects.length})
+        </Link>
+        <Link
+          to="/admin/topics"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+        >
+          <FolderTree className="w-3.5 h-3.5" />
+          Topics & Chapters ({chapters.length})
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
