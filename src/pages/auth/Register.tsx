@@ -93,7 +93,9 @@ export const Register: React.FC = () => {
               <div className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-slate-400 font-medium">Or register with email</span>
+              <span className="bg-white px-3 text-slate-400 font-medium">
+                Or register with email
+              </span>
             </div>
           </div>
 

@@ -121,7 +121,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return {
           id: profile?.id || supabaseUser.id,
-          fullName: profile?.full_name || metaFullName || supabaseUser.email?.split('@')[0] || 'User',
+          fullName:
+            profile?.full_name || metaFullName || supabaseUser.email?.split('@')[0] || 'User',
           email: profile?.email || supabaseUser.email || '',
           phone: profile?.phone ?? undefined,
           avatarUrl: profile?.avatar_url || metaAvatar || undefined,
@@ -257,9 +258,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGoogle = async (
-    targetRedirect?: string
-  ): Promise<{ error: Error | null }> => {
+  const loginWithGoogle = async (targetRedirect?: string): Promise<{ error: Error | null }> => {
     setLoading(true);
     try {
       if (!isSupabaseConfigured) {
