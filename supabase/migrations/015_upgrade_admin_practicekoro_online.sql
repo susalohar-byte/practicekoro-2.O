@@ -31,9 +31,10 @@ BEGIN
         ON CONFLICT (user_id, role) DO NOTHING;
 
         -- Update profiles table
-        UPDATE public.profiles
-        SET role = 'admin', updated_at = NOW()
-        WHERE id = v_user_id;
+        INSERT INTO public.profiles (id, full_name, email, role, updated_at)
+        VALUES (v_user_id, 'Admin', 'admin@practicekoro.online', 'admin', NOW())
+        ON CONFLICT (id) DO UPDATE
+        SET role = 'admin', updated_at = NOW();
 
         RAISE NOTICE 'Successfully upgraded user % (ID: %) to admin', 'admin@practicekoro.online', v_user_id;
     END IF;
@@ -43,7 +44,7 @@ END $$;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_role public.user_role := 'student';
+    v_role text := 'student';
     v_name text;
 BEGIN
     IF LOWER(NEW.email) IN ('admin@practicekoro.online', 'admin@practicekoro.com') THEN
