@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 import {
   ChevronDown,
   Crown,
@@ -119,6 +120,9 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
 
           {/* Right: Actions & User Profile */}
           <div className="flex items-center gap-2.5 shrink-0">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Pro Pass CTA */}
             {isPro ? (
               <Link to="/subscription">

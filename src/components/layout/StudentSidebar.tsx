@@ -269,7 +269,9 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                           isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'
                         )}
                       />
-                      <span className={cn('truncate', isCollapsed && 'lg:hidden')}>{item.label}</span>
+                      <span className={cn('truncate', isCollapsed && 'lg:hidden')}>
+                        {item.label}
+                      </span>
                       {isActive && (
                         <span
                           className={cn(

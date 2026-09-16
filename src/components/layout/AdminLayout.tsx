@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 import {
   LayoutDashboard,
   Shield,
@@ -136,6 +137,11 @@ export const AdminLayout: React.FC = () => {
 
         {/* Footer Actions & Profile Chip */}
         <div className="p-3 border-t border-slate-800/80 space-y-2.5 bg-slate-950/80 shrink-0">
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl border border-slate-800/80 bg-slate-900/90">
+            <span className="text-xs font-semibold text-slate-400">Theme</span>
+            <ThemeToggle />
+          </div>
+
           <Link
             to="/"
             className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 border border-slate-800/80 transition-all group"
