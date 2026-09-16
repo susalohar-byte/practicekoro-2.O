@@ -8,6 +8,7 @@ import {
   Search,
   Eye,
   Edit2,
+  Trash2,
   Archive,
   Download,
   CheckCircle2,
@@ -17,6 +18,12 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  Award,
+  Clock,
+  Lock,
+  LayoutGrid,
+  List,
+  Check,
 } from 'lucide-react';
 import type { Question, Exam, Subject, Chapter, MockTest } from '@/types';
 import {
@@ -26,8 +33,14 @@ import {
   downloadSampleTxt,
 } from '@/utils/txtQuestionParser';
 import { getErrorMessage } from '@/lib/errors';
+import { useSearchParams } from 'react-router-dom';
 
 export const AdminQuestionBank: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const querySource = searchParams.get('source');
+  const querySubjectId = searchParams.get('subjectId');
+  const queryTopicId = searchParams.get('topicId');
+
   // Master Entities
   const [questions, setQuestions] = useState<Question[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
@@ -38,14 +51,26 @@ export const AdminQuestionBank: React.FC = () => {
 
   // Filters (Section 14)
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSource, setSelectedSource] = useState<'all' | 'topic' | 'exam'>('all');
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [selectedTopicId, setSelectedTopicId] = useState('');
+  const [selectedSource, setSelectedSource] = useState<'all' | 'topic' | 'exam'>(
+    querySource === 'topic' ? 'topic' : querySource === 'exam' ? 'exam' : 'all'
+  );
+  const [selectedSubjectId, setSelectedSubjectId] = useState(querySubjectId || '');
+  const [selectedTopicId, setSelectedTopicId] = useState(queryTopicId || '');
   const [selectedTopicTestId, setSelectedTopicTestId] = useState('');
   const [selectedExamId, setSelectedExamId] = useState('');
   const [selectedExamType, setSelectedExamType] = useState<'' | 'full_mock' | 'pyq'>('');
   const [selectedExamTestId, setSelectedExamTestId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'archived'>('all');
+
+  // Sync with searchParams if they change
+  useEffect(() => {
+    const s = searchParams.get('source');
+    const sub = searchParams.get('subjectId');
+    const top = searchParams.get('topicId');
+    if (s === 'topic' || s === 'exam') setSelectedSource(s);
+    if (sub !== null && sub !== undefined) setSelectedSubjectId(sub);
+    if (top !== null && top !== undefined) setSelectedTopicId(top);
+  }, [searchParams]);
 
   // Pagination (Section 5)
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,6 +133,16 @@ export const AdminQuestionBank: React.FC = () => {
   const [editQExplanation, setEditQExplanation] = useState('');
   const [isUpdatingQ, setIsUpdatingQ] = useState(false);
   const [editQError, setEditQError] = useState('');
+
+  // Card / Table View Mode & Selection
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
+
+  // Delete Question Modal
+  const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
+  const [isDeletingQuestion, setIsDeletingQuestion] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   // Load Data
   const loadQuestions = useCallback(async () => {
@@ -219,6 +254,17 @@ export const AdminQuestionBank: React.FC = () => {
         (t.examId === selectedExamId || t.associatedExamIds?.includes(selectedExamId))
     );
   }, [tests, selectedExamId]);
+
+  // Active selected Exam and Test details for Context Banner & Breadcrumbs
+  const currentExamObj = useMemo(() => {
+    if (selectedSource !== 'exam' || !selectedExamId) return null;
+    return exams.find((e) => e.id === selectedExamId) || null;
+  }, [selectedSource, selectedExamId, exams]);
+
+  const currentExamTest = useMemo(() => {
+    if (selectedSource !== 'exam' || !selectedExamTestId) return null;
+    return tests.find((t) => t.id === selectedExamTestId) || null;
+  }, [selectedSource, selectedExamTestId, tests]);
 
   // Single Question Modal Cascading
   const singleTopics = useMemo(() => {
@@ -605,6 +651,83 @@ export const AdminQuestionBank: React.FC = () => {
     }
   };
 
+  // Delete Question Handlers
+  const handleDeleteQuestion = async () => {
+    if (!questionToDelete) return;
+    try {
+      setIsDeletingQuestion(true);
+      setDeleteError('');
+      const success = await api.deleteQuestion(questionToDelete.id);
+      if (success) {
+        setQuestions((prev) => prev.filter((q) => q.id !== questionToDelete.id));
+        setSelectedQuestionIds((prev) => {
+          const next = new Set(prev);
+          next.delete(questionToDelete.id);
+          return next;
+        });
+        setQuestionToDelete(null);
+        setBulkActionSuccess('Question deleted successfully.');
+      } else {
+        setDeleteError('Failed to delete question. Please try again.');
+      }
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Failed to delete question'));
+    } finally {
+      setIsDeletingQuestion(false);
+    }
+  };
+
+  const handleBulkDeleteQuestions = async () => {
+    if (selectedQuestionIds.size === 0) return;
+    try {
+      setIsDeletingQuestion(true);
+      setDeleteError('');
+      const ids = Array.from(selectedQuestionIds);
+      let count = 0;
+      for (const id of ids) {
+        const ok = await api.deleteQuestion(id);
+        if (ok) count++;
+      }
+      setQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
+      setSelectedQuestionIds(new Set());
+      setIsBulkDeleteModalOpen(false);
+      setBulkActionSuccess(`${count} questions deleted successfully.`);
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Failed to delete selected questions'));
+    } finally {
+      setIsDeletingQuestion(false);
+    }
+  };
+
+  const toggleSelectQuestion = (id: string) => {
+    setSelectedQuestionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = () => {
+    if (paginatedQuestions.length === 0) return;
+    if (paginatedQuestions.every((q) => selectedQuestionIds.has(q.id))) {
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        paginatedQuestions.forEach((q) => next.delete(q.id));
+        return next;
+      });
+    } else {
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        paginatedQuestions.forEach((q) => next.add(q.id));
+        return next;
+      });
+    }
+  };
+
   // Pagination calculation
   const totalCount = questions.length;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
@@ -801,7 +924,8 @@ export const AdminQuestionBank: React.FC = () => {
                   </option>
                   {examFullMockTests.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.title}
+                      {t.title}{' '}
+                      {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
                     </option>
                   ))}
                 </select>
@@ -819,7 +943,8 @@ export const AdminQuestionBank: React.FC = () => {
                   </option>
                   {examPyqTests.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.title || t.paperName}
+                      {t.title || t.paperName}{' '}
+                      {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
                     </option>
                   ))}
                 </select>
@@ -869,6 +994,109 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       </div>
 
+      {/* Active Exam Context Banner */}
+      {selectedSource === 'exam' && currentExamObj && currentExamTest && (
+        <div className="bg-gradient-to-r from-indigo-50/80 via-white to-purple-50/80 dark:from-indigo-950/20 dark:via-slate-950 dark:to-purple-950/20 border border-indigo-200/80 dark:border-indigo-900/50 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    selectedExamType === 'full_mock'
+                      ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
+                      : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                  }`}
+                >
+                  {selectedExamType === 'full_mock'
+                    ? 'Full Mock Test'
+                    : 'Previous Year Question (PYQ)'}
+                </span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {currentExamObj.title}
+                </span>
+                {currentExamTest.year && (
+                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
+                    Year {currentExamTest.year}
+                  </span>
+                )}
+              </div>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                {currentExamTest.title || currentExamTest.paperName}
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <Button
+                onClick={handleOpenBulkModal}
+                size="sm"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+              >
+                <Upload className="w-3.5 h-3.5" /> + Bulk Add via TXT
+              </Button>
+              <Button
+                onClick={handleOpenAddSingle}
+                size="sm"
+                variant="outline"
+                className="text-xs font-bold border-indigo-200 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" /> + Add Question
+              </Button>
+              <button
+                onClick={() => setSelectedExamTestId('')}
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-900 transition-colors"
+                title="Switch to another Test / Paper"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Key Metrics */}
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+            <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+              <span>
+                <strong className="text-slate-900 dark:text-white">{questions.length}</strong>{' '}
+                Questions in Test
+              </span>
+            </div>
+
+            {currentExamTest.totalMarks && (
+              <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-emerald-500" />
+                <span>
+                  <strong className="text-slate-900 dark:text-white">
+                    {currentExamTest.totalMarks}
+                  </strong>{' '}
+                  Total Marks
+                </span>
+              </div>
+            )}
+
+            {currentExamTest.durationMinutes && (
+              <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-500" />
+                <span>
+                  <strong className="text-slate-900 dark:text-white">
+                    {currentExamTest.durationMinutes}
+                  </strong>{' '}
+                  Mins
+                </span>
+              </div>
+            )}
+
+            {typeof currentExamTest.negativeMarking === 'number' && (
+              <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300">
+                Negative Marks:{' '}
+                <strong className="text-rose-600 dark:text-rose-400">
+                  -{currentExamTest.negativeMarking}
+                </strong>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* REAL QUESTION LIST TABLE (Section 5, 9, 16) */}
       <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
         {isLoading ? (
@@ -880,31 +1108,102 @@ export const AdminQuestionBank: React.FC = () => {
             <BookOpen className="w-10 h-10 text-indigo-400 mx-auto opacity-50" />
             <p className="text-sm font-bold text-slate-900 dark:text-white">Select Exam Context</p>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Please select an Exam, choose Type (Full Mock Test or PYQ), and select a specific Test
-              to view its questions.
+              Please select an Exam from the filter bar above, choose Type (Full Mock Test or PYQ),
+              and select a specific Test to view its questions.
             </p>
           </div>
         ) : selectedSource === 'exam' && !selectedExamType ? (
-          <div className="p-16 text-center space-y-3">
-            <BookOpen className="w-10 h-10 text-indigo-400 mx-auto opacity-50" />
-            <p className="text-sm font-bold text-slate-900 dark:text-white">
-              Select Type (Full Mock Test / PYQ)
-            </p>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Choose whether you want to view questions for a <strong>Full Mock Test</strong> or{' '}
-              <strong>PYQ</strong>.
-            </p>
+          <div className="p-16 text-center space-y-4">
+            <BookOpen className="w-10 h-10 text-indigo-500 mx-auto opacity-70" />
+            <div className="space-y-1">
+              <p className="text-sm font-black text-slate-900 dark:text-white">
+                Select Question Type
+              </p>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Questions in <strong>{currentExamObj?.title || 'this Exam'}</strong> belong to
+                either a <strong>Full Mock Test</strong> or <strong>PYQ Paper</strong>.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setSelectedExamType('full_mock')}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
+              >
+                Full Mock Tests ({examFullMockTests.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedExamType('pyq')}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
+              >
+                PYQ Papers ({examPyqTests.length})
+              </button>
+            </div>
           </div>
         ) : selectedSource === 'exam' && !selectedExamTestId ? (
-          <div className="p-16 text-center space-y-3">
-            <FileQuestion className="w-10 h-10 text-indigo-400 mx-auto opacity-50" />
-            <p className="text-sm font-bold text-slate-900 dark:text-white">
-              Select a {selectedExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ Paper'}
-            </p>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Exam questions belong to a specific test or paper. Select one from the dropdown above
-              to view its questions.
-            </p>
+          <div className="p-16 text-center space-y-4">
+            <FileQuestion className="w-10 h-10 text-indigo-500 mx-auto opacity-70" />
+            <div className="space-y-1">
+              <p className="text-sm font-black text-slate-900 dark:text-white">
+                Select a {selectedExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ Paper'}
+              </p>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Exam questions belong to a specific test or paper. Select one below or from the
+                dropdown above:
+              </p>
+            </div>
+            {(selectedExamType === 'full_mock' ? examFullMockTests : examPyqTests).length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto pt-1">
+                {(selectedExamType === 'full_mock' ? examFullMockTests : examPyqTests).map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setSelectedExamTestId(t.id)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors"
+                  >
+                    {t.title || t.paperName}{' '}
+                    {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 italic">
+                No {selectedExamType === 'full_mock' ? 'Full Mock Tests' : 'PYQ Papers'} found for
+                this Exam.
+              </p>
+            )}
+          </div>
+        ) : selectedSource === 'exam' && selectedExamTestId && questions.length === 0 ? (
+          <div className="p-16 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-sm">
+              <FileQuestion className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-black text-slate-900 dark:text-white">
+                No questions found in {currentExamTest?.title || 'this test'}
+              </p>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                This {selectedExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ Paper'} does not
+                have any questions yet. Add questions now using bulk TXT upload or the single
+                question editor.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Button
+                onClick={handleOpenBulkModal}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+              >
+                <Upload className="w-3.5 h-3.5" /> + Bulk Add via TXT
+              </Button>
+              <Button
+                onClick={handleOpenAddSingle}
+                variant="outline"
+                className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" /> + Add Question Manually
+              </Button>
+            </div>
           </div>
         ) : questions.length === 0 ? (
           <div className="p-16 text-center space-y-3">
@@ -916,205 +1215,481 @@ export const AdminQuestionBank: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-900/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                  <th className="px-4 py-3 max-w-md">Question</th>
-                  <th className="px-4 py-3">Source & Assignment</th>
-                  <th className="px-4 py-3">Options Overview</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
-                {paginatedQuestions.map((q) => {
-                  const isTopic = q.sourceType === 'topic';
-                  const isExam = q.sourceType === 'other' || Boolean(q.sourceExam);
-                  const isPyq = q.sourceType === 'pyq';
-                  const examObj = exams.find((e) => e.id === q.sourceExam);
+          <div>
+            {/* Top List Controls Bar: Selection, Bulk Actions & View Mode Toggle */}
+            <div className="p-4 bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={toggleSelectAllVisible}
+                  className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition-colors"
+                >
+                  <div
+                    className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                      paginatedQuestions.length > 0 &&
+                      paginatedQuestions.every((q) => selectedQuestionIds.has(q.id))
+                        ? 'bg-sky-500 border-sky-500 text-white'
+                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950'
+                    }`}
+                  >
+                    {paginatedQuestions.length > 0 &&
+                      paginatedQuestions.every((q) => selectedQuestionIds.has(q.id)) && (
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      )}
+                  </div>
+                  <span>Select All Visible</span>
+                </button>
+
+                {selectedQuestionIds.size > 0 && (
+                  <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800">
+                    <span className="font-semibold text-sky-600 dark:text-sky-400">
+                      {selectedQuestionIds.size} selected
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsBulkDeleteModalOpen(true)}
+                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold flex items-center gap-1 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete Selected ({selectedQuestionIds.size})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedQuestionIds(new Set())}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline text-[11px]"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-1 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('card')}
+                  title="Card View (as requested)"
+                  className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
+                    viewMode === 'card'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Card View</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  title="Table View"
+                  className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
+                    viewMode === 'table'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span>Table View</span>
+                </button>
+              </div>
+            </div>
+
+            {/* CARD VIEW (Matching user reference layout exactly) */}
+            {viewMode === 'card' ? (
+              <div className="p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-900/30">
+                {paginatedQuestions.map((q, idx) => {
+                  const questionNumber = (currentPage - 1) * pageSize + idx + 1;
+                  const isSelected = selectedQuestionIds.has(q.id);
+                  const subjectTitle =
+                    q.topicName || q.chapterName || q.subjectName || 'bengali Literature';
 
                   return (
-                    <tr
+                    <div
                       key={q.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors"
+                      className={`bg-white dark:bg-slate-900 border rounded-2xl p-5 sm:p-6 transition-all shadow-xs ${
+                        isSelected
+                          ? 'border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/20 dark:bg-sky-950/20'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                      }`}
                     >
-                      {/* Question Text */}
-                      <td className="px-4 py-3.5 max-w-md">
-                        <div className="space-y-1">
-                          <p className="font-bold text-slate-900 dark:text-white line-clamp-2 leading-relaxed">
-                            {q.questionBengaliText || q.questionText}
-                          </p>
-                          {q.questionBengaliText &&
-                            q.questionText &&
-                            q.questionBengaliText !== q.questionText && (
-                              <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 italic">
-                                {q.questionText}
-                              </p>
-                            )}
-                          <div className="flex items-center gap-2 pt-0.5">
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
-                              {q.defaultMarks} Mark • {q.defaultNegativeMarks} Neg
-                            </span>
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
-                              {q.difficulty || 'medium'}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Source & Hierarchy */}
-                      <td className="px-4 py-3 text-[11px]">
-                        {isTopic && (
-                          <div className="space-y-1">
-                            <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40">
-                              Topic Test
-                            </span>
-                            <p className="font-medium text-slate-700 dark:text-slate-300">
-                              {q.subjectName || 'Subject'}
-                            </p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                              {q.topicName || q.chapterName || 'General Topic'}
-                            </p>
-                          </div>
-                        )}
-
-                        {isExam && (
-                          <div className="space-y-1">
-                            <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40">
-                              Full Mock Test
-                            </span>
-                            <p className="font-medium text-slate-700 dark:text-slate-300">
-                              {examObj?.title || q.sourceExam || 'Standard Exam'}
-                            </p>
-                            {(q.testTitle ||
-                              (selectedExamTestId
-                                ? tests.find((t) => t.id === selectedExamTestId)?.title
-                                : undefined)) && (
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                {q.testTitle ||
-                                  tests.find((t) => t.id === selectedExamTestId)?.title}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {isPyq && (
-                          <div className="space-y-1">
-                            <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
-                              PYQ ({q.sourceYear || 'Official'})
-                            </span>
-                            <p className="font-medium text-slate-700 dark:text-slate-300">
-                              {examObj?.title || q.sourceExam || 'State Exam'}
-                            </p>
-                            {(q.testTitle ||
-                              q.sourcePaper ||
-                              (selectedExamTestId
-                                ? tests.find((t) => t.id === selectedExamTestId)?.paperName ||
-                                  tests.find((t) => t.id === selectedExamTestId)?.title
-                                : undefined)) && (
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                {q.testTitle ||
-                                  q.sourcePaper ||
-                                  tests.find((t) => t.id === selectedExamTestId)?.paperName ||
-                                  tests.find((t) => t.id === selectedExamTestId)?.title}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Options Overview */}
-                      <td className="px-4 py-3 text-[11px] max-w-xs">
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <div
-                            className={`p-1 rounded text-[10px] line-clamp-1 ${
-                              q.correctOption === 'A'
-                                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                : 'text-slate-500'
-                            }`}
-                          >
-                            (a) {q.optionA}
-                          </div>
-                          <div
-                            className={`p-1 rounded text-[10px] line-clamp-1 ${
-                              q.correctOption === 'B'
-                                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                : 'text-slate-500'
-                            }`}
-                          >
-                            (b) {q.optionB}
-                          </div>
-                          <div
-                            className={`p-1 rounded text-[10px] line-clamp-1 ${
-                              q.correctOption === 'C'
-                                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                : 'text-slate-500'
-                            }`}
-                          >
-                            (c) {q.optionC}
-                          </div>
-                          <div
-                            className={`p-1 rounded text-[10px] line-clamp-1 ${
-                              q.correctOption === 'D'
-                                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                : 'text-slate-500'
-                            }`}
-                          >
-                            (d) {q.optionD}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                            q.status === 'active' || (!q.status && q.isActive)
-                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
-                              : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
-                          }`}
-                        >
-                          {q.status || (q.isActive ? 'active' : 'archived')}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      {/* Top Row: Selection circle, Question text, Action Icons */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                          {/* Selection Circle */}
                           <button
-                            onClick={() => {
-                              setPreviewingQuestion(q);
-                              setIsPreviewModalOpen(true);
-                            }}
-                            title="Preview Question"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                            type="button"
+                            onClick={() => toggleSelectQuestion(q.id)}
+                            title={isSelected ? 'Deselect question' : 'Select question'}
+                            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                              isSelected
+                                ? 'border-sky-500 bg-sky-500 text-white shadow-xs'
+                                : 'border-sky-400 dark:border-sky-500 bg-white dark:bg-slate-950 hover:border-sky-600'
+                            }`}
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </button>
 
+                          {/* Question Number & Text */}
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <h3 className="text-[15px] sm:text-base font-bold text-slate-900 dark:text-white leading-relaxed">
+                              {questionNumber}. {q.questionBengaliText || q.questionText}
+                            </h3>
+                            {q.questionBengaliText &&
+                              q.questionText &&
+                              q.questionBengaliText !== q.questionText && (
+                                <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                                  {q.questionText}
+                                </p>
+                              )}
+                          </div>
+                        </div>
+
+                        {/* Top-Right Actions: Edit & Delete */}
+                        <div className="flex items-center gap-1 shrink-0 pt-0.5">
                           <button
+                            type="button"
                             onClick={() => handleOpenEdit(q)}
                             title="Edit Question"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Edit2 className="w-4 h-4" />
                           </button>
 
                           <button
-                            onClick={() => handleArchiveQuestion(q)}
-                            title={q.status === 'archived' ? 'Unarchive' : 'Archive'}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                            type="button"
+                            onClick={() => setQuestionToDelete(q)}
+                            title="Delete Question"
+                            className="p-1.5 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                           >
-                            <Archive className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+
+                      {/* Middle: 2-Column Options Grid (Column 1 = A & C, Column 2 = B & D) */}
+                      <div className="ml-8 mt-3.5 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2.5 text-sm text-slate-800 dark:text-slate-200">
+                        {/* Column 1: A and C */}
+                        <div className="space-y-2">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-slate-900 dark:text-white">A.</span>
+                            <span
+                              className={
+                                q.correctOption === 'A'
+                                  ? 'font-semibold text-slate-950 dark:text-white'
+                                  : ''
+                              }
+                            >
+                              {q.optionA}
+                            </span>
+                            {q.correctOption === 'A' && (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-slate-900 dark:text-white">C.</span>
+                            <span
+                              className={
+                                q.correctOption === 'C'
+                                  ? 'font-semibold text-slate-950 dark:text-white'
+                                  : ''
+                              }
+                            >
+                              {q.optionC}
+                            </span>
+                            {q.correctOption === 'C' && (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Column 2: B and D */}
+                        <div className="space-y-2">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-slate-900 dark:text-white">B.</span>
+                            <span
+                              className={
+                                q.correctOption === 'B'
+                                  ? 'font-semibold text-slate-950 dark:text-white'
+                                  : ''
+                              }
+                            >
+                              {q.optionB}
+                            </span>
+                            {q.correctOption === 'B' && (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-slate-900 dark:text-white">D.</span>
+                            <span
+                              className={
+                                q.correctOption === 'D'
+                                  ? 'font-semibold text-slate-950 dark:text-white'
+                                  : ''
+                              }
+                            >
+                              {q.optionD}
+                            </span>
+                            {q.correctOption === 'D' && (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Row: Book icon, subject name, bn, Lock icon */}
+                      <div className="ml-8 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-3.5">
+                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
+                            <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{subjectTitle}</span>
+                          </div>
+                          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            bn
+                          </span>
+                          <Lock className="w-3.5 h-3.5 text-slate-400" />
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                          <span>{q.defaultMarks || 1} Mark</span>
+                          <span>•</span>
+                          <span>{q.defaultNegativeMarks || 0.25} Neg</span>
+                          {q.explanation && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPreviewingQuestion(q);
+                                setIsPreviewModalOpen(true);
+                              }}
+                              className="ml-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-semibold"
+                            >
+                              View Solution
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            ) : (
+              /* TABLE VIEW (Alternative compact mode) */
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                  <thead className="bg-slate-50 dark:bg-slate-900/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th className="px-3 py-3 w-12 text-center">#</th>
+                      <th className="px-4 py-3 max-w-md">Question</th>
+                      <th className="px-4 py-3">Source & Assignment</th>
+                      <th className="px-4 py-3">Options Overview</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
+                    {paginatedQuestions.map((q, idx) => {
+                      const isTopic = q.sourceType === 'topic';
+                      const isExam = q.sourceType === 'other' || Boolean(q.sourceExam);
+                      const isPyq = q.sourceType === 'pyq';
+                      const examObj = exams.find((e) => e.id === q.sourceExam);
+                      const questionNumber = (currentPage - 1) * pageSize + idx + 1;
+
+                      return (
+                        <tr
+                          key={q.id}
+                          className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors"
+                        >
+                          {/* Question Index */}
+                          <td className="px-3 py-3.5 text-center font-bold text-slate-400 dark:text-slate-500 text-[11px]">
+                            {questionNumber}
+                          </td>
+
+                          {/* Question Text */}
+                          <td className="px-4 py-3.5 max-w-md">
+                            <div className="space-y-1">
+                              <p className="font-bold text-slate-900 dark:text-white line-clamp-2 leading-relaxed">
+                                {q.questionBengaliText || q.questionText}
+                              </p>
+                              {q.questionBengaliText &&
+                                q.questionText &&
+                                q.questionBengaliText !== q.questionText && (
+                                  <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 italic">
+                                    {q.questionText}
+                                  </p>
+                                )}
+                              <div className="flex items-center gap-2 pt-0.5">
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
+                                  {q.defaultMarks} Mark • {q.defaultNegativeMarks} Neg
+                                </span>
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
+                                  {q.difficulty || 'medium'}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Source & Hierarchy */}
+                          <td className="px-4 py-3 text-[11px]">
+                            {isTopic && (
+                              <div className="space-y-1">
+                                <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40">
+                                  Topic Test
+                                </span>
+                                <p className="font-medium text-slate-700 dark:text-slate-300">
+                                  {q.subjectName || 'Subject'}
+                                </p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                                  {q.topicName || q.chapterName || 'General Topic'}
+                                </p>
+                              </div>
+                            )}
+
+                            {isExam && (
+                              <div className="space-y-1">
+                                <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40">
+                                  Full Mock Test
+                                </span>
+                                <p className="font-medium text-slate-700 dark:text-slate-300">
+                                  {examObj?.title || q.sourceExam || 'Standard Exam'}
+                                </p>
+                                {(q.testTitle ||
+                                  (selectedExamTestId
+                                    ? tests.find((t) => t.id === selectedExamTestId)?.title
+                                    : undefined)) && (
+                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                                    {q.testTitle ||
+                                      tests.find((t) => t.id === selectedExamTestId)?.title}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {isPyq && (
+                              <div className="space-y-1">
+                                <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
+                                  PYQ Paper
+                                </span>
+                                <p className="font-medium text-slate-700 dark:text-slate-300">
+                                  {q.sourceExam || 'WBP Exam'}{' '}
+                                  {q.sourceYear ? `(${q.sourceYear})` : ''}
+                                </p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                                  {q.sourcePaper || 'Official Paper'}
+                                </p>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Options Overview */}
+                          <td className="px-4 py-3 text-[11px] max-w-xs">
+                            <div className="grid grid-cols-2 gap-1.5">
+                              <div
+                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                  q.correctOption === 'A'
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
+                                    : 'text-slate-500'
+                                }`}
+                              >
+                                (a) {q.optionA}
+                              </div>
+                              <div
+                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                  q.correctOption === 'B'
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
+                                    : 'text-slate-500'
+                                }`}
+                              >
+                                (b) {q.optionB}
+                              </div>
+                              <div
+                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                  q.correctOption === 'C'
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
+                                    : 'text-slate-500'
+                                }`}
+                              >
+                                (c) {q.optionC}
+                              </div>
+                              <div
+                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                  q.correctOption === 'D'
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
+                                    : 'text-slate-500'
+                                }`}
+                              >
+                                (d) {q.optionD}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                q.status === 'active' || (!q.status && q.isActive)
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
+                                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
+                              }`}
+                            >
+                              {q.status || (q.isActive ? 'active' : 'archived')}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => {
+                                  setPreviewingQuestion(q);
+                                  setIsPreviewModalOpen(true);
+                                }}
+                                title="Preview Question"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => handleOpenEdit(q)}
+                                title="Edit Question"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => handleArchiveQuestion(q)}
+                                title={q.status === 'archived' ? 'Unarchive' : 'Archive'}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                              >
+                                <Archive className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => setQuestionToDelete(q)}
+                                title="Delete Question"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -1374,11 +1949,34 @@ export const AdminQuestionBank: React.FC = () => {
                         : singleExamPyqTests
                       ).map((t) => (
                         <option key={t.id} value={t.id}>
-                          {t.title || t.paperName}
+                          {t.title || t.paperName}{' '}
+                          {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
                         </option>
                       ))}
                     </select>
                   </div>
+                </div>
+              )}
+
+              {/* Exam Target Destination Confirmation Pill */}
+              {singleSource === 'exam' && singleExamId && singleExamTestId && (
+                <div className="p-2.5 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl flex items-center gap-2 text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <span className="text-slate-700 dark:text-slate-300">
+                    Target Destination:{' '}
+                    <strong className="text-slate-900 dark:text-white">
+                      {exams.find((e) => e.id === singleExamId)?.title}
+                    </strong>{' '}
+                    →{' '}
+                    <strong className="text-indigo-600 dark:text-indigo-400">
+                      {singleExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ'}
+                    </strong>{' '}
+                    →{' '}
+                    <strong className="text-slate-900 dark:text-white">
+                      {tests.find((t) => t.id === singleExamTestId)?.title ||
+                        tests.find((t) => t.id === singleExamTestId)?.paperName}
+                    </strong>
+                  </span>
                 </div>
               )}
 
@@ -1718,11 +2316,34 @@ export const AdminQuestionBank: React.FC = () => {
                           : bulkExamPyqTests
                         ).map((t) => (
                           <option key={t.id} value={t.id}>
-                            {t.title || t.paperName}
+                            {t.title || t.paperName}{' '}
+                            {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
                           </option>
                         ))}
                       </select>
                     </div>
+                  </div>
+                )}
+
+                {/* Exam Import Destination Confirmation Pill */}
+                {bulkSource === 'exam' && bulkExamId && bulkExamTestId && (
+                  <div className="p-2.5 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl flex items-center gap-2 text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                    <span className="text-slate-700 dark:text-slate-300">
+                      Import Destination:{' '}
+                      <strong className="text-slate-900 dark:text-white">
+                        {exams.find((e) => e.id === bulkExamId)?.title}
+                      </strong>{' '}
+                      →{' '}
+                      <strong className="text-indigo-600 dark:text-indigo-400">
+                        {bulkExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ'}
+                      </strong>{' '}
+                      →{' '}
+                      <strong className="text-slate-900 dark:text-white">
+                        {tests.find((t) => t.id === bulkExamTestId)?.title ||
+                          tests.find((t) => t.id === bulkExamTestId)?.paperName}
+                      </strong>
+                    </span>
                   </div>
                 )}
 
@@ -2247,6 +2868,133 @@ export const AdminQuestionBank: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Single Question Delete Confirmation Modal */}
+      {questionToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  প্রশ্নটি ডিলিট করতে চান?
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Delete Question Confirmation
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl text-xs text-red-600 dark:text-red-400">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 space-y-1">
+              <p className="font-bold line-clamp-2">
+                {questionToDelete.questionBengaliText || questionToDelete.questionText}
+              </p>
+              <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                <span>
+                  Subject:{' '}
+                  {subjects.find((s) => s.id === questionToDelete.subjectId)?.name ||
+                    questionToDelete.subjectName ||
+                    'General'}
+                </span>
+                <span>•</span>
+                <span>Language: BN</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              এই প্রশ্নটি স্থায়ীভাবে ডাটাবেস থেকে মুছে ফেলা হবে। আপনি কি নিশ্চিত?
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setQuestionToDelete(null);
+                  setDeleteError('');
+                }}
+                disabled={isDeletingQuestion}
+                className="text-xs"
+              >
+                বাতিল করুন (Cancel)
+              </Button>
+              <Button
+                type="button"
+                onClick={handleDeleteQuestion}
+                disabled={isDeletingQuestion}
+                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
+              >
+                {isDeletingQuestion ? 'মুছে ফেলা হচ্ছে...' : 'ডিলিট করুন (Delete)'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {isBulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  একসাথে {selectedQuestionIds.size}টি প্রশ্ন ডিলিট করবেন?
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Bulk Delete Confirmation
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl text-xs text-red-600 dark:text-red-400">
+                {deleteError}
+              </div>
+            )}
+
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              নির্বাচিত {selectedQuestionIds.size}টি প্রশ্ন স্থায়ীভাবে ডাটাবেস ও সংশ্লিষ্ট টেস্ট
+              থেকে ডিলিট করা হবে। এই পদক্ষেপটি আনডু করা যাবে না।
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBulkDeleteModalOpen(false);
+                  setDeleteError('');
+                }}
+                disabled={isDeletingQuestion}
+                className="text-xs"
+              >
+                বাতিল করুন (Cancel)
+              </Button>
+              <Button
+                type="button"
+                onClick={handleBulkDeleteQuestions}
+                disabled={isDeletingQuestion}
+                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
+              >
+                {isDeletingQuestion
+                  ? 'ডিলিট হচ্ছে...'
+                  : `হ্যাঁ, সবকটি ডিলিট করুন (${selectedQuestionIds.size})`}
+              </Button>
+            </div>
           </div>
         </div>
       )}

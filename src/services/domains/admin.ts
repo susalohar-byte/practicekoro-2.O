@@ -1784,22 +1784,50 @@ export const adminApi = {
   async deleteQuestion(id: string): Promise<boolean> {
     if (isSupabaseConfigured) {
       try {
-        const { error } = await supabase
+        // Try deleting test assignments first
+        await supabase.from('test_questions').delete().eq('question_id', id);
+        // Delete the question row
+        const { error } = await supabase.from('questions').delete().eq('id', id);
+        if (!error) {
+          const idx = localQuestions.findIndex((q) => q.id === id);
+          if (idx !== -1) localQuestions.splice(idx, 1);
+          return true;
+        }
+        // Fallback: archive if foreign key prevents hard delete
+        const { error: archiveError } = await supabase
           .from('questions')
           .update({ is_active: false, status: 'archived' })
           .eq('id', id);
-        if (!error) return true;
+        if (!archiveError) {
+          const idx = localQuestions.findIndex((q) => q.id === id);
+          if (idx !== -1) {
+            localQuestions[idx].isActive = false;
+            localQuestions[idx].status = 'archived';
+          }
+          return true;
+        }
       } catch (err) {
         console.error('Supabase deleteQuestion exception:', err);
       }
     }
     const idx = localQuestions.findIndex((q) => q.id === id);
     if (idx !== -1) {
-      localQuestions[idx].isActive = false;
-      localQuestions[idx].status = 'archived';
+      localQuestions.splice(idx, 1);
+      // Remove from localTestQuestions
+      const tqIdx = localTestQuestions.findIndex((t) => t.questionId === id);
+      if (tqIdx !== -1) localTestQuestions.splice(tqIdx, 1);
       return true;
     }
     return false;
+  },
+
+  async deleteQuestions(ids: string[]): Promise<{ success: boolean; deletedCount: number }> {
+    let count = 0;
+    for (const id of ids) {
+      const res = await this.deleteQuestion(id);
+      if (res) count++;
+    }
+    return { success: count > 0, deletedCount: count };
   },
 
   // --------------------------------------------------------------------------

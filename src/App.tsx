@@ -63,9 +63,6 @@ const AdminExams = React.lazy(() =>
 const AdminSubjects = React.lazy(() =>
   import('@/pages/admin/AdminSubjects').then((module) => ({ default: module.AdminSubjects }))
 );
-const AdminChapters = React.lazy(() =>
-  import('@/pages/admin/AdminChapters').then((module) => ({ default: module.AdminChapters }))
-);
 const AdminExamTopics = React.lazy(() =>
   import('@/pages/admin/AdminExamTopics').then((module) => ({ default: module.AdminExamTopics }))
 );
@@ -288,8 +285,8 @@ export const App: React.FC = () => {
           />
           <Route path="pyq-questions" element={<Navigate to="/admin/question-bank" replace />} />
           <Route path="subjects" element={<AdminSubjects />} />
-          <Route path="topics" element={<AdminChapters />} />
-          <Route path="chapters" element={<AdminChapters />} />
+          <Route path="topics" element={<Navigate to="/admin/subjects" replace />} />
+          <Route path="chapters" element={<Navigate to="/admin/subjects" replace />} />
           <Route path="test-series" element={<AdminTestSeries />} />
         </Route>
 
