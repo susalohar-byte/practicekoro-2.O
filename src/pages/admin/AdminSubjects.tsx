@@ -41,7 +41,9 @@ export const AdminSubjects: React.FC = () => {
 
   const [subjectSearch, setSubjectSearch] = useState('');
   const [topicSearch, setTopicSearch] = useState('');
-  const [topicFilterStatus, setTopicFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [topicFilterStatus, setTopicFilterStatus] = useState<
+    'all' | 'active' | 'inactive'
+  >('all');
 
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
@@ -78,7 +80,9 @@ export const AdminSubjects: React.FC = () => {
       setChapters(allChapters);
       setQuestions(allQuestions);
       setSelectedSubjectId((prev) =>
-        prev && allSubjects.some((s) => s.id === prev) ? prev : allSubjects[0]?.id || ''
+        prev && allSubjects.some((s) => s.id === prev)
+          ? prev
+          : allSubjects[0]?.id || ''
       );
     } catch (err) {
       console.error('Error loading curriculum data:', err);
@@ -112,7 +116,8 @@ export const AdminSubjects: React.FC = () => {
       if (!topicId) return;
       const parentChapter = chapters.find((c) => c.id === topicId);
       if (parentChapter?.subjectId) {
-        counts[parentChapter.subjectId] = (counts[parentChapter.subjectId] || 0) + 1;
+        counts[parentChapter.subjectId] =
+          (counts[parentChapter.subjectId] || 0) + 1;
       }
     });
     return counts;
@@ -359,19 +364,23 @@ export const AdminSubjects: React.FC = () => {
 
   return (
     <div className="min-h-full space-y-5 bg-slate-950 text-white">
-      <div className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-slate-950/95 backdrop-blur">
-        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="sticky top-0 z-10 -mx-1 bg-slate-950/95 px-1 py-1 backdrop-blur">
+        <div className="flex flex-col justify-between gap-4 border-b border-slate-800 pb-4 xl:flex-row xl:items-end">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400">
-                <BookOpen className="w-5 h-5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-500/25 bg-indigo-500/10 text-indigo-400">
+                <BookOpen className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-indigo-400">Curriculum CMS</p>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Subjects & Topics</h1>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-400">
+                  Curriculum CMS
+                </p>
+                <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
+                  Subjects & Topics
+                </h1>
               </div>
             </div>
-            <p className="text-xs text-slate-400 mt-2 max-w-2xl">
+            <p className="mt-2 max-w-2xl text-xs text-slate-400">
               Organize your syllabus, manage active modules, and jump straight into topic questions.
             </p>
           </div>
@@ -380,8 +389,8 @@ export const AdminSubjects: React.FC = () => {
             <Button
               size="sm"
               variant="outline"
-              className="border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200"
-              leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+              className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+              leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
               onClick={loadData}
               disabled={isLoading}
             >
@@ -389,8 +398,8 @@ export const AdminSubjects: React.FC = () => {
             </Button>
             <Button
               size="sm"
-              className="bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/20"
-              leftIcon={<Plus className="w-4 h-4" />}
+              className="bg-indigo-600 shadow-lg shadow-indigo-600/20 hover:bg-indigo-500"
+              leftIcon={<Plus className="h-4 w-4" />}
               onClick={openCreateSubjectModal}
             >
               Add Subject
@@ -398,8 +407,8 @@ export const AdminSubjects: React.FC = () => {
             {selectedSubject && (
               <Button
                 size="sm"
-                className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20"
-                leftIcon={<Plus className="w-4 h-4" />}
+                className="bg-emerald-600 shadow-lg shadow-emerald-600/20 hover:bg-emerald-500"
+                leftIcon={<Plus className="h-4 w-4" />}
                 onClick={openCreateTopicModal}
               >
                 Add Topic
@@ -410,227 +419,416 @@ export const AdminSubjects: React.FC = () => {
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 flex items-start gap-3">
-          <AlertCircle className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
           <div className="min-w-0">
             <p className="text-xs font-bold text-rose-300">Unable to load curriculum</p>
-            <p className="text-xs text-rose-200/70 mt-0.5">{loadError}</p>
+            <p className="mt-0.5 text-xs text-rose-200/70">{loadError}</p>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-          <div className="flex items-center justify-between"><span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Subjects</span><BookOpen className="w-4 h-4 text-indigo-400" /></div>
-          <p className="text-2xl font-black mt-2">{subjects.length}</p>
-          <p className="text-[11px] text-slate-500 mt-1">{subjects.filter((s) => s.isActive).length} active</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Subjects</span>
+            <BookOpen className="h-4 w-4 text-indigo-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black">{subjects.length}</p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {subjects.filter((s) => s.isActive).length} active
+          </p>
         </div>
         <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-          <div className="flex items-center justify-between"><span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Topics</span><FolderTree className="w-4 h-4 text-emerald-400" /></div>
-          <p className="text-2xl font-black mt-2">{chapters.length}</p>
-          <p className="text-[11px] text-slate-500 mt-1">{chapters.filter((c) => c.isActive).length} active</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Topics</span>
+            <FolderTree className="h-4 w-4 text-emerald-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black">{chapters.length}</p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {chapters.filter((c) => c.isActive).length} active
+          </p>
         </div>
         <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-          <div className="flex items-center justify-between"><span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Questions</span><HelpCircle className="w-4 h-4 text-blue-400" /></div>
-          <p className="text-2xl font-black mt-2">{questions.length}</p>
-          <p className="text-[11px] text-slate-500 mt-1">Across the question bank</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Questions</span>
+            <HelpCircle className="h-4 w-4 text-blue-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black">{questions.length}</p>
+          <p className="mt-1 text-[11px] text-slate-500">Across the question bank</p>
         </div>
         <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4">
-          <div className="flex items-center justify-between"><span className="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">Selected</span><Hash className="w-4 h-4 text-indigo-400" /></div>
-          <p className="text-sm font-black mt-2 truncate">{selectedSubject?.name || 'None selected'}</p>
-          <p className="text-[11px] text-slate-500 mt-1">{activeSubjectTotalQuestions} questions</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">Selected</span>
+            <Hash className="h-4 w-4 text-indigo-400" />
+          </div>
+          <p className="mt-2 truncate text-sm font-black">
+            {selectedSubject?.name || 'None selected'}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {activeSubjectTotalQuestions} questions
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        <div className="lg:col-span-4 xl:col-span-3 rounded-2xl border border-slate-800 bg-slate-900/50 overflow-hidden">
-          <div className="p-4 border-b border-slate-800 space-y-3">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12">
+        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 lg:col-span-4 xl:col-span-3">
+          <div className="space-y-3 border-b border-slate-800 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-black">Subjects</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Select one to manage topics</p>
+                <p className="mt-0.5 text-[10px] text-slate-500">Select one to manage topics</p>
               </div>
-              <span className="px-2 py-1 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold">{filteredSubjects.length}</span>
+              <span className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] font-bold text-slate-300">
+                {filteredSubjects.length}
+              </span>
             </div>
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 value={subjectSearch}
                 onChange={(e) => setSubjectSearch(e.target.value)}
                 placeholder="Search subjects..."
-                className="w-full h-10 pl-9 pr-9 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
+                className="h-10 w-full rounded-xl border border-slate-800 bg-slate-950 pl-9 pr-9 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               />
               {subjectSearch && (
-                <button onClick={() => setSubjectSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                <button
+                  onClick={() => setSubjectSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
           </div>
 
-          <div className="max-h-[640px] overflow-y-auto p-2 space-y-1.5">
+          <div className="max-h-[640px] space-y-1.5 overflow-y-auto p-2">
             {isLoading ? (
               <div className="p-8 text-center text-xs text-slate-500">Loading...</div>
             ) : filteredSubjects.length === 0 ? (
               <div className="p-8 text-center">
-                <BookOpen className="w-6 h-6 mx-auto text-slate-700" />
-                <p className="text-xs font-bold text-slate-400 mt-2">No subjects found</p>
-                <button onClick={openCreateSubjectModal} className="text-[11px] text-indigo-400 hover:text-indigo-300 mt-1">Create a subject</button>
+                <BookOpen className="mx-auto h-6 w-6 text-slate-700" />
+                <p className="mt-2 text-xs font-bold text-slate-400">No subjects found</p>
+                <button
+                  onClick={openCreateSubjectModal}
+                  className="mt-1 text-[11px] text-indigo-400 hover:text-indigo-300"
+                >
+                  Create a subject
+                </button>
               </div>
             ) : (
               filteredSubjects.map((sub) => {
                 const selected = selectedSubject?.id === sub.id;
                 const topicCount = subjectTopicCounts[sub.id] || 0;
                 const qCount = subjectQuestionCounts[sub.id] || 0;
+
                 return (
-                  <button
+                  <div
                     key={sub.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedSubjectId(sub.id)}
-                    className={`w-full text-left rounded-xl p-3 transition-all border ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedSubjectId(sub.id);
+                      }
+                    }}
+                    className={`w-full cursor-pointer rounded-xl border p-3 text-left transition-all ${
                       selected
-                        ? 'bg-indigo-500/10 border-indigo-500/30 ring-1 ring-indigo-500/10'
+                        ? 'border-indigo-500/30 bg-indigo-500/10 ring-1 ring-indigo-500/10'
                         : 'border-transparent hover:border-slate-800 hover:bg-slate-800/50'
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${selected ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                        <BookOpen className="w-4 h-4" />
+                      <div
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                          selected
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        <BookOpen className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-white truncate">{sub.name}</p>
-                            <p className="text-[10px] text-slate-600 font-mono truncate mt-0.5">/{sub.slug}</p>
+                            <p className="truncate text-xs font-bold text-white">{sub.name}</p>
+                            <p className="mt-0.5 truncate font-mono text-[10px] text-slate-600">
+                              /{sub.slug}
+                            </p>
                           </div>
-                          <ChevronRight className={`w-4 h-4 shrink-0 ${selected ? 'text-indigo-400' : 'text-slate-700'}`} />
+                          <ChevronRight
+                            className={`h-4 w-4 shrink-0 ${
+                              selected ? 'text-indigo-400' : 'text-slate-700'
+                            }`}
+                          />
                         </div>
-                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                          <span className="px-2 py-0.5 rounded-md bg-slate-950 border border-slate-800 text-[9px] text-slate-400">{topicCount} topics</span>
-                          <span className="px-2 py-0.5 rounded-md bg-slate-950 border border-slate-800 text-[9px] text-slate-400">{qCount} questions</span>
-                          <span className={`ml-auto inline-flex items-center gap-1 text-[9px] font-bold ${sub.isActive ? 'text-emerald-400' : 'text-slate-500'}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${sub.isActive ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <span className="rounded-md border border-slate-800 bg-slate-950 px-2 py-0.5 text-[9px] text-slate-400">
+                            {topicCount} topics
+                          </span>
+                          <span className="rounded-md border border-slate-800 bg-slate-950 px-2 py-0.5 text-[9px] text-slate-400">
+                            {qCount} questions
+                          </span>
+                          <span
+                            className={`ml-auto inline-flex items-center gap-1 text-[9px] font-bold ${
+                              sub.isActive ? 'text-emerald-400' : 'text-slate-500'
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                sub.isActive ? 'bg-emerald-400' : 'bg-slate-500'
+                              }`}
+                            />
                             {sub.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                       </div>
                     </div>
                     {selected && (
-                      <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-indigo-500/10">
-                        <button onClick={(e) => handleToggleSubjectActive(sub, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-amber-300 hover:bg-slate-800" title="Toggle status">
-                          {sub.isActive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      <div className="mt-3 flex items-center justify-end gap-1 border-t border-indigo-500/10 pt-2">
+                        <button
+                          onClick={(e) => handleToggleSubjectActive(sub, e)}
+                          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-amber-300"
+                          title="Toggle status"
+                        >
+                          {sub.isActive ? (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          ) : (
+                            <XCircle className="h-3.5 w-3.5" />
+                          )}
                         </button>
-                        <button onClick={(e) => openEditSubjectModal(sub, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800" title="Edit subject">
-                          <Edit2 className="w-3.5 h-3.5" />
+                        <button
+                          onClick={(e) => openEditSubjectModal(sub, e)}
+                          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-white"
+                          title="Edit subject"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={(e) => handleDeleteSubject(sub, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800" title="Delete subject">
-                          <Trash2 className="w-3.5 h-3.5" />
+                        <button
+                          onClick={(e) => handleDeleteSubject(sub, e)}
+                          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-rose-400"
+                          title="Delete subject"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     )}
-                  </button>
+                  </div>
                 );
               })
             )}
           </div>
         </div>
 
-        <div className="lg:col-span-8 xl:col-span-9 rounded-2xl border border-slate-800 bg-slate-900/50 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 lg:col-span-8 xl:col-span-9">
           {!selectedSubject ? (
-            <div className="min-h-[520px] flex items-center justify-center p-8 text-center">
+            <div className="flex min-h-[520px] items-center justify-center p-8 text-center">
               <div>
-                <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600"><BookOpen className="w-6 h-6" /></div>
-                <p className="text-sm font-bold mt-3">Select a subject</p>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm">Choose a subject from the left to view and manage its topics.</p>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-slate-600">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <p className="mt-3 text-sm font-bold">Select a subject</p>
+                <p className="mt-1 max-w-sm text-xs text-slate-500">
+                  Choose a subject from the left to view and manage its topics.
+                </p>
               </div>
             </div>
           ) : (
             <>
-              <div className="p-4 sm:p-5 border-b border-slate-800 bg-gradient-to-r from-indigo-500/5 via-transparent to-emerald-500/5">
-                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+              <div className="border-b border-slate-800 bg-gradient-to-r from-indigo-500/5 via-transparent to-emerald-500/5 p-4 sm:p-5">
+                <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-1 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[9px] uppercase tracking-wider text-indigo-300 font-bold">Selected subject</span>
-                      <span className={`text-[10px] font-bold ${selectedSubject.isActive ? 'text-emerald-400' : 'text-slate-500'}`}>{selectedSubject.isActive ? 'Active' : 'Inactive'}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-md border border-indigo-500/20 bg-indigo-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-indigo-300">
+                        Selected subject
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold ${
+                          selectedSubject.isActive ? 'text-emerald-400' : 'text-slate-500'
+                        }`}
+                      >
+                        {selectedSubject.isActive ? 'Active' : 'Inactive'}
+                      </span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black mt-2 truncate">{selectedSubject.name}</h2>
-                    <p className="text-[11px] text-slate-500 font-mono mt-1">/{selectedSubject.slug}</p>
-                    {selectedSubject.description && <p className="text-xs text-slate-400 mt-2 max-w-2xl">{selectedSubject.description}</p>}
+                    <h2 className="mt-2 truncate text-xl font-black sm:text-2xl">
+                      {selectedSubject.name}
+                    </h2>
+                    <p className="mt-1 font-mono text-[11px] text-slate-500">
+                      /{selectedSubject.slug}
+                    </p>
+                    {selectedSubject.description && (
+                      <p className="mt-2 max-w-2xl text-xs text-slate-400">
+                        {selectedSubject.description}
+                      </p>
+                    )}
                   </div>
-                  <div className="grid grid-cols-3 gap-2 shrink-0">
-                    <div className="min-w-[86px] rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-center"><p className="text-sm font-black text-white">{selectedSubjectTopics.length}</p><p className="text-[9px] uppercase tracking-wider text-slate-600 font-bold mt-0.5">Topics</p></div>
-                    <div className="min-w-[86px] rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-center"><p className="text-sm font-black text-emerald-400">{selectedSubjectTopics.filter((t) => t.isActive).length}</p><p className="text-[9px] uppercase tracking-wider text-slate-600 font-bold mt-0.5">Active</p></div>
-                    <div className="min-w-[96px] rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-center"><p className="text-sm font-black text-blue-400">{activeSubjectTotalQuestions}</p><p className="text-[9px] uppercase tracking-wider text-slate-600 font-bold mt-0.5">Questions</p></div>
+                  <div className="grid shrink-0 grid-cols-3 gap-2">
+                    <div className="min-w-[86px] rounded-xl border border-slate-800 bg-slate-950 px-3 py-2.5 text-center">
+                      <p className="text-sm font-black text-white">{selectedSubjectTopics.length}</p>
+                      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-600">
+                        Topics
+                      </p>
+                    </div>
+                    <div className="min-w-[86px] rounded-xl border border-slate-800 bg-slate-950 px-3 py-2.5 text-center">
+                      <p className="text-sm font-black text-emerald-400">
+                        {selectedSubjectTopics.filter((t) => t.isActive).length}
+                      </p>
+                      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-600">
+                        Active
+                      </p>
+                    </div>
+                    <div className="min-w-[96px] rounded-xl border border-slate-800 bg-slate-950 px-3 py-2.5 text-center">
+                      <p className="text-sm font-black text-blue-400">
+                        {activeSubjectTotalQuestions}
+                      </p>
+                      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-600">
+                        Questions
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-3 border-b border-slate-800 bg-slate-950/40">
-                <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <div className="border-b border-slate-800 bg-slate-950/40 p-3">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center">
                   <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                     <input
                       value={topicSearch}
                       onChange={(e) => setTopicSearch(e.target.value)}
                       placeholder={`Search topics in ${selectedSubject.name}...`}
-                      className="w-full h-10 pl-9 pr-9 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
+                      className="h-10 w-full rounded-xl border border-slate-800 bg-slate-900 pl-9 pr-9 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                     />
-                    {topicSearch && <button onClick={() => setTopicSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"><X className="w-3.5 h-3.5" /></button>}
+                    {topicSearch && (
+                      <button
+                        onClick={() => setTopicSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1 p-1 rounded-xl border border-slate-800 bg-slate-900">
+                  <div className="flex items-center gap-1 rounded-xl border border-slate-800 bg-slate-900 p-1">
                     {(['all', 'active', 'inactive'] as const).map((status) => (
                       <button
                         key={status}
                         onClick={() => setTopicFilterStatus(status)}
-                        className={`h-8 px-3 rounded-lg text-[10px] font-bold capitalize ${topicFilterStatus === status ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                        className={`h-8 rounded-lg px-3 text-[10px] font-bold capitalize ${
+                          topicFilterStatus === status
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-slate-500 hover:text-white'
+                        }`}
                       >
                         {status === 'all' ? 'All' : status}
                       </button>
                     ))}
                   </div>
-                  <button className="h-10 px-3 rounded-xl border border-slate-800 bg-slate-900 text-slate-500 flex items-center gap-2 text-[10px] font-bold" title="Topic filters are applied instantly">
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <button
+                    className="flex h-10 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 text-[10px] font-bold text-slate-500"
+                    title="Topic filters are applied instantly"
+                  >
+                    <SlidersHorizontal className="h-3.5 w-3.5" />
                     Filters
                   </button>
                 </div>
               </div>
 
-              <div className="p-3 sm:p-4 space-y-2.5">
+              <div className="space-y-2.5 p-3 sm:p-4">
                 {filteredTopics.length === 0 ? (
-                  <div className="min-h-[360px] rounded-2xl border border-dashed border-slate-800 bg-slate-950/30 flex items-center justify-center p-8 text-center">
+                  <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/30 p-8 text-center">
                     <div>
-                      <FolderTree className="w-8 h-8 mx-auto text-slate-700" />
-                      <p className="text-sm font-bold text-slate-300 mt-3">No topics found</p>
-                      <p className="text-xs text-slate-500 mt-1 max-w-sm">Try another search/filter or create a new topic for this subject.</p>
-                      <Button size="sm" className="mt-4 bg-indigo-600 hover:bg-indigo-500" leftIcon={<Plus className="w-4 h-4" />} onClick={openCreateTopicModal}>Create Topic</Button>
+                      <FolderTree className="mx-auto h-8 w-8 text-slate-700" />
+                      <p className="mt-3 text-sm font-bold text-slate-300">No topics found</p>
+                      <p className="mt-1 max-w-sm text-xs text-slate-500">
+                        Try another search/filter or create a new topic for this subject.
+                      </p>
+                      <Button
+                        size="sm"
+                        className="mt-4 bg-indigo-600 hover:bg-indigo-500"
+                        leftIcon={<Plus className="h-4 w-4" />}
+                        onClick={openCreateTopicModal}
+                      >
+                        Create Topic
+                      </Button>
                     </div>
                   </div>
                 ) : (
                   filteredTopics.map((topic) => {
                     const questionCount = topicQuestionCounts[topic.id] || 0;
                     return (
-                      <div key={topic.id} className="rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-950 hover:border-slate-700 transition-colors p-3.5 sm:p-4">
-                        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-black shrink-0">#{topic.orderIndex}</div>
+                      <div
+                        key={topic.id}
+                        className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 transition-colors hover:border-slate-700 hover:bg-slate-950 sm:p-4"
+                      >
+                        <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
+                          <div className="flex min-w-0 items-start gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10 text-[10px] font-black text-indigo-400">
+                              #{topic.orderIndex}
+                            </div>
                             <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="text-sm font-bold truncate">{topic.name}</h3>
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${topic.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-800 text-slate-500 border-slate-700'}`}>{topic.isActive ? 'Active' : 'Inactive'}</span>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="truncate text-sm font-bold">{topic.name}</h3>
+                                <span
+                                  className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
+                                    topic.isActive
+                                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                                      : 'border-slate-700 bg-slate-800 text-slate-500'
+                                  }`}
+                                >
+                                  {topic.isActive ? 'Active' : 'Inactive'}
+                                </span>
                               </div>
-                              <p className="text-[10px] font-mono text-slate-600 mt-1">/{topic.slug}</p>
-                              <p className="text-xs text-slate-500 mt-1 line-clamp-2">{topic.description || 'No description provided.'}</p>
+                              <p className="mt-1 font-mono text-[10px] text-slate-600">/{topic.slug}</p>
+                              <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                                {topic.description || 'No description provided.'}
+                              </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap self-start xl:self-center">
-                            <div className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 ${questionCount ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20' : 'bg-slate-900 text-slate-600 border-slate-800'}`}>
-                              <HelpCircle className="w-3.5 h-3.5" />
+                          <div className="flex flex-wrap items-center gap-2 self-start xl:flex-nowrap xl:self-center">
+                            <div
+                              className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold ${
+                                questionCount
+                                  ? 'border-indigo-500/20 bg-indigo-500/10 text-indigo-300'
+                                  : 'border-slate-800 bg-slate-900 text-slate-600'
+                              }`}
+                            >
+                              <HelpCircle className="h-3.5 w-3.5" />
                               {questionCount} Questions
                             </div>
-                            <button onClick={() => navigateToTopicQuestions(selectedSubject.id, topic.id)} className="h-9 px-3 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 text-[10px] font-bold flex items-center gap-1.5 transition-colors">
-                              Open bank <ExternalLink className="w-3 h-3" />
+                            <button
+                              onClick={() => navigateToTopicQuestions(selectedSubject.id, topic.id)}
+                              className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3 text-[10px] font-bold text-slate-300 transition-colors hover:border-indigo-500 hover:bg-indigo-600 hover:text-white"
+                            >
+                              Open bank <ExternalLink className="h-3 w-3" />
                             </button>
                             <div className="flex items-center gap-1 border-l border-slate-800 pl-2">
-                              <button onClick={() => handleToggleTopicActive(topic)} title={topic.isActive ? 'Deactivate topic' : 'Activate topic'} className="p-2 rounded-lg text-slate-500 hover:text-emerald-300 hover:bg-slate-800">{topic.isActive ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}</button>
-                              <button onClick={() => openEditTopicModal(topic)} title="Edit topic" className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800"><Edit2 className="w-4 h-4" /></button>
-                              <button onClick={() => handleDeleteTopic(topic)} title="Delete topic" className="p-2 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800"><Trash2 className="w-4 h-4" /></button>
+                              <button
+                                onClick={() => handleToggleTopicActive(topic)}
+                                title={topic.isActive ? 'Deactivate topic' : 'Activate topic'}
+                                className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-emerald-300"
+                              >
+                                {topic.isActive ? (
+                                  <CheckCircle2 className="h-4 w-4" />
+                                ) : (
+                                  <XCircle className="h-4 w-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => openEditTopicModal(topic)}
+                                title="Edit topic"
+                                className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-white"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTopic(topic)}
+                                title="Delete topic"
+                                className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-rose-400"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -645,34 +843,238 @@ export const AdminSubjects: React.FC = () => {
       </div>
 
       {isSubjectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <form onSubmit={handleSubjectSubmit} className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-start justify-between gap-3"><div><p className="text-[10px] uppercase tracking-wider text-indigo-400 font-bold">Subject</p><h2 className="text-lg font-black mt-1">{editingSubject ? 'Edit subject' : 'Create subject'}</h2></div><button type="button" onClick={() => setIsSubjectModalOpen(false)} className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800"><X className="w-4 h-4" /></button></div>
-            <div className="p-5 space-y-4">
-              <div><label className="text-[11px] text-slate-300 font-bold">Name</label><input autoFocus value={subName} onChange={(e) => handleSubNameChange(e.target.value)} className="mt-1.5 w-full h-10 rounded-xl bg-slate-950 border border-slate-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="e.g. History" /></div>
-              <div><label className="text-[11px] text-slate-300 font-bold">Slug</label><input value={subSlug} onChange={(e) => setSubSlug(e.target.value)} className="mt-1.5 w-full h-10 rounded-xl bg-slate-950 border border-slate-800 px-3 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="history" /></div>
-              <div><label className="text-[11px] text-slate-300 font-bold">Description <span className="text-slate-600 font-normal">(optional)</span></label><textarea value={subDescription} onChange={(e) => setSubDescription(e.target.value)} className="mt-1.5 w-full min-h-24 rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="Short description" /></div>
-              <div className="grid grid-cols-2 gap-3"><div><label className="text-[11px] text-slate-300 font-bold">Order</label><input type="number" min={1} value={subOrderIndex} onChange={(e) => setSubOrderIndex(Number(e.target.value))} className="mt-1.5 w-full h-10 rounded-xl bg-slate-950 border border-slate-800 px-3 text-xs" /></div><div><label className="text-[11px] text-slate-300 font-bold">Status</label><button type="button" onClick={() => setSubIsActive((v) => !v)} className={`mt-1.5 w-full h-10 rounded-xl border text-xs font-bold ${subIsActive ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}>{subIsActive ? 'Active' : 'Inactive'}</button></div></div>
-              {subError && <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-xs text-rose-300">{subError}</div>}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+          <form
+            onSubmit={handleSubjectSubmit}
+            className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-slate-800 p-5">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Subject</p>
+                <h2 className="mt-1 text-lg font-black">
+                  {editingSubject ? 'Edit subject' : 'Create subject'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSubjectModalOpen(false)}
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-end gap-2"><Button type="button" variant="outline" className="border-slate-700 bg-slate-900" onClick={() => setIsSubjectModalOpen(false)}>Cancel</Button><Button type="submit" className="bg-indigo-600 hover:bg-indigo-500" disabled={isSavingSubject}>{isSavingSubject ? 'Saving...' : editingSubject ? 'Save changes' : 'Create subject'}</Button></div>
+            <div className="space-y-4 p-5">
+              <div>
+                <label className="text-[11px] font-bold text-slate-300">Name</label>
+                <input
+                  autoFocus
+                  value={subName}
+                  onChange={(e) => handleSubNameChange(e.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  placeholder="e.g. History"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-300">Slug</label>
+                <input
+                  value={subSlug}
+                  onChange={(e) => setSubSlug(e.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 font-mono text-xs focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  placeholder="history"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-300">
+                  Description <span className="font-normal text-slate-600">(optional)</span>
+                </label>
+                <textarea
+                  value={subDescription}
+                  onChange={(e) => setSubDescription(e.target.value)}
+                  className="mt-1.5 min-h-24 w-full resize-y rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  placeholder="Short description"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300">Order</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={subOrderIndex}
+                    onChange={(e) => setSubOrderIndex(Number(e.target.value))}
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300">Status</label>
+                  <button
+                    type="button"
+                    onClick={() => setSubIsActive((v) => !v)}
+                    className={`mt-1.5 h-10 w-full rounded-xl border text-xs font-bold ${
+                      subIsActive
+                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                        : 'border-slate-800 bg-slate-950 text-slate-500'
+                    }`}
+                  >
+                    {subIsActive ? 'Active' : 'Inactive'}
+                  </button>
+                </div>
+              </div>
+              {subError && (
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-xs text-rose-300">
+                  {subError}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-slate-800 bg-slate-950/40 p-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-slate-700 bg-slate-900"
+                onClick={() => setIsSubjectModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-500"
+                disabled={isSavingSubject}
+              >
+                {isSavingSubject
+                  ? 'Saving...'
+                  : editingSubject
+                    ? 'Save changes'
+                    : 'Create subject'}
+              </Button>
+            </div>
           </form>
         </div>
       )}
 
       {isTopicModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <form onSubmit={handleTopicSubmit} className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-start justify-between gap-3"><div><p className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Topic</p><h2 className="text-lg font-black mt-1">{editingTopic ? 'Edit topic' : 'Create topic'}</h2></div><button type="button" onClick={() => setIsTopicModalOpen(false)} className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800"><X className="w-4 h-4" /></button></div>
-            <div className="p-5 space-y-4">
-              {!editingTopic && <div><label className="text-[11px] text-slate-300 font-bold">Parent subject</label><select value={topicSubjectId} onChange={(e) => setTopicSubjectId(e.target.value)} className="mt-1.5 w-full h-10 rounded-xl bg-slate-950 border border-slate-800 px-3 text-xs"><option value="">Select subject</option>{subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
-              <div><label className="text-[11px] text-slate-300 font-bold">Name</label><input autoFocus value={topicName} onChange={(e) => handleTopicNameChange(e.target.value)} className="mt-1.5 w-full h-10 rounded-xl bg-slate-950 border border-slate-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" placeholder="e.g. Ancient India" /></div>
-              <div><label className="text-[11px] text-slate-300 font-bold">Slug <span className="text-slate-600 font-normal">(optional)</span></label><input value={topicSlug} onChange={(e) => setTopicSlug(e.target.value)} className="mt-1.5 w-full h-10 rounded-xl bg-slate-950 border border-slate-800 px-3 text-xs font-mono" placeholder="ancient-india" /></div>
-              <div><label className="text-[11px] text-slate-300 font-bold">Description <span className="text-slate-600 font-normal">(optional)</span></label><textarea value={topicDescription} onChange={(e) => setTopicDescription(e.target.value)} className="mt-1.5 w-full min-h-24 rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs resize-y" placeholder="Short description" /></div>
-              <div className="grid grid-cols-2 gap-3"><div><label className="text-[11px] text-slate-300 font-bold">Order</label><input type="number" min={1} value={topicOrderIndex} onChange={(e) => setTopicOrderIndex(Number(e.target.value))} className="mt-1.5 w-full h-10 rounded-xl bg-slate-950 border border-slate-800 px-3 text-xs" /></div><div><label className="text-[11px] text-slate-300 font-bold">Status</label><button type="button" onClick={() => setTopicIsActive((v) => !v)} className={`mt-1.5 w-full h-10 rounded-xl border text-xs font-bold ${topicIsActive ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-slate-800 bg-slate-950 text-slate-500'}`}>{topicIsActive ? 'Active' : 'Inactive'}</button></div></div>
-              {topicError && <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-xs text-rose-300">{topicError}</div>}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+          <form
+            onSubmit={handleTopicSubmit}
+            className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-slate-800 p-5">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Topic</p>
+                <h2 className="mt-1 text-lg font-black">
+                  {editingTopic ? 'Edit topic' : 'Create topic'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTopicModalOpen(false)}
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-end gap-2"><Button type="button" variant="outline" className="border-slate-700 bg-slate-900" onClick={() => setIsTopicModalOpen(false)}>Cancel</Button><Button type="submit" className="bg-emerald-600 hover:bg-emerald-500" disabled={isSavingTopic}>{isSavingTopic ? 'Saving...' : editingTopic ? 'Save changes' : 'Create topic'}</Button></div>
+            <div className="space-y-4 p-5">
+              {!editingTopic && (
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300">Parent subject</label>
+                  <select
+                    value={topicSubjectId}
+                    onChange={(e) => setTopicSubjectId(e.target.value)}
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 text-xs"
+                  >
+                    <option value="">Select subject</option>
+                    {subjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div>
+                <label className="text-[11px] font-bold text-slate-300">Name</label>
+                <input
+                  autoFocus
+                  value={topicName}
+                  onChange={(e) => handleTopicNameChange(e.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  placeholder="e.g. Ancient India"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-300">
+                  Slug <span className="font-normal text-slate-600">(optional)</span>
+                </label>
+                <input
+                  value={topicSlug}
+                  onChange={(e) => setTopicSlug(e.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 font-mono text-xs"
+                  placeholder="ancient-india"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-300">
+                  Description <span className="font-normal text-slate-600">(optional)</span>
+                </label>
+                <textarea
+                  value={topicDescription}
+                  onChange={(e) => setTopicDescription(e.target.value)}
+                  className="mt-1.5 min-h-24 w-full resize-y rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs"
+                  placeholder="Short description"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300">Order</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={topicOrderIndex}
+                    onChange={(e) => setTopicOrderIndex(Number(e.target.value))}
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300">Status</label>
+                  <button
+                    type="button"
+                    onClick={() => setTopicIsActive((v) => !v)}
+                    className={`mt-1.5 h-10 w-full rounded-xl border text-xs font-bold ${
+                      topicIsActive
+                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                        : 'border-slate-800 bg-slate-950 text-slate-500'
+                    }`}
+                  >
+                    {topicIsActive ? 'Active' : 'Inactive'}
+                  </button>
+                </div>
+              </div>
+              {topicError && (
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-xs text-rose-300">
+                  {topicError}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-slate-800 bg-slate-950/40 p-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-slate-700 bg-slate-900"
+                onClick={() => setIsTopicModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-500"
+                disabled={isSavingTopic}
+              >
+                {isSavingTopic
+                  ? 'Saving...'
+                  : editingTopic
+                    ? 'Save changes'
+                    : 'Create topic'}
+              </Button>
+            </div>
           </form>
         </div>
       )}
