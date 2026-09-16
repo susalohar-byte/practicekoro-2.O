@@ -1144,35 +1144,35 @@ export const adminApi = {
     };
 
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('questions').insert({
-          id,
-          chapter_id: effectiveTopicId,
-          topic_id: effectiveTopicId,
-          subject_id: newQuestion.subjectId || null,
-          question_text: newQuestion.questionText,
-          question_bengali_text: newQuestion.questionBengaliText || null,
-          option_a: newQuestion.optionA,
-          option_b: newQuestion.optionB,
-          option_c: newQuestion.optionC,
-          option_d: newQuestion.optionD,
-          correct_option: newQuestion.correctOption,
-          explanation: newQuestion.explanation || null,
-          explanation_bengali: newQuestion.explanationBengali || null,
-          difficulty: newQuestion.difficulty || 'medium',
-          default_marks: newQuestion.defaultMarks,
-          default_negative_marks: newQuestion.defaultNegativeMarks,
-          question_type: newQuestion.questionType || 'mcq',
-          source_type: newQuestion.sourceType || 'topic',
-          source_year: newQuestion.sourceYear || null,
-          source_exam: newQuestion.sourceExam || null,
-          source_paper: newQuestion.sourcePaper || null,
-          source_shift: newQuestion.sourceShift || null,
-          is_active: newQuestion.isActive,
-          status: newQuestion.status,
-        });
-      } catch (err) {
-        console.error('Supabase createQuestion error:', err);
+      const { error } = await supabase.from('questions').insert({
+        id,
+        chapter_id: effectiveTopicId,
+        topic_id: effectiveTopicId,
+        subject_id: newQuestion.subjectId || null,
+        question_text: newQuestion.questionText,
+        question_bengali_text: newQuestion.questionBengaliText || null,
+        option_a: newQuestion.optionA,
+        option_b: newQuestion.optionB,
+        option_c: newQuestion.optionC,
+        option_d: newQuestion.optionD,
+        correct_option: newQuestion.correctOption,
+        explanation: newQuestion.explanation || null,
+        explanation_bengali: newQuestion.explanationBengali || null,
+        difficulty: newQuestion.difficulty || 'medium',
+        default_marks: newQuestion.defaultMarks,
+        default_negative_marks: newQuestion.defaultNegativeMarks,
+        question_type: newQuestion.questionType || 'mcq',
+        source_type: newQuestion.sourceType || 'topic',
+        source_year: newQuestion.sourceYear || null,
+        source_exam: newQuestion.sourceExam || null,
+        source_paper: newQuestion.sourcePaper || null,
+        source_shift: newQuestion.sourceShift || null,
+        is_active: newQuestion.isActive,
+        status: newQuestion.status,
+      });
+      if (error) {
+        console.error('Supabase createQuestion error:', error);
+        throw new Error(error.message || 'Failed to create question in database');
       }
     }
 
@@ -1222,9 +1222,14 @@ export const adminApi = {
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
         if (updates.status !== undefined) payload.status = updates.status;
 
-        await supabase.from('questions').update(payload).eq('id', id);
+        const { error } = await supabase.from('questions').update(payload).eq('id', id);
+        if (error) {
+          console.error('Supabase updateQuestion error:', error);
+          throw new Error(error.message || 'Failed to update question in database');
+        }
       } catch (err) {
-        console.error('Supabase updateQuestion error:', err);
+        console.error('Supabase updateQuestion exception:', err);
+        throw err;
       }
     }
 
@@ -1266,13 +1271,13 @@ export const adminApi = {
     }
 
     if (isSupabaseConfigured) {
-      try {
-        await supabase
-          .from('questions')
-          .update({ status: 'archived', is_active: false })
-          .eq('id', id);
-      } catch (err) {
-        console.error('Supabase archiveQuestion error:', err);
+      const { error } = await supabase
+        .from('questions')
+        .update({ status: 'archived', is_active: false })
+        .eq('id', id);
+      if (error) {
+        console.error('Supabase archiveQuestion error:', error);
+        throw new Error(error.message || 'Failed to archive question in database');
       }
     }
     return true;
@@ -1312,6 +1317,115 @@ export const adminApi = {
       errorCount: parsed.invalidCount,
       errors,
     };
+  },
+
+  /**
+   * SEPARATE QUESTION SOURCES ARCHITECTURE:
+   * Uploads a question DIRECTLY into a Full Mock or PYQ test
+   * (Exam -> Full Mock Test / PYQ Paper -> Question).
+   *
+   * - The question is NOT required to have Subject/Topic metadata (optional).
+   * - source_type is derived from the owning test ('pyq' for PYQ, 'other' for
+   *   full mocks) so the question never automatically joins the Topic bank.
+   * - The question is linked to the test via test_questions with the next
+   *   available question_order.
+   */
+  async createQuestionForTest(
+    testId: string,
+    qData: Omit<Question, 'id'>
+  ): Promise<{ success: boolean; question?: Question; error?: string }> {
+    try {
+      // Determine owning test & its type
+      let testType: MockTest['testType'] | undefined;
+      let examId: string | undefined;
+      const localTest = localTests.find((t) => t.id === testId);
+      if (localTest) {
+        testType = localTest.testType;
+        examId = localTest.examId;
+      } else if (isSupabaseConfigured) {
+        const { data, error } = await supabase
+          .from('tests')
+          .select('id, test_type, exam_id')
+          .eq('id', testId)
+          .single();
+        if (error) return { success: false, error: error.message };
+        testType = (data as { test_type: MockTest['testType'] }).test_type;
+        examId = (data as { exam_id: string }).exam_id;
+      } else {
+        return { success: false, error: 'Test not found.' };
+      }
+
+      const sourceType: Question['sourceType'] = testType === 'pyq' ? 'pyq' : 'other';
+
+      // Create the question (createQuestion throws on DB failure now)
+      const question = await this.createQuestion({
+        ...qData,
+        sourceType,
+        sourceExam: qData.sourceExam || (testType === 'pyq' ? examId : undefined),
+        subjectId: qData.subjectId || undefined,
+        chapterId: qData.chapterId || qData.topicId || undefined,
+        topicId: qData.topicId || qData.chapterId || undefined,
+      });
+
+      // Link to the test at the next available order
+      let nextOrder = 1;
+      if (isSupabaseConfigured) {
+        const { data: lastRow, error: orderError } = await supabase
+          .from('test_questions')
+          .select('question_order')
+          .eq('test_id', testId)
+          .order('question_order', { ascending: false })
+          .limit(1);
+        if (orderError) {
+          return {
+            success: false,
+            question,
+            error: `Question created but failed to read test order: ${orderError.message}`,
+          };
+        }
+        nextOrder = lastRow && lastRow.length > 0 ? Number(lastRow[0].question_order) + 1 : 1;
+
+        const { error: insertError } = await supabase.from('test_questions').insert({
+          test_id: testId,
+          question_id: question.id,
+          question_order: nextOrder,
+          marks: question.defaultMarks ?? 1.0,
+          negative_marks: question.defaultNegativeMarks ?? 0.25,
+        });
+        if (insertError) {
+          return {
+            success: false,
+            question,
+            error: `Question created but failed to assign to test: ${insertError.message}`,
+          };
+        }
+      } else {
+        nextOrder =
+          localTestQuestions
+            .filter((tq) => tq.testId === testId)
+            .reduce((max, tq) => Math.max(max, tq.questionOrder), 0) + 1;
+      }
+
+      // Local memory fallback bookkeeping
+      localTestQuestions.push({
+        id: `tq-${testId}-${question.id}`,
+        testId,
+        questionId: question.id,
+        questionOrder: nextOrder,
+        marks: question.defaultMarks ?? 1.0,
+        negativeMarks: question.defaultNegativeMarks ?? 0.25,
+      });
+      const testIdx = localTests.findIndex((t) => t.id === testId);
+      if (testIdx !== -1) {
+        localTests[testIdx].totalQuestions = localTestQuestions.filter(
+          (tq) => tq.testId === testId
+        ).length;
+      }
+
+      return { success: true, question };
+    } catch (err) {
+      return { success: false, error: getErrorMessage(err, 'Failed to create question for test') };
+    }
   },
 
   async getTestAssignedQuestions(testId: string): Promise<TestQuestionAssignment[]> {

@@ -29,9 +29,9 @@ export const AdminLayout: React.FC = () => {
     { label: 'Manage Exams', path: '/admin/exams', icon: Shield },
     { label: 'Exam Topics Map', path: '/admin/exam-topics', icon: Network },
     { label: 'Subjects', path: '/admin/subjects', icon: BookOpen },
-    { label: 'Topics Bank', path: '/admin/topics', icon: FolderTree },
-    { label: 'Questions Bank', path: '/admin/questions', icon: FileQuestion },
-    { label: 'Mock Tests & PYQ', path: '/admin/tests', icon: Layers },
+    { label: 'Topics', path: '/admin/topics', icon: FolderTree },
+    { label: '📚 Topic Questions', path: '/admin/questions', icon: FileQuestion },
+    { label: '🎯 Full Mocks & 📜 PYQ', path: '/admin/tests', icon: Layers },
     { label: 'Test Series', path: '/admin/test-series', icon: ListOrdered },
     { label: 'Subscriptions', path: '/admin/subscriptions', icon: CreditCard },
   ];

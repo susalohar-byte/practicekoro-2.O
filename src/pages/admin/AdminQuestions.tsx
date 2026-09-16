@@ -15,9 +15,6 @@ export const AdminQuestions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>(
-    'all'
-  );
   const [selectedSourceType, setSelectedSourceType] = useState<'all' | 'topic' | 'pyq'>('all');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +24,6 @@ export const AdminQuestions: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [sourceType, setSourceType] = useState<'topic' | 'pyq'>('topic');
   const [sourceYear, setSourceYear] = useState('');
   const [sourceExam, setSourceExam] = useState('');
@@ -67,7 +63,6 @@ export const AdminQuestions: React.FC = () => {
         api.getAllAdminQuestions({
           subjectId: selectedSubjectId || undefined,
           chapterId: selectedChapterId || undefined,
-          difficulty: selectedDifficulty !== 'all' ? selectedDifficulty : undefined,
           sourceType: selectedSourceType !== 'all' ? selectedSourceType : undefined,
           status: selectedStatus || undefined,
           search: searchTerm || undefined,
@@ -81,14 +76,7 @@ export const AdminQuestions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    selectedSubjectId,
-    selectedChapterId,
-    selectedDifficulty,
-    selectedSourceType,
-    selectedStatus,
-    searchTerm,
-  ]);
+  }, [selectedSubjectId, selectedChapterId, selectedSourceType, selectedStatus, searchTerm]);
 
   useEffect(() => {
     loadData();
@@ -101,7 +89,6 @@ export const AdminQuestions: React.FC = () => {
     setEditingQuestion(null);
     setSubjectId(selectedSubjectId || subjects[0]?.id || '');
     setChapterId(selectedChapterId || '');
-    setDifficulty('medium');
     setSourceType('topic');
     setSourceYear('');
     setSourceExam('');
@@ -126,7 +113,6 @@ export const AdminQuestions: React.FC = () => {
     setEditingQuestion(q);
     setSubjectId(q.subjectId || '');
     setChapterId(q.chapterId || q.topicId || '');
-    setDifficulty(q.difficulty === 'easy' || q.difficulty === 'hard' ? q.difficulty : 'medium');
     setSourceType(q.sourceType === 'pyq' ? 'pyq' : 'topic');
     setSourceYear(q.sourceYear ? String(q.sourceYear) : '');
     setSourceExam(q.sourceExam || '');
@@ -166,7 +152,7 @@ export const AdminQuestions: React.FC = () => {
           subjectId: subjectId || undefined,
           chapterId: chapterId || undefined,
           topicId: chapterId || undefined,
-          difficulty,
+          difficulty: 'medium',
           sourceType,
           sourceYear: parsedYear && !isNaN(parsedYear) ? parsedYear : undefined,
           sourceExam: sourceType === 'pyq' && sourceExam.trim() ? sourceExam.trim() : undefined,
@@ -189,7 +175,7 @@ export const AdminQuestions: React.FC = () => {
           subjectId: subjectId || undefined,
           chapterId: chapterId || undefined,
           topicId: chapterId || undefined,
-          difficulty,
+          difficulty: 'medium',
           sourceType,
           sourceYear: parsedYear && !isNaN(parsedYear) ? parsedYear : undefined,
           sourceExam: sourceType === 'pyq' && sourceExam.trim() ? sourceExam.trim() : undefined,
@@ -304,13 +290,18 @@ export const AdminQuestions: React.FC = () => {
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
               <FileQuestion className="w-6 h-6 text-purple-400" />
-              Centralized Question Bank
+              📚 Topic Questions
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
               {questions.length} Questions
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
+            Reusable Subject → Topic question library (no Exam required). Full Mock &amp; PYQ
+            questions are uploaded separately inside{' '}
+            <span className="text-indigo-400 font-semibold">Full Mocks &amp; PYQ → Questions</span>.
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
             Standardized repository of bilingual questions, verified answer keys, and pedagogical
             explanations.
           </p>
@@ -339,9 +330,9 @@ export const AdminQuestions: React.FC = () => {
 
       {/* Filters Bar */}
       <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* Search */}
-          <div className="sm:col-span-2 md:col-span-3 lg:col-span-2 relative">
+          <div className="sm:col-span-2 md:col-span-3 lg:col-span-1 relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
@@ -387,20 +378,6 @@ export const AdminQuestions: React.FC = () => {
                   {c.name}
                 </option>
               ))}
-            </select>
-          </div>
-
-          {/* Difficulty Filter */}
-          <div>
-            <select
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-            >
-              <option value="all">All Difficulties</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
             </select>
           </div>
 
@@ -462,19 +439,6 @@ export const AdminQuestions: React.FC = () => {
                   </span>
                   <span className="text-[11px] font-mono text-slate-400">
                     +{q.defaultMarks} / -{q.defaultNegativeMarks} Marks
-                  </span>
-
-                  {/* Difficulty Badge */}
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
-                      q.difficulty === 'easy'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        : q.difficulty === 'hard'
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    }`}
-                  >
-                    {q.difficulty || 'medium'}
                   </span>
 
                   {/* Source Type / PYQ Badge */}
@@ -655,62 +619,34 @@ export const AdminQuestions: React.FC = () => {
                 </div>
               </div>
 
-              {/* Difficulty & Source Type */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    Difficulty Level
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['easy', 'medium', 'hard'] as const).map((diff) => (
-                      <button
-                        key={diff}
-                        type="button"
-                        onClick={() => setDifficulty(diff)}
-                        className={`py-2 rounded-xl font-bold text-xs capitalize border transition-all ${
-                          difficulty === diff
-                            ? diff === 'easy'
-                              ? 'bg-emerald-600 text-white border-emerald-500'
-                              : diff === 'hard'
-                                ? 'bg-rose-600 text-white border-rose-500'
-                                : 'bg-amber-600 text-white border-amber-500'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        {diff}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    Question Origin / Source
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSourceType('topic')}
-                      className={`py-2 rounded-xl font-bold text-xs border transition-all ${
-                        sourceType === 'topic'
-                          ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      📚 Topic Bank
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSourceType('pyq')}
-                      className={`py-2 rounded-xl font-bold text-xs border transition-all ${
-                        sourceType === 'pyq'
-                          ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      📜 PYQ Paper
-                    </button>
-                  </div>
+              {/* Question Origin / Source */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  Question Origin / Source
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSourceType('topic')}
+                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                      sourceType === 'topic'
+                        ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    📚 Topic Bank
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSourceType('pyq')}
+                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                      sourceType === 'pyq'
+                        ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    📜 PYQ Paper
+                  </button>
                 </div>
               </div>
 

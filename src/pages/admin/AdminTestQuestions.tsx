@@ -36,9 +36,27 @@ export const AdminTestQuestions: React.FC = () => {
   const [bankSearch, setBankSearch] = useState('');
   const [bankSubjectId, setBankSubjectId] = useState('');
   const [bankChapterId, setBankChapterId] = useState('');
-  const [bankDifficulty, setBankDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
   const [bankSourceType, setBankSourceType] = useState<'all' | 'topic' | 'pyq'>('all');
   const [selectedBankIds, setSelectedBankIds] = useState<string[]>([]);
+
+  // Create New Question (direct upload) Modal State
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [newQuestionText, setNewQuestionText] = useState('');
+  const [newQuestionBengali, setNewQuestionBengali] = useState('');
+  const [newOptionA, setNewOptionA] = useState('');
+  const [newOptionB, setNewOptionB] = useState('');
+  const [newOptionC, setNewOptionC] = useState('');
+  const [newOptionD, setNewOptionD] = useState('');
+  const [newCorrectOption, setNewCorrectOption] = useState<'A' | 'B' | 'C' | 'D'>('A');
+  const [newExplanation, setNewExplanation] = useState('');
+  const [newExplanationBengali, setNewExplanationBengali] = useState('');
+  const [newDifficulty, setNewDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [newMarks, setNewMarks] = useState(1.0);
+  const [newNegativeMarks, setNewNegativeMarks] = useState(0.25);
+  const [newSubjectId, setNewSubjectId] = useState(''); // OPTIONAL metadata
+  const [newChapterId, setNewChapterId] = useState(''); // OPTIONAL metadata
 
   const loadData = useCallback(async () => {
     if (!testId) return;
@@ -129,7 +147,6 @@ export const AdminTestQuestions: React.FC = () => {
     setBankSearch('');
     setBankSubjectId(test?.subjectId || '');
     setBankChapterId(test?.chapterId || '');
-    setBankDifficulty('all');
     setBankSourceType('all');
     setIsBankModalOpen(true);
   };
@@ -167,7 +184,6 @@ export const AdminTestQuestions: React.FC = () => {
     if (assignedIds.has(q.id)) return false;
     if (bankSubjectId && q.subjectId !== bankSubjectId) return false;
     if (bankChapterId && q.chapterId !== bankChapterId && q.topicId !== bankChapterId) return false;
-    if (bankDifficulty !== 'all' && q.difficulty !== bankDifficulty) return false;
     if (bankSourceType !== 'all' && q.sourceType !== bankSourceType) return false;
     if (bankSearch) {
       const term = bankSearch.toLowerCase();
@@ -186,6 +202,80 @@ export const AdminTestQuestions: React.FC = () => {
   const handleDeselectAll = () => {
     setSelectedBankIds([]);
   };
+
+  // Direct upload: Exam -> (Full Mock | PYQ Paper) -> Question
+  const openCreateModal = () => {
+    setNewQuestionText('');
+    setNewQuestionBengali('');
+    setNewOptionA('');
+    setNewOptionB('');
+    setNewOptionC('');
+    setNewOptionD('');
+    setNewCorrectOption('A');
+    setNewExplanation('');
+    setNewExplanationBengali('');
+    setNewDifficulty('medium');
+    setNewMarks(1.0);
+    setNewNegativeMarks(0.25);
+    setNewSubjectId('');
+    setNewChapterId('');
+    setCreateError('');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateQuestion = async () => {
+    if (!testId || !test) return;
+    if (!newQuestionText.trim()) {
+      setCreateError('Question text is required.');
+      return;
+    }
+    if (!newOptionA.trim() || !newOptionB.trim() || !newOptionC.trim() || !newOptionD.trim()) {
+      setCreateError('All four options (A, B, C, D) are required.');
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setCreateError('');
+      const res = await api.createQuestionForTest(testId, {
+        subjectId: newSubjectId || undefined, // optional metadata
+        chapterId: newChapterId || undefined, // optional metadata
+        topicId: newChapterId || undefined,
+        questionText: newQuestionText.trim(),
+        questionBengaliText: newQuestionBengali.trim() || undefined,
+        optionA: newOptionA.trim(),
+        optionB: newOptionB.trim(),
+        optionC: newOptionC.trim(),
+        optionD: newOptionD.trim(),
+        correctOption: newCorrectOption,
+        explanation: newExplanation.trim() || undefined,
+        explanationBengali: newExplanationBengali.trim() || undefined,
+        difficulty: newDifficulty,
+        defaultMarks: newMarks,
+        defaultNegativeMarks: newNegativeMarks,
+        isActive: true,
+        status: 'active',
+      });
+
+      if (!res.success) {
+        setCreateError(res.error || 'Failed to create question.');
+        return;
+      }
+
+      setIsCreateModalOpen(false);
+      await loadData();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 4000);
+    } catch (err) {
+      setCreateError(getErrorMessage(err, 'Unexpected error while creating question.'));
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const newChapterOptions = newSubjectId
+    ? chapters.filter((c) => c.subjectId === newSubjectId)
+    : chapters;
 
   const totalAssignedMarks = assignedQuestions.reduce((acc, q) => acc + (q.marks || 0), 0);
 
@@ -209,15 +299,6 @@ export const AdminTestQuestions: React.FC = () => {
     targetCount > 0
       ? Math.min(100, Math.round((assignedQuestions.length / targetCount) * 100))
       : 100;
-  const easyCount = assignedQuestions.filter((q) => {
-    const b = bankQuestions.find((bk) => bk.id === q.questionId);
-    return b?.difficulty === 'easy';
-  }).length;
-  const hardCount = assignedQuestions.filter((q) => {
-    const b = bankQuestions.find((bk) => bk.id === q.questionId);
-    return b?.difficulty === 'hard';
-  }).length;
-  const medCount = assignedQuestions.length - easyCount - hardCount;
 
   return (
     <div className="space-y-6">
@@ -249,6 +330,14 @@ export const AdminTestQuestions: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <Button
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700 text-xs font-bold"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={openCreateModal}
+          >
+            Create &amp; Add Question
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -323,19 +412,6 @@ export const AdminTestQuestions: React.FC = () => {
               </span>
             </div>
           </div>
-
-          {/* Difficulty Distribution Chips */}
-          <div className="flex items-center gap-2 text-[11px] font-semibold">
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Easy: {easyCount}
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              Medium: {medCount}
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              Hard: {hardCount}
-            </span>
-          </div>
         </div>
 
         {targetCount > 0 && (
@@ -361,16 +437,26 @@ export const AdminTestQuestions: React.FC = () => {
             <FileQuestion className="w-10 h-10 text-slate-600 mx-auto" />
             <p className="text-sm font-bold text-white">No questions assigned to this test yet.</p>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Click &quot;Add Questions from Bank&quot; above to select questions and specify their
-              deterministic test order.
+              Use &quot;Create &amp; Add Question&quot; to upload questions directly into this test
+              (Subject/Topic optional), or &quot;Add Questions from Bank&quot; to reference existing
+              Topic Questions.
             </p>
-            <Button
-              size="sm"
-              className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
-              onClick={openBankModal}
-            >
-              Open Question Bank
-            </Button>
+            <div className="flex items-center gap-2 justify-center">
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-xs font-bold"
+                onClick={openCreateModal}
+              >
+                Create &amp; Add Question
+              </Button>
+              <Button
+                size="sm"
+                className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
+                onClick={openBankModal}
+              >
+                Open Question Bank
+              </Button>
+            </div>
           </div>
         ) : (
           assignedQuestions.map((q, idx) => (
@@ -512,7 +598,7 @@ export const AdminTestQuestions: React.FC = () => {
                   Select Questions from Bank
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Filter by subject, topic, difficulty, or source to compose your mock test
+                  Filter by subject, topic, or source to compose your mock test
                 </p>
               </div>
               <button
@@ -576,25 +662,15 @@ export const AdminTestQuestions: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Difficulty & Source Filter */}
-                <div className="flex gap-2">
-                  <select
-                    value={bankDifficulty}
-                    onChange={(e) => setBankDifficulty(e.target.value as any)}
-                    className="w-1/2 px-2 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="all">Diff</option>
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
+                {/* Source Filter */}
+                <div>
                   <select
                     value={bankSourceType}
                     onChange={(e) => setBankSourceType(e.target.value as any)}
-                    className="w-1/2 px-2 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                   >
-                    <option value="all">Source</option>
-                    <option value="topic">Topic</option>
+                    <option value="all">All Sources</option>
+                    <option value="topic">Topic Tests</option>
                     <option value="pyq">PYQ</option>
                   </select>
                 </div>
@@ -667,19 +743,6 @@ export const AdminTestQuestions: React.FC = () => {
                               +{q.defaultMarks} / -{q.defaultNegativeMarks}
                             </span>
 
-                            {/* Difficulty */}
-                            <span
-                              className={`px-2 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider ${
-                                q.difficulty === 'easy'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                  : q.difficulty === 'hard'
-                                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              }`}
-                            >
-                              {q.difficulty || 'medium'}
-                            </span>
-
                             {/* Source */}
                             {q.sourceType === 'pyq' ? (
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
@@ -748,6 +811,226 @@ export const AdminTestQuestions: React.FC = () => {
                   Add Selected ({selectedBankIds.length})
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create & Add Question Modal (direct upload into this test) */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            {/* Header */}
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <FileQuestion className="w-5 h-5 text-emerald-400" />
+                  Create New Question
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Uploaded directly into{' '}
+                  <span className="text-indigo-400 font-semibold">{test?.title}</span>
+                  {test?.testType === 'pyq' ? ' (PYQ source)' : ' (Full Mock source)'} — Subject /
+                  Topic metadata is optional.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-slate-400 hover:text-white text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {createError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 font-bold">
+                {createError}
+              </div>
+            )}
+
+            {/* Question Texts */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Question (English) <span className="text-rose-400">*</span>
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Enter the question statement"
+                value={newQuestionText}
+                onChange={(e) => setNewQuestionText(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Question (Bengali)
+              </label>
+              <textarea
+                rows={2}
+                placeholder="বাংলা প্রশ্ন"
+                value={newQuestionBengali}
+                onChange={(e) => setNewQuestionBengali(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            {/* Options */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {(
+                [
+                  ['A', newOptionA, setNewOptionA],
+                  ['B', newOptionB, setNewOptionB],
+                  ['C', newOptionC, setNewOptionC],
+                  ['D', newOptionD, setNewOptionD],
+                ] as const
+              ).map(([opt, value, setter]) => (
+                <input
+                  key={opt}
+                  placeholder={`Option ${opt} *`}
+                  value={value}
+                  onChange={(e) => setter(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+              ))}
+            </div>
+
+            {/* Correct Answer */}
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Correct Answer <span className="text-rose-400">*</span>
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {(['A', 'B', 'C', 'D'] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setNewCorrectOption(opt)}
+                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                      newCorrectOption === opt
+                        ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Option {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Explanations */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <textarea
+                rows={2}
+                placeholder="Explanation (English)"
+                value={newExplanation}
+                onChange={(e) => setNewExplanation(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
+              <textarea
+                rows={2}
+                placeholder="বাংলা ব্যাখ্যা"
+                value={newExplanationBengali}
+                onChange={(e) => setNewExplanationBengali(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            {/* Scoring & Difficulty */}
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                  Marks
+                </label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={newMarks}
+                  onChange={(e) => setNewMarks(parseFloat(e.target.value) || 1)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                  Negative
+                </label>
+                <input
+                  type="number"
+                  step="0.05"
+                  value={newNegativeMarks}
+                  onChange={(e) => setNewNegativeMarks(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                  Difficulty
+                </label>
+                <select
+                  value={newDifficulty}
+                  onChange={(e) => setNewDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+            </div>
+
+            {/* OPTIONAL Subject / Topic metadata */}
+            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Optional Metadata — Subject / Topic (for analytics &amp; practice tagging)
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <select
+                  value={newSubjectId}
+                  onChange={(e) => {
+                    setNewSubjectId(e.target.value);
+                    setNewChapterId('');
+                  }}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">— No Subject —</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={newChapterId}
+                  onChange={(e) => setNewChapterId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">— No Topic —</option>
+                  {newChapterOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="border-slate-700 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleCreateQuestion}
+                disabled={isCreating}
+                className="bg-emerald-600 hover:bg-emerald-700 text-xs font-bold"
+              >
+                {isCreating ? 'Saving...' : 'Save Question to Test'}
+              </Button>
             </div>
           </div>
         </div>
