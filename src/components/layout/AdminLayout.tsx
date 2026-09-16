@@ -12,11 +12,9 @@ import {
   Layers,
   CreditCard,
   LogOut,
-  ArrowLeft,
   Menu,
   X,
   Sparkles,
-  ExternalLink,
   Network,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -142,17 +140,6 @@ export const AdminLayout: React.FC = () => {
             <ThemeToggle />
           </div>
 
-          <Link
-            to="/"
-            className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 border border-slate-800/80 transition-all group"
-          >
-            <div className="flex items-center gap-2">
-              <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:-translate-x-0.5 transition-transform" />
-              <span>Student Platform</span>
-            </div>
-            <ExternalLink className="w-3 h-3 text-slate-500" />
-          </Link>
-
           <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800/80">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-bold flex items-center justify-center text-xs shrink-0">
@@ -205,15 +192,7 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-all"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Student View</span>
-            </Link>
-
-            <div className="flex items-center gap-2.5 pl-2 border-l border-slate-800">
+            <div className="flex items-center gap-2.5">
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-bold text-white leading-tight">{user?.fullName}</p>
                 <p className="text-[10px] text-slate-400">Super Administrator</p>
