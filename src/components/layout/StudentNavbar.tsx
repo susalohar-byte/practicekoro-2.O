@@ -150,9 +150,17 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
                 className="flex items-center gap-2 p-1 sm:px-2 sm:py-1 rounded-xl hover:bg-slate-100/90 border border-transparent hover:border-slate-200/70 transition-all"
               >
                 <div className="relative">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                    {user?.fullName?.charAt(0) || 'U'}
-                  </div>
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.fullName || 'Candidate'}
+                      className="w-8 h-8 rounded-xl object-cover ring-1 ring-slate-200"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                      {user?.fullName?.charAt(0) || 'U'}
+                    </div>
+                  )}
                   <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white" />
                 </div>
                 <div className="hidden sm:flex flex-col text-left">

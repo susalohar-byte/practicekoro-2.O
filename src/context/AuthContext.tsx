@@ -19,6 +19,7 @@ interface AuthContextType {
   isPro: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: Error | null; role?: UserRole }>;
+  loginWithGoogle: (targetRedirect?: string) => Promise<{ error: Error | null }>;
   register: (
     fullName: string,
     email: string,
@@ -64,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const resolveUserProfile = async (supabaseUser: {
       id: string;
       email?: string;
+      user_metadata?: Record<string, any>;
     }): Promise<UserProfile> => {
       try {
         const [profileRes, rolesRes] = await Promise.all([
@@ -71,27 +73,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           supabase.from('user_roles').select('role').eq('user_id', supabaseUser.id),
         ]);
 
-        const profile = profileRes.data as ProfileRow | null;
+        let profile = profileRes.data as ProfileRow | null;
         const userRoles = (rolesRes.data as { role: string }[] | null) || [];
         const isAdminUser = userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
         const effectiveRole: UserRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
+        const meta = supabaseUser.user_metadata || {};
+        const metaFullName = ((meta.full_name || meta.name || '') as string).trim();
+        const metaAvatar = ((meta.avatar_url || meta.picture || '') as string).trim();
+
+        // If profile doesn't exist yet, insert it (e.g. first Google sign-in)
+        if (!profile) {
+          const initialName = metaFullName || supabaseUser.email?.split('@')[0] || 'Candidate';
+          const newProfile = {
+            id: supabaseUser.id,
+            email: supabaseUser.email || '',
+            full_name: initialName,
+            avatar_url: metaAvatar || null,
+            role: effectiveRole,
+          };
+          try {
+            await supabase.from('profiles').upsert(newProfile, { onConflict: 'id' });
+          } catch (err) {
+            console.warn('Profile upsert warning:', err);
+          }
+
+          profile = newProfile as ProfileRow;
+        } else {
+          // If avatar or full_name is missing from profile but provided by Google OAuth, sync them
+          const needsAvatarUpdate = !profile.avatar_url && Boolean(metaAvatar);
+          const needsNameUpdate =
+            (!profile.full_name || profile.full_name === profile.email?.split('@')[0]) &&
+            Boolean(metaFullName);
+
+          if (needsAvatarUpdate || needsNameUpdate) {
+            const updates: Record<string, string> = {};
+            if (needsAvatarUpdate) updates.avatar_url = metaAvatar;
+            if (needsNameUpdate) updates.full_name = metaFullName;
+
+            try {
+              await supabase.from('profiles').update(updates).eq('id', supabaseUser.id);
+            } catch (err) {
+              console.warn('Profile sync warning:', err);
+            }
+          }
+        }
+
         return {
           id: profile?.id || supabaseUser.id,
-          fullName: profile?.full_name || supabaseUser.email?.split('@')[0] || 'User',
+          fullName: profile?.full_name || metaFullName || supabaseUser.email?.split('@')[0] || 'User',
           email: profile?.email || supabaseUser.email || '',
           phone: profile?.phone ?? undefined,
-          avatarUrl: profile?.avatar_url ?? undefined,
+          avatarUrl: profile?.avatar_url || metaAvatar || undefined,
           targetExamId: profile?.target_exam_id ?? undefined,
           role: effectiveRole,
           createdAt: profile?.created_at || new Date().toISOString(),
         };
       } catch (err) {
-        console.error('Supabase session load error:', err);
+        console.error('Supabase profile resolve error:', err);
+        const meta = supabaseUser.user_metadata || {};
         return {
           id: supabaseUser.id,
-          fullName: supabaseUser.email?.split('@')[0] || 'User',
+          fullName: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
           email: supabaseUser.email || '',
+          avatarUrl: meta.avatar_url || meta.picture || undefined,
           role: 'student',
           createdAt: new Date().toISOString(),
         };
@@ -101,6 +146,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check active Supabase session
     const initAuth = async () => {
       try {
+        // If OAuth returned PKCE code in query string, handle exchange cleanly
+        if (typeof window !== 'undefined' && window.location.search.includes('code=')) {
+          const params = new URLSearchParams(window.location.search);
+          const code = params.get('code');
+          if (code) {
+            try {
+              await supabase.auth.exchangeCodeForSession(code);
+              const cleanUrl = window.location.pathname;
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch (exchangeErr) {
+              console.warn('OAuth PKCE exchange handled or error:', exchangeErr);
+            }
+          }
+        }
+
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -190,6 +250,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
       }
       return { error: null, role: authenticatedRole };
+    } catch (err: unknown) {
+      return { error: err as Error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (
+    targetRedirect?: string
+  ): Promise<{ error: Error | null }> => {
+    setLoading(true);
+    try {
+      if (!isSupabaseConfigured) {
+        if (!isDemoModeEnabled) {
+          return { error: new Error('Authentication is not configured') };
+        }
+        // In demo mode without configured Supabase, authenticate as mock student
+        setUser(MOCK_STUDENT_USER);
+        localStorage.setItem('practicekoro_user', JSON.stringify(MOCK_STUDENT_USER));
+        return { error: null };
+      }
+
+      const redirectUri = targetRedirect || `${window.location.origin}/dashboard`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUri,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        return { error };
+      }
+
+      return { error: null };
     } catch (err: unknown) {
       return { error: err as Error };
     } finally {
@@ -340,6 +440,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isPro,
         loading,
         login,
+        loginWithGoogle,
         register,
         logout,
         switchDemoRole,

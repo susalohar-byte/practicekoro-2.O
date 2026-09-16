@@ -3,17 +3,33 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
-import { Lock, Mail, User, ArrowRight } from 'lucide-react';
+import { GoogleIcon } from '@/components/common/GoogleIcon';
+import { Lock, Mail, User, ArrowRight, Loader2 } from 'lucide-react';
 
 export const Register: React.FC = () => {
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleGoogleRegister = async () => {
+    setIsGoogleLoading(true);
+    setError(null);
+
+    const res = await loginWithGoogle(`${window.location.origin}/dashboard`);
+    setIsGoogleLoading(false);
+
+    if (res.error) {
+      setError(res.error.message);
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +72,30 @@ export const Register: React.FC = () => {
               {error}
             </div>
           )}
+
+          {/* 1-Click Google Sign Up */}
+          <button
+            type="button"
+            onClick={handleGoogleRegister}
+            disabled={isGoogleLoading || isLoading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-xl shadow-xs transition-all active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {isGoogleLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+            ) : (
+              <GoogleIcon className="w-5 h-5" />
+            )}
+            <span>Sign up with Google</span>
+          </button>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-3 text-slate-400 font-medium">Or register with email</span>
+            </div>
+          </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <Input

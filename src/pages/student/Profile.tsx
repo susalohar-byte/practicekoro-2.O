@@ -700,11 +700,19 @@ export const Profile: React.FC = () => {
 
               {/* Avatar Live Preview */}
               <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-blue-50/40 border border-blue-100">
-                <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-sm">
-                  {nameInput.trim()
-                    ? nameInput.trim().charAt(0).toUpperCase()
-                    : user?.fullName?.charAt(0) || 'U'}
-                </div>
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.fullName || 'Candidate'}
+                    className="w-12 h-12 rounded-xl object-cover shadow-sm ring-1 ring-blue-200"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-sm">
+                    {nameInput.trim()
+                      ? nameInput.trim().charAt(0).toUpperCase()
+                      : user?.fullName?.charAt(0) || 'U'}
+                  </div>
+                )}
                 <div>
                   <p className="text-xs font-bold text-slate-800">
                     {nameInput.trim() || user?.fullName || 'Candidate Name'}
