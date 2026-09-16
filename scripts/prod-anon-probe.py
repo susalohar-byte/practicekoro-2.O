@@ -77,6 +77,39 @@ if s == 200:
 else:
     check('user_test_access hidden from anon (post-013 expected)', s in (401, 403, 404), f'status={s}')
 
+# ---- Write-block proofs (RLS must reject anonymous mutations) ----
+try:
+    import urllib.request as _u
+
+    def write_probe(table, payload, method='POST'):
+        req = _u.Request(
+            f'{base}/{table}',
+            data=json.dumps(payload).encode(),
+            method=method,
+            headers={'apikey': key, 'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+        )
+        try:
+            with _u.urlopen(req) as r:
+                rows = json.load(r)
+                return r.status, len(rows) if isinstance(rows, list) else 0
+        except urllib.error.HTTPError as e:
+            return e.code, 0
+
+    st, n = write_probe('exams', {'id': 'probe-hack', 'title': 'x', 'slug': 'x', 'category': 'x'})
+    check('anon cannot INSERT exams', st in (401, 403) or n == 0, f'status={st} rows={n}')
+
+    st, n = write_probe(
+        'questions?id=eq.00000000-0000-0000-0000-000000000000',
+        {'question_text': 'x'},
+        method='PATCH',
+    )
+    check('anon cannot UPDATE questions', st in (401, 403) or n == 0, f'status={st} rows={n}')
+
+    st, n = write_probe('subscriptions', {'user_id': '00000000-0000-0000-0000-000000000000', 'plan_id': 'x', 'status': 'active'})
+    check('anon cannot INSERT subscriptions', st in (401, 403) or n == 0, f'status={st} rows={n}')
+except Exception as exc:  # noqa: BLE001
+    check('write-block probes executed', False, str(exc)[:80])
+
 print()
 failed = [r for r in results if not r[1]]
 print(f'TOTAL: {len(results)} checks, {len(failed)} failed')

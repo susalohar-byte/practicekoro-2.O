@@ -54,7 +54,7 @@ select jsonb_build_object(
   'questions_admin_only',      exists(
                                  select 1 from pg_policies
                                  where schemaname='public' and tablename='questions'
-                                   and cmd='SELECT' and polname ilike '%admin%'
+                                   and cmd='SELECT' and policyname ilike '%admin%'
                                ),
   'questions_no_anon_policy',  not exists(
                                  select 1 from pg_policies
