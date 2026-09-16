@@ -446,21 +446,26 @@ export const adminCommerceApi = {
         });
 
         if (!error && Array.isArray(data)) {
-          return data.map((d) => ({
-            id: d.id,
-            fullName: d.full_name || 'Aspirant',
-            email: d.email || '',
-            phone: d.phone || undefined,
-            avatarUrl: d.avatar_url || undefined,
-            createdAt: d.created_at,
-            planTitle: d.plan_title || 'Free Plan',
-            planId: d.plan_id || 'plan_free',
-            subscriptionStatus: d.subscription_status || 'none',
-            isPro: Boolean(d.is_pro),
-            expiresAt: d.expires_at || undefined,
-            totalAttempts: Number(d.total_attempts || 0),
-            lastActive: d.last_active || d.created_at,
-          }));
+          return data
+            .filter((d) => {
+              const email = (d.email || '').toLowerCase().trim();
+              return email !== 'admin@practicekoro.online' && email !== 'admin@practicekoro.com';
+            })
+            .map((d) => ({
+              id: d.id,
+              fullName: d.full_name || 'Aspirant',
+              email: d.email || '',
+              phone: d.phone || undefined,
+              avatarUrl: d.avatar_url || undefined,
+              createdAt: d.created_at,
+              planTitle: d.plan_title || 'Free Plan',
+              planId: d.plan_id || 'plan_free',
+              subscriptionStatus: d.subscription_status || 'none',
+              isPro: Boolean(d.is_pro),
+              expiresAt: d.expires_at || undefined,
+              totalAttempts: Number(d.total_attempts || 0),
+              lastActive: d.last_active || d.created_at,
+            }));
         }
       } catch (err) {
         console.warn('Fallback querying profiles for admin students:', err);
@@ -499,31 +504,47 @@ export const adminCommerceApi = {
 
         const { data, error } = await query;
         if (!error && Array.isArray(data)) {
-          return data.map((d: any) => {
-            const activeSub = Array.isArray(d.subscriptions)
-              ? d.subscriptions.find((s: any) => s.status === 'active') || d.subscriptions[0]
-              : undefined;
+          return data
+            .filter((d: any) => {
+              const email = (d.email || '').toLowerCase().trim();
+              if (email === 'admin@practicekoro.online' || email === 'admin@practicekoro.com') {
+                return false;
+              }
+              if (d.role === 'admin') return false;
+              return true;
+            })
+            .map((d: any) => {
+              const activeSub = Array.isArray(d.subscriptions)
+                ? d.subscriptions.find((s: any) => s.status === 'active') || d.subscriptions[0]
+                : undefined;
 
-            const isPro = activeSub?.status === 'active';
-            const planTitle =
-              activeSub?.subscription_plans?.title || (isPro ? 'Pro Pass' : 'Free Aspirant');
+              const isPro = activeSub?.status === 'active';
+              const planTitle =
+                activeSub?.subscription_plans?.title || (isPro ? 'Pro Pass' : 'Free Aspirant');
 
-            return {
-              id: d.id,
-              fullName: d.full_name || 'Registered Aspirant',
-              email: d.email || '',
-              phone: d.phone || undefined,
-              avatarUrl: d.avatar_url || undefined,
-              createdAt: d.created_at,
-              planTitle,
-              planId: activeSub?.plan_id || 'plan_free',
-              subscriptionStatus: activeSub?.status || 'none',
-              isPro,
-              expiresAt: activeSub?.expires_at || undefined,
-              totalAttempts: 0,
-              lastActive: d.created_at,
-            };
-          });
+              return {
+                id: d.id,
+                fullName: d.full_name || 'Registered Aspirant',
+                email: d.email || '',
+                phone: d.phone || undefined,
+                avatarUrl: d.avatar_url || undefined,
+                createdAt: d.created_at,
+                planTitle,
+                planId: activeSub?.plan_id || 'plan_free',
+                subscriptionStatus: activeSub?.status || 'none',
+                isPro,
+                expiresAt: activeSub?.expires_at || undefined,
+                totalAttempts: 0,
+                lastActive: d.created_at,
+              };
+            })
+            .filter((st) => {
+              if (filterPlan === 'pro' && !st.isPro) return false;
+              if (filterPlan === 'free' && st.isPro) return false;
+              if (filterStatus === 'active' && !st.isPro) return false;
+              if (filterStatus === 'expired' && st.subscriptionStatus !== 'expired') return false;
+              return true;
+            });
         }
       } catch (err) {
         console.warn('Direct query on profiles failed:', err);

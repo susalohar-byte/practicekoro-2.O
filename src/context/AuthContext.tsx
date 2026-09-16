@@ -86,15 +86,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           (profile?.role !== 'admin' || !userRoles.some((r) => r.role === 'admin'))
         ) {
           try {
-            await Promise.all([
-              supabase
-                .from('user_roles')
-                .upsert(
-                  { user_id: supabaseUser.id, role: 'admin' },
-                  { onConflict: 'user_id,role' }
-                ),
-              supabase.from('profiles').update({ role: 'admin' }).eq('id', supabaseUser.id),
-            ]);
+            // First attempt secure SECURITY DEFINER RPC (bypasses RLS restrictions on user_roles)
+            const rpcResult = await supabase.rpc('sync_admin_profile');
+            if (rpcResult.error) {
+              // Fallback to direct upsert/update if RPC is not yet applied in Postgres
+              await Promise.all([
+                supabase
+                  .from('user_roles')
+                  .upsert(
+                    { user_id: supabaseUser.id, role: 'admin' },
+                    { onConflict: 'user_id,role' }
+                  ),
+                supabase.from('profiles').update({ role: 'admin' }).eq('id', supabaseUser.id),
+              ]);
+            }
             if (profile) profile.role = 'admin';
           } catch (promoteErr) {
             console.warn('Auto admin promotion sync warning:', promoteErr);
