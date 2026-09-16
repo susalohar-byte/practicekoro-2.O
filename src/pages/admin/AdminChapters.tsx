@@ -9,12 +9,14 @@ import {
   Plus,
   Edit2,
   Trash2,
+  Power,
   CheckCircle2,
   XCircle,
   Search,
   Layers,
   Filter,
   X,
+  AlertTriangle,
 } from 'lucide-react';
 import type { Chapter, Subject, Exam } from '@/types';
 
@@ -27,6 +29,9 @@ export const AdminChapters: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
+  const [chapterToDelete, setChapterToDelete] = useState<Chapter | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   // Form State
@@ -150,6 +155,21 @@ export const AdminChapters: React.FC = () => {
       await loadData();
     } catch (err) {
       console.error('Failed to toggle status:', err);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!chapterToDelete) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError('');
+      await api.deleteChapter(chapterToDelete.id);
+      setChapterToDelete(null);
+      await loadData();
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Failed to delete chapter'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -338,7 +358,7 @@ export const AdminChapters: React.FC = () => {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => openEditModal(chap)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
@@ -348,14 +368,24 @@ export const AdminChapters: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleToggleActive(chap)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
-                            title={chap.isActive ? 'Deactivate' : 'Activate'}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              chap.isActive
+                                ? 'text-emerald-400 hover:text-amber-400 hover:bg-amber-500/10'
+                                : 'text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10'
+                            }`}
+                            title={chap.isActive ? 'Deactivate Chapter' : 'Activate Chapter'}
                           >
-                            {chap.isActive ? (
-                              <Trash2 className="w-4 h-4" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4" />
-                            )}
+                            <Power className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeleteError('');
+                              setChapterToDelete(chap);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                            title="Delete Chapter"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -496,6 +526,66 @@ export const AdminChapters: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {chapterToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400 mb-3">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Chapter</h3>
+                <p className="text-xs text-slate-400">
+                  This action will remove the chapter permanently.
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 mb-4">
+                {deleteError}
+              </div>
+            )}
+
+            <p className="text-xs text-slate-300 mb-6 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+              Are you sure you want to permanently delete{' '}
+              <strong className="text-white">"{chapterToDelete.name}"</strong>?
+              {chapterToDelete.testsCount && chapterToDelete.testsCount > 0 ? (
+                <span className="block mt-1 text-amber-400">
+                  ⚠️ This chapter has {chapterToDelete.testsCount} test(s) that may be affected.
+                </span>
+              ) : null}
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isDeleting}
+                onClick={() => {
+                  setChapterToDelete(null);
+                  setDeleteError('');
+                }}
+                className="border-slate-700 text-xs text-slate-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={isDeleting}
+                onClick={handleDeleteConfirm}
+                className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Chapter'}
+              </Button>
+            </div>
           </div>
         </div>
       )}

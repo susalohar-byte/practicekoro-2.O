@@ -515,10 +515,12 @@ export const AdminSubscriptions: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-slate-900 dark:text-white">
-                    {students.length} Registered {students.length === 1 ? 'Student' : 'Students'} Found
+                    {students.length} Registered {students.length === 1 ? 'Student' : 'Students'}{' '}
+                    Found
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Currently holding Free Aspirant passes. Switch to the Students tab to view candidate activity or grant 1-Year Pro passes.
+                    Currently holding Free Aspirant passes. Switch to the Students tab to view
+                    candidate activity or grant 1-Year Pro passes.
                   </p>
                 </div>
               </div>

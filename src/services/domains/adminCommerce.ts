@@ -230,7 +230,7 @@ export const adminCommerceApi = {
   },
 
   async getAdminDashboardStats(): Promise<AdminDashboardStats> {
-    let studentCount = 0;
+    const studentCount = 0;
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.rpc('get_admin_dashboard_counts');
@@ -257,12 +257,65 @@ export const adminCommerceApi = {
       }
 
       try {
-        const { count } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
-        studentCount = count || 0;
-      } catch {
-        studentCount = 0;
+        const [
+          examsRes,
+          subjectsRes,
+          chaptersRes,
+          testSeriesRes,
+          testsRes,
+          questionsRes,
+          attemptsRes,
+          profilesRes,
+        ] = await Promise.all([
+          supabase.from('exams').select('*', { count: 'exact', head: true }),
+          supabase.from('subjects').select('*', { count: 'exact', head: true }),
+          supabase.from('chapters').select('*', { count: 'exact', head: true }),
+          supabase.from('test_series').select('*', { count: 'exact', head: true }),
+          supabase.from('tests').select('status'),
+          supabase.from('questions').select('is_active, status'),
+          supabase.from('test_attempts').select('status'),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        ]);
+
+        const tests = Array.isArray(testsRes.data) ? testsRes.data : [];
+        const questions = Array.isArray(questionsRes.data) ? questionsRes.data : [];
+        const attempts = Array.isArray(attemptsRes.data) ? attemptsRes.data : [];
+
+        return {
+          totalExams: examsRes.count ?? 0,
+          activeExams: examsRes.count ?? 0,
+          totalSubjects: subjectsRes.count ?? 0,
+          totalChapters: chaptersRes.count ?? 0,
+          totalTestSeries: testSeriesRes.count ?? 0,
+          totalTests: tests.length,
+          publishedTests: tests.filter((t: any) => t.status === 'published').length,
+          draftTests: tests.filter((t: any) => t.status === 'draft').length,
+          archivedTests: tests.filter((t: any) => t.status === 'archived').length,
+          totalQuestions: questions.length,
+          activeQuestions: questions.filter((q: any) => q.is_active && q.status !== 'archived')
+            .length,
+          totalAttempts: attempts.length,
+          completedAttempts: attempts.filter((a: any) => a.status === 'completed').length,
+          totalStudents: profilesRes.count ?? 0,
+        };
+      } catch (err) {
+        console.warn('Fallback direct stats calculation failed:', err);
+        return {
+          totalExams: 0,
+          activeExams: 0,
+          totalSubjects: 0,
+          totalChapters: 0,
+          totalTestSeries: 0,
+          totalTests: 0,
+          publishedTests: 0,
+          draftTests: 0,
+          archivedTests: 0,
+          totalQuestions: 0,
+          activeQuestions: 0,
+          totalAttempts: 0,
+          completedAttempts: 0,
+          totalStudents: 0,
+        };
       }
     }
 
@@ -378,27 +431,42 @@ export const adminCommerceApi = {
           freeStudents,
           proStudents,
           activeSubscriptions,
-          totalExams: examsRes.count || localExams.length,
-          totalTests: tests.length || localTests.length,
-          topicTests:
-            topicTests ||
-            localTests.filter((t) => t.testType === 'chapter_mock' || t.testType === 'topic')
-              .length,
-          fullMockTests:
-            fullMockTests || localTests.filter((t) => t.testType === 'full_mock').length,
-          pyqTests: pyqTests || localTests.filter((t) => t.testType === 'pyq').length,
-          totalQuestions: questions.length || localQuestions.length,
-          topicQuestions: topicQuestions || localQuestions.filter((q) => q.chapterId).length,
-          fullMockQuestions:
-            fullMockQuestions ||
-            localQuestions.filter((q) => !q.chapterId && q.id.includes('fm')).length,
-          pyqQuestions:
-            pyqQuestions ||
-            localQuestions.filter((q) => !q.chapterId && q.id.includes('pyq')).length,
+          totalExams: examsRes.count ?? 0,
+          totalTests: tests.length,
+          topicTests,
+          fullMockTests,
+          pyqTests,
+          totalQuestions: questions.length,
+          topicQuestions,
+          fullMockQuestions,
+          pyqQuestions,
           recentActivity: [],
         };
       } catch (err) {
         console.warn('Direct computation of stats failed:', err);
+        return {
+          totalRevenue: 0,
+          todayRevenue: 0,
+          monthRevenue: 0,
+          yearRevenue: 0,
+          revenueTrend: [],
+          totalStudents: 0,
+          newStudents: 0,
+          activeStudents: 0,
+          freeStudents: 0,
+          proStudents: 0,
+          activeSubscriptions: 0,
+          totalExams: 0,
+          totalTests: 0,
+          topicTests: 0,
+          fullMockTests: 0,
+          pyqTests: 0,
+          totalQuestions: 0,
+          topicQuestions: 0,
+          fullMockQuestions: 0,
+          pyqQuestions: 0,
+          recentActivity: [],
+        };
       }
     }
 

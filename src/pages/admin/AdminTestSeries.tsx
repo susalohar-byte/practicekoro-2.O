@@ -7,14 +7,17 @@ import {
   Plus,
   Edit2,
   Trash2,
+  Power,
   CheckCircle2,
   XCircle,
   Search,
   Lock,
   Filter,
   X,
+  FileText,
+  AlertTriangle,
 } from 'lucide-react';
-import type { TestSeries, Exam } from '@/types';
+import type { TestSeries, Exam, MockTest } from '@/types';
 
 export const AdminTestSeries: React.FC = () => {
   const [seriesList, setSeriesList] = useState<TestSeries[]>([]);
@@ -23,6 +26,9 @@ export const AdminTestSeries: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<TestSeries | null>(null);
+  const [seriesToDelete, setSeriesToDelete] = useState<TestSeries | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   // Form State
@@ -34,6 +40,13 @@ export const AdminTestSeries: React.FC = () => {
   const [orderIndex, setOrderIndex] = useState(1);
   const [isActive, setIsActive] = useState(true);
   const [formError, setFormError] = useState('');
+
+  // Manage Tests State
+  const [manageSeriesTests, setManageSeriesTests] = useState<TestSeries | null>(null);
+  const [seriesTests, setSeriesTests] = useState<MockTest[]>([]);
+  const [availableTests, setAvailableTests] = useState<MockTest[]>([]);
+  const [isManagingTests, setIsManagingTests] = useState(false);
+  const [testSearchTerm, setTestSearchTerm] = useState('');
 
   const loadData = useCallback(async () => {
     try {
@@ -143,6 +156,63 @@ export const AdminTestSeries: React.FC = () => {
       await loadData();
     } catch (err) {
       console.error('Failed to toggle status:', err);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!seriesToDelete) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError('');
+      await api.deleteTestSeries(seriesToDelete.id);
+      setSeriesToDelete(null);
+      await loadData();
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Failed to delete test series'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openManageTests = async (series: TestSeries) => {
+    setManageSeriesTests(series);
+    setIsManagingTests(true);
+    setTestSearchTerm('');
+    try {
+      const sTests = await api.getSeriesTests(series.id);
+      const allTests = await api.getAllAdminTests({ examId: series.examId });
+      setSeriesTests(sTests);
+      setAvailableTests(allTests.filter((t) => !t.testSeriesId || t.testSeriesId !== series.id));
+    } catch (err) {
+      console.error('Failed to load series tests', err);
+    }
+  };
+
+  const handleAssignTest = async (testId: string) => {
+    if (!manageSeriesTests) return;
+    try {
+      await api.assignTestToSeries(testId, manageSeriesTests.id);
+      const t = availableTests.find((x) => x.id === testId);
+      if (t) {
+        setAvailableTests((prev) => prev.filter((x) => x.id !== testId));
+        setSeriesTests((prev) => [...prev, { ...t, testSeriesId: manageSeriesTests.id }]);
+      }
+    } catch (err) {
+      console.error('Failed to assign test', err);
+    }
+  };
+
+  const handleUnassignTest = async (testId: string) => {
+    if (!manageSeriesTests) return;
+    try {
+      await api.assignTestToSeries(testId, null);
+      const t = seriesTests.find((x) => x.id === testId);
+      if (t) {
+        setSeriesTests((prev) => prev.filter((x) => x.id !== testId));
+        setAvailableTests((prev) => [...prev, { ...t, testSeriesId: undefined }]);
+      }
+    } catch (err) {
+      console.error('Failed to unassign test', err);
     }
   };
 
@@ -285,7 +355,14 @@ export const AdminTestSeries: React.FC = () => {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => openManageTests(series)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800"
+                            title="Manage Tests"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => openEditModal(series)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
@@ -295,14 +372,24 @@ export const AdminTestSeries: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleToggleActive(series)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800"
-                            title={series.isActive ? 'Deactivate' : 'Activate'}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              series.isActive
+                                ? 'text-emerald-400 hover:text-amber-400 hover:bg-amber-500/10'
+                                : 'text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10'
+                            }`}
+                            title={series.isActive ? 'Deactivate Series' : 'Activate Series'}
                           >
-                            {series.isActive ? (
-                              <Trash2 className="w-4 h-4" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4" />
-                            )}
+                            <Power className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeleteError('');
+                              setSeriesToDelete(series);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                            title="Delete Series"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -314,6 +401,119 @@ export const AdminTestSeries: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Modal */}
+      {isManagingTests && manageSeriesTests && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-slate-800 shrink-0">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-cyan-400" />
+                Manage Tests: {manageSeriesTests.title}
+              </h3>
+              <button
+                onClick={() => setIsManagingTests(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2">
+              <div className="p-6 border-r border-slate-800 flex flex-col h-full">
+                <h4 className="text-sm font-bold text-slate-300 mb-4 flex items-center justify-between">
+                  <span>Available Tests in Exam</span>
+                  <span className="px-2 py-0.5 rounded-md bg-slate-800 text-xs text-slate-400">
+                    {availableTests.length}
+                  </span>
+                </h4>
+                <div className="relative mb-4 shrink-0">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search available tests..."
+                    value={testSearchTerm}
+                    onChange={(e) => setTestSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                  {availableTests
+                    .filter((t) => t.title.toLowerCase().includes(testSearchTerm.toLowerCase()))
+                    .map((t) => (
+                      <div
+                        key={t.id}
+                        className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between group"
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-white">{t.title}</p>
+                          <p className="text-xs text-slate-500">
+                            {t.durationMinutes} mins • {t.totalMarks} marks
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleAssignTest(t.id)}
+                          className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-colors"
+                          title="Add to Series"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  {availableTests.length === 0 && (
+                    <p className="text-center text-xs text-slate-500 mt-8">
+                      No available tests for this exam.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6 flex flex-col h-full">
+                <h4 className="text-sm font-bold text-slate-300 mb-4 flex items-center justify-between">
+                  <span>Assigned to Series</span>
+                  <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs">
+                    {seriesTests.length}
+                  </span>
+                </h4>
+                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                  {seriesTests.map((t) => (
+                    <div
+                      key={t.id}
+                      className="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/20 flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="text-sm font-bold text-white">{t.title}</p>
+                        <p className="text-xs text-slate-400">
+                          {t.durationMinutes} mins • {t.totalMarks} marks
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleUnassignTest(t.id)}
+                        className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
+                        title="Remove from Series"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {seriesTests.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-3">
+                      <ListOrdered className="w-8 h-8 opacity-50" />
+                      <p className="text-sm">No tests assigned to this series yet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-end shrink-0">
+              <Button onClick={() => setIsManagingTests(false)} size="sm">
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {isModalOpen && (
@@ -453,6 +653,67 @@ export const AdminTestSeries: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {seriesToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400 mb-3">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Test Series</h3>
+                <p className="text-xs text-slate-400">
+                  Permanently remove this test series package.
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 mb-4">
+                {deleteError}
+              </div>
+            )}
+
+            <p className="text-xs text-slate-300 mb-6 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+              Are you sure you want to permanently delete{' '}
+              <strong className="text-white">"{seriesToDelete.title}"</strong>?
+              {(seriesToDelete.testCount || seriesToDelete.testsCount || 0) > 0 ? (
+                <span className="block mt-1 text-amber-400">
+                  ⚠️ This series has {seriesToDelete.testCount || seriesToDelete.testsCount} linked
+                  test(s). The tests will remain but their series association will be removed.
+                </span>
+              ) : null}
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isDeleting}
+                onClick={() => {
+                  setSeriesToDelete(null);
+                  setDeleteError('');
+                }}
+                className="border-slate-700 text-xs text-slate-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={isDeleting}
+                onClick={handleDeleteConfirm}
+                className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Series'}
+              </Button>
+            </div>
           </div>
         </div>
       )}
