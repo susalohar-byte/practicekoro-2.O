@@ -16,6 +16,8 @@ import {
   X,
   Sparkles,
   Network,
+  Target,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,7 +32,9 @@ export const AdminLayout: React.FC = () => {
     { label: 'Exam Topics Map', path: '/admin/exam-topics', icon: Network },
     { label: 'Subjects', path: '/admin/subjects', icon: BookOpen },
     { label: 'Topics', path: '/admin/topics', icon: FolderTree },
-    { label: '📚 Topic Questions', path: '/admin/questions', icon: FileQuestion },
+    { label: 'Question Bank', path: '/admin/questions', icon: FileQuestion },
+    { label: '🎯 Full Mock Questions', path: '/admin/full-mock-questions', icon: Target },
+    { label: '📜 PYQ Questions', path: '/admin/pyq-questions', icon: ScrollText },
     { label: '🎯 Full Mocks & 📜 PYQ', path: '/admin/tests', icon: Layers },
     { label: 'Test Series', path: '/admin/test-series', icon: ListOrdered },
     { label: 'Subscriptions', path: '/admin/subscriptions', icon: CreditCard },

@@ -298,8 +298,9 @@ export const AdminQuestions: React.FC = () => {
           </div>
           <p className="text-xs text-slate-400 mt-1">
             Reusable Subject → Topic question library (no Exam required). Full Mock &amp; PYQ
-            questions are uploaded separately inside{' '}
-            <span className="text-indigo-400 font-semibold">Full Mocks &amp; PYQ → Questions</span>.
+            questions have their own upload pages:{' '}
+            <span className="text-indigo-400 font-semibold">🎯 Full Mock Questions</span> and{' '}
+            <span className="text-purple-400 font-semibold">📜 PYQ Questions</span> in the sidebar.
           </p>
           <p className="text-xs text-slate-500 mt-1">
             Standardized repository of bilingual questions, verified answer keys, and pedagogical

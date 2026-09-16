@@ -83,6 +83,16 @@ const AdminTestQuestions = React.lazy(() =>
 const AdminQuestions = React.lazy(() =>
   import('@/pages/admin/AdminQuestions').then((module) => ({ default: module.AdminQuestions }))
 );
+const AdminFullMockQuestions = React.lazy(() =>
+  import('@/pages/admin/AdminFullMockQuestions').then((module) => ({
+    default: module.AdminFullMockQuestions,
+  }))
+);
+const AdminPyqQuestions = React.lazy(() =>
+  import('@/pages/admin/AdminPyqQuestions').then((module) => ({
+    default: module.AdminPyqQuestions,
+  }))
+);
 const AdminSubscriptions = React.lazy(() =>
   import('@/pages/admin/AdminSubscriptions').then((module) => ({
     default: module.AdminSubscriptions,
@@ -242,6 +252,8 @@ export const App: React.FC = () => {
           <Route path="tests" element={<AdminTests />} />
           <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
           <Route path="questions" element={<AdminQuestions />} />
+          <Route path="full-mock-questions" element={<AdminFullMockQuestions />} />
+          <Route path="pyq-questions" element={<AdminPyqQuestions />} />
           <Route path="subscriptions" element={<AdminSubscriptions />} />
         </Route>
 
