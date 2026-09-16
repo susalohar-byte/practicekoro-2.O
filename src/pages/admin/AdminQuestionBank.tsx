@@ -20,10 +20,15 @@ import {
   RotateCcw,
   Award,
   Clock,
-  Lock,
   LayoutGrid,
   List,
   Check,
+  Sparkles,
+  Layers,
+  GraduationCap,
+  RefreshCw,
+  SlidersHorizontal,
+  Copy,
 } from 'lucide-react';
 import type { Question, Exam, Subject, Chapter, MockTest } from '@/types';
 import {
@@ -35,6 +40,77 @@ import {
 import { getErrorMessage } from '@/lib/errors';
 import { useSearchParams } from 'react-router-dom';
 
+// ─── Stat Card Component ─────────────────────────────────────────
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  subtitle?: string;
+  gradient: string;
+  iconBg: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle, gradient, iconBg }) => (
+  <div
+    className={`relative overflow-hidden rounded-2xl p-5 ${gradient} border border-white/10 dark:border-white/5 shadow-lg shadow-black/5 dark:shadow-black/20`}
+  >
+    <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-white/5 -mr-10 -mt-10 pointer-events-none" />
+    <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 -ml-8 -mb-8 pointer-events-none" />
+    <div className="relative flex items-start gap-3.5">
+      <div
+        className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center shrink-0 shadow-sm`}
+      >
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold text-white/70 uppercase tracking-wider">{label}</p>
+        <p className="text-2xl font-black text-white mt-0.5 leading-none">{value}</p>
+        {subtitle && <p className="text-[11px] text-white/60 mt-1 truncate">{subtitle}</p>}
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Status Badge Component ──────────────────────────────────────
+const StatusBadge: React.FC<{ status?: string; isActive?: boolean }> = ({ status, isActive }) => {
+  const isArchived = status === 'archived' || isActive === false;
+  return isArchived ? (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+      Archived
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+      Active
+    </span>
+  );
+};
+
+// ─── Difficulty Badge Component ──────────────────────────────────
+const DifficultyBadge: React.FC<{ difficulty?: string }> = ({ difficulty = 'medium' }) => {
+  const d = difficulty.toLowerCase();
+  if (d === 'easy') {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+        Easy (সহজ)
+      </span>
+    );
+  }
+  if (d === 'hard') {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+        Hard (কঠিন)
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+      Medium (মাঝারি)
+    </span>
+  );
+};
+
 export const AdminQuestionBank: React.FC = () => {
   const [searchParams] = useSearchParams();
   const querySource = searchParams.get('source');
@@ -43,11 +119,13 @@ export const AdminQuestionBank: React.FC = () => {
 
   // Master Entities
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [allMasterQuestions, setAllMasterQuestions] = useState<Question[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [tests, setTests] = useState<MockTest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Filters (Section 14)
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,6 +139,15 @@ export const AdminQuestionBank: React.FC = () => {
   const [selectedExamType, setSelectedExamType] = useState<'' | 'full_mock' | 'pyq'>('');
   const [selectedExamTestId, setSelectedExamTestId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'archived'>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>(
+    'all'
+  );
+
+  // Inline solution expansion state (in Card View)
+  const [expandedSolutions, setExpandedSolutions] = useState<Set<string>>(new Set());
+
+  // Copy success notification
+  const [copiedFormat, setCopiedFormat] = useState(false);
 
   // Sync with searchParams if they change
   useEffect(() => {
@@ -85,12 +172,14 @@ export const AdminQuestionBank: React.FC = () => {
   const [singleExamId, setSingleExamId] = useState('');
   const [singleExamType, setSingleExamType] = useState<'full_mock' | 'pyq'>('full_mock');
   const [singleExamTestId, setSingleExamTestId] = useState('');
-  const [singleQuestionText, setSingleQuestionText] = useState('');
+  const [singleQuestionBengali, setSingleQuestionBengali] = useState('');
+  const [singleQuestionEnglish, setSingleQuestionEnglish] = useState('');
   const [singleOptA, setSingleOptA] = useState('');
   const [singleOptB, setSingleOptB] = useState('');
   const [singleOptC, setSingleOptC] = useState('');
   const [singleOptD, setSingleOptD] = useState('');
   const [singleCorrect, setSingleCorrect] = useState<'A' | 'B' | 'C' | 'D'>('A');
+  const [singleDifficulty, setSingleDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [singleExplanation, setSingleExplanation] = useState('');
   const [singleMarks, setSingleMarks] = useState(1.0);
   const [singleNegativeMarks, setSingleNegativeMarks] = useState(0.25);
@@ -125,12 +214,16 @@ export const AdminQuestionBank: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [editQText, setEditQText] = useState('');
+  const [editQBengaliText, setEditQBengaliText] = useState('');
   const [editQOptA, setEditQOptA] = useState('');
   const [editQOptB, setEditQOptB] = useState('');
   const [editQOptC, setEditQOptC] = useState('');
   const [editQOptD, setEditQOptD] = useState('');
   const [editQCorrect, setEditQCorrect] = useState<'A' | 'B' | 'C' | 'D'>('A');
+  const [editQDifficulty, setEditQDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [editQExplanation, setEditQExplanation] = useState('');
+  const [editQMarks, setEditQMarks] = useState(1.0);
+  const [editQNegativeMarks, setEditQNegativeMarks] = useState(0.25);
   const [isUpdatingQ, setIsUpdatingQ] = useState(false);
   const [editQError, setEditQError] = useState('');
 
@@ -148,46 +241,51 @@ export const AdminQuestionBank: React.FC = () => {
   const loadQuestions = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [allExams, allSubjects, allChapters, allTests, allQuestions] = await Promise.all([
-        api.getAllAdminExams(),
-        api.getAllAdminSubjects(),
-        api.getAllAdminChapters(),
-        api.getAllAdminTests(),
-        api.getAllAdminQuestions({
-          sourceType:
-            selectedSource === 'all'
-              ? undefined
-              : selectedSource === 'topic'
-                ? 'topic'
-                : selectedExamType === 'pyq'
-                  ? 'pyq'
-                  : selectedExamType === 'full_mock'
-                    ? 'other'
-                    : undefined,
-          subjectId:
-            selectedSource === 'topic' && selectedSubjectId ? selectedSubjectId : undefined,
-          topicId: selectedSource === 'topic' && selectedTopicId ? selectedTopicId : undefined,
-          testId:
-            selectedSource === 'topic' && selectedTopicTestId
-              ? selectedTopicTestId
-              : selectedSource === 'exam' && selectedExamTestId
-                ? selectedExamTestId
-                : undefined,
-          sourceExam: selectedSource === 'exam' && selectedExamId ? selectedExamId : undefined,
-          status: selectedStatus === 'all' ? undefined : selectedStatus,
-          search: searchTerm.trim() || undefined,
-        }),
-      ]);
+      const [allExams, allSubjects, allChapters, allTests, filteredQuestions, masterQuestions] =
+        await Promise.all([
+          api.getAllAdminExams(),
+          api.getAllAdminSubjects(),
+          api.getAllAdminChapters(),
+          api.getAllAdminTests(),
+          api.getAllAdminQuestions({
+            sourceType:
+              selectedSource === 'all'
+                ? undefined
+                : selectedSource === 'topic'
+                  ? 'topic'
+                  : selectedExamType === 'pyq'
+                    ? 'pyq'
+                    : selectedExamType === 'full_mock'
+                      ? 'other'
+                      : undefined,
+            subjectId:
+              selectedSource === 'topic' && selectedSubjectId ? selectedSubjectId : undefined,
+            topicId: selectedSource === 'topic' && selectedTopicId ? selectedTopicId : undefined,
+            testId:
+              selectedSource === 'topic' && selectedTopicTestId
+                ? selectedTopicTestId
+                : selectedSource === 'exam' && selectedExamTestId
+                  ? selectedExamTestId
+                  : undefined,
+            sourceExam: selectedSource === 'exam' && selectedExamId ? selectedExamId : undefined,
+            status: selectedStatus === 'all' ? undefined : selectedStatus,
+            difficulty: selectedDifficulty === 'all' ? undefined : selectedDifficulty,
+            search: searchTerm.trim() || undefined,
+          }),
+          api.getAllAdminQuestions(), // for master stats
+        ]);
 
       setExams(allExams);
       setSubjects(allSubjects);
       setChapters(allChapters);
       setTests(allTests);
-      setQuestions(allQuestions);
+      setQuestions(filteredQuestions);
+      setAllMasterQuestions(masterQuestions);
     } catch (err) {
       console.error('Failed to load Question Bank data:', err);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [
     selectedSource,
@@ -198,6 +296,7 @@ export const AdminQuestionBank: React.FC = () => {
     selectedExamType,
     selectedExamTestId,
     selectedStatus,
+    selectedDifficulty,
     searchTerm,
   ]);
 
@@ -217,8 +316,21 @@ export const AdminQuestionBank: React.FC = () => {
     selectedExamType,
     selectedExamTestId,
     selectedStatus,
+    selectedDifficulty,
     searchTerm,
   ]);
+
+  // High-level statistics calculation
+  const bankStats = useMemo(() => {
+    const list = allMasterQuestions.length > 0 ? allMasterQuestions : questions;
+    const total = list.length;
+    const topicCount = list.filter((q) => q.sourceType === 'topic').length;
+    const fullMockCount = list.filter(
+      (q) => q.sourceType === 'other' || (!q.sourceType && q.sourceExam)
+    ).length;
+    const pyqCount = list.filter((q) => q.sourceType === 'pyq').length;
+    return { total, topicCount, fullMockCount, pyqCount };
+  }, [allMasterQuestions, questions]);
 
   // Filtered dropdown options for cascading - Topic Tests
   const filterTopics = useMemo(() => {
@@ -236,7 +348,7 @@ export const AdminQuestionBank: React.FC = () => {
     });
   }, [tests, selectedTopicId, selectedSubjectId]);
 
-  // Filtered dropdown options for cascading - Exam Full Mock & PYQ Tests (Section 7, 8)
+  // Filtered dropdown options for cascading - Exam Full Mock & PYQ Tests
   const examFullMockTests = useMemo(() => {
     if (!selectedExamId) return [];
     return tests.filter(
@@ -265,6 +377,16 @@ export const AdminQuestionBank: React.FC = () => {
     if (selectedSource !== 'exam' || !selectedExamTestId) return null;
     return tests.find((t) => t.id === selectedExamTestId) || null;
   }, [selectedSource, selectedExamTestId, tests]);
+
+  const currentSubjectObj = useMemo(() => {
+    if (selectedSource !== 'topic' || !selectedSubjectId) return null;
+    return subjects.find((s) => s.id === selectedSubjectId) || null;
+  }, [selectedSource, selectedSubjectId, subjects]);
+
+  const currentTopicObj = useMemo(() => {
+    if (selectedSource !== 'topic' || !selectedTopicId) return null;
+    return chapters.find((c) => c.id === selectedTopicId) || null;
+  }, [selectedSource, selectedTopicId, chapters]);
 
   // Single Question Modal Cascading
   const singleTopics = useMemo(() => {
@@ -340,7 +462,6 @@ export const AdminQuestionBank: React.FC = () => {
     const defaultTopicTest =
       tests.find((t) => t.chapterId === defaultTopic || t.topicId === defaultTopic)?.id || '';
 
-    // Inherit active filter context if user is actively in Exam view
     const effectiveExam = selectedExamId || exams[0]?.id || '';
     const effectiveExamType: 'full_mock' | 'pyq' = selectedExamType === 'pyq' ? 'pyq' : 'full_mock';
     const effectiveTests = tests.filter(
@@ -357,12 +478,14 @@ export const AdminQuestionBank: React.FC = () => {
     setSingleExamId(effectiveExam);
     setSingleExamType(effectiveExamType);
     setSingleExamTestId(defaultExamTest);
-    setSingleQuestionText('');
+    setSingleQuestionBengali('');
+    setSingleQuestionEnglish('');
     setSingleOptA('');
     setSingleOptB('');
     setSingleOptC('');
     setSingleOptD('');
     setSingleCorrect('A');
+    setSingleDifficulty('medium');
     setSingleExplanation('');
     setSingleMarks(1.0);
     setSingleNegativeMarks(0.25);
@@ -370,11 +493,12 @@ export const AdminQuestionBank: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  // Submit Single Question (Section 6A)
+  // Submit Single Question
   const handleSaveSingle = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!singleQuestionText.trim()) {
-      setSingleError('Question statement is required.');
+    const primaryText = singleQuestionBengali.trim() || singleQuestionEnglish.trim();
+    if (!primaryText) {
+      setSingleError('Question statement (Bengali or English) is required.');
       return;
     }
     if (!singleOptA.trim() || !singleOptB.trim() || !singleOptC.trim() || !singleOptD.trim()) {
@@ -414,61 +538,44 @@ export const AdminQuestionBank: React.FC = () => {
       setIsSavingSingle(true);
       setSingleError('');
 
+      const questionPayload = {
+        questionText: singleQuestionEnglish.trim() || singleQuestionBengali.trim(),
+        questionBengaliText: singleQuestionBengali.trim() || singleQuestionEnglish.trim(),
+        optionA: singleOptA.trim(),
+        optionB: singleOptB.trim(),
+        optionC: singleOptC.trim(),
+        optionD: singleOptD.trim(),
+        correctOption: singleCorrect,
+        explanation: singleExplanation.trim() || undefined,
+        difficulty: singleDifficulty,
+        defaultMarks: singleMarks,
+        defaultNegativeMarks: singleNegativeMarks,
+        isActive: true,
+        status: 'active' as const,
+      };
+
       if (singleSource === 'exam' && singleExamTestId) {
-        // Create and link directly to selected Full Mock Test or PYQ (Section 12, 15)
         await api.createQuestionForTest(singleExamTestId, {
-          questionText: singleQuestionText.trim(),
-          optionA: singleOptA.trim(),
-          optionB: singleOptB.trim(),
-          optionC: singleOptC.trim(),
-          optionD: singleOptD.trim(),
-          correctOption: singleCorrect,
-          explanation: singleExplanation.trim() || undefined,
+          ...questionPayload,
           sourceExam: singleExamId,
           sourceType: singleExamType === 'pyq' ? 'pyq' : 'other',
-          defaultMarks: singleMarks,
-          defaultNegativeMarks: singleNegativeMarks,
-          isActive: true,
-          status: 'active',
         });
       } else if (singleSource === 'topic' && singleTopicTestId) {
-        // Create and assign directly to the selected Topic Test
         await api.createQuestionForTest(singleTopicTestId, {
-          questionText: singleQuestionText.trim(),
-          optionA: singleOptA.trim(),
-          optionB: singleOptB.trim(),
-          optionC: singleOptC.trim(),
-          optionD: singleOptD.trim(),
-          correctOption: singleCorrect,
-          explanation: singleExplanation.trim() || undefined,
+          ...questionPayload,
           subjectId: singleSubjectId,
           topicId: singleTopicId,
           chapterId: singleTopicId,
           sourceType: 'topic',
-          defaultMarks: singleMarks,
-          defaultNegativeMarks: singleNegativeMarks,
-          isActive: true,
-          status: 'active',
         });
       } else {
-        // Save to question repository with metadata
         await api.createQuestion({
-          questionText: singleQuestionText.trim(),
-          optionA: singleOptA.trim(),
-          optionB: singleOptB.trim(),
-          optionC: singleOptC.trim(),
-          optionD: singleOptD.trim(),
-          correctOption: singleCorrect,
-          explanation: singleExplanation.trim() || undefined,
+          ...questionPayload,
           subjectId: singleSource === 'topic' ? singleSubjectId : undefined,
           topicId: singleSource === 'topic' ? singleTopicId : undefined,
           chapterId: singleSource === 'topic' ? singleTopicId : undefined,
           sourceType: singleSource === 'topic' ? 'topic' : 'other',
           sourceExam: singleSource === 'exam' ? singleExamId : undefined,
-          defaultMarks: singleMarks,
-          defaultNegativeMarks: singleNegativeMarks,
-          isActive: true,
-          status: 'active',
         });
       }
 
@@ -481,14 +588,13 @@ export const AdminQuestionBank: React.FC = () => {
     }
   };
 
-  // Open Bulk Modal (Section 7)
+  // Open Bulk Modal
   const handleOpenBulkModal = () => {
     const defaultSub = subjects[0]?.id || '';
     const defaultTopic = chapters.find((c) => c.subjectId === defaultSub)?.id || '';
     const defaultTopicTest =
       tests.find((t) => t.chapterId === defaultTopic || t.topicId === defaultTopic)?.id || '';
 
-    // Inherit active filter context if user is actively in Exam view
     const effectiveExam = selectedExamId || exams[0]?.id || '';
     const effectiveExamType: 'full_mock' | 'pyq' = selectedExamType === 'pyq' ? 'pyq' : 'full_mock';
     const effectiveTests = tests.filter(
@@ -527,7 +633,7 @@ export const AdminQuestionBank: React.FC = () => {
     reader.readAsText(file, 'utf-8');
   };
 
-  // Parse TXT to Preview (Section 8, 9, 10)
+  // Parse TXT to Preview
   const handleParseTxt = () => {
     if (!bulkRawText.trim()) {
       setBulkActionError('Please select a TXT file or paste question content.');
@@ -567,7 +673,7 @@ export const AdminQuestionBank: React.FC = () => {
     setBulkStep('preview');
   };
 
-  // Import Valid Questions from Preview (Section 9, 10, 11)
+  // Import Valid Questions from Preview
   const handleImportValidQuestions = async () => {
     if (!bulkParseResult || bulkParseResult.valid.length === 0) return;
 
@@ -602,13 +708,17 @@ export const AdminQuestionBank: React.FC = () => {
   // Edit Question
   const handleOpenEdit = (q: Question) => {
     setEditingQuestion(q);
-    setEditQText(q.questionText);
+    setEditQText(q.questionText || '');
+    setEditQBengaliText(q.questionBengaliText || q.questionText || '');
     setEditQOptA(q.optionA);
     setEditQOptB(q.optionB);
     setEditQOptC(q.optionC);
     setEditQOptD(q.optionD);
     setEditQCorrect((q.correctOption as any) || 'A');
+    setEditQDifficulty((q.difficulty as any) || 'medium');
     setEditQExplanation(q.explanation || '');
+    setEditQMarks(q.defaultMarks || 1.0);
+    setEditQNegativeMarks(q.defaultNegativeMarks || 0.25);
     setEditQError('');
     setIsEditModalOpen(true);
   };
@@ -620,12 +730,16 @@ export const AdminQuestionBank: React.FC = () => {
       setIsUpdatingQ(true);
       setEditQError('');
       await api.updateQuestion(editingQuestion.id, {
-        questionText: editQText.trim(),
+        questionText: editQText.trim() || editQBengaliText.trim(),
+        questionBengaliText: editQBengaliText.trim() || editQText.trim(),
         optionA: editQOptA.trim(),
         optionB: editQOptB.trim(),
         optionC: editQOptC.trim(),
         optionD: editQOptD.trim(),
         correctOption: editQCorrect,
+        difficulty: editQDifficulty,
+        defaultMarks: editQMarks,
+        defaultNegativeMarks: editQNegativeMarks,
         explanation: editQExplanation.trim() || undefined,
       });
       setIsEditModalOpen(false);
@@ -637,9 +751,9 @@ export const AdminQuestionBank: React.FC = () => {
     }
   };
 
-  // Archive Question
+  // Archive / Toggle Question
   const handleArchiveQuestion = async (q: Question) => {
-    const isCurrentlyArchived = q.status === 'archived';
+    const isCurrentlyArchived = q.status === 'archived' || q.isActive === false;
     try {
       await api.updateQuestion(q.id, {
         status: isCurrentlyArchived ? 'active' : 'archived',
@@ -666,7 +780,6 @@ export const AdminQuestionBank: React.FC = () => {
           return next;
         });
         setQuestionToDelete(null);
-        setBulkActionSuccess('Question deleted successfully.');
       } else {
         setDeleteError('Failed to delete question. Please try again.');
       }
@@ -699,14 +812,72 @@ export const AdminQuestionBank: React.FC = () => {
     }
   };
 
+  // Bulk Status Update (Active / Archived)
+  const handleBulkToggleStatus = async (targetStatus: 'active' | 'archived') => {
+    if (selectedQuestionIds.size === 0) return;
+    try {
+      setIsLoading(true);
+      const ids = Array.from(selectedQuestionIds);
+      for (const id of ids) {
+        await api.updateQuestion(id, {
+          status: targetStatus,
+          isActive: targetStatus === 'active',
+        });
+      }
+      setSelectedQuestionIds(new Set());
+      await loadQuestions();
+    } catch (err) {
+      console.error('Failed to update questions status:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Export Questions as standard TXT format
+  const handleExportQuestionsTxt = (questionsToExport: Question[]) => {
+    if (questionsToExport.length === 0) return;
+    let content = '';
+    questionsToExport.forEach((q, idx) => {
+      const qNum = idx + 1;
+      const text = q.questionBengaliText || q.questionText;
+      content += `${qNum}. ${text}\n`;
+      content += `(a) ${q.optionA}\n`;
+      content += `(b) ${q.optionB}\n`;
+      content += `(c) ${q.optionC}\n`;
+      content += `(d) ${q.optionD}\n\n`;
+      const optLetter = q.correctOption.toLowerCase();
+      const optText =
+        optLetter === 'a'
+          ? q.optionA
+          : optLetter === 'b'
+            ? q.optionB
+            : optLetter === 'c'
+              ? q.optionC
+              : q.optionD;
+      content += `সঠিক উত্তর: (${optLetter}) ${optText}\n\n`;
+      if (q.explanation) {
+        content += `Explanation:\n${q.explanation}\n\n`;
+      }
+      content += '\n';
+    });
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `practicekoro-questions-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Selection helpers
   const toggleSelectQuestion = (id: string) => {
     setSelectedQuestionIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -728,6 +899,55 @@ export const AdminQuestionBank: React.FC = () => {
     }
   };
 
+  const toggleExpandSolution = (id: string) => {
+    setExpandedSolutions((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Active filters count
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedSource !== 'all') count++;
+    if (selectedSubjectId) count++;
+    if (selectedTopicId) count++;
+    if (selectedTopicTestId) count++;
+    if (selectedExamId) count++;
+    if (selectedExamType) count++;
+    if (selectedExamTestId) count++;
+    if (selectedStatus !== 'all') count++;
+    if (selectedDifficulty !== 'all') count++;
+    if (searchTerm.trim()) count++;
+    return count;
+  }, [
+    selectedSource,
+    selectedSubjectId,
+    selectedTopicId,
+    selectedTopicTestId,
+    selectedExamId,
+    selectedExamType,
+    selectedExamTestId,
+    selectedStatus,
+    selectedDifficulty,
+    searchTerm,
+  ]);
+
+  const resetAllFilters = () => {
+    setSelectedSource('all');
+    setSelectedSubjectId('');
+    setSelectedTopicId('');
+    setSelectedTopicTestId('');
+    setSelectedExamId('');
+    setSelectedExamType('');
+    setSelectedExamTestId('');
+    setSelectedStatus('all');
+    setSelectedDifficulty('all');
+    setSearchTerm('');
+  };
+
   // Pagination calculation
   const totalCount = questions.length;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
@@ -738,86 +958,221 @@ export const AdminQuestionBank: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
-            <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            Question Bank
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Central repository of exam and practice questions. Real question records loaded
-            directly.
-          </p>
+      {/* ─── Top Header with Breadcrumb & Primary Actions ─── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 shrink-0">
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Question Bank
+              </h1>
+              <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
+                Live Repository
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-xl">
+              Centralized repository for Bengali & English MCQs across Topic Tests, Full Mock Tests,
+              and Previous Year Papers (PYQ).
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Global Action Buttons */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              setIsRefreshing(true);
+              loadQuestions();
+            }}
+            title="Refresh Question Records"
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+
           <Button
             onClick={() => setIsFormatGuideOpen(true)}
             variant="outline"
-            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
+            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center gap-1.5"
           >
-            <Download className="w-3.5 h-3.5" /> TXT Format
+            <Download className="w-3.5 h-3.5 text-indigo-500" /> TXT Format Guide
           </Button>
 
           <Button
             onClick={handleOpenBulkModal}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
           >
-            <Upload className="w-3.5 h-3.5" /> + Bulk Add Questions
+            <Upload className="w-3.5 h-3.5" /> + Bulk Add via TXT
           </Button>
 
           <Button
             onClick={handleOpenAddSingle}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
           >
-            <Plus className="w-3.5 h-3.5" /> + Add Question
+            <Plus className="w-3.5 h-3.5" /> + Add Single Question
           </Button>
         </div>
       </div>
 
-      {/* Dynamic Filters Bar (Section 14) */}
-      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Search */}
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      {/* ─── 4 Gradient Metric Stat Cards ─── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={<Layers className="w-5 h-5 text-white" />}
+          label="Total Questions"
+          value={bankStats.total}
+          subtitle="All repository items"
+          gradient="bg-gradient-to-br from-indigo-600 to-indigo-800"
+          iconBg="bg-white/10"
+        />
+        <StatCard
+          icon={<GraduationCap className="w-5 h-5 text-white" />}
+          label="Topic Tests"
+          value={bankStats.topicCount}
+          subtitle="Curriculum & syllabus practice"
+          gradient="bg-gradient-to-br from-blue-600 to-cyan-700"
+          iconBg="bg-white/10"
+        />
+        <StatCard
+          icon={<Award className="w-5 h-5 text-white" />}
+          label="Full Mock Tests"
+          value={bankStats.fullMockCount}
+          subtitle="Exam simulation sets"
+          gradient="bg-gradient-to-br from-purple-600 to-pink-700"
+          iconBg="bg-white/10"
+        />
+        <StatCard
+          icon={<Clock className="w-5 h-5 text-white" />}
+          label="PYQ Papers"
+          value={bankStats.pyqCount}
+          subtitle="Official previous year questions"
+          gradient="bg-gradient-to-br from-amber-600 to-orange-700"
+          iconBg="bg-white/10"
+        />
+      </div>
+
+      {/* ─── Dynamic Filters & Command Bar ─── */}
+      <div className="bg-white dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
+        {/* Row 1: Search, Source Segmented Selector, Status & View Mode */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Search Box */}
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input
               type="text"
-              placeholder="Search questions by text or keyword..."
+              placeholder="Search by Bengali / English text, options, or solution keyword..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+              className="w-full pl-10 pr-9 py-2.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Source Dropdown */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              Source:
-            </span>
-            <select
-              value={selectedSource}
-              onChange={(e) => {
-                const val = e.target.value as any;
-                setSelectedSource(val);
-                if (val !== 'topic') {
-                  setSelectedSubjectId('');
-                  setSelectedTopicId('');
-                  setSelectedTopicTestId('');
-                }
-                if (val !== 'exam') {
-                  setSelectedExamId('');
-                  setSelectedExamType('');
-                  setSelectedExamTestId('');
-                }
+          {/* Source Segmented Control */}
+          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSource('all');
+                setSelectedSubjectId('');
+                setSelectedTopicId('');
+                setSelectedTopicTestId('');
+                setSelectedExamId('');
+                setSelectedExamType('');
+                setSelectedExamTestId('');
               }}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                selectedSource === 'all'
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
             >
-              <option value="all">All Sources</option>
-              <option value="topic">Topic Test</option>
-              <option value="exam">Exam</option>
-            </select>
+              All Sources
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSource('topic');
+                setSelectedExamId('');
+                setSelectedExamType('');
+                setSelectedExamTestId('');
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                selectedSource === 'topic'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              Topic Tests
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSource('exam');
+                setSelectedSubjectId('');
+                setSelectedTopicId('');
+                setSelectedTopicTestId('');
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                selectedSource === 'exam'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5" />
+              Exam Tests
+            </button>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('card')}
+              className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
+                viewMode === 'card'
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+              title="Card View (Bengali Question Paper Layout)"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Card View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
+                viewMode === 'table'
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+              title="Table View (Compact Summary)"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Table View</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Cascading Filters Bar */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-xs font-semibold mr-1">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Filters:</span>
           </div>
 
           {/* IF SOURCE = TOPIC TEST: Subject -> Topic -> Topic Test */}
@@ -830,7 +1185,7 @@ export const AdminQuestionBank: React.FC = () => {
                   setSelectedTopicId('');
                   setSelectedTopicTestId('');
                 }}
-                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
               >
                 <option value="">All Subjects</option>
                 {subjects.map((s) => (
@@ -847,7 +1202,7 @@ export const AdminQuestionBank: React.FC = () => {
                   setSelectedTopicTestId('');
                 }}
                 disabled={!selectedSubjectId}
-                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white disabled:opacity-50"
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-50"
               >
                 <option value="">All Topics</option>
                 {filterTopics.map((c) => (
@@ -861,7 +1216,7 @@ export const AdminQuestionBank: React.FC = () => {
                 value={selectedTopicTestId}
                 onChange={(e) => setSelectedTopicTestId(e.target.value)}
                 disabled={!selectedTopicId}
-                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white disabled:opacity-50"
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-50"
               >
                 <option value="">All Topic Tests</option>
                 {filterTopicTests.map((t) => (
@@ -873,7 +1228,7 @@ export const AdminQuestionBank: React.FC = () => {
             </>
           )}
 
-          {/* IF SOURCE = EXAM: Cascading Exam -> Type (Full Mock Test | PYQ) -> specific Full Mock Test / PYQ (Section 6, 7, 8, 13) */}
+          {/* IF SOURCE = EXAM: Cascading Exam -> Type (Full Mock Test | PYQ) -> specific Full Mock Test / PYQ */}
           {selectedSource === 'exam' && (
             <>
               {/* Exam Dropdown */}
@@ -884,7 +1239,7 @@ export const AdminQuestionBank: React.FC = () => {
                   setSelectedExamType('');
                   setSelectedExamTestId('');
                 }}
-                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
               >
                 <option value="">Select Exam</option>
                 {exams.map((e) => (
@@ -902,7 +1257,7 @@ export const AdminQuestionBank: React.FC = () => {
                     setSelectedExamType(e.target.value as any);
                     setSelectedExamTestId('');
                   }}
-                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
                 >
                   <option value="">Select Type</option>
                   <option value="full_mock">Full Mock Test</option>
@@ -915,7 +1270,7 @@ export const AdminQuestionBank: React.FC = () => {
                 <select
                   value={selectedExamTestId}
                   onChange={(e) => setSelectedExamTestId(e.target.value)}
-                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
                 >
                   <option value="">
                     {examFullMockTests.length === 0
@@ -936,7 +1291,7 @@ export const AdminQuestionBank: React.FC = () => {
                 <select
                   value={selectedExamTestId}
                   onChange={(e) => setSelectedExamTestId(e.target.value)}
-                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
                 >
                   <option value="">
                     {examPyqTests.length === 0 ? 'No PYQs Available' : 'Select PYQ Paper'}
@@ -952,66 +1307,73 @@ export const AdminQuestionBank: React.FC = () => {
             </>
           )}
 
+          {/* Difficulty Dropdown */}
+          <select
+            value={selectedDifficulty}
+            onChange={(e) => setSelectedDifficulty(e.target.value as any)}
+            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
+          >
+            <option value="all">All Difficulties</option>
+            <option value="easy">Easy (সহজ)</option>
+            <option value="medium">Medium (মাঝারি)</option>
+            <option value="hard">Hard (কঠিন)</option>
+          </select>
+
           {/* Status Dropdown */}
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value as any)}
-            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
           >
             <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
+            <option value="active">Active Only</option>
+            <option value="archived">Archived Only</option>
           </select>
 
-          {/* Reset Filters */}
-          {(selectedSource !== 'all' ||
-            selectedSubjectId ||
-            selectedTopicId ||
-            selectedTopicTestId ||
-            selectedExamId ||
-            selectedExamType ||
-            selectedExamTestId ||
-            selectedStatus !== 'all' ||
-            searchTerm) && (
+          {/* Reset Filters CTA with count */}
+          {activeFiltersCount > 0 && (
             <button
-              onClick={() => {
-                setSelectedSource('all');
-                setSelectedSubjectId('');
-                setSelectedTopicId('');
-                setSelectedTopicTestId('');
-                setSelectedExamId('');
-                setSelectedExamType('');
-                setSelectedExamTestId('');
-                setSelectedStatus('all');
-                setSearchTerm('');
-              }}
-              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900"
-              title="Reset all filters"
+              onClick={resetAllFilters}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
+              title="Reset all active filters"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span>Reset ({activeFiltersCount})</span>
+            </button>
+          )}
+
+          {/* Export Filtered Questions TXT button */}
+          {questions.length > 0 && (
+            <button
+              onClick={() => handleExportQuestionsTxt(questions)}
+              className="ml-auto px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+              title="Export all currently filtered questions as TXT"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Export Questions (.txt)</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Active Exam Context Banner */}
+      {/* ─── Active Context Banner (Exam or Topic) ─── */}
       {selectedSource === 'exam' && currentExamObj && currentExamTest && (
-        <div className="bg-gradient-to-r from-indigo-50/80 via-white to-purple-50/80 dark:from-indigo-950/20 dark:via-slate-950 dark:to-purple-950/20 border border-indigo-200/80 dark:border-indigo-900/50 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+        <div className="bg-gradient-to-r from-indigo-50/90 via-purple-50/60 to-white dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-950 border border-indigo-200/80 dark:border-indigo-900/60 rounded-2xl p-5 shadow-sm space-y-3.5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                     selectedExamType === 'full_mock'
-                      ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
-                      : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                      ? 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
+                      : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                   }`}
                 >
                   {selectedExamType === 'full_mock'
                     ? 'Full Mock Test'
                     : 'Previous Year Question (PYQ)'}
                 </span>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   {currentExamObj.title}
                 </span>
                 {currentExamTest.year && (
@@ -1020,24 +1382,24 @@ export const AdminQuestionBank: React.FC = () => {
                   </span>
                 )}
               </div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                 {currentExamTest.title || currentExamTest.paperName}
               </h2>
             </div>
 
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
               <Button
                 onClick={handleOpenBulkModal}
                 size="sm"
                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
-                <Upload className="w-3.5 h-3.5" /> + Bulk Add via TXT
+                <Upload className="w-3.5 h-3.5" /> + Bulk Add to Test
               </Button>
               <Button
                 onClick={handleOpenAddSingle}
                 size="sm"
                 variant="outline"
-                className="text-xs font-bold border-indigo-200 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center gap-1.5"
+                className="text-xs font-bold border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" /> + Add Question
               </Button>
@@ -1053,7 +1415,7 @@ export const AdminQuestionBank: React.FC = () => {
 
           {/* Key Metrics */}
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <div className="px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-xs">
               <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
               <span>
                 <strong className="text-slate-900 dark:text-white">{questions.length}</strong>{' '}
@@ -1062,7 +1424,7 @@ export const AdminQuestionBank: React.FC = () => {
             </div>
 
             {currentExamTest.totalMarks && (
-              <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <div className="px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-xs">
                 <Award className="w-3.5 h-3.5 text-emerald-500" />
                 <span>
                   <strong className="text-slate-900 dark:text-white">
@@ -1074,7 +1436,7 @@ export const AdminQuestionBank: React.FC = () => {
             )}
 
             {currentExamTest.durationMinutes && (
-              <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <div className="px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-xs">
                 <Clock className="w-3.5 h-3.5 text-amber-500" />
                 <span>
                   <strong className="text-slate-900 dark:text-white">
@@ -1086,7 +1448,7 @@ export const AdminQuestionBank: React.FC = () => {
             )}
 
             {typeof currentExamTest.negativeMarking === 'number' && (
-              <div className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300">
+              <div className="px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
                 Negative Marks:{' '}
                 <strong className="text-rose-600 dark:text-rose-400">
                   -{currentExamTest.negativeMarking}
@@ -1097,45 +1459,114 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* REAL QUESTION LIST TABLE (Section 5, 9, 16) */}
-      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+      {/* ─── Active Context Banner for Topic Test ─── */}
+      {selectedSource === 'topic' && currentSubjectObj && currentTopicObj && (
+        <div className="bg-gradient-to-r from-blue-50/90 via-cyan-50/60 to-white dark:from-blue-950/40 dark:via-cyan-950/30 dark:to-slate-950 border border-blue-200/80 dark:border-blue-900/60 rounded-2xl p-5 shadow-sm space-y-3.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  Topic Test Practice
+                </span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {currentSubjectObj.name}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                {currentTopicObj.name}
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleOpenBulkModal}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5"
+              >
+                <Upload className="w-3.5 h-3.5" /> + Bulk Add to Topic
+              </Button>
+              <Button
+                onClick={handleOpenAddSingle}
+                size="sm"
+                variant="outline"
+                className="text-xs font-bold border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" /> + Add Question
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Question Records Container ─── */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
         {isLoading ? (
-          <div className="p-16 text-center text-xs text-slate-500 dark:text-slate-400">
-            Loading Question Bank records...
+          <div className="p-20 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-sm animate-pulse">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">
+              Loading Question Bank records...
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Synchronizing with database and tests hierarchy.
+            </p>
           </div>
         ) : selectedSource === 'exam' && !selectedExamId ? (
-          <div className="p-16 text-center space-y-3">
-            <BookOpen className="w-10 h-10 text-indigo-400 mx-auto opacity-50" />
-            <p className="text-sm font-bold text-slate-900 dark:text-white">Select Exam Context</p>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Please select an Exam from the filter bar above, choose Type (Full Mock Test or PYQ),
-              and select a specific Test to view its questions.
-            </p>
+          <div className="p-16 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-sm">
+              <Award className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-black text-slate-900 dark:text-white">
+                Select Exam Context
+              </p>
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                Choose an Exam from the filter bar above, choose Type (Full Mock Test or PYQ), and
+                select a specific Test to view its questions.
+              </p>
+            </div>
+            {exams.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2 max-w-xl mx-auto pt-2">
+                {exams.slice(0, 6).map((e) => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    onClick={() => setSelectedExamId(e.id)}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:text-indigo-600 transition-all"
+                  >
+                    {e.title}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : selectedSource === 'exam' && !selectedExamType ? (
           <div className="p-16 text-center space-y-4">
-            <BookOpen className="w-10 h-10 text-indigo-500 mx-auto opacity-70" />
+            <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto shadow-sm">
+              <BookOpen className="w-7 h-7" />
+            </div>
             <div className="space-y-1">
-              <p className="text-sm font-black text-slate-900 dark:text-white">
-                Select Question Type
+              <p className="text-base font-black text-slate-900 dark:text-white">
+                Select Question Type for {currentExamObj?.title || 'this Exam'}
               </p>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Questions in <strong>{currentExamObj?.title || 'this Exam'}</strong> belong to
-                either a <strong>Full Mock Test</strong> or <strong>PYQ Paper</strong>.
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                Questions in this exam belong to either a <strong>Full Mock Test</strong> or{' '}
+                <strong>Previous Year Paper (PYQ)</strong>.
               </p>
             </div>
-            <div className="flex items-center justify-center gap-3 pt-1">
+            <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setSelectedExamType('full_mock')}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all shadow-xs"
               >
                 Full Mock Tests ({examFullMockTests.length})
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedExamType('pyq')}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all shadow-xs"
               >
                 PYQ Papers ({examPyqTests.length})
               </button>
@@ -1143,24 +1574,25 @@ export const AdminQuestionBank: React.FC = () => {
           </div>
         ) : selectedSource === 'exam' && !selectedExamTestId ? (
           <div className="p-16 text-center space-y-4">
-            <FileQuestion className="w-10 h-10 text-indigo-500 mx-auto opacity-70" />
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-sm">
+              <FileQuestion className="w-7 h-7" />
+            </div>
             <div className="space-y-1">
-              <p className="text-sm font-black text-slate-900 dark:text-white">
+              <p className="text-base font-black text-slate-900 dark:text-white">
                 Select a {selectedExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ Paper'}
               </p>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Exam questions belong to a specific test or paper. Select one below or from the
-                dropdown above:
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                Select a specific paper below to inspect its questions or add new ones:
               </p>
             </div>
             {(selectedExamType === 'full_mock' ? examFullMockTests : examPyqTests).length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto pt-1">
+              <div className="flex flex-wrap justify-center gap-2.5 max-w-lg mx-auto pt-2">
                 {(selectedExamType === 'full_mock' ? examFullMockTests : examPyqTests).map((t) => (
                   <button
                     key={t.id}
                     type="button"
                     onClick={() => setSelectedExamTestId(t.id)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:border-indigo-500 transition-all shadow-xs"
                   >
                     {t.title || t.paperName}{' '}
                     {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
@@ -1176,14 +1608,14 @@ export const AdminQuestionBank: React.FC = () => {
           </div>
         ) : selectedSource === 'exam' && selectedExamTestId && questions.length === 0 ? (
           <div className="p-16 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-sm">
-              <FileQuestion className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-sm">
+              <FileQuestion className="w-7 h-7" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-black text-slate-900 dark:text-white">
+              <p className="text-base font-black text-slate-900 dark:text-white">
                 No questions found in {currentExamTest?.title || 'this test'}
               </p>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
                 This {selectedExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ Paper'} does not
                 have any questions yet. Add questions now using bulk TXT upload or the single
                 question editor.
@@ -1192,44 +1624,59 @@ export const AdminQuestionBank: React.FC = () => {
             <div className="flex items-center justify-center gap-3 pt-2">
               <Button
                 onClick={handleOpenBulkModal}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
               >
                 <Upload className="w-3.5 h-3.5" /> + Bulk Add via TXT
               </Button>
               <Button
                 onClick={handleOpenAddSingle}
                 variant="outline"
-                className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
+                className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" /> + Add Question Manually
               </Button>
             </div>
           </div>
         ) : questions.length === 0 ? (
-          <div className="p-16 text-center space-y-3">
-            <FileQuestion className="w-10 h-10 text-indigo-400 mx-auto opacity-50" />
-            <p className="text-sm font-bold text-slate-900 dark:text-white">No questions found</p>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              No questions matched the active filters. Upload new questions via "+ Add Question" or
-              "+ Bulk Add Questions".
-            </p>
+          <div className="p-16 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
+              <FileQuestion className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-black text-slate-900 dark:text-white">
+                No questions found
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                No questions matched the active filters. Clear your filters or add questions using
+                the buttons above.
+              </p>
+            </div>
+            {activeFiltersCount > 0 && (
+              <Button
+                onClick={resetAllFilters}
+                variant="outline"
+                className="text-xs font-bold border-slate-200 dark:border-slate-800"
+              >
+                Reset All Filters
+              </Button>
+            )}
           </div>
         ) : (
           <div>
-            {/* Top List Controls Bar: Selection, Bulk Actions & View Mode Toggle */}
-            <div className="p-4 bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+            {/* Top Action Bar: Selection Count, Bulk Actions, Select All Visible */}
+            <div className="px-5 py-3.5 bg-slate-50/90 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={toggleSelectAllVisible}
-                  className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition-colors"
+                  className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <div
                     className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
                       paginatedQuestions.length > 0 &&
                       paginatedQuestions.every((q) => selectedQuestionIds.has(q.id))
-                        ? 'bg-sky-500 border-sky-500 text-white'
-                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950'
+                        ? 'bg-sky-500 border-sky-500 text-white shadow-xs'
+                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
                     }`}
                   >
                     {paginatedQuestions.length > 0 &&
@@ -1237,26 +1684,61 @@ export const AdminQuestionBank: React.FC = () => {
                         <Check className="w-3 h-3 stroke-[3]" />
                       )}
                   </div>
-                  <span>Select All Visible</span>
+                  <span>Select All Visible ({paginatedQuestions.length})</span>
                 </button>
 
                 {selectedQuestionIds.size > 0 && (
-                  <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800">
-                    <span className="font-semibold text-sky-600 dark:text-sky-400">
+                  <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800 flex-wrap">
+                    <span className="font-black text-sky-600 dark:text-sky-400">
                       {selectedQuestionIds.size} selected
                     </span>
+
+                    <button
+                      type="button"
+                      onClick={() => handleBulkToggleStatus('archived')}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1 transition-colors"
+                      title="Archive selected questions"
+                    >
+                      <Archive className="w-3 h-3" />
+                      Archive
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleBulkToggleStatus('active')}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold flex items-center gap-1 transition-colors"
+                      title="Activate selected questions"
+                    >
+                      <CheckCircle2 className="w-3 h-3" />
+                      Activate
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const selectedList = questions.filter((q) => selectedQuestionIds.has(q.id));
+                        handleExportQuestionsTxt(selectedList);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 font-bold flex items-center gap-1 transition-colors"
+                      title="Export selected questions as TXT"
+                    >
+                      <Download className="w-3 h-3" />
+                      Export TXT
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setIsBulkDeleteModalOpen(true)}
-                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold flex items-center gap-1 transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold flex items-center gap-1 transition-colors"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Delete Selected ({selectedQuestionIds.size})
+                      <Trash2 className="w-3 h-3" />
+                      Delete ({selectedQuestionIds.size})
                     </button>
+
                     <button
                       type="button"
                       onClick={() => setSelectedQuestionIds(new Set())}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline text-[11px]"
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline text-[11px] ml-1"
                     >
                       Clear
                     </button>
@@ -1264,58 +1746,42 @@ export const AdminQuestionBank: React.FC = () => {
                 )}
               </div>
 
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('card')}
-                  title="Card View (as requested)"
-                  className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                    viewMode === 'card'
-                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Card View</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('table')}
-                  title="Table View"
-                  className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                    viewMode === 'table'
-                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <List className="w-3.5 h-3.5" />
-                  <span>Table View</span>
-                </button>
+              <div className="text-[11px] text-slate-500 font-medium">
+                Showing{' '}
+                <strong className="text-slate-900 dark:text-white">
+                  {(currentPage - 1) * pageSize + 1}
+                </strong>{' '}
+                –{' '}
+                <strong className="text-slate-900 dark:text-white">
+                  {Math.min(currentPage * pageSize, totalCount)}
+                </strong>{' '}
+                of <strong className="text-slate-900 dark:text-white">{totalCount}</strong>{' '}
+                questions
               </div>
             </div>
 
-            {/* CARD VIEW (Matching user reference layout exactly) */}
+            {/* ─── CARD VIEW (Bengali Question Paper Layout) ─── */}
             {viewMode === 'card' ? (
-              <div className="p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-900/30">
+              <div className="p-4 sm:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
                 {paginatedQuestions.map((q, idx) => {
                   const questionNumber = (currentPage - 1) * pageSize + idx + 1;
                   const isSelected = selectedQuestionIds.has(q.id);
+                  const isSolutionExpanded = expandedSolutions.has(q.id);
                   const subjectTitle =
-                    q.topicName || q.chapterName || q.subjectName || 'bengali Literature';
+                    q.topicName || q.chapterName || q.subjectName || 'General Knowledge';
 
                   return (
                     <div
                       key={q.id}
-                      className={`bg-white dark:bg-slate-900 border rounded-2xl p-5 sm:p-6 transition-all shadow-xs ${
+                      className={`bg-white dark:bg-slate-900 border rounded-2xl p-5 sm:p-6 transition-all duration-200 shadow-xs hover:shadow-md ${
                         isSelected
-                          ? 'border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/20 dark:bg-sky-950/20'
+                          ? 'border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/15 dark:bg-sky-950/15'
                           : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      {/* Top Row: Selection circle, Question text, Action Icons */}
+                      {/* Top Row: Select circle, Number Badge, Question Text, Action Icons */}
                       <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
                           {/* Selection Circle */}
                           <button
                             type="button"
@@ -1330,11 +1796,22 @@ export const AdminQuestionBank: React.FC = () => {
                             {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </button>
 
-                          {/* Question Number & Text */}
-                          <div className="space-y-1 flex-1 min-w-0">
+                          {/* Question Content */}
+                          <div className="space-y-1.5 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[11px] font-black px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                #{questionNumber}
+                              </span>
+                              <DifficultyBadge difficulty={q.difficulty} />
+                              <StatusBadge status={q.status} isActive={q.isActive} />
+                            </div>
+
+                            {/* Bengali Question Text (Primary) */}
                             <h3 className="text-[15px] sm:text-base font-bold text-slate-900 dark:text-white leading-relaxed">
-                              {questionNumber}. {q.questionBengaliText || q.questionText}
+                              {q.questionBengaliText || q.questionText}
                             </h3>
+
+                            {/* English Question Text (Secondary) */}
                             {q.questionBengaliText &&
                               q.questionText &&
                               q.questionBengaliText !== q.questionText && (
@@ -1345,136 +1822,255 @@ export const AdminQuestionBank: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Top-Right Actions: Edit & Delete */}
+                        {/* Top-Right Quick Action Icons */}
                         <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewingQuestion(q);
+                              setIsPreviewModalOpen(true);
+                            }}
+                            title="Full Question Preview"
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(q)}
                             title="Edit Question"
-                            className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
 
                           <button
                             type="button"
+                            onClick={() => handleArchiveQuestion(q)}
+                            title={
+                              q.status === 'archived' || q.isActive === false
+                                ? 'Unarchive Question'
+                                : 'Archive Question'
+                            }
+                            className="p-1.5 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Archive className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => setQuestionToDelete(q)}
                             title="Delete Question"
-                            className="p-1.5 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
 
-                      {/* Middle: 2-Column Options Grid (Column 1 = A & C, Column 2 = B & D) */}
-                      <div className="ml-8 mt-3.5 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2.5 text-sm text-slate-800 dark:text-slate-200">
-                        {/* Column 1: A and C */}
-                        <div className="space-y-2">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">A.</span>
+                      {/* Options Grid: Column 1 = A & C, Column 2 = B & D */}
+                      <div className="ml-8 mt-4 grid grid-cols-1 md:grid-cols-2 gap-2.5 text-sm">
+                        {/* Option A */}
+                        <div
+                          className={`p-3 rounded-xl border transition-all flex items-start justify-between gap-2.5 ${
+                            q.correctOption === 'A'
+                              ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700/70 shadow-xs'
+                              : 'bg-slate-50/60 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 min-w-0">
                             <span
-                              className={
+                              className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ${
                                 q.correctOption === 'A'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              A
+                            </span>
+                            <span
+                              className={`text-xs sm:text-[13px] leading-relaxed ${
+                                q.correctOption === 'A'
+                                  ? 'font-bold text-emerald-950 dark:text-emerald-200'
+                                  : 'text-slate-800 dark:text-slate-200'
+                              }`}
                             >
                               {q.optionA}
                             </span>
-                            {q.correctOption === 'A' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
-                                ✓
-                              </span>
-                            )}
                           </div>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">C.</span>
-                            <span
-                              className={
-                                q.correctOption === 'C'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
-                            >
-                              {q.optionC}
+                          {q.correctOption === 'A' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/50 px-2 py-0.5 rounded-full shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" /> Correct
                             </span>
-                            {q.correctOption === 'C' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
-                                ✓
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
 
-                        {/* Column 2: B and D */}
-                        <div className="space-y-2">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">B.</span>
+                        {/* Option B */}
+                        <div
+                          className={`p-3 rounded-xl border transition-all flex items-start justify-between gap-2.5 ${
+                            q.correctOption === 'B'
+                              ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700/70 shadow-xs'
+                              : 'bg-slate-50/60 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 min-w-0">
                             <span
-                              className={
+                              className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ${
                                 q.correctOption === 'B'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              B
+                            </span>
+                            <span
+                              className={`text-xs sm:text-[13px] leading-relaxed ${
+                                q.correctOption === 'B'
+                                  ? 'font-bold text-emerald-950 dark:text-emerald-200'
+                                  : 'text-slate-800 dark:text-slate-200'
+                              }`}
                             >
                               {q.optionB}
                             </span>
-                            {q.correctOption === 'B' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
-                                ✓
-                              </span>
-                            )}
                           </div>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">D.</span>
+                          {q.correctOption === 'B' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/50 px-2 py-0.5 rounded-full shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" /> Correct
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Option C */}
+                        <div
+                          className={`p-3 rounded-xl border transition-all flex items-start justify-between gap-2.5 ${
+                            q.correctOption === 'C'
+                              ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700/70 shadow-xs'
+                              : 'bg-slate-50/60 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 min-w-0">
                             <span
-                              className={
+                              className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ${
+                                q.correctOption === 'C'
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              C
+                            </span>
+                            <span
+                              className={`text-xs sm:text-[13px] leading-relaxed ${
+                                q.correctOption === 'C'
+                                  ? 'font-bold text-emerald-950 dark:text-emerald-200'
+                                  : 'text-slate-800 dark:text-slate-200'
+                              }`}
+                            >
+                              {q.optionC}
+                            </span>
+                          </div>
+                          {q.correctOption === 'C' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/50 px-2 py-0.5 rounded-full shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" /> Correct
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Option D */}
+                        <div
+                          className={`p-3 rounded-xl border transition-all flex items-start justify-between gap-2.5 ${
+                            q.correctOption === 'D'
+                              ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700/70 shadow-xs'
+                              : 'bg-slate-50/60 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            <span
+                              className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ${
                                 q.correctOption === 'D'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              D
+                            </span>
+                            <span
+                              className={`text-xs sm:text-[13px] leading-relaxed ${
+                                q.correctOption === 'D'
+                                  ? 'font-bold text-emerald-950 dark:text-emerald-200'
+                                  : 'text-slate-800 dark:text-slate-200'
+                              }`}
                             >
                               {q.optionD}
                             </span>
-                            {q.correctOption === 'D' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
-                                ✓
-                              </span>
-                            )}
                           </div>
+                          {q.correctOption === 'D' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/50 px-2 py-0.5 rounded-full shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" /> Correct
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Bottom Row: Book icon, subject name, bn, Lock icon */}
+                      {/* Inline Solution Accordion */}
+                      {q.explanation && (
+                        <div className="ml-8 mt-3">
+                          {isSolutionExpanded ? (
+                            <div className="p-3.5 bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/40 rounded-xl text-xs space-y-1.5">
+                              <div className="flex items-center justify-between text-indigo-700 dark:text-indigo-300 font-bold">
+                                <span className="flex items-center gap-1.5">
+                                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                                  ব্যাখ্যা ও সমাধান (Explanation & Notes):
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleExpandSolution(q.id)}
+                                  className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                >
+                                  Hide
+                                </button>
+                              </div>
+                              <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                                {q.explanation}
+                              </p>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => toggleExpandSolution(q.id)}
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>View Explanation & Notes</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bottom Meta Row */}
                       <div className="ml-8 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-                        <div className="flex items-center gap-3.5">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
-                            <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-semibold text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                            <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
                             <span>{subjectTitle}</span>
                           </div>
-                          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                            bn
+
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                            BN
                           </span>
-                          <Lock className="w-3.5 h-3.5 text-slate-400" />
+
+                          {q.sourceExam && (
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                              Exam:{' '}
+                              {exams.find((e) => e.id === q.sourceExam)?.title || q.sourceExam}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                          <span>{q.defaultMarks || 1} Mark</span>
-                          <span>•</span>
-                          <span>{q.defaultNegativeMarks || 0.25} Neg</span>
-                          {q.explanation && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPreviewingQuestion(q);
-                                setIsPreviewModalOpen(true);
-                              }}
-                              className="ml-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-semibold"
-                            >
-                              View Solution
-                            </button>
-                          )}
+                          <span className="font-semibold text-slate-600 dark:text-slate-400">
+                            +{q.defaultMarks || 1} / -{q.defaultNegativeMarks || 0.25}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1482,42 +2078,56 @@ export const AdminQuestionBank: React.FC = () => {
                 })}
               </div>
             ) : (
-              /* TABLE VIEW (Alternative compact mode) */
+              /* ─── TABLE VIEW (Compact Data Grid) ─── */
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                  <thead className="bg-slate-50 dark:bg-slate-900/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                  <thead className="bg-slate-50 dark:bg-slate-950/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className="px-3 py-3 w-12 text-center">#</th>
-                      <th className="px-4 py-3 max-w-md">Question</th>
-                      <th className="px-4 py-3">Source & Assignment</th>
-                      <th className="px-4 py-3">Options Overview</th>
+                      <th className="px-3.5 py-3 w-12 text-center">#</th>
+                      <th className="px-4 py-3 max-w-md">Question Statement</th>
+                      <th className="px-4 py-3">Source & Hierarchy</th>
+                      <th className="px-4 py-3">Options & Key</th>
+                      <th className="px-4 py-3">Difficulty</th>
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     {paginatedQuestions.map((q, idx) => {
-                      const isTopic = q.sourceType === 'topic';
-                      const isExam = q.sourceType === 'other' || Boolean(q.sourceExam);
-                      const isPyq = q.sourceType === 'pyq';
-                      const examObj = exams.find((e) => e.id === q.sourceExam);
                       const questionNumber = (currentPage - 1) * pageSize + idx + 1;
+                      const isSelected = selectedQuestionIds.has(q.id);
+                      const isTopic = q.sourceType === 'topic';
+                      const isPyq = q.sourceType === 'pyq';
+                      const isExam = q.sourceType === 'other' || Boolean(q.sourceExam);
+                      const examObj = exams.find((e) => e.id === q.sourceExam);
 
                       return (
                         <tr
                           key={q.id}
-                          className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors"
+                          className={`hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors ${
+                            isSelected ? 'bg-sky-50/20 dark:bg-sky-950/20' : ''
+                          }`}
                         >
-                          {/* Question Index */}
-                          <td className="px-3 py-3.5 text-center font-bold text-slate-400 dark:text-slate-500 text-[11px]">
-                            {questionNumber}
+                          {/* Selection & Index */}
+                          <td className="px-3.5 py-3.5 text-center">
+                            <button
+                              type="button"
+                              onClick={() => toggleSelectQuestion(q.id)}
+                              className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                                isSelected
+                                  ? 'bg-sky-500 border-sky-500 text-white'
+                                  : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                            </button>
                           </td>
 
                           {/* Question Text */}
                           <td className="px-4 py-3.5 max-w-md">
                             <div className="space-y-1">
                               <p className="font-bold text-slate-900 dark:text-white line-clamp-2 leading-relaxed">
-                                {q.questionBengaliText || q.questionText}
+                                {questionNumber}. {q.questionBengaliText || q.questionText}
                               </p>
                               {q.questionBengaliText &&
                                 q.questionText &&
@@ -1527,11 +2137,8 @@ export const AdminQuestionBank: React.FC = () => {
                                   </p>
                                 )}
                               <div className="flex items-center gap-2 pt-0.5">
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
-                                  {q.defaultMarks} Mark • {q.defaultNegativeMarks} Neg
-                                </span>
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
-                                  {q.difficulty || 'medium'}
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                  +{q.defaultMarks || 1} / -{q.defaultNegativeMarks || 0.25}
                                 </span>
                               </div>
                             </div>
@@ -1540,50 +2147,38 @@ export const AdminQuestionBank: React.FC = () => {
                           {/* Source & Hierarchy */}
                           <td className="px-4 py-3 text-[11px]">
                             {isTopic && (
-                              <div className="space-y-1">
+                              <div className="space-y-0.5">
                                 <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40">
                                   Topic Test
                                 </span>
-                                <p className="font-medium text-slate-700 dark:text-slate-300">
+                                <p className="font-semibold text-slate-700 dark:text-slate-300">
                                   {q.subjectName || 'Subject'}
                                 </p>
-                                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                                <p className="text-[10px] text-slate-400">
                                   {q.topicName || q.chapterName || 'General Topic'}
                                 </p>
                               </div>
                             )}
 
                             {isExam && (
-                              <div className="space-y-1">
+                              <div className="space-y-0.5">
                                 <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40">
                                   Full Mock Test
                                 </span>
-                                <p className="font-medium text-slate-700 dark:text-slate-300">
+                                <p className="font-semibold text-slate-700 dark:text-slate-300">
                                   {examObj?.title || q.sourceExam || 'Standard Exam'}
                                 </p>
-                                {(q.testTitle ||
-                                  (selectedExamTestId
-                                    ? tests.find((t) => t.id === selectedExamTestId)?.title
-                                    : undefined)) && (
-                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                    {q.testTitle ||
-                                      tests.find((t) => t.id === selectedExamTestId)?.title}
-                                  </p>
-                                )}
                               </div>
                             )}
 
                             {isPyq && (
-                              <div className="space-y-1">
+                              <div className="space-y-0.5">
                                 <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
                                   PYQ Paper
                                 </span>
-                                <p className="font-medium text-slate-700 dark:text-slate-300">
+                                <p className="font-semibold text-slate-700 dark:text-slate-300">
                                   {q.sourceExam || 'WBP Exam'}{' '}
                                   {q.sourceYear ? `(${q.sourceYear})` : ''}
-                                </p>
-                                <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                  {q.sourcePaper || 'Official Paper'}
                                 </p>
                               </div>
                             )}
@@ -1593,7 +2188,7 @@ export const AdminQuestionBank: React.FC = () => {
                           <td className="px-4 py-3 text-[11px] max-w-xs">
                             <div className="grid grid-cols-2 gap-1.5">
                               <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                className={`p-1.5 rounded text-[10px] line-clamp-1 ${
                                   q.correctOption === 'A'
                                     ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
                                     : 'text-slate-500'
@@ -1602,7 +2197,7 @@ export const AdminQuestionBank: React.FC = () => {
                                 (a) {q.optionA}
                               </div>
                               <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                className={`p-1.5 rounded text-[10px] line-clamp-1 ${
                                   q.correctOption === 'B'
                                     ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
                                     : 'text-slate-500'
@@ -1611,7 +2206,7 @@ export const AdminQuestionBank: React.FC = () => {
                                 (b) {q.optionB}
                               </div>
                               <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                className={`p-1.5 rounded text-[10px] line-clamp-1 ${
                                   q.correctOption === 'C'
                                     ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
                                     : 'text-slate-500'
@@ -1620,7 +2215,7 @@ export const AdminQuestionBank: React.FC = () => {
                                 (c) {q.optionC}
                               </div>
                               <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
+                                className={`p-1.5 rounded text-[10px] line-clamp-1 ${
                                   q.correctOption === 'D'
                                     ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
                                     : 'text-slate-500'
@@ -1631,17 +2226,14 @@ export const AdminQuestionBank: React.FC = () => {
                             </div>
                           </td>
 
+                          {/* Difficulty */}
+                          <td className="px-4 py-3">
+                            <DifficultyBadge difficulty={q.difficulty} />
+                          </td>
+
                           {/* Status */}
                           <td className="px-4 py-3">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                q.status === 'active' || (!q.status && q.isActive)
-                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
-                                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
-                              }`}
-                            >
-                              {q.status || (q.isActive ? 'active' : 'archived')}
-                            </span>
+                            <StatusBadge status={q.status} isActive={q.isActive} />
                           </td>
 
                           {/* Actions */}
@@ -1653,7 +2245,7 @@ export const AdminQuestionBank: React.FC = () => {
                                   setIsPreviewModalOpen(true);
                                 }}
                                 title="Preview Question"
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                               </button>
@@ -1661,15 +2253,19 @@ export const AdminQuestionBank: React.FC = () => {
                               <button
                                 onClick={() => handleOpenEdit(q)}
                                 title="Edit Question"
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
 
                               <button
                                 onClick={() => handleArchiveQuestion(q)}
-                                title={q.status === 'archived' ? 'Unarchive' : 'Archive'}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                                title={
+                                  q.status === 'archived' || q.isActive === false
+                                    ? 'Unarchive'
+                                    : 'Archive'
+                                }
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                               >
                                 <Archive className="w-3.5 h-3.5" />
                               </button>
@@ -1677,7 +2273,7 @@ export const AdminQuestionBank: React.FC = () => {
                               <button
                                 onClick={() => setQuestionToDelete(q)}
                                 title="Delete Question"
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1693,9 +2289,9 @@ export const AdminQuestionBank: React.FC = () => {
           </div>
         )}
 
-        {/* Pagination Controls */}
+        {/* ─── Pagination Controls ─── */}
         {questions.length > 0 && (
-          <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="p-4 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div>
               Showing{' '}
               <span className="font-bold text-slate-900 dark:text-white">
@@ -1716,7 +2312,7 @@ export const AdminQuestionBank: React.FC = () => {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-900 dark:text-white"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-900 dark:text-white"
               >
                 <option value={25}>25 per page</option>
                 <option value={50}>50 per page</option>
@@ -1726,7 +2322,7 @@ export const AdminQuestionBank: React.FC = () => {
               <button
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 disabled:opacity-40"
+                className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:border-slate-300"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -1738,7 +2334,7 @@ export const AdminQuestionBank: React.FC = () => {
               <button
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 disabled:opacity-40"
+                className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:border-slate-300"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -1747,17 +2343,83 @@ export const AdminQuestionBank: React.FC = () => {
         )}
       </div>
 
-      {/* SINGLE QUESTION MODAL (Section 6A) */}
+      {/* ─── Floating Bulk Action Bar (When Items Selected) ─── */}
+      {selectedQuestionIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-700/80 text-white rounded-2xl px-5 py-3 shadow-2xl flex items-center gap-3.5 animate-fadeIn">
+          <div className="flex items-center gap-2 pr-3 border-r border-slate-700">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+            <span className="text-xs font-bold text-slate-200 whitespace-nowrap">
+              {selectedQuestionIds.size} selected
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => handleBulkToggleStatus('archived')}
+              className="px-2.5 py-1.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <Archive className="w-3.5 h-3.5 text-slate-400" />
+              <span>Archive</span>
+            </button>
+
+            <button
+              onClick={() => handleBulkToggleStatus('active')}
+              className="px-2.5 py-1.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Activate</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const selectedList = questions.filter((q) => selectedQuestionIds.has(q.id));
+                handleExportQuestionsTxt(selectedList);
+              }}
+              className="px-2.5 py-1.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-sky-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export TXT</span>
+            </button>
+
+            <button
+              onClick={() => setIsBulkDeleteModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete ({selectedQuestionIds.size})</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedQuestionIds(new Set())}
+              className="text-xs text-slate-400 hover:text-white underline ml-1"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── SINGLE QUESTION MODAL (Add Single) ─── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Plus className="w-5 h-5 text-emerald-500" /> Add Single Question
-              </h3>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Add Single Question
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Create an MCQ with statement, options, correct answer, and explanation.
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1771,40 +2433,43 @@ export const AdminQuestionBank: React.FC = () => {
             )}
 
             <form onSubmit={handleSaveSingle} className="space-y-4">
-              {/* Question Source Selection (Section 6A) */}
+              {/* Question Source Selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Question Source *
+                  Target Question Source *
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setSingleSource('topic')}
-                    className={`py-2.5 px-4 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                       singleSource === 'topic'
-                        ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                        ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-600 dark:text-blue-400 shadow-xs'
                         : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    Topic Test (Subject → Topic → Test)
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Topic Test (Subject → Topic → Test)</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setSingleSource('exam')}
-                    className={`py-2.5 px-4 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                       singleSource === 'exam'
-                        ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-600 dark:text-indigo-400 shadow-xs'
                         : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    Exam (Target Exam)
+                    <Award className="w-4 h-4" />
+                    <span>Exam (Full Mock Test / PYQ)</span>
                   </button>
                 </div>
               </div>
 
-              {/* IF SOURCE = TOPIC TEST: Subject -> Topic -> Topic Test */}
-              {singleSource === 'topic' && (
-                <div className="grid grid-cols-3 gap-3">
+              {/* Source Cascading Selection */}
+              {singleSource === 'topic' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Subject *
@@ -1818,7 +2483,7 @@ export const AdminQuestionBank: React.FC = () => {
                         setSingleTopicId(firstTopic);
                       }}
                       required
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                     >
                       <option value="">Select Subject</option>
                       {subjects.map((s) => (
@@ -1837,7 +2502,7 @@ export const AdminQuestionBank: React.FC = () => {
                       value={singleTopicId}
                       onChange={(e) => setSingleTopicId(e.target.value)}
                       required
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                     >
                       <option value="">Select Topic</option>
                       {singleTopics.map((c) => (
@@ -1850,14 +2515,14 @@ export const AdminQuestionBank: React.FC = () => {
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Topic Test
+                      Topic Test (Optional)
                     </label>
                     <select
                       value={singleTopicTestId}
                       onChange={(e) => setSingleTopicTestId(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                     >
-                      <option value="">(Optional) Link to Test</option>
+                      <option value="">(Optional) Auto-link to Test</option>
                       {singleTopicTests.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.title}
@@ -1866,14 +2531,11 @@ export const AdminQuestionBank: React.FC = () => {
                     </select>
                   </div>
                 </div>
-              )}
-
-              {/* IF SOURCE = EXAM: Exam -> Type (Full Mock Test | PYQ) -> specific Full Mock Test / PYQ (Section 12, 13) */}
-              {singleSource === 'exam' && (
+              ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Exam *
+                      Target Exam *
                     </label>
                     <select
                       value={singleExamId}
@@ -1888,9 +2550,9 @@ export const AdminQuestionBank: React.FC = () => {
                         setSingleExamTestId(testsForNewExam[0]?.id || '');
                       }}
                       required
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
                     >
-                      <option value="">Select Target Exam</option>
+                      <option value="">Select Exam</option>
                       {exams.map((e) => (
                         <option key={e.id} value={e.id}>
                           {e.title}
@@ -1918,7 +2580,7 @@ export const AdminQuestionBank: React.FC = () => {
                       }}
                       required
                       disabled={!singleExamId}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white disabled:opacity-50"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white disabled:opacity-50"
                     >
                       <option value="full_mock">Full Mock Test</option>
                       <option value="pyq">PYQ</option>
@@ -1934,7 +2596,7 @@ export const AdminQuestionBank: React.FC = () => {
                       onChange={(e) => setSingleExamTestId(e.target.value)}
                       required
                       disabled={!singleExamId}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white disabled:opacity-50"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white disabled:opacity-50"
                     >
                       <option value="">
                         {(singleExamType === 'full_mock'
@@ -1958,45 +2620,37 @@ export const AdminQuestionBank: React.FC = () => {
                 </div>
               )}
 
-              {/* Exam Target Destination Confirmation Pill */}
-              {singleSource === 'exam' && singleExamId && singleExamTestId && (
-                <div className="p-2.5 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl flex items-center gap-2 text-xs">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                  <span className="text-slate-700 dark:text-slate-300">
-                    Target Destination:{' '}
-                    <strong className="text-slate-900 dark:text-white">
-                      {exams.find((e) => e.id === singleExamId)?.title}
-                    </strong>{' '}
-                    →{' '}
-                    <strong className="text-indigo-600 dark:text-indigo-400">
-                      {singleExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ'}
-                    </strong>{' '}
-                    →{' '}
-                    <strong className="text-slate-900 dark:text-white">
-                      {tests.find((t) => t.id === singleExamTestId)?.title ||
-                        tests.find((t) => t.id === singleExamTestId)?.paperName}
-                    </strong>
-                  </span>
+              {/* Question Statement in Bengali & English */}
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Question Statement in Bengali (বাংলা প্রশ্ন) *
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="যেমন: ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?"
+                    value={singleQuestionBengali}
+                    onChange={(e) => setSingleQuestionBengali(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white leading-relaxed focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
-              )}
 
-              {/* Question Text */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Question Text (English or Bengali) *
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Type or paste the complete question text..."
-                  value={singleQuestionText}
-                  onChange={(e) => setSingleQuestionText(e.target.value)}
-                  required
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
-                />
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Question Statement in English (ঐচ্ছিক / Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Who was the first President of India?"
+                    value={singleQuestionEnglish}
+                    onChange={(e) => setSingleQuestionEnglish(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
               </div>
 
               {/* 4 Options */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Option A *
@@ -2007,7 +2661,7 @@ export const AdminQuestionBank: React.FC = () => {
                     value={singleOptA}
                     onChange={(e) => setSingleOptA(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2020,7 +2674,7 @@ export const AdminQuestionBank: React.FC = () => {
                     value={singleOptB}
                     onChange={(e) => setSingleOptB(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2033,7 +2687,7 @@ export const AdminQuestionBank: React.FC = () => {
                     value={singleOptC}
                     onChange={(e) => setSingleOptC(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2046,7 +2700,7 @@ export const AdminQuestionBank: React.FC = () => {
                     value={singleOptD}
                     onChange={(e) => setSingleOptD(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -2054,7 +2708,7 @@ export const AdminQuestionBank: React.FC = () => {
               {/* Correct Answer Selection */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Correct Answer *
+                  Correct Answer Key *
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {(['A', 'B', 'C', 'D'] as const).map((opt) => (
@@ -2065,30 +2719,72 @@ export const AdminQuestionBank: React.FC = () => {
                       className={`py-2 text-xs font-black rounded-xl border transition-all ${
                         singleCorrect === opt
                           ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                          : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                       }`}
                     >
-                      Option ({opt.toLowerCase()})
+                      Option ({opt})
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Marks, Negative Marks & Difficulty */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Marks (+ve)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.25"
+                    value={singleMarks}
+                    onChange={(e) => setSingleMarks(Number(e.target.value))}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Negative Marks
+                  </label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    value={singleNegativeMarks}
+                    onChange={(e) => setSingleNegativeMarks(Number(e.target.value))}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Difficulty
+                  </label>
+                  <select
+                    value={singleDifficulty}
+                    onChange={(e) => setSingleDifficulty(e.target.value as any)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  >
+                    <option value="easy">Easy (সহজ)</option>
+                    <option value="medium">Medium (মাঝারি)</option>
+                    <option value="hard">Hard (কঠিন)</option>
+                  </select>
                 </div>
               </div>
 
               {/* Explanation */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Explanation / Solution (English or Bengali)
+                  Explanation & Solution Notes (English or Bengali)
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Detailed solution or points explaining the answer..."
+                  placeholder="Detailed solution or points explaining the correct answer..."
                   value={singleExplanation}
                   onChange={(e) => setSingleExplanation(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 leading-relaxed"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
@@ -2100,7 +2796,7 @@ export const AdminQuestionBank: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={isSavingSingle}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20"
                 >
                   {isSavingSingle ? 'Saving...' : 'Save Question'}
                 </Button>
@@ -2110,18 +2806,27 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* BULK TXT QUESTION UPLOAD MODAL (Section 7, 8, 9) */}
+      {/* ─── BULK TXT QUESTION UPLOAD MODAL ─── */}
       {isBulkModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Upload className="w-5 h-5 text-indigo-500" />
-                Bulk Add Questions via TXT (Section 7)
-              </h3>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Bulk Add Questions via TXT
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Import questions in batches using standard PracticeKoro UTF-8 format.
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsBulkModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2153,31 +2858,33 @@ export const AdminQuestionBank: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setBulkSource('topic')}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                         bulkSource === 'topic'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                          ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-600 dark:text-blue-400 shadow-xs'
                           : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                       }`}
                     >
-                      Topic Test
+                      <GraduationCap className="w-4 h-4" />
+                      <span>Topic Test</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setBulkSource('exam')}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                         bulkSource === 'exam'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                          ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-600 dark:text-indigo-400 shadow-xs'
                           : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                       }`}
                     >
-                      Exam
+                      <Award className="w-4 h-4" />
+                      <span>Exam (Mock / PYQ)</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Assignment Dropdowns */}
                 {bulkSource === 'topic' ? (
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                         Subject *
@@ -2191,7 +2898,7 @@ export const AdminQuestionBank: React.FC = () => {
                           setBulkTopicId(firstTopic);
                         }}
                         required
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                       >
                         <option value="">Select Subject</option>
                         {subjects.map((s) => (
@@ -2210,7 +2917,7 @@ export const AdminQuestionBank: React.FC = () => {
                         value={bulkTopicId}
                         onChange={(e) => setBulkTopicId(e.target.value)}
                         required
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                       >
                         <option value="">Select Topic</option>
                         {bulkTopics.map((c) => (
@@ -2228,7 +2935,7 @@ export const AdminQuestionBank: React.FC = () => {
                       <select
                         value={bulkTopicTestId}
                         onChange={(e) => setBulkTopicTestId(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                       >
                         <option value="">(Optional) Auto-link to Test</option>
                         {bulkTopicTests.map((t) => (
@@ -2243,7 +2950,7 @@ export const AdminQuestionBank: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Exam *
+                        Target Exam *
                       </label>
                       <select
                         value={bulkExamId}
@@ -2258,7 +2965,7 @@ export const AdminQuestionBank: React.FC = () => {
                           setBulkExamTestId(testsForNewExam[0]?.id || '');
                         }}
                         required
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
                       >
                         <option value="">Select Target Exam</option>
                         {exams.map((e) => (
@@ -2287,7 +2994,7 @@ export const AdminQuestionBank: React.FC = () => {
                         }}
                         required
                         disabled={!bulkExamId}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white disabled:opacity-50"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white disabled:opacity-50"
                       >
                         <option value="full_mock">Full Mock Test</option>
                         <option value="pyq">PYQ</option>
@@ -2303,7 +3010,7 @@ export const AdminQuestionBank: React.FC = () => {
                         onChange={(e) => setBulkExamTestId(e.target.value)}
                         required
                         disabled={!bulkExamId}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white disabled:opacity-50"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white disabled:opacity-50"
                       >
                         <option value="">
                           {(bulkExamType === 'full_mock' ? bulkExamFullMockTests : bulkExamPyqTests)
@@ -2325,12 +3032,12 @@ export const AdminQuestionBank: React.FC = () => {
                   </div>
                 )}
 
-                {/* Exam Import Destination Confirmation Pill */}
+                {/* Exam Destination Confirmation */}
                 {bulkSource === 'exam' && bulkExamId && bulkExamTestId && (
-                  <div className="p-2.5 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl flex items-center gap-2 text-xs">
+                  <div className="p-3 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl flex items-center gap-2.5 text-xs">
                     <CheckCircle2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                     <span className="text-slate-700 dark:text-slate-300">
-                      Import Destination:{' '}
+                      Destination:{' '}
                       <strong className="text-slate-900 dark:text-white">
                         {exams.find((e) => e.id === bulkExamId)?.title}
                       </strong>{' '}
@@ -2347,24 +3054,24 @@ export const AdminQuestionBank: React.FC = () => {
                   </div>
                 )}
 
-                {/* Upload & Sample buttons */}
+                {/* Upload & Format Guide buttons */}
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     Upload TXT File (UTF-8)
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIsFormatGuideOpen(true)}
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
+                      className="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
                     >
-                      View TXT Format
+                      View Format
                     </button>
                     <span className="text-slate-300 dark:text-slate-700">•</span>
                     <button
                       type="button"
                       onClick={() => downloadSampleTxt()}
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
+                      className="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
                     >
                       <Download className="w-3 h-3" /> Download Sample TXT
                     </button>
@@ -2372,19 +3079,19 @@ export const AdminQuestionBank: React.FC = () => {
                 </div>
 
                 {/* File picker */}
-                <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center space-y-2 hover:border-indigo-500 transition-colors">
+                <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center space-y-2 hover:border-indigo-500 transition-colors bg-slate-50/50 dark:bg-slate-950/40">
                   <Upload className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
                   <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                     {bulkFileName ? (
                       <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                        Selected: {bulkFileName}
+                        Selected File: {bulkFileName}
                       </span>
                     ) : (
-                      'Choose a .txt file or drag it here'
+                      'Choose a .txt file (UTF-8 encoded) or drag & drop it here'
                     )}
                   </p>
                   <label className="inline-block">
-                    <span className="cursor-pointer text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                    <span className="cursor-pointer text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-xs">
                       Browse File
                     </span>
                     <input
@@ -2406,11 +3113,11 @@ export const AdminQuestionBank: React.FC = () => {
                     placeholder="1. ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?&#10;(a) ড. রাজেন্দ্র প্রসাদ&#10;(b) জওহরলাল নেহরু&#10;(c) সর্বপল্লী রাধাকৃষ্ণন&#10;(d) ড. বি. আর. আম্বেদকর&#10;&#10;সঠিক উত্তর: (a) ড. রাজেন্দ্র প্রসাদ&#10;&#10;Explanation:&#10;- ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি।"
                     value={bulkRawText}
                     onChange={(e) => setBulkRawText(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono leading-relaxed"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white font-mono leading-relaxed focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                   <Button
                     type="button"
                     variant="outline"
@@ -2422,7 +3129,7 @@ export const AdminQuestionBank: React.FC = () => {
                   <Button
                     type="button"
                     onClick={handleParseTxt}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20"
                   >
                     Parse TXT & Preview Questions
                   </Button>
@@ -2430,11 +3137,11 @@ export const AdminQuestionBank: React.FC = () => {
               </div>
             )}
 
-            {/* STEP 2: BULK UPLOAD PREVIEW (Section 9) */}
+            {/* STEP 2: BULK UPLOAD PREVIEW */}
             {bulkStep === 'preview' && bulkParseResult && (
               <div className="space-y-4">
-                {/* Target Destination Banner */}
-                <div className="p-3 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/40 rounded-xl flex items-center justify-between text-xs">
+                {/* Destination Banner */}
+                <div className="p-3.5 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-xl flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-slate-500 dark:text-slate-400 block text-[10px] uppercase tracking-wider">
                       Target Destination
@@ -2448,14 +3155,15 @@ export const AdminQuestionBank: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setBulkStep('upload')}
-                    className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                    className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                   >
                     Change
                   </button>
                 </div>
-                {/* Validation Stats */}
+
+                {/* Validation Stat Cards */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center">
+                  <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-center">
                     <span className="block text-[11px] font-medium text-slate-500">
                       Detected Questions
                     </span>
@@ -2475,7 +3183,7 @@ export const AdminQuestionBank: React.FC = () => {
 
                   <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 rounded-xl text-center">
                     <span className="block text-[11px] font-medium text-rose-600 dark:text-rose-400">
-                      Errors
+                      Formatting Errors
                     </span>
                     <span className="text-xl font-black text-rose-700 dark:text-rose-400">
                       {bulkParseResult.errors.length}
@@ -2483,12 +3191,12 @@ export const AdminQuestionBank: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Show Problematic Blocks (Section 9) */}
+                {/* Errors List */}
                 {bulkParseResult.errors.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-xs font-black text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                      <AlertCircle className="w-4 h-4" /> Problematic Question Blocks (Fix before
-                      importing)
+                      <AlertCircle className="w-4 h-4" />
+                      Problematic Question Blocks (Review before importing)
                     </h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                       {bulkParseResult.errors.map((err, i) => (
@@ -2504,7 +3212,7 @@ export const AdminQuestionBank: React.FC = () => {
                             {err.reason}
                           </p>
                           <pre className="text-[10px] p-2 bg-black/10 dark:bg-black/40 rounded text-slate-600 dark:text-slate-400 overflow-x-auto whitespace-pre-wrap font-mono">
-                            {err.rawText.slice(0, 150)}...
+                            {err.rawText.slice(0, 160)}...
                           </pre>
                         </div>
                       ))}
@@ -2512,18 +3220,18 @@ export const AdminQuestionBank: React.FC = () => {
                   </div>
                 )}
 
-                {/* Valid Questions Sample Preview */}
+                {/* Valid Questions Preview */}
                 {bulkParseResult.valid.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      Valid Questions Preview (First 3 of {bulkParseResult.valid.length})
+                      Valid Questions Preview (Showing first 3 of {bulkParseResult.valid.length})
                     </h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                       {bulkParseResult.valid.slice(0, 3).map((q) => (
                         <div
                           key={q.questionNumber}
-                          className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs space-y-1"
+                          className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs space-y-1"
                         >
                           <p className="font-bold text-slate-900 dark:text-white">
                             {q.questionNumber}. {q.questionText}
@@ -2558,16 +3266,12 @@ export const AdminQuestionBank: React.FC = () => {
                               (d) {q.optionD}
                             </span>
                           </div>
-                          <p className="text-[10px] text-emerald-600 font-bold pt-0.5">
-                            Correct: ({q.correctOption.toLowerCase()})
-                          </p>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Action Buttons (Section 9) */}
                 <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
                   <Button
                     type="button"
@@ -2592,7 +3296,7 @@ export const AdminQuestionBank: React.FC = () => {
                       type="button"
                       onClick={handleImportValidQuestions}
                       disabled={isImportingBulk || bulkParseResult.valid.length === 0}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
                     >
                       {isImportingBulk
                         ? 'Importing...'
@@ -2606,15 +3310,19 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* VIEW TXT FORMAT GUIDE MODAL (Section 8) */}
+      {/* ─── VIEW TXT FORMAT GUIDE MODAL ─── */}
       {isFormatGuideOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl p-6 space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-indigo-500" /> Standard TXT Question Format
-                (Section 8)
-              </h3>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  Standard TXT Question Format
+                </h3>
+              </div>
               <button
                 onClick={() => setIsFormatGuideOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -2624,17 +3332,36 @@ export const AdminQuestionBank: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Every question must follow this exact conceptual layout. The parser accommodates
-              standard whitespace and English or Bengali numerals.
+              Every question block must include the statement numbered, 4 options labeled (a) to
+              (d), the correct answer line (`সঠিক উত্তর: (a)`), and optional `Explanation:`.
             </p>
 
-            <div className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+            <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl relative">
               <pre className="text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap leading-relaxed">
                 {SAMPLE_TXT_CONTENT}
               </pre>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(SAMPLE_TXT_CONTENT);
+                  setCopiedFormat(true);
+                  setTimeout(() => setCopiedFormat(false), 2000);
+                }}
+                className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-[11px] font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-xs flex items-center gap-1 hover:bg-slate-50"
+              >
+                {copiedFormat ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-500" /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 text-slate-400" /> Copy Sample
+                  </>
+                )}
+              </button>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
               <Button
                 variant="outline"
                 onClick={() => setIsFormatGuideOpen(false)}
@@ -2644,7 +3371,7 @@ export const AdminQuestionBank: React.FC = () => {
               </Button>
               <Button
                 onClick={() => downloadSampleTxt()}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5" /> Download Template (.txt)
               </Button>
@@ -2653,14 +3380,17 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* QUESTION PREVIEW MODAL */}
+      {/* ─── QUESTION PREVIEW MODAL (Student-style view) ─── */}
       {isPreviewModalOpen && previewingQuestion && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Eye className="w-4 h-4 text-indigo-500" /> Question Details
-              </h3>
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-indigo-500" />
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  Question Preview
+                </h3>
+              </div>
               <button
                 onClick={() => setIsPreviewModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -2669,12 +3399,32 @@ export const AdminQuestionBank: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-sm font-black text-slate-900 dark:text-white leading-relaxed">
-                {previewingQuestion.questionBengaliText || previewingQuestion.questionText}
-              </p>
+            <div className="space-y-3.5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <DifficultyBadge difficulty={previewingQuestion.difficulty} />
+                  <StatusBadge
+                    status={previewingQuestion.status}
+                    isActive={previewingQuestion.isActive}
+                  />
+                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                    +{previewingQuestion.defaultMarks || 1} / -
+                    {previewingQuestion.defaultNegativeMarks || 0.25}
+                  </span>
+                </div>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white leading-relaxed pt-1">
+                  {previewingQuestion.questionBengaliText || previewingQuestion.questionText}
+                </h4>
+                {previewingQuestion.questionBengaliText &&
+                  previewingQuestion.questionText &&
+                  previewingQuestion.questionBengaliText !== previewingQuestion.questionText && (
+                    <p className="text-xs text-slate-500 italic">
+                      {previewingQuestion.questionText}
+                    </p>
+                  )}
+              </div>
 
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-2 pt-1">
                 {[
                   { key: 'A', text: previewingQuestion.optionA },
                   { key: 'B', text: previewingQuestion.optionB },
@@ -2685,15 +3435,24 @@ export const AdminQuestionBank: React.FC = () => {
                   return (
                     <div
                       key={opt.key}
-                      className={`p-2.5 rounded-xl text-xs flex items-center justify-between border ${
+                      className={`p-3 rounded-xl text-xs flex items-center justify-between border transition-all ${
                         isCorrect
-                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold'
-                          : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 font-bold shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      <span>
-                        ({opt.key.toLowerCase()}) {opt.text}
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ${
+                            isCorrect
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {opt.key}
+                        </span>
+                        <span>{opt.text}</span>
+                      </div>
                       {isCorrect && (
                         <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black">
                           Correct Answer
@@ -2705,8 +3464,9 @@ export const AdminQuestionBank: React.FC = () => {
               </div>
 
               {previewingQuestion.explanation && (
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 rounded-xl text-xs space-y-1">
-                  <span className="font-bold text-indigo-700 dark:text-indigo-400 flex items-center gap-1">
+                <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 rounded-xl text-xs space-y-1">
+                  <span className="font-bold text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
                     Explanation & Solution Notes:
                   </span>
                   <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
@@ -2729,14 +3489,19 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* QUESTION EDIT MODAL */}
+      {/* ─── QUESTION EDIT MODAL ─── */}
       {isEditModalOpen && editingQuestion && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Edit2 className="w-4 h-4 text-emerald-500" /> Edit Question
-              </h3>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <Edit2 className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  Edit Question #{editingQuestion.id.slice(0, 8)}
+                </h3>
+              </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -2751,17 +3516,29 @@ export const AdminQuestionBank: React.FC = () => {
               </p>
             )}
 
-            <form onSubmit={handleUpdateQuestion} className="space-y-3">
+            <form onSubmit={handleUpdateQuestion} className="space-y-3.5">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Question Text *
+                  Question Statement in Bengali (বাংলা প্রশ্ন) *
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
+                  value={editQBengaliText}
+                  onChange={(e) => setEditQBengaliText(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white leading-relaxed focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Question Statement in English (English Statement)
+                </label>
+                <input
+                  type="text"
                   value={editQText}
                   onChange={(e) => setEditQText(e.target.value)}
-                  required
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -2775,7 +3552,7 @@ export const AdminQuestionBank: React.FC = () => {
                     value={editQOptA}
                     onChange={(e) => setEditQOptA(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2787,7 +3564,7 @@ export const AdminQuestionBank: React.FC = () => {
                     value={editQOptB}
                     onChange={(e) => setEditQOptB(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2799,7 +3576,7 @@ export const AdminQuestionBank: React.FC = () => {
                     value={editQOptC}
                     onChange={(e) => setEditQOptC(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2811,14 +3588,14 @@ export const AdminQuestionBank: React.FC = () => {
                     value={editQOptD}
                     onChange={(e) => setEditQOptD(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Correct Answer *
+                  Correct Answer Key *
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {(['A', 'B', 'C', 'D'] as const).map((opt) => (
@@ -2826,27 +3603,68 @@ export const AdminQuestionBank: React.FC = () => {
                       type="button"
                       key={opt}
                       onClick={() => setEditQCorrect(opt)}
-                      className={`py-1.5 text-xs font-black rounded-xl border ${
+                      className={`py-2 text-xs font-black rounded-xl border transition-all ${
                         editQCorrect === opt
-                          ? 'bg-emerald-600 text-white border-emerald-600'
-                          : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      ({opt.toLowerCase()})
+                      Option ({opt})
                     </button>
                   ))}
                 </div>
               </div>
 
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Marks
+                  </label>
+                  <input
+                    type="number"
+                    step="0.25"
+                    value={editQMarks}
+                    onChange={(e) => setEditQMarks(Number(e.target.value))}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Negative Marks
+                  </label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    value={editQNegativeMarks}
+                    onChange={(e) => setEditQNegativeMarks(Number(e.target.value))}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Difficulty
+                  </label>
+                  <select
+                    value={editQDifficulty}
+                    onChange={(e) => setEditQDifficulty(e.target.value as any)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  >
+                    <option value="easy">Easy (সহজ)</option>
+                    <option value="medium">Medium (মাঝারি)</option>
+                    <option value="hard">Hard (কঠিন)</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Explanation Notes
+                  Explanation & Solution Notes
                 </label>
                 <textarea
                   rows={2}
                   value={editQExplanation}
                   onChange={(e) => setEditQExplanation(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white leading-relaxed"
                 />
               </div>
 
@@ -2872,9 +3690,9 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* Single Question Delete Confirmation Modal */}
+      {/* ─── SINGLE QUESTION DELETE MODAL ─── */}
       {questionToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">
@@ -2933,7 +3751,7 @@ export const AdminQuestionBank: React.FC = () => {
                 type="button"
                 onClick={handleDeleteQuestion}
                 disabled={isDeletingQuestion}
-                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
+                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md shadow-red-600/20"
               >
                 {isDeletingQuestion ? 'মুছে ফেলা হচ্ছে...' : 'ডিলিট করুন (Delete)'}
               </Button>
@@ -2942,9 +3760,9 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* Bulk Delete Confirmation Modal */}
+      {/* ─── BULK DELETE MODAL ─── */}
       {isBulkDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">
@@ -2966,9 +3784,9 @@ export const AdminQuestionBank: React.FC = () => {
               </div>
             )}
 
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              নির্বাচিত {selectedQuestionIds.size}টি প্রশ্ন স্থায়ীভাবে ডাটাবেস ও সংশ্লিষ্ট টেস্ট
-              থেকে ডিলিট করা হবে। এই পদক্ষেপটি আনডু করা যাবে না।
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              নির্বাচিত <strong>{selectedQuestionIds.size}টি</strong> প্রশ্ন স্থায়ীভাবে ডাটাবেস ও
+              সংশ্লিষ্ট টেস্ট থেকে ডিলিট করা হবে। এই পদক্ষেপটি আনডু করা যাবে না।
             </p>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
@@ -2988,7 +3806,7 @@ export const AdminQuestionBank: React.FC = () => {
                 type="button"
                 onClick={handleBulkDeleteQuestions}
                 disabled={isDeletingQuestion}
-                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
+                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md shadow-red-600/20"
               >
                 {isDeletingQuestion
                   ? 'ডিলিট হচ্ছে...'

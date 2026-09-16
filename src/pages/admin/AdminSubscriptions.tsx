@@ -39,11 +39,15 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle, gradient, iconBg }) => (
-  <div className={`relative overflow-hidden rounded-2xl p-5 ${gradient} border border-white/10 dark:border-white/5 shadow-lg shadow-black/5 dark:shadow-black/20`}>
+  <div
+    className={`relative overflow-hidden rounded-2xl p-5 ${gradient} border border-white/10 dark:border-white/5 shadow-lg shadow-black/5 dark:shadow-black/20`}
+  >
     <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/5 -mr-8 -mt-8" />
     <div className="absolute bottom-0 left-0 w-16 h-16 rounded-full bg-white/5 -ml-6 -mb-6" />
     <div className="relative flex items-start gap-3.5">
-      <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center shrink-0 shadow-sm`}>
+      <div
+        className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center shrink-0 shadow-sm`}
+      >
         {icon}
       </div>
       <div className="min-w-0">
@@ -58,16 +62,42 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle, gradi
 // ─── Status Badge ───────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const config: Record<string, { bg: string; text: string; dot: string }> = {
-    active: { bg: 'bg-emerald-500/10 dark:bg-emerald-500/15', text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
-    expired: { bg: 'bg-rose-500/10 dark:bg-rose-500/15', text: 'text-rose-600 dark:text-rose-400', dot: 'bg-rose-500' },
-    cancelled: { bg: 'bg-slate-500/10 dark:bg-slate-500/15', text: 'text-slate-500 dark:text-slate-400', dot: 'bg-slate-400' },
-    completed: { bg: 'bg-emerald-500/10 dark:bg-emerald-500/15', text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
-    pending: { bg: 'bg-amber-500/10 dark:bg-amber-500/15', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
-    failed: { bg: 'bg-rose-500/10 dark:bg-rose-500/15', text: 'text-rose-600 dark:text-rose-400', dot: 'bg-rose-500' },
+    active: {
+      bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      dot: 'bg-emerald-500',
+    },
+    expired: {
+      bg: 'bg-rose-500/10 dark:bg-rose-500/15',
+      text: 'text-rose-600 dark:text-rose-400',
+      dot: 'bg-rose-500',
+    },
+    cancelled: {
+      bg: 'bg-slate-500/10 dark:bg-slate-500/15',
+      text: 'text-slate-500 dark:text-slate-400',
+      dot: 'bg-slate-400',
+    },
+    completed: {
+      bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      dot: 'bg-emerald-500',
+    },
+    pending: {
+      bg: 'bg-amber-500/10 dark:bg-amber-500/15',
+      text: 'text-amber-600 dark:text-amber-400',
+      dot: 'bg-amber-500',
+    },
+    failed: {
+      bg: 'bg-rose-500/10 dark:bg-rose-500/15',
+      text: 'text-rose-600 dark:text-rose-400',
+      dot: 'bg-rose-500',
+    },
   };
   const c = config[status] || config.cancelled;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold ${c.bg} ${c.text}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold ${c.bg} ${c.text}`}
+    >
       <span className={`w-1.5 h-1.5 rounded-full ${c.dot} animate-pulse`} />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
@@ -76,14 +106,21 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 
 // ─── Avatar ─────────────────────────────────────────────────────
 const Avatar: React.FC<{ name: string; isPro?: boolean }> = ({ name, isPro }) => {
-  const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const initials = name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
   return (
     <div className="relative">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
-        isPro
-          ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/20'
-          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-      }`}>
+      <div
+        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+          isPro
+            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/20'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+        }`}
+      >
         {initials}
       </div>
       {isPro && (
@@ -96,7 +133,12 @@ const Avatar: React.FC<{ name: string; isPro?: boolean }> = ({ name, isPro }) =>
 };
 
 // ─── Empty State ────────────────────────────────────────────────
-const EmptyState: React.FC<{ icon: React.ReactNode; title: string; subtitle: string; isLoading?: boolean }> = ({ icon, title, subtitle, isLoading }) => (
+const EmptyState: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  isLoading?: boolean;
+}> = ({ icon, title, subtitle, isLoading }) => (
   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
     <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center mb-4">
       {icon}
@@ -111,7 +153,11 @@ const EmptyState: React.FC<{ icon: React.ReactNode; title: string; subtitle: str
 );
 
 // ─── Search Bar ─────────────────────────────────────────────────
-const SearchBar: React.FC<{ value: string; onChange: (v: string) => void; placeholder: string }> = ({ value, onChange, placeholder }) => (
+const SearchBar: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}> = ({ value, onChange, placeholder }) => (
   <div className="relative flex-1">
     <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
     <input
@@ -122,7 +168,10 @@ const SearchBar: React.FC<{ value: string; onChange: (v: string) => void; placeh
       className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
     />
     {value && (
-      <button onClick={() => onChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+      <button
+        onClick={() => onChange('')}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+      >
         <X className="w-3.5 h-3.5" />
       </button>
     )}
@@ -348,16 +397,23 @@ export const AdminSubscriptions: React.FC = () => {
 
   // ─── Computed Stats ─────────────────────────────────────────
   const stats = useMemo(() => {
-    const activeSubs = subscriptions.filter(s => s.status === 'active').length;
-    const expiredSubs = subscriptions.filter(s => s.status === 'expired').length;
-    const totalRevenue = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
-    const proStudents = students.filter(s => s.isPro).length;
+    const activeSubs = subscriptions.filter((s) => s.status === 'active').length;
+    const expiredSubs = subscriptions.filter((s) => s.status === 'expired').length;
+    const totalRevenue = payments
+      .filter((p) => p.status === 'completed')
+      .reduce((sum, p) => sum + p.amount, 0);
+    const proStudents = students.filter((s) => s.isPro).length;
     return { activeSubs, expiredSubs, totalRevenue, proStudents };
   }, [subscriptions, payments, students]);
 
   // ─── Tab Config ─────────────────────────────────────────────
   const tabs = [
-    { key: 'subscriptions' as const, label: 'Active Subs', icon: CreditCard, count: subscriptions.length },
+    {
+      key: 'subscriptions' as const,
+      label: 'Active Subs',
+      icon: CreditCard,
+      count: subscriptions.length,
+    },
     { key: 'students' as const, label: 'Students', icon: Users, count: students.length },
     { key: 'payments' as const, label: 'Payments', icon: Receipt, count: payments.length },
     { key: 'plans' as const, label: 'Plans', icon: Layers, count: plans.length },
@@ -409,7 +465,7 @@ export const AdminSubscriptions: React.FC = () => {
         <StatCard
           icon={<Layers className="w-5 h-5 text-white" />}
           label="Active Plans"
-          value={plans.filter(p => p.isActive).length}
+          value={plans.filter((p) => p.isActive).length}
           subtitle={`${plans.length} total configured`}
           gradient="bg-gradient-to-br from-slate-600 to-slate-700 dark:from-slate-700 dark:to-slate-800"
           iconBg="bg-white/20"
@@ -419,7 +475,7 @@ export const AdminSubscriptions: React.FC = () => {
       {/* ─── Tab Navigation ────────────────────────────────── */}
       <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 p-1.5 shadow-sm">
         <div className="flex gap-1">
-          {tabs.map(tab => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
             return (
@@ -434,11 +490,13 @@ export const AdminSubscriptions: React.FC = () => {
               >
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
-                <span className={`text-[11px] rounded-md px-1.5 py-0.5 font-bold ${
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                }`}>
+                <span
+                  className={`text-[11px] rounded-md px-1.5 py-0.5 font-bold ${
+                    isActive
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  }`}
+                >
                   {tab.count}
                 </span>
               </button>
@@ -454,7 +512,11 @@ export const AdminSubscriptions: React.FC = () => {
         <div className="space-y-4">
           {/* Filters & Search */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <SearchBar value={subSearch} onChange={setSubSearch} placeholder="Search by name or email..." />
+            <SearchBar
+              value={subSearch}
+              onChange={setSubSearch}
+              placeholder="Search by name or email..."
+            />
             <div className="flex gap-2">
               <div className="relative">
                 <select
@@ -475,7 +537,9 @@ export const AdminSubscriptions: React.FC = () => {
                 className="p-2.5 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600/50 transition-all"
                 title="Refresh"
               >
-                <RefreshCw className={`w-4 h-4 ${subLoading ? 'animate-spin text-indigo-500' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${subLoading ? 'animate-spin text-indigo-500' : ''}`}
+                />
               </button>
             </div>
           </div>
@@ -486,12 +550,24 @@ export const AdminSubscriptions: React.FC = () => {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50/80 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700/50">
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Student</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Plan</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Period</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Days Left</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Payment Ref</th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Plan
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Period
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Days Left
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Payment Ref
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -508,15 +584,24 @@ export const AdminSubscriptions: React.FC = () => {
                     </tr>
                   ) : (
                     subscriptions.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors group">
+                      <tr
+                        key={sub.id}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors group"
+                      >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <Avatar name={sub.studentName} isPro={sub.status === 'active'} />
                             <div className="min-w-0">
-                              <div className="font-semibold text-slate-900 dark:text-white text-sm">{sub.studentName}</div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{sub.studentEmail}</div>
+                              <div className="font-semibold text-slate-900 dark:text-white text-sm">
+                                {sub.studentName}
+                              </div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                {sub.studentEmail}
+                              </div>
                               {sub.studentPhone && (
-                                <div className="text-[11px] text-slate-400 dark:text-slate-500">{sub.studentPhone}</div>
+                                <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                                  {sub.studentPhone}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -532,10 +617,18 @@ export const AdminSubscriptions: React.FC = () => {
                         </td>
                         <td className="px-5 py-4">
                           <div className="text-xs text-slate-600 dark:text-slate-300">
-                            {new Date(sub.startsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                            {new Date(sub.startsAt).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                            })}
                           </div>
                           <div className="text-[11px] text-slate-400 dark:text-slate-500">
-                            to {new Date(sub.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            to{' '}
+                            {new Date(sub.expiresAt).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
                           </div>
                         </td>
                         <td className="px-5 py-4">
@@ -544,10 +637,14 @@ export const AdminSubscriptions: React.FC = () => {
                               <div className="w-16 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                                 <div
                                   className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all"
-                                  style={{ width: `${Math.min(100, (sub.daysRemaining / 365) * 100)}%` }}
+                                  style={{
+                                    width: `${Math.min(100, (sub.daysRemaining / 365) * 100)}%`,
+                                  }}
                                 />
                               </div>
-                              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{sub.daysRemaining}d</span>
+                              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                {sub.daysRemaining}d
+                              </span>
                             </div>
                           ) : (
                             <span className="text-xs text-slate-400">Expired</span>
@@ -574,7 +671,11 @@ export const AdminSubscriptions: React.FC = () => {
       {activeTab === 'students' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            <SearchBar value={studentSearch} onChange={setStudentSearch} placeholder="Search student by name or email..." />
+            <SearchBar
+              value={studentSearch}
+              onChange={setStudentSearch}
+              placeholder="Search student by name or email..."
+            />
             <div className="flex gap-2">
               <div className="relative">
                 <select
@@ -594,7 +695,9 @@ export const AdminSubscriptions: React.FC = () => {
                 className="p-2.5 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600/50 transition-all"
                 title="Refresh"
               >
-                <RefreshCw className={`w-4 h-4 ${studentLoading ? 'animate-spin text-indigo-500' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${studentLoading ? 'animate-spin text-indigo-500' : ''}`}
+                />
               </button>
             </div>
           </div>
@@ -605,12 +708,24 @@ export const AdminSubscriptions: React.FC = () => {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50/80 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700/50">
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Student</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Membership</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Plan</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Expiry</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Registered</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Membership
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Plan
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Expiry
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Registered
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -627,14 +742,23 @@ export const AdminSubscriptions: React.FC = () => {
                     </tr>
                   ) : (
                     students.map((st) => (
-                      <tr key={st.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                      <tr
+                        key={st.id}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                      >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <Avatar name={st.fullName || 'Student'} isPro={st.isPro} />
                             <div className="min-w-0">
-                              <div className="font-semibold text-slate-900 dark:text-white text-sm truncate">{st.fullName}</div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{st.email}</div>
-                              {st.phone && <div className="text-[11px] text-slate-400">{st.phone}</div>}
+                              <div className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                                {st.fullName}
+                              </div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                {st.email}
+                              </div>
+                              {st.phone && (
+                                <div className="text-[11px] text-slate-400">{st.phone}</div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -655,17 +779,23 @@ export const AdminSubscriptions: React.FC = () => {
                           {st.planTitle || (st.isPro ? 'Pro Pass' : '—')}
                         </td>
                         <td className="px-5 py-4 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                          {st.expiresAt
-                            ? new Date(st.expiresAt).toLocaleDateString('en-IN', {
-                                day: 'numeric', month: 'short', year: 'numeric',
-                              })
-                            : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          {st.expiresAt ? (
+                            new Date(st.expiresAt).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })
+                          ) : (
+                            <span className="text-slate-300 dark:text-slate-600">—</span>
+                          )}
                         </td>
                         <td className="px-5 py-4 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-3 h-3" />
                             {new Date(st.createdAt).toLocaleDateString('en-IN', {
-                              day: 'numeric', month: 'short', year: 'numeric',
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
                             })}
                           </div>
                         </td>
@@ -699,7 +829,11 @@ export const AdminSubscriptions: React.FC = () => {
       {activeTab === 'payments' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            <SearchBar value={paySearch} onChange={setPaySearch} placeholder="Search by student name, order ID, or payment ID..." />
+            <SearchBar
+              value={paySearch}
+              onChange={setPaySearch}
+              placeholder="Search by student name, order ID, or payment ID..."
+            />
             <div className="flex gap-2">
               <div className="relative">
                 <select
@@ -720,7 +854,9 @@ export const AdminSubscriptions: React.FC = () => {
                 className="p-2.5 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600/50 transition-all"
                 title="Refresh"
               >
-                <RefreshCw className={`w-4 h-4 ${payLoading ? 'animate-spin text-indigo-500' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${payLoading ? 'animate-spin text-indigo-500' : ''}`}
+                />
               </button>
             </div>
           </div>
@@ -731,13 +867,27 @@ export const AdminSubscriptions: React.FC = () => {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50/80 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700/50">
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Student</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Plan</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Amount</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gateway</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Transaction</th>
-                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Plan
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Gateway
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Transaction
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -754,17 +904,23 @@ export const AdminSubscriptions: React.FC = () => {
                     </tr>
                   ) : (
                     payments.map((p) => (
-                      <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                      <tr
+                        key={p.id}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                      >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                             <Clock className="w-3 h-3" />
                             {new Date(p.createdAt).toLocaleDateString('en-IN', {
-                              day: 'numeric', month: 'short', year: 'numeric',
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
                             })}
                           </div>
                           <div className="text-[11px] text-slate-400 dark:text-slate-500">
                             {new Date(p.createdAt).toLocaleTimeString('en-IN', {
-                              hour: '2-digit', minute: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
                             })}
                           </div>
                         </td>
@@ -772,8 +928,12 @@ export const AdminSubscriptions: React.FC = () => {
                           <div className="flex items-center gap-2.5">
                             <Avatar name={p.studentName} />
                             <div className="min-w-0">
-                              <div className="font-semibold text-slate-900 dark:text-white text-sm">{p.studentName}</div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{p.studentEmail}</div>
+                              <div className="font-semibold text-slate-900 dark:text-white text-sm">
+                                {p.studentName}
+                              </div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                {p.studentEmail}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -822,7 +982,9 @@ export const AdminSubscriptions: React.FC = () => {
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Subscription Plans</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Subscription Plans
+              </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Configure pricing, durations, and features for student passes
               </p>
@@ -851,14 +1013,20 @@ export const AdminSubscriptions: React.FC = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="text-base font-bold text-slate-900 dark:text-white">{p.title}</h4>
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                          {p.title}
+                        </h4>
                         {p.isActive ? (
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         ) : (
-                          <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">OFF</span>
+                          <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                            OFF
+                          </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{p.description}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {p.description}
+                      </p>
                     </div>
                     <button
                       onClick={() => handleOpenEditPlan(p)}
@@ -870,16 +1038,24 @@ export const AdminSubscriptions: React.FC = () => {
 
                   {/* Price */}
                   <div className="flex items-end gap-2 mb-4">
-                    <span className="text-3xl font-black text-slate-900 dark:text-white">₹{p.price}</span>
+                    <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      ₹{p.price}
+                    </span>
                     {p.originalPrice && (
-                      <span className="text-sm text-slate-400 line-through mb-1">₹{p.originalPrice}</span>
+                      <span className="text-sm text-slate-400 line-through mb-1">
+                        ₹{p.originalPrice}
+                      </span>
                     )}
-                    <span className="text-xs text-slate-500 dark:text-slate-400 mb-1">/ {p.durationDays} days</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      / {p.durationDays} days
+                    </span>
                   </div>
 
                   {/* Meta */}
                   <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-slate-500 mb-4">
-                    <span className="font-mono bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-md">{p.id}</span>
+                    <span className="font-mono bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-md">
+                      {p.id}
+                    </span>
                     <span>{p.currency || 'INR'}</span>
                   </div>
                 </div>
@@ -887,10 +1063,15 @@ export const AdminSubscriptions: React.FC = () => {
                 {/* Features */}
                 <div className="px-5 pb-5 pt-0">
                   <div className="border-t border-slate-100 dark:border-slate-800/50 pt-4">
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Features</p>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">
+                      Features
+                    </p>
                     <ul className="space-y-2">
                       {p.features.map((f, idx) => (
-                        <li key={idx} className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                        <li
+                          key={idx}
+                          className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300"
+                        >
                           <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                           <span>{f}</span>
                         </li>
@@ -963,13 +1144,17 @@ export const AdminSubscriptions: React.FC = () => {
               <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50">
                 <Avatar name={grantModalStudent.fullName || 'Student'} />
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{grantModalStudent.fullName}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                    {grantModalStudent.fullName}
+                  </p>
                   <p className="text-xs text-slate-500">{grantModalStudent.email}</p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Select Plan</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                  Select Plan
+                </label>
                 <div className="relative">
                   <select
                     value={grantPlanId}
@@ -987,7 +1172,9 @@ export const AdminSubscriptions: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Duration (Days)</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                  Duration (Days)
+                </label>
                 <input
                   type="number"
                   min={1}
@@ -1052,7 +1239,9 @@ export const AdminSubscriptions: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Plan ID *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                    Plan ID *
+                  </label>
                   <input
                     type="text"
                     required
@@ -1063,7 +1252,9 @@ export const AdminSubscriptions: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Plan Title *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                    Plan Title *
+                  </label>
                   <input
                     type="text"
                     required
@@ -1075,7 +1266,9 @@ export const AdminSubscriptions: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Description</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                  Description
+                </label>
                 <input
                   type="text"
                   value={planDesc}
@@ -1086,7 +1279,9 @@ export const AdminSubscriptions: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Price (₹) *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                    Price (₹) *
+                  </label>
                   <input
                     type="number"
                     min={0}
@@ -1097,7 +1292,9 @@ export const AdminSubscriptions: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Orig. Price (₹)</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                    Orig. Price (₹)
+                  </label>
                   <input
                     type="number"
                     min={0}
@@ -1107,7 +1304,9 @@ export const AdminSubscriptions: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Days *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                    Days *
+                  </label>
                   <input
                     type="number"
                     min={1}
@@ -1120,7 +1319,9 @@ export const AdminSubscriptions: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Features (one per line)</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                  Features (one per line)
+                </label>
                 <textarea
                   rows={4}
                   value={planFeaturesText}
@@ -1140,7 +1341,9 @@ export const AdminSubscriptions: React.FC = () => {
                   <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-checked:bg-indigo-500 rounded-full transition-colors" />
                   <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-4 transition-transform" />
                 </div>
-                <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">Plan is active & visible</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                  Plan is active & visible
+                </span>
               </label>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700/50">
