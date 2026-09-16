@@ -9,6 +9,9 @@ describe('authentication policy', () => {
     expect(resolveDemoRole('not-admin@example.com')).toBe('student');
     expect(resolveDemoRole('admin.attacker@example.com')).toBe('student');
   });
-  it('accepts exact demo admin', () =>
-    expect(resolveDemoRole('ADMIN@PRACTICEKORO.COM')).toBe('admin'));
+  it('accepts exact demo admin', () => {
+    expect(resolveDemoRole('ADMIN@PRACTICEKORO.COM')).toBe('admin');
+    expect(resolveDemoRole('admin@practicekoro.online')).toBe('admin');
+    expect(resolveDemoRole('ADMIN@PRACTICEKORO.ONLINE')).toBe('admin');
+  });
 });

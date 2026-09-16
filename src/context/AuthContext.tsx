@@ -4,7 +4,7 @@ import {
   isSupabaseConfigured,
   isDemoModeEnabled,
 } from '@/lib/supabase';
-import { canRestoreCachedUser, resolveDemoRole } from '@/lib/authPolicy';
+import { canRestoreCachedUser, resolveDemoRole, isAdminEmail } from '@/lib/authPolicy';
 import { MOCK_STUDENT_USER, MOCK_ADMIN_USER } from '@/services/mockData';
 import type { Database } from '@/types/database';
 import type { UserProfile, UserRole } from '@/types';
@@ -75,8 +75,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         let profile = profileRes.data as ProfileRow | null;
         const userRoles = (rolesRes.data as { role: string }[] | null) || [];
-        const isAdminUser = userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
+        const isEmailAdmin = isAdminEmail(supabaseUser.email);
+        const isAdminUser =
+          userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin' || isEmailAdmin;
         const effectiveRole: UserRole = isAdminUser ? 'admin' : profile?.role || 'student';
+
+        // Automatically synchronize admin role in database if authorized admin email logs in
+        if (
+          isEmailAdmin &&
+          (profile?.role !== 'admin' || !userRoles.some((r) => r.role === 'admin'))
+        ) {
+          try {
+            await Promise.all([
+              supabase
+                .from('user_roles')
+                .upsert(
+                  { user_id: supabaseUser.id, role: 'admin' },
+                  { onConflict: 'user_id,role' }
+                ),
+              supabase.from('profiles').update({ role: 'admin' }).eq('id', supabaseUser.id),
+            ]);
+            if (profile) profile.role = 'admin';
+          } catch (promoteErr) {
+            console.warn('Auto admin promotion sync warning:', promoteErr);
+          }
+        }
 
         const meta = supabaseUser.user_metadata || {};
         const metaFullName = ((meta.full_name || meta.name || '') as string).trim();
@@ -233,8 +256,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const profile = profileRes.data as ProfileRow | null;
         const userRoles = (rolesRes.data as { role: string }[] | null) || [];
-        const isAdminUser = userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
+        const isEmailAdmin = isAdminEmail(email) || isAdminEmail(data.user.email);
+        const isAdminUser =
+          userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin' || isEmailAdmin;
         authenticatedRole = isAdminUser ? 'admin' : profile?.role || 'student';
+
+        if (
+          isEmailAdmin &&
+          (profile?.role !== 'admin' || !userRoles.some((r) => r.role === 'admin'))
+        ) {
+          try {
+            await Promise.all([
+              supabase
+                .from('user_roles')
+                .upsert({ user_id: data.user.id, role: 'admin' }, { onConflict: 'user_id,role' }),
+              supabase.from('profiles').update({ role: 'admin' }).eq('id', data.user.id),
+            ]);
+            if (profile) profile.role = 'admin';
+          } catch (promoteErr) {
+            console.warn('Auto admin promotion sync warning:', promoteErr);
+          }
+        }
 
         const userObj: UserProfile = {
           id: profile?.id || data.user.id,
