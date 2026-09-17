@@ -19,6 +19,12 @@ export const AdminQuestions: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+  // Server-side pagination
+  const PAGE_SIZE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(totalQuestions / PAGE_SIZE));
+
   // Question Form Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -65,30 +71,47 @@ export const AdminQuestions: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [allSubjects, allChapters, allQuestions] = await Promise.all([
+      const [allSubjects, allChapters, pageResult] = await Promise.all([
         api.getAllAdminSubjects(),
         api.getAllAdminChapters(),
-        api.getAllAdminQuestions({
-          subjectId: selectedSubjectId || undefined,
-          chapterId: selectedChapterId || undefined,
-          sourceType: selectedSourceType !== 'all' ? selectedSourceType : undefined,
-          status: selectedStatus || undefined,
-          search: searchTerm || undefined,
-        }),
+        api.getAdminQuestionsPaged(
+          {
+            subjectId: selectedSubjectId || undefined,
+            chapterId: selectedChapterId || undefined,
+            sourceType: selectedSourceType !== 'all' ? selectedSourceType : undefined,
+            status: selectedStatus || undefined,
+            search: searchTerm || undefined,
+          },
+          currentPage,
+          PAGE_SIZE
+        ),
       ]);
       setSubjects(allSubjects);
       setChapters(allChapters);
-      setQuestions(allQuestions);
+      setQuestions(pageResult.questions);
+      setTotalQuestions(pageResult.total);
     } catch (err) {
       console.error('Error loading questions:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedSubjectId, selectedChapterId, selectedSourceType, selectedStatus, searchTerm]);
+  }, [
+    selectedSubjectId,
+    selectedChapterId,
+    selectedSourceType,
+    selectedStatus,
+    searchTerm,
+    currentPage,
+  ]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedSubjectId, selectedChapterId, selectedSourceType, selectedStatus, searchTerm]);
 
   // Load exams & tests once for the unified upload destination picker
   useEffect(() => {
@@ -622,6 +645,43 @@ export const AdminQuestions: React.FC = () => {
           ))
         )}
       </div>
+
+      {/* Server-side Pagination */}
+      {totalQuestions > PAGE_SIZE && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800">
+          <span className="text-xs text-slate-400 font-semibold">
+            Showing{' '}
+            <span className="text-slate-200 font-mono">
+              {(currentPage - 1) * PAGE_SIZE + 1}–
+              {Math.min(currentPage * PAGE_SIZE, totalQuestions)}
+            </span>{' '}
+            of <span className="text-purple-400 font-mono">{totalQuestions}</span> questions
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="border-slate-700 text-xs"
+            >
+              ← Prev
+            </Button>
+            <span className="text-xs text-slate-300 font-mono px-2">
+              Page {currentPage} / {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="border-slate-700 text-xs"
+            >
+              Next →
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Create / Edit Question Modal */}
       {isModalOpen && (
