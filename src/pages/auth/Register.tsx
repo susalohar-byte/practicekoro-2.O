@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { isAdminEmail } from '@/lib/authPolicy';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { GoogleIcon } from '@/components/common/GoogleIcon';
@@ -48,7 +47,8 @@ export const Register: React.FC = () => {
     if (res.error) {
       setError(res.error.message);
     } else {
-      if (res.role === 'admin' || isAdminEmail(email) || email.toLowerCase().includes('admin')) {
+      // Registration always creates student accounts; admin is DB-only
+      if (res.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });

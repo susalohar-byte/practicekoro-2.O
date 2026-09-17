@@ -1,17 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { canRestoreCachedUser, resolveDemoRole } from './authPolicy';
+import { isAdminEmail, ADMIN_EMAILS } from './authPolicy';
+
 describe('authentication policy', () => {
-  it('restores cache only in demo mode', () => {
-    expect(canRestoreCachedUser(true)).toBe(true);
-    expect(canRestoreCachedUser(false)).toBe(false);
+  it('defines trusted admin emails', () => {
+    expect(ADMIN_EMAILS).toContain('admin@practicekoro.com');
+    expect(ADMIN_EMAILS).toContain('admin@practicekoro.online');
   });
-  it('blocks partial admin matches', () => {
-    expect(resolveDemoRole('not-admin@example.com')).toBe('student');
-    expect(resolveDemoRole('admin.attacker@example.com')).toBe('student');
+
+  it('blocks non-admin or partial admin matches', () => {
+    expect(isAdminEmail(null)).toBe(false);
+    expect(isAdminEmail(undefined)).toBe(false);
+    expect(isAdminEmail('')).toBe(false);
+    expect(isAdminEmail('not-admin@example.com')).toBe(false);
+    expect(isAdminEmail('admin.attacker@example.com')).toBe(false);
+    expect(isAdminEmail('admin@practicekoro.com.fake')).toBe(false);
+    expect(isAdminEmail('student@practicekoro.online')).toBe(false);
   });
-  it('accepts exact demo admin', () => {
-    expect(resolveDemoRole('ADMIN@PRACTICEKORO.COM')).toBe('admin');
-    expect(resolveDemoRole('admin@practicekoro.online')).toBe('admin');
-    expect(resolveDemoRole('ADMIN@PRACTICEKORO.ONLINE')).toBe('admin');
+
+  it('accepts authorized admin emails case-insensitively', () => {
+    expect(isAdminEmail('admin@practicekoro.com')).toBe(true);
+    expect(isAdminEmail('ADMIN@PRACTICEKORO.COM')).toBe(true);
+    expect(isAdminEmail('admin@practicekoro.online')).toBe(true);
+    expect(isAdminEmail('ADMIN@PRACTICEKORO.ONLINE')).toBe(true);
+    expect(isAdminEmail('  admin@practicekoro.online  ')).toBe(true);
   });
 });

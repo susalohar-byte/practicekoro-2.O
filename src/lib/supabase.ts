@@ -11,9 +11,6 @@ export const isSupabaseConfigured = Boolean(
   !supabaseUrl.includes('your-project-ref')
 );
 
-export const isDemoModeEnabled =
-  import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_MODE === 'true';
-
 // Create client with fallback dummy values to prevent crashing if unconfigured
 export const supabase = createClient<Database>(
   isSupabaseConfigured ? supabaseUrl : 'https://placeholder-project.supabase.co',
