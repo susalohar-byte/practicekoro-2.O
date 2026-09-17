@@ -19,9 +19,8 @@ export interface CsvParseResult {
 export type QuestionImportFormat = 'csv' | 'text';
 
 /**
- * Normalizes an explanation into a strict 2-5 bullet-point format.
- * Each point must be useful for clearing the candidate's doubt about the
- * question, correct answer, or the options/distractors.
+ * Normalizes an explanation into a consistent bullet-point format.
+ * It only formats the supplied content; it never invents new facts.
  */
 export function normalizeExplanationBullets(value: string | undefined | null): string {
   if (!value?.trim()) return '';
@@ -38,28 +37,24 @@ export function normalizeExplanationBullets(value: string | undefined | null): s
 
   if (cleaned.length === 0) return '';
 
-  // Preserve the first 5 meaningful explanation points. Existing single-line
-  // explanations are kept as the first point until the content is enriched.
   return cleaned.slice(0, 5).map((line) => `• ${line}`).join('\n');
 }
 
 /**
- * Validates the explanation format used by uploads.
- * We require 2-5 separate, meaningful bullet points so imported content does
- * not silently regress to one-line explanations.
+ * Validates a supplied explanation. Explanations are optional for backwards
+ * compatibility, but when present they must contain 2-5 meaningful bullets.
  */
 export function validateExplanationBullets(value: string | undefined | null): string[] {
-  const errors: string[] = [];
+  if (!value?.trim()) return [];
+
   const normalized = normalizeExplanationBullets(value);
-
-  if (!normalized) {
-    errors.push('Explanation is required and must contain 2-5 bullet points.');
-    return errors;
-  }
-
   const bullets = normalized.split('\n').filter(Boolean);
+  const errors: string[] = [];
+
   if (bullets.length < 2) {
-    errors.push('Explanation must contain at least 2 bullet points. Add question/option-related important facts.');
+    errors.push(
+      'Explanation must contain at least 2 bullet points. Add important facts related to the question, correct answer, or confusing options.'
+    );
   }
   if (bullets.length > 5) {
     errors.push('Explanation must contain no more than 5 bullet points.');
@@ -85,6 +80,7 @@ export function parseCsvRaw(csvText: string): string[][] {
 
     if (char === '"') {
       if (insideQuotes && nextChar === '"') {
+        // Escaped double quote
         currentField += '"';
         i++;
       } else {
@@ -95,6 +91,7 @@ export function parseCsvRaw(csvText: string): string[][] {
       currentField = '';
     } else if (char === '\n' && !insideQuotes) {
       currentRow.push(currentField.trim());
+      // Only push non-empty rows
       if (currentRow.some((field) => field.length > 0)) {
         rows.push(currentRow);
       }
@@ -105,6 +102,7 @@ export function parseCsvRaw(csvText: string): string[][] {
     }
   }
 
+  // Handle final field/row if not followed by newline
   if (currentField.length > 0 || currentRow.length > 0) {
     currentRow.push(currentField.trim());
     if (currentRow.some((field) => field.length > 0)) {
@@ -115,10 +113,16 @@ export function parseCsvRaw(csvText: string): string[][] {
   return rows;
 }
 
+/**
+ * Normalizes header string to lowercase alphanumeric representation
+ */
 function normalizeHeader(header: string): string {
   return header.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/**
+ * Validates and maps CSV rows into Question objects
+ */
 export function parseQuestionsCsv(
   csvContent: string,
   defaults?: { defaultSubjectId?: string; defaultChapterId?: string }
@@ -143,10 +147,13 @@ export function parseQuestionsCsv(
     headerMap.set(normalizeHeader(h), index);
   });
 
+  // Find column index helper
   const getCol = (possibleNames: string[]): number => {
     for (const name of possibleNames) {
       const norm = normalizeHeader(name);
-      if (headerMap.has(norm)) return headerMap.get(norm)!;
+      if (headerMap.has(norm)) {
+        return headerMap.get(norm)!;
+      }
     }
     return -1;
   };
@@ -171,11 +178,18 @@ export function parseQuestionsCsv(
   const colChapterId = getCol(['chapter_id', 'chapterid']);
 
   const errors: string[] = [];
-  if (colQuestionText === -1) errors.push('Missing required column: "question_text"');
-  if (colOptA === -1 || colOptB === -1 || colOptC === -1 || colOptD === -1) {
-    errors.push('Missing one or more required option columns: "option_a", "option_b", "option_c", "option_d"');
+
+  if (colQuestionText === -1) {
+    errors.push('Missing required column: "question_text"');
   }
-  if (colCorrect === -1) errors.push('Missing required column: "correct_option"');
+  if (colOptA === -1 || colOptB === -1 || colOptC === -1 || colOptD === -1) {
+    errors.push(
+      'Missing one or more required option columns: "option_a", "option_b", "option_c", "option_d"'
+    );
+  }
+  if (colCorrect === -1) {
+    errors.push('Missing required column: "correct_option"');
+  }
 
   if (errors.length > 0) {
     return {
@@ -194,8 +208,10 @@ export function parseQuestionsCsv(
   for (let r = 1; r < rawRows.length; r++) {
     const row = rawRows[r];
     const rowErrors: string[] = [];
-    const getVal = (colIndex: number): string =>
-      colIndex >= 0 && colIndex < row.length ? row[colIndex].trim() : '';
+
+    const getVal = (colIndex: number): string => {
+      return colIndex >= 0 && colIndex < row.length ? row[colIndex].trim() : '';
+    };
 
     const questionText = getVal(colQuestionText);
     const questionBengali = getVal(colQuestionBengali);
@@ -211,7 +227,9 @@ export function parseQuestionsCsv(
     const rowSubjectId = getVal(colSubjectId) || defaults?.defaultSubjectId;
     const rowChapterId = getVal(colChapterId) || defaults?.defaultChapterId;
 
-    if (!questionText) rowErrors.push('Question text is empty');
+    if (!questionText) {
+      rowErrors.push('Question text is empty');
+    }
     if (!optionA) rowErrors.push('Option A is empty');
     if (!optionB) rowErrors.push('Option B is empty');
     if (!optionC) rowErrors.push('Option C is empty');
@@ -224,8 +242,8 @@ export function parseQuestionsCsv(
       correctOption = rawCorrect as 'A' | 'B' | 'C' | 'D';
     }
 
-    rowErrors.push(...validateExplanationBullets(explanation));
-    rowErrors.push(...validateExplanationBullets(explanationBengali));
+    if (explanation) rowErrors.push(...validateExplanationBullets(explanation));
+    if (explanationBengali) rowErrors.push(...validateExplanationBullets(explanationBengali));
 
     const marks = rawMarks ? parseFloat(rawMarks) || 1.0 : 1.0;
     const negativeMarks = rawNegativeMarks ? parseFloat(rawNegativeMarks) || 0.25 : 0.25;
@@ -249,8 +267,17 @@ export function parseQuestionsCsv(
     };
 
     const isValid = rowErrors.length === 0;
-    parsedRows.push({ rowNumber: r + 1, data, isValid, errors: rowErrors });
-    if (isValid) validQuestions.push(data);
+
+    parsedRows.push({
+      rowNumber: r + 1,
+      data,
+      isValid,
+      errors: rowErrors,
+    });
+
+    if (isValid) {
+      validQuestions.push(data);
+    }
   }
 
   const validCount = parsedRows.filter((p) => p.isValid).length;
@@ -263,12 +290,33 @@ export function parseQuestionsCsv(
     validCount,
     invalidCount,
     errors:
-      invalidCount > 0 ? [`${invalidCount} out of ${parsedRows.length} rows have validation errors.`] : [],
+      invalidCount > 0
+        ? [`${invalidCount} out of ${parsedRows.length} rows have validation errors.`]
+        : [],
   };
 }
 
 /**
- * Parses formatted text question blocks.
+ * Parses "formatted text" question blocks — the common study-material style:
+ *
+ *   1. প্রশ্ন টেক্সট?
+ *   (a) Option 1
+ *   (b) Option 2
+ *   (c) Option 3
+ *   (d) Option 4
+ *   সঠিক উত্তর: (b)
+ *
+ *   Explanation:
+ *   - line one
+ *   - line two
+ *
+ * Rules:
+ *  - Blocks are separated by one or more blank lines.
+ *  - Option lines: (a)/(b)/(c)/(d) with ). or : separators, case-insensitive.
+ *  - Answer line: contains "সঠিক উত্তর", "উত্তর", "correct answer" or "answer"
+ *    with the letter inside (x) or after a separator.
+ *  - Explanation: everything after an "Explanation"/"ব্যাখ্যা" marker line.
+ *  - Leading question numbering ("1.", "12)") is stripped.
  */
 export function parseQuestionsText(
   text: string,
@@ -280,6 +328,7 @@ export function parseQuestionsText(
     .map((b) => b.trim())
     .filter((b) => b.length > 0);
 
+  // If a block starts with "Explanation:" or "ব্যাখ্যা:", merge it into the preceding question block
   const blocks: string[] = [];
   for (const b of rawBlocks) {
     if (blocks.length > 0 && /^(explanation|ব্যাখ্যা)/i.test(b)) {
@@ -296,6 +345,7 @@ export function parseQuestionsText(
   blocks.forEach((block, blockIdx) => {
     const lines = block.split('\n').map((l) => l.trim());
     const rowErrors: string[] = [];
+
     const questionLines: string[] = [];
     const options: Record<'A' | 'B' | 'C' | 'D', string> = { A: '', B: '', C: '', D: '' };
     let correctOption: 'A' | 'B' | 'C' | 'D' | null = null;
@@ -309,16 +359,18 @@ export function parseQuestionsText(
     for (const line of lines) {
       if (!line) continue;
 
+      // Explanation marker line
       if (
         /^(explanation|ব্যাখ্যা)\s*[:-]?$/i.test(line) ||
         /^(explanation|ব্যাখ্যা)\s*[:-]/i.test(line)
       ) {
         inExplanation = true;
         const inline = line.replace(/^(explanation|ব্যাখ্যা)\s*[:-]?\s*/i, '').trim();
-        if (inline) explanationLines.push(inline.replace(/^[-•*]\s*/, ''));
+        if (inline) explanationLines.push(inline);
         continue;
       }
 
+      // Answer line
       const answerMatch = line.match(answerRegex);
       if (answerMatch && !inExplanation) {
         const letterMatch =
@@ -333,28 +385,35 @@ export function parseQuestionsText(
         continue;
       }
 
+      // Option line
       const optionMatch = line.match(optionRegex);
       if (optionMatch && !inExplanation) {
         const key = optionMatch[1].toUpperCase() as 'A' | 'B' | 'C' | 'D';
-        if (seenOptions.has(key)) rowErrors.push(`Duplicate option "${key}"`);
+        if (seenOptions.has(key)) {
+          rowErrors.push(`Duplicate option "${key}"`);
+        }
         seenOptions.add(key);
         options[key] = optionMatch[2].trim();
         continue;
       }
 
       if (inExplanation) {
-        explanationLines.push(line.replace(/^[-•*]\s*/, '').trim());
+        explanationLines.push(line.replace(/^[-•*]\s*/, ''));
       } else {
         questionLines.push(line);
       }
     }
 
+    // Join question text and strip leading numbering ("1." / "12)")
     const questionText = questionLines
       .join(' ')
       .replace(/^\s*\d+\s*[.)]\s*/, '')
       .trim();
 
-    if (!questionText) rowErrors.push('Question text is empty');
+    // Validation
+    if (!questionText) {
+      rowErrors.push('Question text is empty');
+    }
     (['A', 'B', 'C', 'D'] as const).forEach((k) => {
       if (!options[k]) rowErrors.push(`Option ${k} is empty`);
     });
@@ -362,12 +421,13 @@ export function parseQuestionsText(
       rowErrors.push('Correct answer missing — add a line like "সঠিক উত্তর: (b)"');
     }
 
+    // Duplicate-block safety: identical question text in the same paste
     if (questionText && validQuestions.some((q) => q.questionText === questionText)) {
       rowErrors.push('Duplicate question text within this import');
     }
 
     const explanation = normalizeExplanationBullets(explanationLines.join('\n'));
-    rowErrors.push(...validateExplanationBullets(explanation));
+    if (explanation) rowErrors.push(...validateExplanationBullets(explanation));
 
     const data: Omit<Question, 'id'> = {
       subjectId: defaults?.defaultSubjectId || undefined,
@@ -386,7 +446,12 @@ export function parseQuestionsText(
     };
 
     const isValid = rowErrors.length === 0;
-    parsedRows.push({ rowNumber: blockIdx + 1, data, isValid, errors: rowErrors });
+    parsedRows.push({
+      rowNumber: blockIdx + 1,
+      data,
+      isValid,
+      errors: rowErrors,
+    });
     if (isValid) validQuestions.push(data);
   });
 
@@ -405,7 +470,9 @@ export function parseQuestionsText(
     invalidCount,
     errors: [
       ...globalErrors,
-      ...(invalidCount > 0 ? [`${invalidCount} out of ${parsedRows.length} blocks have validation errors.`] : []),
+      ...(invalidCount > 0
+        ? [`${invalidCount} out of ${parsedRows.length} blocks have validation errors.`]
+        : []),
     ],
   };
 }
