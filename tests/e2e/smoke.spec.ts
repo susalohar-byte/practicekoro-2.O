@@ -84,19 +84,34 @@ test('student can discover a topic test and open the runner in demo mode', async
       createdAt: '2025-01-10T10:00:00Z',
     };
     localStorage.setItem('practicekoro_user', JSON.stringify(demoUser));
+    // Premium tests only render the "Start Test Now" CTA for entitled users
+    // (see useSubscription/hasAccessToTest), so seed an active Pro pass too.
+    localStorage.setItem('practicekoro_is_pro', 'true');
   });
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto('/practice');
-  await page.getByRole('button', { name: /Topic Tests/i }).click();
-  await page.getByRole('button', { name: /Indian History/i }).click();
-  await page.getByRole('button', { name: /Indus Valley Civilization/i }).click();
+  await page
+    .getByRole('button', { name: /Topic Tests/i })
+    .first()
+    .click();
+  await page
+    .getByRole('button', { name: /Indian History/i })
+    .first()
+    .click();
+  await page
+    .getByRole('button', { name: /Indus Valley Civilization/i })
+    .first()
+    .click();
   await page
     .getByRole('button', { name: /View Test/i })
     .first()
     .click();
   await expect(page).toHaveURL(/\/exams\/test-indus-01$/);
-  await page.getByRole('button', { name: /Start Test Now/i }).click();
+  await page
+    .getByRole('button', { name: /Start Test Now/i })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/exams\/test-indus-01\/runner\?attemptId=/);
   await expect(page.getByText(/Question 1/i).first()).toBeVisible();
 });
