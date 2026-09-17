@@ -9,7 +9,6 @@ import {
   Eye,
   Edit2,
   Trash2,
-  Archive,
   Download,
   CheckCircle2,
   AlertCircle,
@@ -29,6 +28,7 @@ import {
   RefreshCw,
   SlidersHorizontal,
   Copy,
+  Minus,
 } from 'lucide-react';
 import type { Question, Exam, Subject, Chapter, MockTest } from '@/types';
 import {
@@ -70,46 +70,6 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle, gradi
     </div>
   </div>
 );
-
-// ─── Status Badge Component ──────────────────────────────────────
-const StatusBadge: React.FC<{ status?: string; isActive?: boolean }> = ({ status, isActive }) => {
-  const isArchived = status === 'archived' || isActive === false;
-  return isArchived ? (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-      Archived
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-      Active
-    </span>
-  );
-};
-
-// ─── Difficulty Badge Component ──────────────────────────────────
-const DifficultyBadge: React.FC<{ difficulty?: string }> = ({ difficulty = 'medium' }) => {
-  const d = difficulty.toLowerCase();
-  if (d === 'easy') {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-        Easy (সহজ)
-      </span>
-    );
-  }
-  if (d === 'hard') {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-        Hard (কঠিন)
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-      Medium (মাঝারি)
-    </span>
-  );
-};
 
 export const AdminQuestionBank: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -175,7 +135,6 @@ export const AdminQuestionBank: React.FC = () => {
   const [singleOptC, setSingleOptC] = useState('');
   const [singleOptD, setSingleOptD] = useState('');
   const [singleCorrect, setSingleCorrect] = useState<'A' | 'B' | 'C' | 'D'>('A');
-  const [singleDifficulty, setSingleDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [singleExplanation, setSingleExplanation] = useState('');
   const [singleMarks, setSingleMarks] = useState(1.0);
   const [singleNegativeMarks, setSingleNegativeMarks] = useState(0.25);
@@ -216,7 +175,6 @@ export const AdminQuestionBank: React.FC = () => {
   const [editQOptC, setEditQOptC] = useState('');
   const [editQOptD, setEditQOptD] = useState('');
   const [editQCorrect, setEditQCorrect] = useState<'A' | 'B' | 'C' | 'D'>('A');
-  const [editQDifficulty, setEditQDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [editQExplanation, setEditQExplanation] = useState('');
   const [editQMarks, setEditQMarks] = useState(1.0);
   const [editQNegativeMarks, setEditQNegativeMarks] = useState(0.25);
@@ -475,7 +433,6 @@ export const AdminQuestionBank: React.FC = () => {
     setSingleOptC('');
     setSingleOptD('');
     setSingleCorrect('A');
-    setSingleDifficulty('medium');
     setSingleExplanation('');
     setSingleMarks(1.0);
     setSingleNegativeMarks(0.25);
@@ -537,7 +494,6 @@ export const AdminQuestionBank: React.FC = () => {
         optionD: singleOptD.trim(),
         correctOption: singleCorrect,
         explanation: singleExplanation.trim() || undefined,
-        difficulty: singleDifficulty,
         defaultMarks: singleMarks,
         defaultNegativeMarks: singleNegativeMarks,
         isActive: true,
@@ -705,7 +661,6 @@ export const AdminQuestionBank: React.FC = () => {
     setEditQOptC(q.optionC);
     setEditQOptD(q.optionD);
     setEditQCorrect((q.correctOption as any) || 'A');
-    setEditQDifficulty((q.difficulty as any) || 'medium');
     setEditQExplanation(q.explanation || '');
     setEditQMarks(q.defaultMarks || 1.0);
     setEditQNegativeMarks(q.defaultNegativeMarks || 0.25);
@@ -727,7 +682,6 @@ export const AdminQuestionBank: React.FC = () => {
         optionC: editQOptC.trim(),
         optionD: editQOptD.trim(),
         correctOption: editQCorrect,
-        difficulty: editQDifficulty,
         defaultMarks: editQMarks,
         defaultNegativeMarks: editQNegativeMarks,
         explanation: editQExplanation.trim() || undefined,
@@ -738,20 +692,6 @@ export const AdminQuestionBank: React.FC = () => {
       setEditQError(getErrorMessage(err, 'Failed to update question'));
     } finally {
       setIsUpdatingQ(false);
-    }
-  };
-
-  // Archive / Toggle Question
-  const handleArchiveQuestion = async (q: Question) => {
-    const isCurrentlyArchived = q.status === 'archived' || q.isActive === false;
-    try {
-      await api.updateQuestion(q.id, {
-        status: isCurrentlyArchived ? 'active' : 'archived',
-        isActive: isCurrentlyArchived,
-      });
-      await loadQuestions();
-    } catch (err) {
-      console.error('Failed to toggle question archive status:', err);
     }
   };
 
@@ -786,11 +726,8 @@ export const AdminQuestionBank: React.FC = () => {
       setIsDeletingQuestion(true);
       setDeleteError('');
       const ids = Array.from(selectedQuestionIds);
-      let count = 0;
-      for (const id of ids) {
-        const ok = await api.deleteQuestion(id);
-        if (ok) count++;
-      }
+      const res = await api.deleteQuestions(ids);
+      const count = res.deletedCount || ids.length;
       setQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
       setSelectedQuestionIds(new Set());
       setIsBulkDeleteModalOpen(false);
@@ -799,27 +736,6 @@ export const AdminQuestionBank: React.FC = () => {
       setDeleteError(getErrorMessage(err, 'Failed to delete selected questions'));
     } finally {
       setIsDeletingQuestion(false);
-    }
-  };
-
-  // Bulk Status Update (Active / Archived)
-  const handleBulkToggleStatus = async (targetStatus: 'active' | 'archived') => {
-    if (selectedQuestionIds.size === 0) return;
-    try {
-      setIsLoading(true);
-      const ids = Array.from(selectedQuestionIds);
-      for (const id of ids) {
-        await api.updateQuestion(id, {
-          status: targetStatus,
-          isActive: targetStatus === 'active',
-        });
-      }
-      setSelectedQuestionIds(new Set());
-      await loadQuestions();
-    } catch (err) {
-      console.error('Failed to update questions status:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -870,23 +786,6 @@ export const AdminQuestionBank: React.FC = () => {
       else next.add(id);
       return next;
     });
-  };
-
-  const toggleSelectAllVisible = () => {
-    if (paginatedQuestions.length === 0) return;
-    if (paginatedQuestions.every((q) => selectedQuestionIds.has(q.id))) {
-      setSelectedQuestionIds((prev) => {
-        const next = new Set(prev);
-        paginatedQuestions.forEach((q) => next.delete(q.id));
-        return next;
-      });
-    } else {
-      setSelectedQuestionIds((prev) => {
-        const next = new Set(prev);
-        paginatedQuestions.forEach((q) => next.add(q.id));
-        return next;
-      });
-    }
   };
 
   const toggleExpandSolution = (id: string) => {
@@ -940,65 +839,202 @@ export const AdminQuestionBank: React.FC = () => {
     return questions.slice(start, start + pageSize);
   }, [questions, currentPage, pageSize]);
 
+  // Context info for selection label (Topic, Full Mock Test, PYQ, etc.)
+  const selectionContextInfo = useMemo(() => {
+    if (selectedSource === 'topic') {
+      if (selectedTopicTestId) {
+        const t = tests.find((item) => item.id === selectedTopicTestId);
+        return {
+          type: 'Topic Test',
+          name: t ? t.title : 'Topic Test',
+        };
+      }
+      if (selectedTopicId) {
+        const c = chapters.find((item) => item.id === selectedTopicId);
+        return {
+          type: 'Topic',
+          name: c ? c.name : 'Topic',
+        };
+      }
+      if (selectedSubjectId) {
+        const s = subjects.find((item) => item.id === selectedSubjectId);
+        return {
+          type: 'Subject',
+          name: s ? s.name : 'Subject',
+        };
+      }
+      return {
+        type: 'Topic Tests',
+        name: 'Topic Tests',
+      };
+    }
+    if (selectedSource === 'exam') {
+      if (selectedExamTestId) {
+        const t = tests.find((item) => item.id === selectedExamTestId);
+        const isPyq = selectedExamType === 'pyq' || t?.testType === 'pyq';
+        return {
+          type: isPyq ? 'PYQ Paper' : 'Full Mock Test',
+          name: t ? t.paperName || t.title : isPyq ? 'PYQ' : 'Full Mock Test',
+        };
+      }
+      if (selectedExamType === 'full_mock') {
+        return {
+          type: 'Full Mock Tests',
+          name: 'Full Mock Tests',
+        };
+      }
+      if (selectedExamType === 'pyq') {
+        return {
+          type: 'PYQ Papers',
+          name: 'PYQ Papers',
+        };
+      }
+      if (selectedExamId) {
+        const e = exams.find((item) => item.id === selectedExamId);
+        return {
+          type: 'Exam',
+          name: e ? e.title : 'Exam',
+        };
+      }
+      return {
+        type: 'Exam Tests',
+        name: 'Exam Tests',
+      };
+    }
+    return {
+      type: 'Question Bank',
+      name: 'Question Bank',
+    };
+  }, [
+    selectedSource,
+    selectedTopicTestId,
+    selectedTopicId,
+    selectedSubjectId,
+    selectedExamTestId,
+    selectedExamType,
+    selectedExamId,
+    tests,
+    chapters,
+    subjects,
+    exams,
+  ]);
+
+  // Selection state helpers across all questions in topic / full mock / PYQ
+  const isAllQuestionsSelected =
+    questions.length > 0 && questions.every((q) => selectedQuestionIds.has(q.id));
+  const isAllPageSelected =
+    paginatedQuestions.length > 0 && paginatedQuestions.every((q) => selectedQuestionIds.has(q.id));
+  const isPartiallySelected = selectedQuestionIds.size > 0 && !isAllQuestionsSelected;
+
+  // Select/deselect all questions in this topic / Full Mock Test / PYQ / filtered set
+  const toggleSelectAllQuestions = () => {
+    if (questions.length === 0) return;
+    if (isAllQuestionsSelected) {
+      setSelectedQuestionIds(new Set());
+    } else {
+      setSelectedQuestionIds(new Set(questions.map((q) => q.id)));
+    }
+  };
+
+  // Select/deselect current page (visible 25)
+  const toggleSelectPage = () => {
+    if (paginatedQuestions.length === 0) return;
+    if (isAllPageSelected) {
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        paginatedQuestions.forEach((q) => next.delete(q.id));
+        return next;
+      });
+    } else {
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        paginatedQuestions.forEach((q) => next.add(q.id));
+        return next;
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* ─── Top Header with Breadcrumb & Primary Actions ─── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 shrink-0">
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Question Bank
-              </h1>
-              <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
-                Live Repository
+      {/* ─── Top Header: Redesigned Sleek Control Banner ─── */}
+      <div className="relative bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs transition-all">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+          {/* Left: Branding & Status */}
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
+            <div className="relative shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 ring-4 ring-indigo-50 dark:ring-indigo-950/40">
+                <BookOpen className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-xl">
-              Centralized repository for Bengali & English MCQs across Topic Tests, Full Mock Tests,
-              and Previous Year Papers (PYQ).
-            </p>
+
+            <div className="space-y-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  Question Bank
+                </h1>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Repository
+                </span>
+              </div>
+              <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
+                Centralized repository for Bengali & English MCQs across Topic Tests, Full Mock
+                Tests, and Previous Year Papers (PYQ).
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Global Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={() => {
-              setIsRefreshing(true);
-              loadQuestions();
-            }}
-            title="Refresh Question Records"
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
+          {/* Right: Modern Action Suite */}
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsRefreshing(true);
+                loadQuestions();
+              }}
+              title="Refresh Question Records"
+              className="h-10 w-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center transition-all shrink-0 active:scale-95"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`}
+              />
+            </button>
 
-          <Button
-            onClick={() => setIsFormatGuideOpen(true)}
-            variant="outline"
-            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center gap-1.5"
-          >
-            <Download className="w-3.5 h-3.5 text-indigo-500" /> TXT Format Guide
-          </Button>
+            {/* TXT Format Guide */}
+            <button
+              type="button"
+              onClick={() => setIsFormatGuideOpen(true)}
+              className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-2 transition-all shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 active:scale-[0.98]"
+            >
+              <Download className="w-3.5 h-3.5 text-indigo-500" />
+              <span>TXT Guide</span>
+            </button>
 
-          <Button
-            onClick={handleOpenBulkModal}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
-          >
-            <Upload className="w-3.5 h-3.5" /> + Bulk Add via TXT
-          </Button>
+            {/* Bulk Upload TXT */}
+            <button
+              type="button"
+              onClick={handleOpenBulkModal}
+              className="h-10 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/80 hover:bg-indigo-100/80 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold inline-flex items-center gap-2 transition-all active:scale-[0.98]"
+            >
+              <Upload className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span>Bulk Add TXT</span>
+            </button>
 
-          <Button
-            onClick={handleOpenAddSingle}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
-          >
-            <Plus className="w-3.5 h-3.5" /> + Add Single Question
-          </Button>
+            {/* Add Single Question Primary Button */}
+            <button
+              type="button"
+              onClick={handleOpenAddSingle}
+              className="h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold inline-flex items-center gap-2 shadow-md shadow-indigo-600/25 hover:shadow-indigo-600/35 transition-all active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add Question</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1630,53 +1666,60 @@ export const AdminQuestionBank: React.FC = () => {
           <div>
             {/* Top Action Bar: Selection Count, Bulk Actions, Select All Visible */}
             <div className="px-5 py-3.5 bg-slate-50/90 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* Master Selection Button for whole Topic / Full Mock Test / PYQ / Bank */}
                 <button
                   type="button"
-                  onClick={toggleSelectAllVisible}
+                  onClick={toggleSelectAllQuestions}
                   className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <div
                     className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
-                      paginatedQuestions.length > 0 &&
-                      paginatedQuestions.every((q) => selectedQuestionIds.has(q.id))
+                      isAllQuestionsSelected
                         ? 'bg-sky-500 border-sky-500 text-white shadow-xs'
-                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
+                        : isPartiallySelected
+                          ? 'bg-sky-500/20 border-sky-500 text-sky-600 dark:text-sky-400'
+                          : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
                     }`}
                   >
-                    {paginatedQuestions.length > 0 &&
-                      paginatedQuestions.every((q) => selectedQuestionIds.has(q.id)) && (
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      )}
+                    {isAllQuestionsSelected ? (
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    ) : isPartiallySelected ? (
+                      <Minus className="w-3 h-3 stroke-[3]" />
+                    ) : null}
                   </div>
-                  <span>Select All Visible ({paginatedQuestions.length})</span>
+                  <span>
+                    Select All in {selectionContextInfo.type} ({questions.length})
+                  </span>
                 </button>
+
+                {/* Sub-toggle: If multiple pages, allow selecting visible page only */}
+                {questions.length > paginatedQuestions.length && (
+                  <button
+                    type="button"
+                    onClick={toggleSelectPage}
+                    className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-colors ${
+                      isAllPageSelected && !isAllQuestionsSelected
+                        ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-300 dark:border-sky-700 text-sky-600 dark:text-sky-400 font-bold'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-white dark:bg-slate-900'
+                    }`}
+                    title={`Select only ${paginatedQuestions.length} questions visible on this page`}
+                  >
+                    Visible Page only ({paginatedQuestions.length})
+                  </button>
+                )}
 
                 {selectedQuestionIds.size > 0 && (
                   <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800 flex-wrap">
                     <span className="font-black text-sky-600 dark:text-sky-400">
-                      {selectedQuestionIds.size} selected
+                      {selectedQuestionIds.size} of {questions.length} selected
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={() => handleBulkToggleStatus('archived')}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1 transition-colors"
-                      title="Archive selected questions"
-                    >
-                      <Archive className="w-3 h-3" />
-                      Archive
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleBulkToggleStatus('active')}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold flex items-center gap-1 transition-colors"
-                      title="Activate selected questions"
-                    >
-                      <CheckCircle2 className="w-3 h-3" />
-                      Activate
-                    </button>
+                    {isAllQuestionsSelected && (
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                        All Selected
+                      </span>
+                    )}
 
                     <button
                       type="button"
@@ -1725,6 +1768,28 @@ export const AdminQuestionBank: React.FC = () => {
               </div>
             </div>
 
+            {/* Context Prompt: When visible page is selected, offer 1-click select all in Topic/Mock/PYQ */}
+            {isAllPageSelected &&
+              !isAllQuestionsSelected &&
+              questions.length > paginatedQuestions.length && (
+                <div className="px-5 py-2.5 bg-sky-50 dark:bg-sky-950/40 border-b border-sky-100 dark:border-sky-900/60 flex items-center justify-between gap-3 text-xs text-sky-800 dark:text-sky-300">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                    <span>
+                      All <strong>{paginatedQuestions.length}</strong> questions on this page are
+                      selected.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleSelectAllQuestions}
+                    className="font-bold underline hover:text-sky-950 dark:hover:text-white transition-colors cursor-pointer"
+                  >
+                    Select all {questions.length} questions in {selectionContextInfo.name} →
+                  </button>
+                </div>
+              )}
+
             {/* ─── CARD VIEW (Bengali Question Paper Layout) ─── */}
             {viewMode === 'card' ? (
               <div className="p-4 sm:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
@@ -1767,8 +1832,6 @@ export const AdminQuestionBank: React.FC = () => {
                               <span className="text-[11px] font-black px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                                 #{questionNumber}
                               </span>
-                              <DifficultyBadge difficulty={q.difficulty} />
-                              <StatusBadge status={q.status} isActive={q.isActive} />
                             </div>
 
                             {/* Bengali Question Text (Primary) */}
@@ -1808,19 +1871,6 @@ export const AdminQuestionBank: React.FC = () => {
                             className="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           >
                             <Edit2 className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleArchiveQuestion(q)}
-                            title={
-                              q.status === 'archived' || q.isActive === false
-                                ? 'Unarchive Question'
-                                : 'Archive Question'
-                            }
-                            className="p-1.5 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <Archive className="w-3.5 h-3.5" />
                           </button>
 
                           <button
@@ -2048,12 +2098,29 @@ export const AdminQuestionBank: React.FC = () => {
                 <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
                   <thead className="bg-slate-50 dark:bg-slate-950/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className="px-3.5 py-3 w-12 text-center">#</th>
+                      <th className="px-3.5 py-3 w-12 text-center">
+                        <button
+                          type="button"
+                          onClick={toggleSelectAllQuestions}
+                          title={`Select all ${questions.length} questions in ${selectionContextInfo.type}`}
+                          className={`w-4 h-4 rounded-md border inline-flex items-center justify-center transition-all ${
+                            isAllQuestionsSelected
+                              ? 'bg-sky-500 border-sky-500 text-white shadow-xs'
+                              : isPartiallySelected
+                                ? 'bg-sky-500/20 border-sky-500 text-sky-600 dark:text-sky-400'
+                                : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
+                          }`}
+                        >
+                          {isAllQuestionsSelected ? (
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          ) : isPartiallySelected ? (
+                            <Minus className="w-3 h-3 stroke-[3]" />
+                          ) : null}
+                        </button>
+                      </th>
                       <th className="px-4 py-3 max-w-md">Question Statement</th>
                       <th className="px-4 py-3">Source & Hierarchy</th>
                       <th className="px-4 py-3">Options & Key</th>
-                      <th className="px-4 py-3">Difficulty</th>
-                      <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -2191,16 +2258,6 @@ export const AdminQuestionBank: React.FC = () => {
                             </div>
                           </td>
 
-                          {/* Difficulty */}
-                          <td className="px-4 py-3">
-                            <DifficultyBadge difficulty={q.difficulty} />
-                          </td>
-
-                          {/* Status */}
-                          <td className="px-4 py-3">
-                            <StatusBadge status={q.status} isActive={q.isActive} />
-                          </td>
-
                           {/* Actions */}
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
@@ -2221,18 +2278,6 @@ export const AdminQuestionBank: React.FC = () => {
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-
-                              <button
-                                onClick={() => handleArchiveQuestion(q)}
-                                title={
-                                  q.status === 'archived' || q.isActive === false
-                                    ? 'Unarchive'
-                                    : 'Archive'
-                                }
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              >
-                                <Archive className="w-3.5 h-3.5" />
                               </button>
 
                               <button
@@ -2314,27 +2359,16 @@ export const AdminQuestionBank: React.FC = () => {
           <div className="flex items-center gap-2 pr-3 border-r border-slate-700">
             <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
             <span className="text-xs font-bold text-slate-200 whitespace-nowrap">
-              {selectedQuestionIds.size} selected
+              {selectedQuestionIds.size} of {questions.length} selected
             </span>
+            {isAllQuestionsSelected && (
+              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                All
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => handleBulkToggleStatus('archived')}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
-            >
-              <Archive className="w-3.5 h-3.5 text-slate-400" />
-              <span>Archive</span>
-            </button>
-
-            <button
-              onClick={() => handleBulkToggleStatus('active')}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Activate</span>
-            </button>
-
             <button
               onClick={() => {
                 const selectedList = questions.filter((q) => selectedQuestionIds.has(q.id));
@@ -2693,8 +2727,8 @@ export const AdminQuestionBank: React.FC = () => {
                 </div>
               </div>
 
-              {/* Marks, Negative Marks & Difficulty */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* Marks & Negative Marks */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Marks (+ve)
@@ -2718,20 +2752,6 @@ export const AdminQuestionBank: React.FC = () => {
                     onChange={(e) => setSingleNegativeMarks(Number(e.target.value))}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Difficulty
-                  </label>
-                  <select
-                    value={singleDifficulty}
-                    onChange={(e) => setSingleDifficulty(e.target.value as any)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
-                  >
-                    <option value="easy">Easy (সহজ)</option>
-                    <option value="medium">Medium (মাঝারি)</option>
-                    <option value="hard">Hard (কঠিন)</option>
-                  </select>
                 </div>
               </div>
 
@@ -3367,11 +3387,6 @@ export const AdminQuestionBank: React.FC = () => {
             <div className="space-y-3.5">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <DifficultyBadge difficulty={previewingQuestion.difficulty} />
-                  <StatusBadge
-                    status={previewingQuestion.status}
-                    isActive={previewingQuestion.isActive}
-                  />
                   <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                     +{previewingQuestion.defaultMarks || 1} / -
                     {previewingQuestion.defaultNegativeMarks || 0.25}
@@ -3580,7 +3595,7 @@ export const AdminQuestionBank: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                     Marks
@@ -3604,20 +3619,6 @@ export const AdminQuestionBank: React.FC = () => {
                     onChange={(e) => setEditQNegativeMarks(Number(e.target.value))}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Difficulty
-                  </label>
-                  <select
-                    value={editQDifficulty}
-                    onChange={(e) => setEditQDifficulty(e.target.value as any)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
-                  >
-                    <option value="easy">Easy (সহজ)</option>
-                    <option value="medium">Medium (মাঝারি)</option>
-                    <option value="hard">Hard (কঠিন)</option>
-                  </select>
                 </div>
               </div>
 

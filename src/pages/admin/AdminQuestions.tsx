@@ -16,7 +16,6 @@ export const AdminQuestions: React.FC = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
   const [selectedSourceType, setSelectedSourceType] = useState<'all' | 'topic' | 'pyq'>('all');
-  const [selectedStatus, setSelectedStatus] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   // Server-side pagination
@@ -79,7 +78,6 @@ export const AdminQuestions: React.FC = () => {
             subjectId: selectedSubjectId || undefined,
             chapterId: selectedChapterId || undefined,
             sourceType: selectedSourceType !== 'all' ? selectedSourceType : undefined,
-            status: selectedStatus || undefined,
             search: searchTerm || undefined,
           },
           currentPage,
@@ -95,14 +93,7 @@ export const AdminQuestions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    selectedSubjectId,
-    selectedChapterId,
-    selectedSourceType,
-    selectedStatus,
-    searchTerm,
-    currentPage,
-  ]);
+  }, [selectedSubjectId, selectedChapterId, selectedSourceType, searchTerm, currentPage]);
 
   useEffect(() => {
     loadData();
@@ -111,7 +102,7 @@ export const AdminQuestions: React.FC = () => {
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedSubjectId, selectedChapterId, selectedSourceType, selectedStatus, searchTerm]);
+  }, [selectedSubjectId, selectedChapterId, selectedSourceType, searchTerm]);
 
   // Load exams & tests once for the unified upload destination picker
   useEffect(() => {
@@ -484,19 +475,6 @@ export const AdminQuestions: React.FC = () => {
               <option value="all">All Sources</option>
               <option value="topic">Topic Questions</option>
               <option value="pyq">PYQ (Previous Year)</option>
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="sm:col-span-2 md:col-span-1 lg:col-span-1">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-            >
-              <option value="">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="archived">Archived</option>
             </select>
           </div>
         </div>
