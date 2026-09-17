@@ -661,7 +661,7 @@ export const AdminQuestionBank: React.FC = () => {
     setEditQOptC(q.optionC);
     setEditQOptD(q.optionD);
     setEditQCorrect((q.correctOption as any) || 'A');
-    setEditQExplanation(q.explanation || '');
+    setEditQExplanation(q.explanationBengali || q.explanation || '');
     setEditQMarks(q.defaultMarks || 1.0);
     setEditQNegativeMarks(q.defaultNegativeMarks || 0.25);
     setEditQError('');
@@ -761,8 +761,8 @@ export const AdminQuestionBank: React.FC = () => {
               ? q.optionC
               : q.optionD;
       content += `সঠিক উত্তর: (${optLetter}) ${optText}\n\n`;
-      if (q.explanation) {
-        content += `Explanation:\n${q.explanation}\n\n`;
+      if (q.explanationBengali || q.explanation) {
+        content += `Explanation:\n${q.explanationBengali || q.explanation}\n\n`;
       }
       content += '\n';
     });
@@ -2028,7 +2028,7 @@ export const AdminQuestionBank: React.FC = () => {
                       </div>
 
                       {/* Inline Solution Accordion */}
-                      {q.explanation && (
+                      {(q.explanationBengali || q.explanation) && (
                         <div className="ml-8 mt-3">
                           {isSolutionExpanded ? (
                             <div className="p-3.5 bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/40 rounded-xl text-xs space-y-1.5">
@@ -2046,7 +2046,7 @@ export const AdminQuestionBank: React.FC = () => {
                                 </button>
                               </div>
                               <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                                {q.explanation}
+                                {q.explanationBengali || q.explanation}
                               </p>
                             </div>
                           ) : (
@@ -3443,14 +3443,14 @@ export const AdminQuestionBank: React.FC = () => {
                 })}
               </div>
 
-              {previewingQuestion.explanation && (
+              {(previewingQuestion.explanationBengali || previewingQuestion.explanation) && (
                 <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 rounded-xl text-xs space-y-1">
                   <span className="font-bold text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
                     Explanation & Solution Notes:
                   </span>
                   <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                    {previewingQuestion.explanation}
+                    {previewingQuestion.explanationBengali || previewingQuestion.explanation}
                   </p>
                 </div>
               )}
