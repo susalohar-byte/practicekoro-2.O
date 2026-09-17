@@ -1,8 +1,21 @@
-import re, urllib.request, urllib.error, json
+import os
+import re
+import urllib.error
+import urllib.request
+import json
 
-env = open('/Users/susantalohar/Documents/PracticeKoro 2.0.O/.env').read()
-url = re.search(r'VITE_SUPABASE_URL="?https://([a-z0-9]+)\.supabase\.co', env).group(1)
-key = re.search(r'VITE_SUPABASE_ANON_KEY="?([A-Za-z0-9_\-.]+)', env).group(1)
+# CI: SUPABASE_URL + SUPABASE_ANON_KEY env vars (repo variables, public by design).
+# Local: falls back to the sibling checkout's .env.
+_env_url = os.environ.get('SUPABASE_URL', '')
+_env_key = os.environ.get('SUPABASE_ANON_KEY', '')
+if _env_url and _env_key:
+    url = _env_url.replace('https://', '').split('.')[0]
+    key = _env_key
+else:
+    _env_path = '/Users/susantalohar/Documents/PracticeKoro 2.0.O/.env'
+    env = open(_env_path).read()
+    url = re.search(r'VITE_SUPABASE_URL="?https://([a-z0-9]+)\.supabase\.co', env).group(1)
+    key = re.search(r'VITE_SUPABASE_ANON_KEY="?([A-Za-z0-9_\-.]+)', env).group(1)
 base = f'https://{url}.supabase.co/rest/v1'
 
 
