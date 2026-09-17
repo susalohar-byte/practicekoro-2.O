@@ -65,7 +65,8 @@ d) Kalibangan
 Answer: b
 
 Explanation:
-- Lothal in Gujarat had the world's earliest known tidal dockyard.`;
+- Lothal in Gujarat had the world's earliest known tidal dockyard.
+- It was a vital ancient trading port connected to the Arabian Sea.`;
 
   it('parses Bengali and English blocks with answer and explanation', () => {
     const result = parseQuestionsText(sampleText);

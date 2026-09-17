@@ -37,7 +37,10 @@ export function normalizeExplanationBullets(value: string | undefined | null): s
 
   if (cleaned.length === 0) return '';
 
-  return cleaned.slice(0, 5).map((line) => `• ${line}`).join('\n');
+  return cleaned
+    .slice(0, 5)
+    .map((line) => `• ${line}`)
+    .join('\n');
 }
 
 /**

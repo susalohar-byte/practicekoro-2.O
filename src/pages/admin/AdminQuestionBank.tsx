@@ -46,6 +46,7 @@ export const AdminQuestionBank: React.FC = () => {
 
   // Master Entities
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [baseQuestions, setBaseQuestions] = useState<Question[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -171,37 +172,46 @@ export const AdminQuestionBank: React.FC = () => {
     };
   }, []);
 
-  // Load Filtered Questions
+  // Load Base Questions matching Exam, Subject, Chapter, and Search filters
   const loadQuestions = useCallback(async () => {
     try {
       setIsLoading(true);
-      const allQuestions = await api.getAllAdminQuestions({
+      const matching = await api.getAllAdminQuestions({
         sourceExam: selectedExamId || undefined,
         subjectId: selectedSubjectId || undefined,
         chapterId: selectedChapterId || undefined,
         topicId: selectedChapterId || undefined,
-        sourceType:
-          selectedQuestionType === 'topic'
-            ? 'topic'
-            : selectedQuestionType === 'pyq'
-              ? 'pyq'
-              : selectedQuestionType === 'full_mock'
-                ? 'other'
-                : undefined,
         search: searchTerm.trim() || undefined,
       });
 
-      setQuestions(allQuestions);
+      setBaseQuestions(matching);
     } catch (err) {
       console.error('Failed to load Question Bank data:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedQuestionType, searchTerm]);
+  }, [selectedExamId, selectedSubjectId, selectedChapterId, searchTerm]);
 
   useEffect(() => {
     loadQuestions();
   }, [loadQuestions]);
+
+  // Synchronize visible questions based on selectedQuestionType
+  useEffect(() => {
+    if (!selectedQuestionType) {
+      setQuestions(baseQuestions);
+    } else if (selectedQuestionType === 'topic') {
+      setQuestions(baseQuestions.filter((q) => q.sourceType === 'topic'));
+    } else if (selectedQuestionType === 'pyq') {
+      setQuestions(baseQuestions.filter((q) => q.sourceType === 'pyq'));
+    } else if (selectedQuestionType === 'full_mock') {
+      setQuestions(
+        baseQuestions.filter(
+          (q) => q.sourceType === 'other' || (!q.sourceType && Boolean(q.sourceExam))
+        )
+      );
+    }
+  }, [baseQuestions, selectedQuestionType]);
 
   // Reset page on filter changes
   useEffect(() => {
@@ -1176,39 +1186,74 @@ export const AdminQuestionBank: React.FC = () => {
                       </div>
 
                       {/* Middle: 2-Column Options Grid (Column 1 = A & C, Column 2 = B & D) */}
-                      <div className="ml-8 mt-3.5 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2.5 text-sm text-slate-800 dark:text-slate-200">
+                      <div className="ml-8 mt-3.5 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5 text-sm text-slate-800 dark:text-slate-200">
                         {/* Column 1: A and C */}
                         <div className="space-y-2">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">A.</span>
-                            <span
-                              className={
-                                q.correctOption === 'A'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
-                            >
-                              {q.optionA}
-                            </span>
+                          {/* Option A */}
+                          <div
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                              q.correctOption === 'A'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
+                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-baseline gap-2 min-w-0">
+                              <span
+                                className={`font-bold shrink-0 ${
+                                  q.correctOption === 'A'
+                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    : 'text-slate-900 dark:text-white'
+                                }`}
+                              >
+                                A.
+                              </span>
+                              <span
+                                className={
+                                  q.correctOption === 'A'
+                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
+                                    : ''
+                                }
+                              >
+                                {q.optionA}
+                              </span>
+                            </div>
                             {q.correctOption === 'A' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
                                 ✓
                               </span>
                             )}
                           </div>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">C.</span>
-                            <span
-                              className={
-                                q.correctOption === 'C'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
-                            >
-                              {q.optionC}
-                            </span>
+
+                          {/* Option C */}
+                          <div
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                              q.correctOption === 'C'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
+                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-baseline gap-2 min-w-0">
+                              <span
+                                className={`font-bold shrink-0 ${
+                                  q.correctOption === 'C'
+                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    : 'text-slate-900 dark:text-white'
+                                }`}
+                              >
+                                C.
+                              </span>
+                              <span
+                                className={
+                                  q.correctOption === 'C'
+                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
+                                    : ''
+                                }
+                              >
+                                {q.optionC}
+                              </span>
+                            </div>
                             {q.correctOption === 'C' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
                                 ✓
                               </span>
                             )}
@@ -1217,36 +1262,71 @@ export const AdminQuestionBank: React.FC = () => {
 
                         {/* Column 2: B and D */}
                         <div className="space-y-2">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">B.</span>
-                            <span
-                              className={
-                                q.correctOption === 'B'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
-                            >
-                              {q.optionB}
-                            </span>
+                          {/* Option B */}
+                          <div
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                              q.correctOption === 'B'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
+                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-baseline gap-2 min-w-0">
+                              <span
+                                className={`font-bold shrink-0 ${
+                                  q.correctOption === 'B'
+                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    : 'text-slate-900 dark:text-white'
+                                }`}
+                              >
+                                B.
+                              </span>
+                              <span
+                                className={
+                                  q.correctOption === 'B'
+                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
+                                    : ''
+                                }
+                              >
+                                {q.optionB}
+                              </span>
+                            </div>
                             {q.correctOption === 'B' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
                                 ✓
                               </span>
                             )}
                           </div>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white">D.</span>
-                            <span
-                              className={
-                                q.correctOption === 'D'
-                                  ? 'font-semibold text-slate-950 dark:text-white'
-                                  : ''
-                              }
-                            >
-                              {q.optionD}
-                            </span>
+
+                          {/* Option D */}
+                          <div
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                              q.correctOption === 'D'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
+                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-baseline gap-2 min-w-0">
+                              <span
+                                className={`font-bold shrink-0 ${
+                                  q.correctOption === 'D'
+                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    : 'text-slate-900 dark:text-white'
+                                }`}
+                              >
+                                D.
+                              </span>
+                              <span
+                                className={
+                                  q.correctOption === 'D'
+                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
+                                    : ''
+                                }
+                              >
+                                {q.optionD}
+                              </span>
+                            </div>
                             {q.correctOption === 'D' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1 text-sm select-none">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
                                 ✓
                               </span>
                             )}
