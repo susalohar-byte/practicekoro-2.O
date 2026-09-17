@@ -1,19 +1,11 @@
 /**
  * PracticeKoro 2.0 — Defined TXT Question Parser
  *
- * Implements the exact question structure specified in Section 8:
- *
- * 1. Question text (English/Bengali)
- * (a) Option A
- * (b) Option B
- * (c) Option C
- * (d) Option D
- *
- * সঠিক উত্তর: (a) Option text / Ans: (a)
- *
- * Explanation:
- * - Point 1
- * - Point 2
+ * Each question contains:
+ * - Question text
+ * - 4 options
+ * - Correct answer
+ * - Explanation & Notes as 3–4 concise bullet points focused on the question/options
  */
 
 export interface ParsedTxtQuestion {
@@ -41,7 +33,8 @@ export interface TxtParseResult {
 }
 
 /**
- * Standard Sample TXT content provided for Admins to view or download.
+ * Standard sample TXT content.
+ * Explanation must contain 3–4 useful, question/option-related bullet points.
  */
 export const SAMPLE_TXT_CONTENT = `1. ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?
 (a) ড. রাজেন্দ্র প্রসাদ
@@ -52,9 +45,10 @@ export const SAMPLE_TXT_CONTENT = `1. ভারতের প্রথম রা�
 সঠিক উত্তর: (a) ড. রাজেন্দ্র প্রসাদ
 
 Explanation:
-- ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি।
-- তিনি ১৯৫০ থেকে ১৯৬২ সাল পর্যন্ত ভারতের রাষ্ট্রপতির পদে আসীন ছিলেন।
-- তিনি গণপরিষদের সভাপতি নির্বাচিত হয়েছিলেন।
+- ড. রাজেন্দ্র প্রসাদ স্বাধীন ভারতের প্রথম রাষ্ট্রপতি ছিলেন এবং ১৯৫০ সালে দায়িত্ব গ্রহণ করেন।
+- তিনি ১৯৫০ থেকে ১৯৬২ সাল পর্যন্ত টানা দুই মেয়াদে রাষ্ট্রপতি ছিলেন।
+- সর্বপল্লী রাধাকৃষ্ণন ছিলেন ভারতের দ্বিতীয় রাষ্ট্রপতি, তাই (c) সঠিক নয়।
+- জওহরলাল নেহরু ছিলেন ভারতের প্রথম প্রধানমন্ত্রী এবং ড. বি. আর. আম্বেদকর ছিলেন আইনমন্ত্রী ও সংবিধানের খসড়া প্রণয়ন কমিটির চেয়ারম্যান।
 
 2. মানবদেহের বৃহত্তম অঙ্গ কোনটি?
 (a) যকৃৎ (Liver)
@@ -65,12 +59,11 @@ Explanation:
 সঠিক উত্তর: (b) ত্বক (Skin)
 
 Explanation:
-- ত্বক হলো মানবদেহের বৃহত্তম বাহ্যিক অঙ্গ।
-- মানবদেহের বৃহত্তম অভ্যন্তরীণ গ্রন্থি বা অঙ্গ হলো যকৃৎ (Liver)।`;
+- ত্বক মানবদেহের বৃহত্তম বাহ্যিক অঙ্গ এবং এটি পুরো শরীরকে আবৃত করে।
+- ত্বক শরীরকে জীবাণু, আঘাত এবং অতিরিক্ত জলক্ষয় থেকে সুরক্ষা দেয়।
+- যকৃৎ হলো বৃহত্তম অভ্যন্তরীণ অঙ্গ, তাই (a) ত্বকের সঠিক বিকল্প নয়।
+- ফুসফুস ও বৃক্কের গুরুত্বপূর্ণ শারীরবৃত্তীয় কাজ থাকলেও আকারের দিক থেকে তারা ত্বকের চেয়ে ছোট।`;
 
-/**
- * Helper to trigger browser download of sample TXT template.
- */
 export function downloadSampleTxt(filename = 'practicekoro_question_template.txt'): void {
   const blob = new Blob([SAMPLE_TXT_CONTENT], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -83,44 +76,57 @@ export function downloadSampleTxt(filename = 'practicekoro_question_template.txt
   URL.revokeObjectURL(url);
 }
 
-/**
- * Normalizes Bengali numerals (০-৯) to standard Arabic numerals (0-9)
- */
+/** Normalizes Bengali numerals (০-৯) to Arabic numerals (0-9). */
 export function normalizeBengaliNumerals(input: string): string {
   const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   return input.replace(/[০-৯]/g, (digit) => String(bengaliDigits.indexOf(digit)));
 }
 
 /**
- * Parses raw TXT content into structured questions with granular error tracking.
+ * Count meaningful explanation bullets. Supports "-", "•", "*" and numbered bullets.
  */
+export function countExplanationBullets(explanation?: string): number {
+  if (!explanation?.trim()) return 0;
+  return explanation
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^[-•*]\s+/.test(line) || /^\d+[.)]\s+/.test(line)).length;
+}
+
+/**
+ * Normalize explanation to a clean 3–4 bullet-point block.
+ */
+export function normalizeExplanationBullets(explanation?: string): string | undefined {
+  if (!explanation?.trim()) return undefined;
+
+  const lines = explanation
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^(?:[-•*]|\d+[.)])\s*/, '').trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) return undefined;
+  return lines.map((line) => `- ${line}`).join('\n');
+}
+
 export function parseQuestionsTxt(content: string): TxtParseResult {
   if (!content || !content.trim()) {
     return { totalDetected: 0, valid: [], errors: [] };
   }
 
-  // Normalize line endings
   const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-
-  // Strategy to detect individual question blocks:
-  // A question block typically starts with a number followed by dot/parenthesis/colon
-  // e.g., "1.", "1)", "১.", "Q1.", "Question 1:" at the start of a line
   const lines = normalized.split('\n');
   const blocks: string[] = [];
   let currentBlock: string[] = [];
 
   const startRegex = /^(?:(?:Q(?:uestion)?\s*)?[0-9০-৯]+[-.:)]\s*)/i;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  for (const line of lines) {
     const isNewQuestionStart = startRegex.test(line.trim());
-
     if (isNewQuestionStart && currentBlock.length > 0) {
-      // Check if previous block has content before pushing
       const joined = currentBlock.join('\n').trim();
-      if (joined) {
-        blocks.push(joined);
-      }
+      if (joined) blocks.push(joined);
       currentBlock = [line];
     } else {
       currentBlock.push(line);
@@ -129,20 +135,15 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
 
   if (currentBlock.length > 0) {
     const joined = currentBlock.join('\n').trim();
-    if (joined) {
-      blocks.push(joined);
-    }
+    if (joined) blocks.push(joined);
   }
 
-  // Fallback: If no numbering was found in any line, split by double empty lines
-  const hasAnyNumbering = lines.some((l) => startRegex.test(l.trim()));
+  const hasAnyNumbering = lines.some((line) => startRegex.test(line.trim()));
   if (!hasAnyNumbering && normalized.includes('\n\n')) {
     const paragraphs = normalized.split(/\n\s*\n+/);
-    if (paragraphs.length > 0) {
-      blocks.length = 0;
-      for (const p of paragraphs) {
-        if (p.trim()) blocks.push(p.trim());
-      }
+    blocks.length = 0;
+    for (const paragraph of paragraphs) {
+      if (paragraph.trim()) blocks.push(paragraph.trim());
     }
   }
 
@@ -150,42 +151,24 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
   const errors: TxtParseError[] = [];
 
   blocks.forEach((block, index) => {
-    const questionNumber = index + 1;
+    const fallbackNumber = index + 1;
     const blockLines = block.split('\n');
-
-    // Extract Question Number if present in text
     const firstLine = blockLines[0]?.trim() || '';
     const numMatch = firstLine.match(/^(?:(?:Q(?:uestion)?\s*)?([0-9০-৯]+)[-.:)]\s*)/i);
     const parsedNumber = numMatch
       ? parseInt(normalizeBengaliNumerals(numMatch[1]), 10)
-      : questionNumber;
+      : fallbackNumber;
 
-    // Remove the leading number prefix from question statement line
     let questionFirstLine = firstLine;
-    if (numMatch) {
-      questionFirstLine = firstLine.substring(numMatch[0].length).trim();
-    }
+    if (numMatch) questionFirstLine = firstLine.substring(numMatch[0].length).trim();
 
-    // Extract Question Text, Options, Answer, and Explanation
-    // Options pattern: (a), (b), (c), (d) or a), b), c), d) or A., B., C., D.
     const optionRegex = /^\s*(?:\(([a-dA-D])\)|([a-dA-D])[.)])\s*(.*)$/;
-
-    // Answer pattern:
-    // "সঠিক উত্তর: (a) ..." or "সঠিক উত্তর : a" or "Ans: (a)" or "Answer: a" or "Correct: (a)"
     const answerRegex =
       /^\s*(?:সঠিক\s*উত্তর|উত্তর|Answer|Ans|Correct\s*Answer|Correct\s*Option)\s*[:\-–—]\s*(?:\(([a-dA-D])\)|([a-dA-D]))/i;
-
-    // Explanation pattern:
-    // "Explanation:" or "ব্যাখ্যা:" or "ব্যাখ্যা : "
     const explanationRegex = /^\s*(?:Explanation|ব্যাখ্যা|Note|Notes)\s*[:\-–—]?\s*(.*)$/i;
 
     const questionLines: string[] = [questionFirstLine];
-    const options: Record<'A' | 'B' | 'C' | 'D', string> = {
-      A: '',
-      B: '',
-      C: '',
-      D: '',
-    };
+    const options: Record<'A' | 'B' | 'C' | 'D', string> = { A: '', B: '', C: '', D: '' };
     let correctOption: 'A' | 'B' | 'C' | 'D' | null = null;
     const explanationLines: string[] = [];
 
@@ -197,7 +180,6 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
       const trimmed = rawLine.trim();
       if (!trimmed) continue;
 
-      // Check for Answer line
       const ansMatch = trimmed.match(answerRegex);
       if (ansMatch) {
         const letter = (ansMatch[1] || ansMatch[2]).toUpperCase() as 'A' | 'B' | 'C' | 'D';
@@ -206,17 +188,13 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
         continue;
       }
 
-      // Check for Explanation line
       const expMatch = trimmed.match(explanationRegex);
       if (expMatch) {
         currentSection = 'explanation';
-        if (expMatch[1] && expMatch[1].trim()) {
-          explanationLines.push(expMatch[1].trim());
-        }
+        if (expMatch[1]?.trim()) explanationLines.push(expMatch[1].trim());
         continue;
       }
 
-      // Check for Option line
       const optMatch = trimmed.match(optionRegex);
       if (optMatch) {
         const letter = (optMatch[1] || optMatch[2]).toUpperCase() as 'A' | 'B' | 'C' | 'D';
@@ -226,11 +204,9 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
         continue;
       }
 
-      // Continuation of current section
       if (currentSection === 'question') {
         questionLines.push(trimmed);
       } else if (currentSection === 'option' && currentOptionKey) {
-        // Multi-line option text
         options[currentOptionKey] += (options[currentOptionKey] ? ' ' : '') + trimmed;
       } else if (currentSection === 'explanation') {
         explanationLines.push(trimmed);
@@ -239,7 +215,6 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
 
     const fullQuestionText = questionLines.join('\n').trim();
 
-    // Secondary search for Answer if not caught by line-start regex
     if (!correctOption) {
       const inlineAnsMatch = block.match(
         /(?:সঠিক\s*উত্তর|উত্তর|Answer|Ans|Correct)\s*[:\-–—]\s*(?:\(([a-dA-D])\)|([a-dA-D]))/i
@@ -250,7 +225,6 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
       }
     }
 
-    // Validation checks
     if (!fullQuestionText) {
       errors.push({
         questionNumber: parsedNumber,
@@ -284,7 +258,21 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
       return;
     }
 
-    // Valid question block
+    const explanation = normalizeExplanationBullets(explanationLines.join('\n'));
+    const explanationBulletCount = countExplanationBullets(explanation);
+
+    if (explanationBulletCount < 3 || explanationBulletCount > 4) {
+      errors.push({
+        questionNumber: parsedNumber,
+        reason:
+          explanationBulletCount === 0
+            ? 'Explanation & Notes must contain 3–4 bullet points focused on the question and options.'
+            : `Explanation & Notes must contain 3–4 bullet points; ${explanationBulletCount} bullet point(s) were detected.`,
+        rawText: block,
+      });
+      return;
+    }
+
     valid.push({
       questionNumber: parsedNumber,
       questionText: fullQuestionText,
@@ -293,7 +281,7 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
       optionC: options.C,
       optionD: options.D,
       correctOption,
-      explanation: explanationLines.length > 0 ? explanationLines.join('\n') : undefined,
+      explanation,
       rawText: block,
     });
   });
