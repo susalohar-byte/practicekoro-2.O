@@ -12,23 +12,21 @@ DELETE FROM public.mistakes;
 DELETE FROM public.test_questions;
 DELETE FROM public.questions;
 
--- 2. ENSURE BENGALI LITERATURE SUBJECT & TOPIC EXIST
+-- 2. ENSURE BENGALI LITERATURE & POLITY SUBJECT & TOPIC EXIST
 INSERT INTO public.subjects (id, exam_id, name, slug, description, icon_name, order_index) VALUES
-  ('wbp-bengali', 'wbp-constable', 'Bengali Literature (বাংলা সাহিত্য ও ভাষা)', 'bengali-literature', 'বাংলা সাহিত্যের ধ্রুপদী রচনা, লেখক পরিচিতি ও ব্যাকরণ।', 'BookOpen', 5)
+  ('wbp-bengali', 'wbp-constable', 'Bengali Literature (বাংলা সাহিত্য ও ভাষা)', 'bengali-literature', 'বাংলা সাহিত্যের ধ্রুপদী রচনা, লেখক পরিচিতি ও ব্যাকরণ।', 'BookOpen', 5),
+  ('wbp-polity', 'wbp-constable', 'Indian Constitution (ভারতের সংবিধান)', 'indian-constitution', 'Preamble, Fundamental Rights, Directive Principles, and Governance.', 'Scale', 4)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description;
 
 INSERT INTO public.chapters (id, subject_id, name, slug, description, order_index) VALUES
-  ('wbp-bengali-lit', 'wbp-bengali', 'bengali Literature', 'bengali-literature-classics', 'কাব্যগ্রন্থ, উপন্যাস, নাটক ও সাহিত্যিকদের গুরুত্বপূর্ণ তথ্য।', 1)
+  ('wbp-bengali-lit', 'wbp-bengali', 'Bengali Literature', 'bengali-literature-classics', 'কাব্যগ্রন্থ, উপন্যাস, নাটক ও সাহিত্যিকদের গুরুত্বপূর্ণ তথ্য।', 1),
+  ('wbp-polity-rights', 'wbp-polity', 'Fundamental Rights & Duties (মৌলিক অধিকার ও কর্তব্য)', 'fundamental-rights-duties', 'Articles 12 to 35, Writs, 42nd & 44th Constitutional Amendments.', 1)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description;
 
--- Ensure topic link in exam_topics
-INSERT INTO public.exam_topics (exam_id, topic_id, order_index) VALUES
-  ('wbp-constable', 'wbp-bengali-lit', 5)
-ON CONFLICT (exam_id, topic_id) DO NOTHING;
 
 -- 3. INSERT FRESH BENGALI QUESTIONS
 INSERT INTO public.questions (
@@ -464,6 +462,11 @@ ON CONFLICT (id) DO UPDATE SET
   explanation_bengali = EXCLUDED.explanation_bengali,
   is_active = true,
   status = 'active';
+
+-- Ensure test-wbp-mock-01 exists
+INSERT INTO public.tests (id, exam_id, title, slug, test_type, duration_minutes, total_questions, total_marks, passing_marks, negative_marking, is_premium, order_index, is_active, status) VALUES
+  ('test-wbp-mock-01', 'wbp-constable', 'WBP Constable Full Mock 01 (Free Starter)', 'wbp-full-mock-01', 'full_mock', 60, 5, 5.00, 2.00, 0.25, false, 4, true, 'published')
+ON CONFLICT (id) DO NOTHING;
 
 -- 4. LINK QUESTIONS TO TESTS
 INSERT INTO public.test_questions (test_id, question_id, question_order, marks, negative_marks) VALUES

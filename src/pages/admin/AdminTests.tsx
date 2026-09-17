@@ -22,6 +22,7 @@ import {
   Crown,
   ChevronRight,
   Power,
+  ArrowRight,
 } from 'lucide-react';
 import type { MockTest, Exam, Subject, Chapter, PublishValidationResult } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
@@ -63,6 +64,7 @@ export const AdminTests: React.FC = () => {
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [editingTest, setEditingTest] = useState<MockTest | null>(null);
   const [modalType, setModalType] = useState<'topic' | 'full_mock' | 'pyq'>('topic');
+  const [newlyCreatedTest, setNewlyCreatedTest] = useState<MockTest | null>(null);
 
   // Test Form Fields
   const [formExamId, setFormExamId] = useState('');
@@ -227,7 +229,7 @@ export const AdminTests: React.FC = () => {
           shift: modalType === 'pyq' ? formShift.trim() : undefined,
         });
       } else {
-        await api.createTest({
+        const created = await api.createTest({
           title: formTitle.trim(),
           slug: formTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           description: formDescription.trim() || undefined,
@@ -249,6 +251,7 @@ export const AdminTests: React.FC = () => {
           isActive: true,
           status: 'draft',
         });
+        setNewlyCreatedTest(created);
       }
 
       setIsTestModalOpen(false);
@@ -380,6 +383,11 @@ export const AdminTests: React.FC = () => {
 
   // Toggle Active/Inactive
   const handleToggleActive = async (test: MockTest) => {
+    // If activating a test that has 0 questions, prevent activation
+    if (!test.isActive && (!test.totalQuestions || test.totalQuestions === 0)) {
+      alert(`This test has no questions yet. Add questions before activating "${test.title}".`);
+      return;
+    }
     try {
       const nextActive = !test.isActive;
       await api.updateTest(test.id, { isActive: nextActive });
@@ -484,6 +492,47 @@ export const AdminTests: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {/* Post Test-Creation Banner with Direct Manage Questions Action */}
+      {newlyCreatedTest && (
+        <div className="p-4.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-blue-500/15 to-indigo-500/15 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/30 shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+                  ✓ Test Created Successfully
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {newlyCreatedTest.title}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Ready for questions! Click below to automatically load matching questions from the
+                Question Bank.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <button
+              onClick={() => setNewlyCreatedTest(null)}
+              className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              Dismiss
+            </button>
+            <Link
+              to={`/admin/tests/${newlyCreatedTest.id}/questions`}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#0075FF] to-[#0052E0] hover:from-[#0066FF] hover:to-[#0047C7] text-white text-xs font-bold shadow-md shadow-[#0075FF]/30 flex items-center gap-1.5 transition-all"
+            >
+              <span>Manage Questions</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* 4 Primary Tabs (Section 15) */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">

@@ -362,6 +362,136 @@
   html:not(.dark) .admin-scope .text-slate-400 {
     color: #64748b;
   }
+
+  /* Admin Sidebar is permanently dark blue in both themes — keep text pure white & bright */
+  .admin-scope aside,
+  html:not(.dark) .admin-scope aside {
+    color: #ffffff;
+  }
+  .admin-scope aside .text-white,
+  html:not(.dark) .admin-scope aside .text-white {
+    color: #ffffff !important;
+  }
+  .admin-scope aside .text-slate-100,
+  html:not(.dark) .admin-scope aside .text-slate-100 {
+    color: #f8fafc !important;
+  }
+  .admin-scope aside .text-slate-200,
+  html:not(.dark) .admin-scope aside .text-slate-200 {
+    color: #e2e8f0 !important;
+  }
+  .admin-scope aside .text-slate-300,
+  html:not(.dark) .admin-scope aside .text-slate-300 {
+    color: #cbd5e1 !important;
+  }
+  .admin-scope aside .text-slate-400,
+  html:not(.dark) .admin-scope aside .text-slate-400 {
+    color: #94a3b8 !important;
+  }
+  .admin-scope aside .text-sky-100,
+  html:not(.dark) .admin-scope aside .text-sky-100 {
+    color: #e0f2fe !important;
+  }
+  .admin-scope aside .text-sky-200,
+  html:not(.dark) .admin-scope aside .text-sky-200 {
+    color: #bae6fd !important;
+  }
+  .admin-scope aside .text-sky-300,
+  html:not(.dark) .admin-scope aside .text-sky-300 {
+    color: #7dd3fc !important;
+  }
+  .admin-scope aside .text-sky-400,
+  html:not(.dark) .admin-scope aside .text-sky-400 {
+    color: #38bdf8 !important;
+  }
+
+  /* Admin Console Dark Hero Cards & Banners: Ensure bright white & readable text */
+  .admin-scope .admin-dark-card,
+  html:not(.dark) .admin-scope .admin-dark-card,
+  .admin-scope [class*='from-[#070d1d]'],
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] {
+    color: #ffffff;
+  }
+
+  .admin-scope .admin-dark-card .text-white,
+  html:not(.dark) .admin-scope .admin-dark-card .text-white,
+  .admin-scope [class*='from-[#070d1d]'] .text-white,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] .text-white,
+  .admin-scope .admin-dark-card h1,
+  html:not(.dark) .admin-scope .admin-dark-card h1,
+  .admin-scope [class*='from-[#070d1d]'] h1,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] h1,
+  .admin-scope .admin-dark-card strong,
+  html:not(.dark) .admin-scope .admin-dark-card strong,
+  .admin-scope [class*='from-[#070d1d]'] strong,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] strong {
+    color: #ffffff !important;
+  }
+
+  .admin-scope .admin-dark-card .text-slate-100,
+  html:not(.dark) .admin-scope .admin-dark-card .text-slate-100,
+  .admin-scope [class*='from-[#070d1d]'] .text-slate-100,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] .text-slate-100 {
+    color: #f8fafc !important;
+  }
+
+  .admin-scope .admin-dark-card .text-slate-200,
+  html:not(.dark) .admin-scope .admin-dark-card .text-slate-200,
+  .admin-scope [class*='from-[#070d1d]'] .text-slate-200,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] .text-slate-200 {
+    color: #e2e8f0 !important;
+  }
+
+  .admin-scope .admin-dark-card .text-slate-300,
+  html:not(.dark) .admin-scope .admin-dark-card .text-slate-300,
+  .admin-scope [class*='from-[#070d1d]'] .text-slate-300,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] .text-slate-300 {
+    color: #cbd5e1 !important;
+  }
+
+  .admin-scope .admin-dark-card .text-slate-400,
+  html:not(.dark) .admin-scope .admin-dark-card .text-slate-400,
+  .admin-scope [class*='from-[#070d1d]'] .text-slate-400,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] .text-slate-400 {
+    color: #94a3b8 !important;
+  }
+
+  .admin-scope .admin-dark-card a,
+  html:not(.dark) .admin-scope .admin-dark-card a,
+  .admin-scope [class*='from-[#070d1d]'] a,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] a {
+    color: #cbd5e1;
+  }
+  .admin-scope .admin-dark-card a:hover,
+  html:not(.dark) .admin-scope .admin-dark-card a:hover,
+  .admin-scope [class*='from-[#070d1d]'] a:hover,
+  html:not(.dark) .admin-scope [class*='from-[#070d1d]'] a:hover {
+    color: #ffffff !important;
+  }
+
+  /* Sidebar Theme Toggle styling in both light and dark mode */
+  .admin-scope aside [role='radiogroup'],
+  html:not(.dark) .admin-scope aside [role='radiogroup'] {
+    background-color: #070d1d !important;
+    border-color: #1a2a50 !important;
+  }
+  .admin-scope aside [role='radiogroup'] button,
+  html:not(.dark) .admin-scope aside [role='radiogroup'] button {
+    color: #94a3b8 !important;
+  }
+  .admin-scope aside [role='radiogroup'] button:hover,
+  html:not(.dark) .admin-scope aside [role='radiogroup'] button:hover {
+    color: #ffffff !important;
+  }
+  .admin-scope aside [role='radiogroup'] button[aria-checked='true'],
+  html:not(.dark) .admin-scope aside [role='radiogroup'] button[aria-checked='true'] {
+    color: #38bdf8 !important;
+  }
+  .admin-scope aside [role='radiogroup'] button[aria-checked='true'] span,
+  html:not(.dark) .admin-scope aside [role='radiogroup'] button[aria-checked='true'] span {
+    background-color: #152449 !important;
+    border-color: #2b3d6f !important;
+  }
   html:not(.dark) .admin-scope input,
   html:not(.dark) .admin-scope select,
   html:not(.dark) .admin-scope textarea {

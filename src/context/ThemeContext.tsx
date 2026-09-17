@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextValue {
   theme: ThemeMode;
@@ -13,17 +13,21 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'pk_theme';
 
-function systemPrefersDark(): boolean {
-  return (
-    typeof window !== 'undefined' &&
+function getInitialTheme(): ThemeMode {
+  if (typeof window === 'undefined') return 'light';
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch {
+    // Ignore inaccessible storage
+  }
+  if (
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-color-scheme: dark)').matches
-  );
-}
-
-function resolve(mode: ThemeMode): 'light' | 'dark' {
-  if (mode === 'system') return systemPrefersDark() ? 'dark' : 'light';
-  return mode;
+  ) {
+    return 'dark';
+  }
+  return 'light';
 }
 
 function applyToDocument(resolved: 'light' | 'dark', animate = false) {
@@ -41,37 +45,13 @@ function applyToDocument(resolved: 'light' | 'dark', animate = false) {
 }
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<ThemeMode>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
-    } catch {
-      // Ignore inaccessible storage
-    }
-    return 'system';
-  });
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => resolve(theme));
+  const [theme, setThemeState] = useState<ThemeMode>(getInitialTheme);
 
   // Apply on every change (animated; first mount applies silently)
   const firstRun = React.useRef(true);
   useEffect(() => {
-    const resolved = resolve(theme);
-    setResolvedTheme(resolved);
-    applyToDocument(resolved, !firstRun.current);
+    applyToDocument(theme, !firstRun.current);
     firstRun.current = false;
-  }, [theme]);
-
-  // Track OS preference while in 'system' mode
-  useEffect(() => {
-    if (theme !== 'system' || typeof window.matchMedia !== 'function') return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = () => {
-      const resolved = resolve('system');
-      setResolvedTheme(resolved);
-      applyToDocument(resolved);
-    };
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
   }, [theme]);
 
   const setTheme = useCallback((mode: ThemeMode) => {
@@ -84,11 +64,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-  }, [resolvedTheme, setTheme]);
+    setThemeState((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // Ignore inaccessible storage
+      }
+      return next;
+    });
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme: theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -500,10 +500,11 @@ export const adminCommerceApi = {
     search?: string,
     filterPlan?: string,
     filterStatus?: string,
-    limit = 50,
+    limit = 200,
     offset = 0
   ): Promise<AdminStudentRow[]> {
     if (isSupabaseConfigured) {
+      // Attempt 1: RPC function (most complete data)
       try {
         const { data, error } = await supabase.rpc('get_admin_students', {
           p_search: search || null,
@@ -535,34 +536,18 @@ export const adminCommerceApi = {
               lastActive: d.last_active || d.created_at,
             }));
         }
+        if (error) {
+          console.warn('RPC get_admin_students failed:', error.message, error.code);
+        }
       } catch (err) {
-        console.warn('Fallback querying profiles for admin students:', err);
+        console.warn('RPC get_admin_students exception:', err);
       }
 
-      // Direct fallback query against Supabase profiles table
+      // Attempt 2: Direct query on profiles (simple, no nested join)
       try {
         let query = supabase
           .from('profiles')
-          .select(
-            `
-            id,
-            full_name,
-            email,
-            phone,
-            avatar_url,
-            role,
-            created_at,
-            subscriptions (
-              id,
-              plan_id,
-              status,
-              expires_at,
-              subscription_plans (
-                title
-              )
-            )
-          `
-          )
+          .select('id, full_name, email, phone, avatar_url, role, created_at')
           .order('created_at', { ascending: false })
           .range(offset, offset + limit - 1);
 
@@ -570,25 +555,53 @@ export const adminCommerceApi = {
           query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
         }
 
-        const { data, error } = await query;
-        if (!error && Array.isArray(data)) {
-          return data
-            .filter((d: any) => {
-              const email = (d.email || '').toLowerCase().trim();
-              if (email === 'admin@practicekoro.online' || email === 'admin@practicekoro.com') {
-                return false;
-              }
-              if (d.role === 'admin') return false;
-              return true;
-            })
-            .map((d: any) => {
-              const activeSub = Array.isArray(d.subscriptions)
-                ? d.subscriptions.find((s: any) => s.status === 'active') || d.subscriptions[0]
-                : undefined;
+        const { data: profileData, error: profileError } = await query;
+        if (profileError) {
+          console.warn('Direct profiles query failed:', profileError.message);
+        }
 
-              const isPro = activeSub?.status === 'active';
+        if (!profileError && Array.isArray(profileData) && profileData.length > 0) {
+          // Filter out admins
+          const studentProfiles = profileData.filter((d: any) => {
+            const email = (d.email || '').toLowerCase().trim();
+            if (email === 'admin@practicekoro.online' || email === 'admin@practicekoro.com') {
+              return false;
+            }
+            if (d.role === 'admin') return false;
+            return true;
+          });
+
+          // Fetch subscriptions separately to avoid ambiguous FK join issues
+          const userIds = studentProfiles.map((p: any) => p.id);
+          const subsMap: Record<string, any> = {};
+
+          if (userIds.length > 0) {
+            try {
+              const { data: subsData } = await supabase
+                .from('subscriptions')
+                .select('user_id, plan_id, status, expires_at, subscription_plans(title)')
+                .in('user_id', userIds)
+                .order('created_at', { ascending: false });
+
+              if (Array.isArray(subsData)) {
+                for (const s of subsData) {
+                  // Keep only the most recent subscription per user
+                  if (!subsMap[s.user_id]) {
+                    subsMap[s.user_id] = s;
+                  }
+                }
+              }
+            } catch {
+              // Subscriptions lookup is optional — students still show without it
+            }
+          }
+
+          return studentProfiles
+            .map((d: any) => {
+              const sub = subsMap[d.id];
+              const isPro = sub?.status === 'active';
               const planTitle =
-                activeSub?.subscription_plans?.title || (isPro ? 'Pro Pass' : 'Free Aspirant');
+                (sub?.subscription_plans as any)?.title || (isPro ? 'Pro Pass' : 'Free Aspirant');
 
               return {
                 id: d.id,
@@ -598,10 +611,10 @@ export const adminCommerceApi = {
                 avatarUrl: d.avatar_url || undefined,
                 createdAt: d.created_at,
                 planTitle,
-                planId: activeSub?.plan_id || 'plan_free',
-                subscriptionStatus: activeSub?.status || 'none',
+                planId: sub?.plan_id || 'plan_free',
+                subscriptionStatus: sub?.status || 'none',
                 isPro,
-                expiresAt: activeSub?.expires_at || undefined,
+                expiresAt: sub?.expires_at || undefined,
                 totalAttempts: 0,
                 lastActive: d.created_at,
               };
@@ -615,7 +628,7 @@ export const adminCommerceApi = {
             });
         }
       } catch (err) {
-        console.warn('Direct query on profiles failed:', err);
+        console.warn('Direct profiles query exception:', err);
       }
     }
 

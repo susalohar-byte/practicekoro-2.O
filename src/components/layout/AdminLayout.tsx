@@ -86,7 +86,7 @@ export const AdminLayout: React.FC = () => {
       title: 'Administration',
       items: [
         {
-          label: 'Subscriptions & Students',
+          label: 'Subscriptions',
           path: '/admin/subscriptions',
           altPaths: ['/admin/students', '/admin/pro-users'],
           icon: CreditCard,
@@ -129,8 +129,8 @@ export const AdminLayout: React.FC = () => {
         )}
       >
         {/* Top Header */}
-        <div className="h-16 flex items-center justify-between px-4 sm:px-5 border-b border-[#152347] shrink-0 bg-[#070d1d]/80 backdrop-blur-md">
-          <Link to="/admin" className="flex items-center gap-3 group">
+        <div className="h-16 flex items-center justify-between px-3.5 sm:px-4 border-b border-[#152347] shrink-0 bg-[#070d1d]/80 backdrop-blur-md">
+          <Link to="/admin" className="flex items-center gap-2.5 group min-w-0">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 flex items-center justify-center shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform shrink-0">
               <img
                 src="/logo-icon-transparent.png"
@@ -140,7 +140,7 @@ export const AdminLayout: React.FC = () => {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-black text-sm tracking-tight text-white leading-tight">
+                <span className="font-black text-sm tracking-tight !text-white leading-tight truncate">
                   PracticeKoro
                 </span>
               </div>
@@ -150,13 +150,16 @@ export const AdminLayout: React.FC = () => {
               </span>
             </div>
           </Link>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-            aria-label="Close sidebar"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <ThemeToggle className="h-8 w-8 rounded-lg bg-white/[0.07] hover:bg-white/15 border-white/10 text-slate-300 hover:text-white" />
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation List - Scrollable with subtle custom scrollbar */}
@@ -164,7 +167,7 @@ export const AdminLayout: React.FC = () => {
           {navSections.map((section) => (
             <div key={section.title} className="space-y-1">
               <div className="px-3 pt-2.5 pb-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider !text-sky-300">
                   {section.title}
                 </p>
               </div>
@@ -189,8 +192,8 @@ export const AdminLayout: React.FC = () => {
                       className={cn(
                         'group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors duration-150 select-none',
                         isItemActive
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md shadow-blue-600/30 border border-blue-400/40'
-                          : 'text-slate-300 hover:text-white hover:bg-white/[0.08] border border-transparent'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 !text-white font-bold shadow-md shadow-blue-600/40 border border-blue-400/40'
+                          : '!text-white hover:bg-white/[0.12] border border-transparent'
                       )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -198,25 +201,27 @@ export const AdminLayout: React.FC = () => {
                           className={cn(
                             'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150 shrink-0',
                             isItemActive
-                              ? 'bg-white/20 text-white shadow-xs'
-                              : 'text-slate-400 group-hover:text-sky-300 group-hover:bg-white/10'
+                              ? 'bg-white/20 !text-white shadow-xs'
+                              : '!text-sky-200 group-hover:!text-white bg-white/[0.06] group-hover:bg-white/15'
                           )}
                         >
                           <Icon className="w-4 h-4" />
                         </div>
-                        <span className="truncate">{item.label}</span>
+                        <span className="truncate font-semibold !text-white tracking-wide">
+                          {item.label}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
                         {item.badge && (
-                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-sky-500/20 text-sky-200 border border-sky-400/30">
+                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-sky-500/25 text-sky-100 border border-sky-400/40">
                             {item.badge}
                           </span>
                         )}
                         {isItemActive && (
                           <motion.span
                             layoutId="activeNavDot"
-                            className="w-2 h-2 rounded-full bg-sky-300 shadow-sm shadow-sky-300/90 ring-2 ring-sky-400/30"
+                            className="w-2 h-2 rounded-full bg-sky-300 shadow-sm shadow-sky-300/90 ring-2 ring-sky-400/40"
                             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                           />
                         )}
@@ -230,13 +235,7 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         {/* Footer Actions & Profile Chip */}
-        <div className="p-3 border-t border-[#152347] bg-[#070d1d]/80 shrink-0 space-y-2">
-          {/* Integrated Theme Toggle Row */}
-          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl border border-[#1d2d54] bg-[#0e1935] shadow-2xs">
-            <span className="text-[11px] font-semibold text-slate-300">Appearance</span>
-            <ThemeToggle />
-          </div>
-
+        <div className="p-3 border-t border-[#152347] bg-[#070d1d]/80 shrink-0">
           {/* User Profile Card */}
           <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0e1935] border border-[#1d2d54] shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -247,10 +246,10 @@ export const AdminLayout: React.FC = () => {
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0a1226]" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-white truncate leading-tight">
+                <p className="text-xs font-bold !text-white truncate leading-tight">
                   {user?.fullName || 'Administrator'}
                 </p>
-                <p className="text-[10px] font-medium text-slate-400 truncate">Super Admin</p>
+                <p className="text-[10px] font-semibold !text-sky-300 truncate">Super Admin</p>
               </div>
             </div>
 
@@ -259,7 +258,7 @@ export const AdminLayout: React.FC = () => {
                 logout();
                 navigate('/login');
               }}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+              className="p-1.5 rounded-lg !text-slate-300 hover:!text-rose-400 hover:bg-rose-500/20 transition-colors"
               title="Sign Out"
               aria-label="Sign Out"
             >
@@ -293,6 +292,7 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggle className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-amber-300" />
             <div className="flex items-center gap-2.5">
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">

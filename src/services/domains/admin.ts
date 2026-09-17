@@ -1491,8 +1491,16 @@ export const adminApi = {
           questions = questions.filter((q) => q.difficulty === filters.difficulty);
         if (filters.sourceType)
           questions = questions.filter((q) => q.sourceType === filters.sourceType);
-        if (filters.sourceExam)
-          questions = questions.filter((q) => q.sourceExam === filters.sourceExam);
+        if (filters.sourceExam) {
+          const sExam = filters.sourceExam.toLowerCase();
+          questions = questions.filter(
+            (q) =>
+              q.sourceExam &&
+              (q.sourceExam.toLowerCase() === sExam ||
+                q.sourceExam.toLowerCase().includes(sExam) ||
+                sExam.includes(q.sourceExam.toLowerCase()))
+          );
+        }
         if (filters.testId) {
           const tqIds = localTestQuestions
             .filter((tq) => tq.testId === filters.testId)

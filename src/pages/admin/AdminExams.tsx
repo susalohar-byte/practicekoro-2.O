@@ -27,6 +27,7 @@ import {
   AlertCircle,
   ExternalLink,
   ChevronRight,
+  Upload,
 } from 'lucide-react';
 import type { Exam, MockTest } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
@@ -55,12 +56,33 @@ export const AdminExams: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  // Category Management States
+  const STORAGE_KEY_CATEGORIES = 'practicekoro_exam_categories';
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_CATEGORIES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error('Error reading custom categories:', e);
+    }
+    return [];
+  });
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryModalInput, setCategoryModalInput] = useState('');
+  const [categoryModalError, setCategoryModalError] = useState('');
+  const [isInlineCreatingCategory, setIsInlineCreatingCategory] = useState(false);
+  const [inlineCategoryInput, setInlineCategoryInput] = useState('');
+
   // Form State
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
-  const [category, setCategory] = useState('West Bengal Police');
+  const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [iconName, setIconName] = useState('Shield');
+  const [iconName, setIconName] = useState('');
+  const [iconPreview, setIconPreview] = useState('');
   const [orderIndex, setOrderIndex] = useState(1);
   const [isActive, setIsActive] = useState(true);
   const [formError, setFormError] = useState('');
@@ -104,14 +126,74 @@ export const AdminExams: React.FC = () => {
     return counts;
   }, [tests]);
 
-  // Unique Categories
+  // Categories: combining custom categories and existing categories from exams
   const categories = useMemo(() => {
     const set = new Set<string>();
-    exams.forEach((e) => {
-      if (e.category) set.add(e.category);
+    customCategories.forEach((c) => {
+      if (c && c.trim()) set.add(c.trim());
     });
-    return Array.from(set);
-  }, [exams]);
+    exams.forEach((e) => {
+      if (e.category && e.category.trim()) set.add(e.category.trim());
+    });
+    return Array.from(set).sort();
+  }, [customCategories, exams]);
+
+  // Category helpers
+  const addCategoryItem = (catName: string): boolean => {
+    const trimmed = catName.trim();
+    if (!trimmed) return false;
+    if (categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+      return false;
+    }
+    const updated = [...customCategories, trimmed];
+    setCustomCategories(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving custom category:', e);
+    }
+    return true;
+  };
+
+  const removeCategoryItem = (catName: string) => {
+    const updated = customCategories.filter((c) => c.toLowerCase() !== catName.toLowerCase());
+    setCustomCategories(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error removing custom category:', e);
+    }
+  };
+
+  // Icon upload handlers
+  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setFormError('Please upload a valid image file (PNG, JPG, SVG, WebP).');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setFormError('Icon file size must be less than 2MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setIconPreview(result);
+      setIconName(result);
+      setFormError('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveIcon = () => {
+    setIconPreview('');
+    setIconName('');
+  };
 
   // Summary Metrics
   const stats = useMemo(() => {
@@ -151,9 +233,12 @@ export const AdminExams: React.FC = () => {
     setEditingExam(null);
     setTitle('');
     setSlug('');
-    setCategory('West Bengal Police');
+    setCategory(categories[0] || '');
     setDescription('');
-    setIconName('Shield');
+    setIconName('');
+    setIconPreview('');
+    setIsInlineCreatingCategory(categories.length === 0);
+    setInlineCategoryInput('');
     setOrderIndex(exams.length + 1);
     setIsActive(true);
     setFormError('');
@@ -164,9 +249,12 @@ export const AdminExams: React.FC = () => {
     setEditingExam(exam);
     setTitle(exam.title);
     setSlug(exam.slug);
-    setCategory(exam.category);
+    setCategory(exam.category || categories[0] || '');
     setDescription(exam.description || '');
-    setIconName(exam.iconName || 'Shield');
+    setIconName(exam.iconName || '');
+    setIconPreview(exam.iconName || '');
+    setIsInlineCreatingCategory(false);
+    setInlineCategoryInput('');
     setOrderIndex(exam.orderIndex);
     setIsActive(exam.isActive);
     setFormError('');
@@ -190,17 +278,23 @@ export const AdminExams: React.FC = () => {
       setFormError('Exam title is required.');
       return;
     }
+    if (!category.trim()) {
+      setFormError('Please select or create an Exam Category.');
+      return;
+    }
 
     try {
       setIsSaving(true);
       setFormError('');
+      const finalIcon = iconName.trim() || 'Shield';
+
       if (editingExam) {
         await api.updateExam(editingExam.id, {
           title: title.trim(),
           slug: slug.trim() || undefined,
           category: category.trim(),
           description: description.trim() || undefined,
-          iconName: iconName.trim(),
+          iconName: finalIcon,
           orderIndex: Number(orderIndex),
           isActive,
         });
@@ -217,7 +311,7 @@ export const AdminExams: React.FC = () => {
               .replace(/(^-|-$)/g, ''),
           category: category.trim(),
           description: description.trim() || undefined,
-          iconName: iconName.trim(),
+          iconName: finalIcon,
           orderIndex: Number(orderIndex),
           isActive,
         });
@@ -287,8 +381,20 @@ export const AdminExams: React.FC = () => {
     return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
   };
 
-  // Render Icon helper
+  // Render Icon helper (supports uploaded image data URLs or legacy icon strings)
   const renderExamIcon = (icon?: string, className: string = 'w-5 h-5') => {
+    if (!icon) return <Shield className={className} />;
+    if (
+      icon.startsWith('data:image') ||
+      icon.startsWith('http://') ||
+      icon.startsWith('https://') ||
+      icon.startsWith('/') ||
+      icon.startsWith('blob:')
+    ) {
+      return (
+        <img src={icon} alt="Exam Icon" className={`${className} object-contain rounded-md`} />
+      );
+    }
     switch (icon) {
       case 'Award':
         return <Award className={className} />;
@@ -378,14 +484,26 @@ export const AdminExams: React.FC = () => {
           </div>
         </div>
 
-        <Button
-          size="sm"
-          className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm"
-          leftIcon={<Plus className="w-4 h-4" />}
-          onClick={openCreateModal}
-        >
-          Add Target Exam
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs font-bold border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+            leftIcon={<Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+            onClick={() => setIsCategoryModalOpen(true)}
+          >
+            Manage Categories
+          </Button>
+
+          <Button
+            size="sm"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={openCreateModal}
+          >
+            Add Target Exam
+          </Button>
+        </div>
       </div>
 
       {/* Summary KPI Cards */}
@@ -421,13 +539,20 @@ export const AdminExams: React.FC = () => {
           <p className="text-[11px] text-slate-400">Full tests & PYQ papers</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div
+          onClick={() => setIsCategoryModalOpen(true)}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1 cursor-pointer hover:border-purple-300 dark:hover:border-purple-800 transition-colors"
+          title="Click to view and manage categories"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-xs font-medium">Exam Categories</span>
             <Layers className="w-4 h-4 text-purple-500" />
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white">{stats.catCount}</div>
-          <p className="text-[11px] text-slate-400">Police, PSC, Civil Services</p>
+          <p className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
+            <span>Manage categories</span>
+            <ChevronRight className="w-3 h-3" />
+          </p>
         </div>
       </div>
 
@@ -533,6 +658,16 @@ export const AdminExams: React.FC = () => {
               </button>
             );
           })}
+
+          <button
+            type="button"
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-dashed border-indigo-300 dark:border-indigo-700 flex items-center gap-1 ml-auto sm:ml-0"
+            title="Create and manage categories"
+          >
+            <Plus className="w-3 h-3" />
+            <span>+ Category</span>
+          </button>
         </div>
       </div>
 
@@ -652,7 +787,7 @@ export const AdminExams: React.FC = () => {
 
                   {/* Exam Icon & Title */}
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 overflow-hidden">
                       {renderExamIcon(exam.iconName, 'w-5 h-5')}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -770,7 +905,7 @@ export const AdminExams: React.FC = () => {
                       {/* Exam Title & Description */}
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                          <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 overflow-hidden">
                             {renderExamIcon(exam.iconName, 'w-4 h-4')}
                           </div>
                           <div className="min-w-0">
@@ -938,57 +1073,173 @@ export const AdminExams: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                    URL Slug / ID *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. wbp-constable"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-slate-300 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  URL Slug / ID *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. wbp-constable"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-slate-300 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                    Icon Theme
-                  </label>
-                  <select
-                    value={iconName}
-                    onChange={(e) => setIconName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="Shield">Shield (Police & Defense)</option>
-                    <option value="Award">Award (Sergeant & SI)</option>
-                    <option value="FileCheck">FileCheck (Civil Services)</option>
-                    <option value="GraduationCap">GraduationCap (Clerkship & General)</option>
-                    <option value="Trophy">Trophy (Competitive)</option>
-                    <option value="Sparkles">Sparkles (Special)</option>
-                  </select>
+              {/* Icon Upload (Replacing Icon Theme) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Exam Icon / Logo
+                </label>
+                <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+                  {/* Icon Thumbnail Preview */}
+                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                    {iconPreview ? (
+                      <img
+                        src={iconPreview}
+                        alt="Exam Icon Preview"
+                        className="w-full h-full object-contain p-1"
+                      />
+                    ) : (
+                      <Shield className="w-7 h-7 text-indigo-400 opacity-60" />
+                    )}
+                  </div>
+
+                  {/* Upload Actions */}
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <label className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition-colors">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{iconPreview ? 'Change Icon' : 'Upload Icon'}</span>
+                        <input
+                          type="file"
+                          accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                          onChange={handleIconUpload}
+                          className="hidden"
+                        />
+                      </label>
+
+                      {iconPreview && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveIcon}
+                          className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 text-xs font-semibold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Upload custom exam badge or logo (PNG, SVG, JPG under 2MB).
+                    </p>
+                  </div>
                 </div>
               </div>
 
+              {/* Exam Category (Dynamic with Create Option) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Exam Category
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500"
-                >
-                  <option value="West Bengal Police">West Bengal Police (WBP / KP)</option>
-                  <option value="State Civil Services">State Civil Services (WBCS)</option>
-                  <option value="State Govt.">State Govt. (WBPSC)</option>
-                  <option value="Staff Selection">Staff Selection Commission (SSC)</option>
-                  <option value="Railways">Railways (RRB NTPC / Group D)</option>
-                  <option value="Teaching Exams">Teaching Exams (WB TET / SLST)</option>
-                  <option value="General Combined">General Combined / Other</option>
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Exam Category *
+                  </label>
+                  {!isInlineCreatingCategory && (
+                    <button
+                      type="button"
+                      onClick={() => setIsInlineCreatingCategory(true)}
+                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Create Category</span>
+                    </button>
+                  )}
+                </div>
+
+                {isInlineCreatingCategory ? (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                      <input
+                        type="text"
+                        placeholder="Enter category name (e.g. Police, Defence, WBPSC)..."
+                        value={inlineCategoryInput}
+                        onChange={(e) => setInlineCategoryInput(e.target.value)}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (inlineCategoryInput.trim()) {
+                              addCategoryItem(inlineCategoryInput.trim());
+                              setCategory(inlineCategoryInput.trim());
+                              setInlineCategoryInput('');
+                              setIsInlineCreatingCategory(false);
+                            }
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (inlineCategoryInput.trim()) {
+                            addCategoryItem(inlineCategoryInput.trim());
+                            setCategory(inlineCategoryInput.trim());
+                            setInlineCategoryInput('');
+                            setIsInlineCreatingCategory(false);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsInlineCreatingCategory(false);
+                          setInlineCategoryInput('');
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Press Enter or click Save to create and select this category.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <select
+                      value={category}
+                      onChange={(e) => {
+                        if (e.target.value === '__CREATE_NEW__') {
+                          setIsInlineCreatingCategory(true);
+                        } else {
+                          setCategory(e.target.value);
+                        }
+                      }}
+                      required
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="">-- Select Exam Category --</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                      <option value="__CREATE_NEW__" className="text-indigo-600 font-bold">
+                        + Create New Category...
+                      </option>
+                    </select>
+
+                    {categories.length === 0 && (
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                        No categories exist yet. Click &quot;Create Category&quot; above or select
+                        it from the dropdown to add your first category.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1053,6 +1304,173 @@ export const AdminExams: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* MODAL: Manage Exam Categories                                       */}
+      {/* =================================================================== */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-5 animate-scale-up">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Manage Exam Categories
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Create and organize categories for recruitment exams
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCategoryModalOpen(false);
+                  setCategoryModalInput('');
+                  setCategoryModalError('');
+                }}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {categoryModalError && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{categoryModalError}</span>
+              </div>
+            )}
+
+            {/* Add Category Form */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Create New Category
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. Police, Defence, WBPSC, SSC..."
+                  value={categoryModalInput}
+                  onChange={(e) => {
+                    setCategoryModalInput(e.target.value);
+                    setCategoryModalError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (!categoryModalInput.trim()) {
+                        setCategoryModalError('Category name is required.');
+                        return;
+                      }
+                      const added = addCategoryItem(categoryModalInput.trim());
+                      if (!added) {
+                        setCategoryModalError('This category already exists.');
+                        return;
+                      }
+                      setCategoryModalInput('');
+                      setCategoryModalError('');
+                    }
+                  }}
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    if (!categoryModalInput.trim()) {
+                      setCategoryModalError('Category name is required.');
+                      return;
+                    }
+                    const added = addCategoryItem(categoryModalInput.trim());
+                    if (!added) {
+                      setCategoryModalError('This category already exists.');
+                      return;
+                    }
+                    setCategoryModalInput('');
+                    setCategoryModalError('');
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 shadow-xs"
+                >
+                  Create
+                </Button>
+              </div>
+            </div>
+
+            {/* Existing Categories List */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Available Categories ({categories.length})
+              </label>
+              <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+                {categories.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                    No categories created yet. Type above and click Create!
+                  </div>
+                ) : (
+                  categories.map((cat) => {
+                    const examCount = exams.filter((e) => e.category === cat).length;
+                    return (
+                      <div
+                        key={cat}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                          <span className="font-bold text-slate-900 dark:text-white truncate">
+                            {cat}
+                          </span>
+                          <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800">
+                            {examCount} {examCount === 1 ? 'exam' : 'exams'}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (
+                              examCount > 0 &&
+                              !confirm(
+                                `"${cat}" is linked to ${examCount} exam(s). Delete category from list?`
+                              )
+                            ) {
+                              return;
+                            }
+                            removeCategoryItem(cat);
+                          }}
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                          title="Delete Category"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsCategoryModalOpen(false);
+                  setCategoryModalInput('');
+                  setCategoryModalError('');
+                }}
+                className="text-xs"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       )}

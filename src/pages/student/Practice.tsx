@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { Card } from '@/components/common/Card';
@@ -35,6 +35,8 @@ interface PracticeAnswerRecord {
 export const Practice: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Data state
   const [activeTab, setActiveTab] = useState<PracticeTab>('topics');
@@ -84,6 +86,54 @@ export const Practice: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Sync active tab with URL (?tab=mistakes|bookmarks|topics) and
+  // legacy/dedicated paths (/practice/mistakes, /practice/bookmarks).
+  // This makes sidebar links like `/practice?tab=mistakes` open the
+  // dedicated view instead of always falling back to Topic Tests.
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const pathSuffix = location.pathname.split('/').pop() || '';
+
+    let nextTab: PracticeTab | null = null;
+    if (tabParam === 'mistakes' || tabParam === 'bookmarks' || tabParam === 'topics') {
+      nextTab = tabParam;
+    } else if (pathSuffix === 'mistakes' || pathSuffix === 'bookmarks') {
+      nextTab = pathSuffix;
+    } else if (!tabParam && location.pathname.replace(/\/$/, '') === '/practice') {
+      nextTab = 'topics';
+    }
+
+    if (nextTab) {
+      setActiveTab((prev) => {
+        if (prev !== nextTab) {
+          setSelectedSubjectFilter('all');
+          setExpandedId(null);
+          setIsPracticing(false);
+          setIsSessionComplete(false);
+        }
+        return nextTab as PracticeTab;
+      });
+    }
+  }, [location.pathname, searchParams]);
+
+  // Tab switcher that keeps the URL in sync so direct links,
+  // refresh, and back/forward navigation preserve the dedicated view.
+  const handleTabChange = useCallback(
+    (tab: PracticeTab) => {
+      setActiveTab(tab);
+      setSelectedSubjectFilter('all');
+      setExpandedId(null);
+      setIsPracticing(false);
+      setIsSessionComplete(false);
+      if (tab === 'topics') {
+        setSearchParams({}, { replace: false });
+      } else {
+        setSearchParams({ tab }, { replace: false });
+      }
+    },
+    [setSearchParams]
+  );
 
   // Derived metrics (strictly real data)
   const pendingMistakes = mistakes.filter((m) => !m.isResolved);
@@ -624,10 +674,7 @@ export const Practice: React.FC = () => {
             <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab('topics');
-                  setSelectedSubjectFilter('all');
-                }}
+                onClick={() => handleTabChange('topics')}
                 className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'topics'
                     ? 'border-brand-600 text-brand-600'
@@ -640,10 +687,7 @@ export const Practice: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab('mistakes');
-                  setSelectedSubjectFilter('all');
-                }}
+                onClick={() => handleTabChange('mistakes')}
                 className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'mistakes'
                     ? 'border-brand-600 text-brand-600'
@@ -659,10 +703,7 @@ export const Practice: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab('bookmarks');
-                  setSelectedSubjectFilter('all');
-                }}
+                onClick={() => handleTabChange('bookmarks')}
                 className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'bookmarks'
                     ? 'border-brand-600 text-brand-600'

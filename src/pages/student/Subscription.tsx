@@ -46,7 +46,9 @@ export const Subscription: React.FC = () => {
 
   useEffect(() => {
     if (plans.length > 0 && !selectedPlan) {
-      const defaultPlan = plans.find((p) => p.id === 'pro_1_year') || plans[0];
+      // Only show purchasable plans (price > 0) — free plan is automatic for all users
+      const paidPlans = plans.filter((p) => p.price > 0);
+      const defaultPlan = paidPlans.find((p) => p.id === 'pro_1_year') || paidPlans[0] || plans[0];
       setSelectedPlan(defaultPlan);
     }
   }, [plans, selectedPlan]);

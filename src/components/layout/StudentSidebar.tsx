@@ -77,6 +77,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
       label: 'Mistakes Notebook',
       path: '/practice',
       search: '?tab=mistakes',
+      tab: 'mistakes',
       icon: AlertTriangle,
       count: mistakesCount,
       countColor: 'bg-rose-50 text-rose-600 border-rose-200/60',
@@ -85,11 +86,14 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
       label: 'Saved Questions',
       path: '/practice',
       search: '?tab=bookmarks',
+      tab: 'bookmarks',
       icon: Bookmark,
       count: bookmarksCount,
       countColor: 'bg-blue-50 text-blue-600 border-blue-200/60',
     },
   ];
+
+  const activePracticeTab = new URLSearchParams(location.search).get('tab');
 
   return (
     <>
@@ -299,6 +303,9 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
               <div className="space-y-0.5">
                 {practiceTools.map((tool) => {
                   const Icon = tool.icon;
+                  const isActive =
+                    location.pathname.startsWith('/practice') &&
+                    (activePracticeTab === tool.tab || location.pathname.endsWith(`/${tool.tab}`));
                   return (
                     <Link
                       key={tool.label}
@@ -306,12 +313,20 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                       onClick={onClose}
                       title={isCollapsed ? `${tool.label} (${tool.count})` : undefined}
                       className={cn(
-                        'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 transition-all group',
-                        isCollapsed && 'lg:justify-center lg:px-2'
+                        'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group',
+                        isCollapsed && 'lg:justify-center lg:px-2',
+                        isActive
+                          ? 'bg-blue-50 text-blue-700 font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <Icon className="w-4 h-4 text-slate-400 group-hover:text-blue-600 shrink-0 transition-colors" />
+                        <Icon
+                          className={cn(
+                            'w-4 h-4 shrink-0 transition-colors',
+                            isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-600'
+                          )}
+                        />
                         <span className={cn('truncate', isCollapsed && 'lg:hidden')}>
                           {tool.label}
                         </span>

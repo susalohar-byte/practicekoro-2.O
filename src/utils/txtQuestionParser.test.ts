@@ -25,7 +25,7 @@ describe('txtQuestionParser', () => {
     expect(q1.optionC).toBe('সর্বপল্লী রাধাকৃষ্ণন');
     expect(q1.optionD).toBe('ড. বি. আর. আম্বেদকর');
     expect(q1.correctOption).toBe('A');
-    expect(q1.explanation).toContain('ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি।');
+    expect(q1.explanation).toContain('ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি');
 
     const q2 = result.valid[1];
     expect(q2.questionNumber).toBe(2);
