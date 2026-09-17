@@ -1,0 +1,56 @@
+name: Fix Short Notes Display
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-short-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch Question Bank short notes rendering
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/pages/admin/AdminQuestionBank.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = {
+              "setEditQExplanation(q.explanation || '');": "setEditQExplanation(q.explanationBengali || q.explanation || '');",
+              "      if (q.explanation) {\n        content += `Explanation:\\n${q.explanation}\\n\\n`;\n      }": "      if (q.explanationBengali || q.explanation) {\n        content += `Explanation:\\n${q.explanationBengali || q.explanation}\\n\\n`;\n      }",
+              "{q.explanation && (": "{(q.explanationBengali || q.explanation) && (",
+              "                                {q.explanation}\n": "                                {q.explanationBengali || q.explanation}\n",
+              "              {previewingQuestion.explanation && (": "              {(previewingQuestion.explanationBengali || previewingQuestion.explanation) && (",
+              "                    {previewingQuestion.explanation}\n": "                    {previewingQuestion.explanationBengali || previewingQuestion.explanation}\n",
+          }
+
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Missing expected source pattern: {old[:100]!r}')
+              text = text.replace(old, new)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify short notes rendering rules
+        run: |
+          test -f src/pages/admin/AdminQuestionBank.tsx
+          ! grep -nE '\.slice\(0, ?3\)|notes\.slice\([^)]*3|shortNotes\.slice\([^)]*3|importantNotes\.slice\([^)]*3' src/pages/admin/AdminQuestionBank.tsx
+          grep -n "explanationBengali || q.explanation" src/pages/admin/AdminQuestionBank.tsx
+          grep -n "previewingQuestion.explanationBengali || previewingQuestion.explanation" src/pages/admin/AdminQuestionBank.tsx
+
+      - name: Commit fix and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/pages/admin/AdminQuestionBank.tsx
+          git commit -m "fix: display all stored short notes" || true
+          git rm .github/workflows/fix-short-notes.yml
+          git commit -m "chore: remove temporary fix workflow"
+          git push
