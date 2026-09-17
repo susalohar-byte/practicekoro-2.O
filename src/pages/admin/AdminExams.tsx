@@ -9,7 +9,6 @@ import {
   Trash2,
   CheckCircle2,
   Search,
-  Network,
   X,
   Layers,
   LayoutGrid,
@@ -445,19 +444,33 @@ export const AdminExams: React.FC = () => {
             Exams Directory ({exams.length})
           </Link>
           <Link
-            to="/admin/exam-topics"
+            to="/admin/tests"
             className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
           >
-            <Network className="w-3.5 h-3.5" />
-            Syllabus & Topics Mapping
+            <FileText className="w-3.5 h-3.5 text-indigo-500" />
+            Mock & Topic Tests
+          </Link>
+          <Link
+            to="/admin/subjects"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+          >
+            <Layers className="w-3.5 h-3.5 text-blue-500" />
+            Subjects & Topics
+          </Link>
+          <Link
+            to="/admin/question-bank"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+            Question Bank
           </Link>
         </div>
 
         <Link
-          to="/admin/tests"
+          to="/admin/tests?tab=topic"
           className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors"
         >
-          <span>Mock Test Management</span>
+          <span>Manage Topic Tests</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -478,8 +491,8 @@ export const AdminExams: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
-              Define target recruitment exams, manage syllabus architecture, and configure Full Mock
-              Tests and PYQ papers mapped to each exam category.
+              Define target recruitment exams. Topic Tests are automatically enabled by default for
+              every exam with centralized syllabus chapters and mock test simulations.
             </p>
           </div>
         </div>
@@ -514,7 +527,7 @@ export const AdminExams: React.FC = () => {
             <Shield className="w-4 h-4 text-indigo-500" />
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white">{stats.total}</div>
-          <p className="text-[11px] text-slate-400">Configured in curriculum</p>
+          <p className="text-[11px] text-slate-400">Target recruitment exams</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
@@ -818,25 +831,31 @@ export const AdminExams: React.FC = () => {
 
                   {/* Metrics Badge Row */}
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                    <Link
+                      to={`/admin/tests?examId=${exam.id}&tab=full_mock`}
+                      className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-800 flex items-center gap-2 transition-colors group/mock"
+                      title="Manage Full Mock Tests for this exam"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-[10px] text-slate-400 leading-none">Mock Tests</p>
-                        <p className="font-bold text-slate-900 dark:text-white mt-0.5">
+                        <p className="text-[10px] text-slate-400 leading-none">Full Mock</p>
+                        <p className="font-bold text-slate-900 dark:text-white mt-0.5 group-hover/mock:text-indigo-600 dark:group-hover/mock:text-indigo-400">
                           {testCount} Tests
                         </p>
                       </div>
-                    </div>
+                    </Link>
 
                     <Link
-                      to="/admin/exam-topics"
-                      className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-800 flex items-center gap-2 transition-colors group/link"
+                      to={`/admin/tests?examId=${exam.id}&tab=topic`}
+                      className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 flex items-center gap-2 transition-colors group/topic"
+                      title="Topic Tests are available by default. Click to manage topic tests for this exam."
                     >
-                      <Network className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-[10px] text-slate-400 leading-none">Curriculum</p>
-                        <p className="font-bold text-slate-900 dark:text-white mt-0.5 group-hover/link:text-indigo-600 dark:group-hover/link:text-indigo-400">
-                          Map Syllabus
+                        <p className="text-[10px] text-slate-400 leading-none">Topic Tests</p>
+                        <p className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 group-hover/topic:text-blue-600 dark:group-hover/topic:text-blue-400 flex items-center gap-1">
+                          <span>Active</span>
+                          <ChevronRight className="w-3 h-3 opacity-60" />
                         </p>
                       </div>
                     </Link>
@@ -845,13 +864,24 @@ export const AdminExams: React.FC = () => {
 
                 {/* Card Footer Actions */}
                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                  <Link
-                    to="/admin/tests"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
-                  >
-                    <span>View Tests</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </Link>
+                  <div className="flex items-center gap-2.5">
+                    <Link
+                      to={`/admin/question-bank?examId=${exam.id}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                      title="View all questions for this exam in Question Bank"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Question Bank</span>
+                    </Link>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <Link
+                      to="/admin/tests"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    >
+                      <span>Tests</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  </div>
 
                   <div className="flex items-center gap-1">
                     <button
@@ -989,11 +1019,18 @@ export const AdminExams: React.FC = () => {
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
-                            to="/admin/exam-topics"
+                            to={`/admin/question-bank?examId=${exam.id}`}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                            title="Map Syllabus Topics"
+                            title="View Exam in Question Bank"
                           >
-                            <Network className="w-4 h-4" />
+                            <BookOpen className="w-4 h-4" />
+                          </Link>
+                          <Link
+                            to={`/admin/tests?examId=${exam.id}&tab=topic`}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            title="Manage Topic Tests for this Exam"
+                          >
+                            <Layers className="w-4 h-4" />
                           </Link>
                           <button
                             type="button"
@@ -1038,7 +1075,8 @@ export const AdminExams: React.FC = () => {
                     {editingExam ? 'Edit Target Exam' : 'Add Target Recruitment Exam'}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Configure exam identity, URL path, and categorization
+                    Configure exam identity, URL path, and categorization (Topic Tests active by
+                    default)
                   </p>
                 </div>
               </div>
@@ -1052,6 +1090,13 @@ export const AdminExams: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>
+                  No syllabus mapping required. Standard topic tests and subjects are automatically
+                  enabled for this exam.
+                </span>
+              </div>
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />

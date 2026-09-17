@@ -188,11 +188,17 @@ export const catalogApi = {
     }[]
   > {
     try {
-      const [allSubjects, allChapters, mappedTopicIds] = await Promise.all([
+      const [fetchedSubjects, allChapters, mappedTopicIds] = await Promise.all([
         this.getSubjects(examId),
         this.getAllChapters(),
         this.getExamTopicMappings(examId),
       ]);
+      let allSubjects = fetchedSubjects;
+
+      // If no exam-specific subjects were found, fallback to universal active subjects
+      if (!allSubjects || allSubjects.length === 0) {
+        allSubjects = await this.getSubjects();
+      }
 
       const mappedSet = new Set(mappedTopicIds);
       const hasMappings = mappedTopicIds.length > 0;
@@ -309,6 +315,90 @@ export const catalogApi = {
     examId: string,
     category?: 'full_mock' | 'pyq' | 'topic'
   ): Promise<MockTest[]> {
+    if (category === 'topic') {
+      const fallback = () =>
+        localTests.filter(
+          (t) =>
+            t.isActive &&
+            (t.status === 'published' || !t.status) &&
+            (!t.examId || t.examId === examId) &&
+            (t.testType === 'topic' ||
+              t.testType === 'chapter_mock' ||
+              t.testType === 'subject_mock')
+        );
+
+      if (!isSupabaseConfigured) return fallback();
+
+      try {
+        let assocTestIds: string[] = [];
+        try {
+          const { data: assocData } = await supabase
+            .from('test_exams')
+            .select('test_id')
+            .eq('exam_id', examId);
+          if (assocData && assocData.length > 0) {
+            assocTestIds = assocData.map((a) => a.test_id);
+          }
+        } catch (e) {
+          console.warn('Could not query test_exams table', e);
+        }
+
+        let query = supabase
+          .from('tests')
+          .select('*, exams(title), subjects(name), chapters(name), test_series(title)')
+          .eq('is_active', true)
+          .eq('status', 'published')
+          .in('test_type', ['topic', 'chapter_mock', 'subject_mock']);
+
+        if (assocTestIds.length > 0) {
+          query = query.or(
+            `id.in.(${assocTestIds.join(',')}),exam_id.eq.${examId},exam_id.is.null`
+          );
+        } else {
+          query = query.or(`exam_id.eq.${examId},exam_id.is.null`);
+        }
+
+        const { data, error } = await query.order('order_index', { ascending: true });
+        if (error || !data || data.length === 0) {
+          return fallback();
+        }
+
+        return data.map((item) => ({
+          id: item.id,
+          examId: item.exam_id,
+          subjectId: item.subject_id ?? undefined,
+          chapterId: item.chapter_id ?? undefined,
+          topicId: item.chapter_id ?? undefined,
+          testSeriesId: item.test_series_id ?? undefined,
+          title: item.title,
+          slug: item.slug,
+          description: item.description ?? undefined,
+          testType: item.test_type,
+          year: item.year ? Number(item.year) : undefined,
+          paperName: item.paper_name ?? undefined,
+          shift: item.shift ?? undefined,
+          setName: item.set_name ?? undefined,
+          examDate: item.exam_date ?? undefined,
+          durationMinutes: item.duration_minutes,
+          totalQuestions: item.total_questions,
+          totalMarks: Number(item.total_marks),
+          passingMarks: Number(item.passing_marks),
+          negativeMarking: Number(item.negative_marking),
+          isPremium: item.is_premium,
+          orderIndex: item.order_index,
+          isActive: item.is_active,
+          status: (item.status as 'draft' | 'published' | 'archived') || 'published',
+          examTitle: item.exams?.title,
+          subjectName: item.subjects?.name,
+          chapterName: item.chapters?.name,
+          topicName: item.chapters?.name,
+          testSeriesTitle: item.test_series?.title,
+        }));
+      } catch {
+        return fallback();
+      }
+    }
+
     const allTests = await this.getTests(undefined, examId);
     if (!category) return allTests;
 
@@ -317,12 +407,6 @@ export const catalogApi = {
     }
     if (category === 'pyq') {
       return allTests.filter((t) => t.testType === 'pyq');
-    }
-    if (category === 'topic') {
-      return allTests.filter(
-        (t) =>
-          t.testType === 'topic' || t.testType === 'chapter_mock' || t.testType === 'subject_mock'
-      );
     }
     return allTests;
   },

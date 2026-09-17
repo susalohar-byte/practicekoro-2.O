@@ -4,13 +4,14 @@ import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { FileQuestion, Plus, Edit2, Trash2, Search, Upload, X, Download } from 'lucide-react';
 import type { Question, Subject, Chapter, Exam, MockTest } from '@/types';
+import { parseQuestionsCsv, parseQuestionsText, CsvParseResult } from '@/utils/csvParser';
 import {
-  parseQuestionsCsv,
-  parseQuestionsText,
-  validateExplanationBullets,
-  normalizeExplanationBullets,
-  CsvParseResult,
-} from '@/utils/csvParser';
+  isMathematicsSubject,
+  isMathematicsQuestion,
+  normalizeShortNotes,
+  validateShortNotes,
+  getAiQuestionGenerationPrompt,
+} from '@/utils/shortNotes';
 
 export const AdminQuestions: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -61,26 +62,35 @@ export const AdminQuestions: React.FC = () => {
   const [importFormat, setImportFormat] = useState<'csv' | 'text'>('csv');
   const [csvParseResult, setCsvParseResult] = useState<CsvParseResult | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [aiPromptCopied, setAiPromptCopied] = useState(false);
   const [importNotice, setImportNotice] = useState<{
     type: 'success' | 'error';
     text: string;
   } | null>(null);
 
   const normalizeAndValidateShortNotes = (value: string) => {
-    if (!value.trim()) {
-      setFormError(
-        'Short Notes is required for GK / General questions and must contain 3–5 bullet points.'
-      );
-      return null;
+    // Mathematics keeps the classic step-by-step Explanation (same DB column, no bullet rules).
+    if (editorIsMath) {
+      return value.trim();
     }
-    const normalized = normalizeExplanationBullets(value);
-    const errors = validateExplanationBullets(normalized);
+    // Non-Mathematics: strict 4–5 bullet Short Notes, no answer declarations.
+    const errors = validateShortNotes(value, false);
     if (errors.length > 0) {
-      setFormError(`Short Notes: ${errors[0]}`);
+      setFormError(errors[0]);
       return null;
     }
-    return normalized;
+    return normalizeShortNotes(value);
   };
+
+  // Subject context for the editor modal (drives Short Notes vs Explanation mode).
+  const editorSubject = subjects.find((s) => s.id === subjectId);
+  const editorChapter = chapters.find((c) => c.id === chapterId);
+  const editorIsMath = isMathematicsSubject(
+    editorSubject
+      ? { name: editorSubject.name, slug: editorSubject.slug, id: editorSubject.id }
+      : subjectId,
+    { chapterName: editorChapter?.name }
+  );
 
   const loadData = useCallback(async () => {
     try {
@@ -192,7 +202,13 @@ export const AdminQuestions: React.FC = () => {
     setOptionC(q.optionC);
     setOptionD(q.optionD);
     setCorrectOption(q.correctOption);
-    setShortNotes(normalizeExplanationBullets(q.explanationBengali || q.explanation || ''));
+    // Mathematics edits keep the raw step-by-step text; non-Math normalizes to • bullets.
+    const editIsMath = isMathematicsQuestion(q);
+    setShortNotes(
+      editIsMath
+        ? q.explanationBengali || q.explanation || ''
+        : normalizeShortNotes(q.explanationBengali || q.explanation || '')
+    );
     setDefaultMarks(q.defaultMarks);
     setDefaultNegativeMarks(q.defaultNegativeMarks);
     setFormError('');
@@ -343,8 +359,8 @@ export const AdminQuestions: React.FC = () => {
   };
 
   const sampleCsvText = `question_text,question_bengali_text,option_a,option_b,option_c,option_d,correct_option,explanation_bengali,marks,negative_marks
-"Who founded the Maurya Empire in 322 BCE?","কে ৩২২ খ্রিস্টপূর্বাব্দে মৌর্য সাম্রাজ্য প্রতিষ্ঠা করেছিলেন?","Chandragupta Maurya","Bindusara","Ashoka the Great","Brihadratha","A","• সঠিক উত্তর: চন্দ্রগুপ্ত মৌর্য।\\n• ৩২২ খ্রিস্টপূর্বাব্দে নন্দ বংশের পতনের পর মৌর্য সাম্রাজ্যের সূচনা হয়।\\n• চাণক্য বা কৌটিল্যের সহায়তায় চন্দ্রগুপ্তের উত্থান ঘটে।\\n• বিন্দুসার ও অশোক পরবর্তী শাসক—তাঁরা প্রতিষ্ঠাতা নন।",1.0,0.25
-"Which Harappan site had an artificial tidal dockyard?","সিন্ধু সভ্যতার কোন স্থানে একটি কৃত্রিম পোতাশ্রয় ছিল?","Harappa","Lothal","Mohenjodaro","Kalibangan","B","• সঠিক উত্তর: লোথাল।\\n• লোথাল বর্তমান গুজরাটে অবস্থিত গুরুত্বপূর্ণ হরপ্পা কেন্দ্র।\\n• ডকইয়ার্ড-সদৃশ কাঠামো থেকে সামুদ্রিক বাণিজ্য ও জোয়ারভাটা নিয়ন্ত্রণের ধারণা পাওয়া যায়।\\n• হরপ্পা ও মহেঞ্জোদারো বড় নগর হলেও ডকইয়ার্ডের সঙ্গে সবচেয়ে বেশি যুক্ত লোথাল।",1.0,0.25`;
+"Who founded the Maurya Empire in 322 BCE?","কে ৩২২ খ্রিস্টপূর্বাব্দে মৌর্য সাম্রাজ্য প্রতিষ্ঠা করেছিলেন?","Chandragupta Maurya","Bindusara","Ashoka the Great","Brihadratha","A","• ৩২২ খ্রিস্টপূর্বাব্দে নন্দ বংশের পতনের পর চন্দ্রগুপ্ত মৌর্য মৌর্য সাম্রাজ্যের সূচনা করেন।\\n• চাণক্য বা কৌটিল্যের সহায়তায় চন্দ্রগুপ্তের উত্থান ঘটে।\\n• বিন্দুসার ছিলেন চন্দ্রগুপ্তের পুত্র ও পরবর্তী শাসক।\\n• অশোক মৌর্য বংশের তৃতীয় গুরুত্বপূর্ণ শাসক এবং কলিঙ্গ যুদ্ধের জন্য বিখ্যাত।\\n• বৃহদ্রথ ছিলেন মৌর্য বংশের শেষ শাসক।",1.0,0.25
+"Which Harappan site had an artificial tidal dockyard?","সিন্ধু সভ্যতার কোন স্থানে একটি কৃত্রিম পোতাশ্রয় ছিল?","Harappa","Lothal","Mohenjodaro","Kalibangan","B","• লোথাল বর্তমান গুজরাটে অবস্থিত একটি গুরুত্বপূর্ণ হরপ্পা প্রত্নস্থল।\\n• এখানকার ডকইয়ার্ড-সদৃশ কাঠামো থেকে সামুদ্রিক বাণিজ্যের ধারণা পাওয়া যায়।\\n• লোথাল থেকে পুঁতি, সিলমোহর ও ওজন-বাটখারা পাওয়া গেছে।\\n• হরপ্পা বর্তমান পাকিস্তানের পাঞ্জাব অঞ্চলে অবস্থিত প্রথম আবিষ্কৃত হরপ্পা নগর।\\n• মহেঞ্জোদারো সিন্ধু অঞ্চলে অবস্থিত এবং বৃহৎ স্নানাগারের জন্য বিখ্যাত।",1.0,0.25`;
 
   const downloadSampleCsv = () => {
     const blob = new Blob([sampleCsvText], { type: 'text/csv;charset=utf-8;' });
@@ -357,8 +373,39 @@ export const AdminQuestions: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  // AI question-generation prompt (Short Notes rules enforced, math-aware).
+  // No backend AI service exists in the repo, so the admin copies this prompt
+  // into any external AI tool and pastes the result back into the importer.
+  const aiPromptSubject = subjects.find((s) => s.id === csvDefaultSubject);
+  const aiPromptText = getAiQuestionGenerationPrompt({
+    subject: aiPromptSubject?.name || 'General Knowledge',
+    isMathematics: aiPromptSubject
+      ? isMathematicsSubject({
+          name: aiPromptSubject.name,
+          slug: aiPromptSubject.slug,
+          id: aiPromptSubject.id,
+        })
+      : false,
+    count: 5,
+  });
+
+  const handleCopyAiPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(aiPromptText);
+      setAiPromptCopied(true);
+      setTimeout(() => setAiPromptCopied(false), 2000);
+    } catch {
+      setImportNotice({
+        type: 'error',
+        text: 'Could not copy automatically — please select and copy manually.',
+      });
+    }
+  };
+
   const renderShortNotes = (q: Question) => {
-    const notes = normalizeExplanationBullets(q.explanationBengali || q.explanation || '');
+    const rowIsMath = isMathematicsQuestion(q);
+    const raw = q.explanationBengali || q.explanation || '';
+    const notes = rowIsMath ? raw : normalizeShortNotes(raw);
     if (!notes) return null;
     return (
       <div className="rounded-2xl border border-indigo-300/40 bg-indigo-50/70 dark:bg-indigo-500/5 p-4 sm:p-5 shadow-sm">
@@ -369,31 +416,39 @@ export const AdminQuestions: React.FC = () => {
             </span>
             <div>
               <div className="text-sm sm:text-base font-black text-indigo-700 dark:text-indigo-300">
-                Short Notes
+                {rowIsMath ? 'Explanation' : 'শর্ট নোটস (Short Notes)'}
               </div>
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
-                প্রশ্নের সঠিক উত্তর ও গুরুত্বপূর্ণ তথ্য
+                {rowIsMath
+                  ? 'ধাপে ধাপে গাণিতিক সমাধান'
+                  : 'প্রশ্নের সঙ্গে সরাসরি সম্পর্কিত গুরুত্বপূর্ণ তথ্য'}
               </div>
             </div>
           </div>
           <span className="px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-200 dark:border-indigo-500/20">
-            3–5 Points
+            {rowIsMath ? 'Steps' : '4–5 Points'}
           </span>
         </div>
-        <div className="space-y-2.5">
-          {notes
-            .split('\n')
-            .filter(Boolean)
-            .map((line, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 text-sm leading-7 text-slate-700 dark:text-slate-200"
-              >
-                <span className="mt-2 w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-                <span>{line.replace(/^•\s*/, '')}</span>
-              </div>
-            ))}
-        </div>
+        {rowIsMath ? (
+          <p className="text-sm leading-7 text-slate-700 dark:text-slate-200 whitespace-pre-line">
+            {notes}
+          </p>
+        ) : (
+          <div className="space-y-2.5">
+            {notes
+              .split('\n')
+              .filter(Boolean)
+              .map((line, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-3 text-sm leading-7 text-slate-700 dark:text-slate-200"
+                >
+                  <span className="mt-2 w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                  <span>{line.replace(/^•\s*/, '')}</span>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -418,7 +473,7 @@ export const AdminQuestions: React.FC = () => {
             <span className="text-purple-400 font-semibold">📜 PYQ Questions</span> in the sidebar.
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            Question-wise Short Notes are shown as separate 3–5 point lines for fast revision.
+            Question-wise Short Notes are shown as separate 4–5 point lines for fast revision.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -1017,27 +1072,31 @@ export const AdminQuestions: React.FC = () => {
                   </span>
                   <div>
                     <p className="text-sm font-black text-indigo-700 dark:text-indigo-300">
-                      Short Notes
+                      {editorIsMath ? 'Explanation' : 'Short Notes (শর্ট নোটস)'}
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                      GK / History / Science / General প্রশ্নের জন্য শুধু বাংলা Short Notes লিখুন।
-                      ৩–৫টি আলাদা bullet point দিন। প্রতিটি point প্রশ্নের উত্তর, গুরুত্বপূর্ণ তথ্য
-                      বা confusing option পরিষ্কার করবে।
+                      {editorIsMath
+                        ? 'গণিত প্রশ্নের জন্য ধাপে ধাপে সমাধান, সূত্র ও হিসাব লিখুন (same database column)।'
+                        : 'GK / History / Science / General প্রশ্নের জন্য ৪–৫টি বাংলা বুলেট পয়েন্ট লিখুন। প্রতিটি point • দিয়ে শুরু হবে, আলাদা লাইনে থাকবে এবং পরীক্ষার জন্য নতুন তথ্য দেবে। “সঠিক উত্তর: …” বা “Option … সঠিক/ভুল” লিখবেন না।'}
                     </p>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      Short Notes (শুধু বাংলা) *
+                      {editorIsMath ? 'Explanation *' : 'Short Notes (শর্ট নোটস) *'}
                     </label>
-                    <span className="text-[10px] text-indigo-300">3–5 bullets</span>
+                    <span className="text-[10px] text-indigo-300">
+                      {editorIsMath ? 'steps' : '4–5 bullets'}
+                    </span>
                   </div>
                   <textarea
-                    required
+                    required={!editorIsMath}
                     rows={7}
                     placeholder={
-                      '• সঠিক উত্তর কেন সঠিক\n• প্রশ্নের গুরুত্বপূর্ণ তথ্য\n• confusing option-এর সঙ্গে পার্থক্য\n• পরীক্ষার জন্য মনে রাখার তথ্য'
+                      editorIsMath
+                        ? 'সূত্র লিখুন\nধাপ ১: মান বসান\nধাপ ২: হিসাব করুন\nসুতরাং নির্ণেয় উত্তর ...'
+                        : '• প্রশ্নের সঙ্গে সরাসরি সম্পর্কিত গুরুত্বপূর্ণ তথ্য\n• একই topic-এর আরেকটি পরীক্ষাযোগ্য তথ্য\n• প্রয়োজনে confusing option-এর প্রাসঙ্গিক তুলনা\n• আরও একটি গুরুত্বপূর্ণ exam fact'
                     }
                     value={shortNotes}
                     onChange={(e) => setShortNotes(e.target.value)}
@@ -1104,8 +1163,10 @@ export const AdminQuestions: React.FC = () => {
                   Bulk Questions Import
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Use one Bengali Short Notes field with 3–5 separate bullet points. The app stores
-                  the same notes in both explanation columns for compatibility.
+                  Non-Mathematics questions need 4–5 Bengali Short Notes bullets (each starting with
+                  •, no “সঠিক উত্তর”/option declarations). Mathematics keeps step-by-step
+                  Explanation. The app stores the same notes in both explanation columns for
+                  compatibility.
                 </p>
               </div>
               <button
@@ -1203,10 +1264,34 @@ export const AdminQuestions: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1.5">
-                  Short Notes is required and must have 3–5 separate bullet points. Bengali notes
-                  are used for GK / General questions.
+                  Non-Mathematics: Short Notes required — 4–5 Bengali bullets, each starting with •
+                  on its own line. Never write “সঠিক উত্তর: …” or “Option … সঠিক/ভুল”. Mathematics:
+                  classic step-by-step Explanation.
                 </p>
               </div>
+              <details className="rounded-xl border border-purple-500/25 bg-purple-500/5 p-3.5">
+                <summary className="text-xs font-bold text-purple-300 cursor-pointer list-none flex items-center justify-between gap-2">
+                  <span>🤖 AI দিয়ে প্রশ্ন বানাচ্ছেন? Short Notes prompt কপি করুন</span>
+                  <span className="text-[10px] font-semibold text-purple-400">
+                    {aiPromptSubject ? aiPromptSubject.name : 'General Knowledge'}
+                  </span>
+                </summary>
+                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+                  নিচের prompt বাইরের যেকোনো AI টুলে paste করুন — Short Notes নিয়মসহ (গণিত হলে
+                  গাণিতিক Explanation) প্রশ্ন তৈরি হবে। তারপর result এখানে paste করে import করুন।
+                </p>
+                <pre className="mt-2 max-h-44 overflow-y-auto whitespace-pre-wrap rounded-lg bg-slate-950 border border-slate-800 p-3 text-[11px] font-mono text-slate-300">
+                  {aiPromptText}
+                </pre>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleCopyAiPrompt}
+                  className="mt-2 bg-purple-600 hover:bg-purple-500 text-xs font-bold"
+                >
+                  {aiPromptCopied ? '✓ Copied!' : 'Copy AI Prompt'}
+                </Button>
+              </details>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
@@ -1227,8 +1312,8 @@ export const AdminQuestions: React.FC = () => {
                   rows={importFormat === 'text' ? 12 : 6}
                   placeholder={
                     importFormat === 'text'
-                      ? `1. Question?\n(a) Option A\n(b) Option B\n(c) Option C\n(d) Option D\nসঠিক উত্তর: (b)\n\nShort Notes:\n- সঠিক উত্তর কেন সঠিক\n- প্রশ্নের গুরুত্বপূর্ণ তথ্য\n- confusing option-এর সঙ্গে পার্থক্য\n- পরীক্ষার জন্য মনে রাখার তথ্য`
-                      : 'Paste CSV with explanation_bengali or explanation column containing 3-5 Bengali bullet points.'
+                      ? `1. হরিয়ানায় অবস্থিত কোন প্রত্নস্থলটি হরপ্পা সভ্যতার সঙ্গে যুক্ত?\n(a) রাখিগড়ি\n(b) লোথাল\n(c) ধোলাভিরা\n(d) মহেঞ্জোদারো\nসঠিক উত্তর: (a)\n\nShort Notes:\n• রাখিগড়ি হরিয়ানা রাজ্যের হিসার অঞ্চলের কাছে অবস্থিত গুরুত্বপূর্ণ হরপ্পা প্রত্নস্থল।\n• এটি ভারতীয় উপমহাদেশের বৃহৎ হরপ্পা বসতিগুলির অন্যতম।\n• রাখিগড়ি থেকে পরিকল্পিত বসতি ও নিকাশি ব্যবস্থার নিদর্শন পাওয়া গেছে।\n• লোথাল গুজরাটে অবস্থিত এবং ডকইয়ার্ড-সদৃশ কাঠামোর জন্য পরিচিত।\n• ধোলাভিরা কচ্ছ অঞ্চলে অবস্থিত এবং জল সংরক্ষণ ব্যবস্থার জন্য বিখ্যাত।`
+                      : 'Paste CSV with explanation_bengali column containing 4–5 Bengali bullet points (each starting with •).'
                   }
                   value={csvContent}
                   onChange={(e) => handleCsvChange(e.target.value)}
@@ -1271,11 +1356,11 @@ export const AdminQuestions: React.FC = () => {
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
                         {csvParseResult.parsedRows.slice(0, 8).map((r) => {
-                          const count = normalizeExplanationBullets(
-                            r.data.explanationBengali || r.data.explanation
-                          )
+                          const count = (r.data.explanationBengali || r.data.explanation || '')
+                            .replace(/\\r\\n/g, '\n')
+                            .replace(/\\n/g, '\n')
                             .split('\n')
-                            .filter(Boolean).length;
+                            .filter((l) => l.trim()).length;
                           return (
                             <tr
                               key={r.rowNumber}

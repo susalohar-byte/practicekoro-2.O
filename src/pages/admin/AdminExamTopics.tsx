@@ -163,14 +163,21 @@ export const AdminExamTopics: React.FC = () => {
           className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80"
         >
           <Shield className="w-3.5 h-3.5" />
-          Exams List ({exams.length})
+          Exams Directory ({exams.length})
+        </Link>
+        <Link
+          to="/admin/tests?tab=topic"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+          Manage Topic Tests
         </Link>
         <Link
           to="/admin/exam-topics"
           className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
         >
           <Network className="w-3.5 h-3.5" />
-          Syllabus & Topics Mapping
+          Custom Topic Scope (Optional)
         </Link>
       </div>
 
@@ -182,12 +189,12 @@ export const AdminExamTopics: React.FC = () => {
               <Network className="w-5 h-5" />
             </span>
             <h1 className="text-xl font-black text-white tracking-tight">
-              Exam <span className="text-indigo-400">↔</span> Topic Mapping
+              Exam <span className="text-indigo-400">↔</span> Topic Scope (Optional)
             </h1>
           </div>
           <p className="text-xs text-slate-400">
-            Define which centralized Question Bank topics & syllabus items belong to each
-            competitive examination.
+            Topic Tests are active by default for all exams. Use this optional screen only if you
+            want to customize or restrict which topics appear for an exam.
           </p>
         </div>
 

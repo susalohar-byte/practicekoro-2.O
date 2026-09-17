@@ -52,7 +52,7 @@ function mapQuestionRow(q: any): Question {
     defaultMarks: Number(q.default_marks || 1),
     defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
     questionType: q.question_type || 'mcq',
-    sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
+    sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || (q.source_exam ? 'other' : 'topic'),
     sourceYear: q.source_year ? Number(q.source_year) : undefined,
     sourceExam: q.source_exam ?? undefined,
     sourcePaper: q.source_paper ?? undefined,
@@ -1489,8 +1489,18 @@ export const adminApi = {
           );
         if (filters.difficulty)
           questions = questions.filter((q) => q.difficulty === filters.difficulty);
-        if (filters.sourceType)
-          questions = questions.filter((q) => q.sourceType === filters.sourceType);
+        if (filters.sourceType) {
+          if (filters.sourceType === 'full_mock' || filters.sourceType === 'other') {
+            questions = questions.filter(
+              (q) =>
+                q.sourceType === 'other' ||
+                (q.sourceType as string) === 'full_mock' ||
+                Boolean(q.sourceExam && q.sourceType !== 'topic' && q.sourceType !== 'pyq')
+            );
+          } else {
+            questions = questions.filter((q) => q.sourceType === filters.sourceType);
+          }
+        }
         if (filters.sourceExam) {
           const sExam = filters.sourceExam.toLowerCase();
           questions = questions.filter(
@@ -1552,7 +1562,13 @@ export const adminApi = {
     const chapId = filters?.topicId || filters?.chapterId;
     if (chapId) query = query.or(`chapter_id.eq.${chapId},topic_id.eq.${chapId}`);
     if (filters?.difficulty) query = query.eq('difficulty', filters.difficulty);
-    if (filters?.sourceType) query = query.eq('source_type', filters.sourceType);
+    if (filters?.sourceType) {
+      if (filters.sourceType === 'full_mock' || filters.sourceType === 'other') {
+        query = query.in('source_type', ['other', 'full_mock']);
+      } else {
+        query = query.eq('source_type', filters.sourceType);
+      }
+    }
     if (filters?.sourceExam) query = query.eq('source_exam', filters.sourceExam);
     if (filters?.status) query = query.eq('status', filters.status);
 
@@ -1623,8 +1639,13 @@ export const adminApi = {
     if (filters?.subjectId) query = query.eq('subject_id', filters.subjectId);
     const chapId = filters?.topicId || filters?.chapterId;
     if (chapId) query = query.or(`chapter_id.eq.${chapId},topic_id.eq.${chapId}`);
-    if (filters?.difficulty) query = query.eq('difficulty', filters.difficulty);
-    if (filters?.sourceType) query = query.eq('source_type', filters.sourceType);
+    if (filters?.sourceType) {
+      if (filters.sourceType === 'full_mock' || filters.sourceType === 'other') {
+        query = query.in('source_type', ['other', 'full_mock']);
+      } else {
+        query = query.eq('source_type', filters.sourceType);
+      }
+    }
     if (filters?.status) query = query.eq('status', filters.status);
     if (filters?.search && filters.search.trim()) {
       const term = filters.search.trim();

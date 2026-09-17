@@ -5,6 +5,8 @@ import { api } from '@/services/api';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { isMathematicsSubject } from '@/utils/shortNotes';
 import {
   CheckCircle2,
   XCircle,
@@ -12,9 +14,8 @@ import {
   Bookmark,
   ArrowLeft,
   AlertTriangle,
-  BookOpen,
 } from 'lucide-react';
-import type { QuestionSolution } from '@/types';
+import type { QuestionSolution, MockTest } from '@/types';
 
 export const TestSolutions: React.FC = () => {
   const { testId, attemptId } = useParams<{ testId: string; attemptId: string }>();
@@ -22,6 +23,7 @@ export const TestSolutions: React.FC = () => {
   const navigate = useNavigate();
 
   const [solutions, setSolutions] = useState<QuestionSolution[]>([]);
+  const [testMeta, setTestMeta] = useState<MockTest | null>(null);
   const [filter, setFilter] = useState<'all' | 'wrong' | 'correct' | 'skipped'>('all');
   const [loading, setLoading] = useState(true);
 
@@ -30,8 +32,12 @@ export const TestSolutions: React.FC = () => {
       if (!testId || !attemptId) return;
       setLoading(true);
       try {
-        const data = await api.getAttemptSolutions(attemptId, testId);
+        const [data, test] = await Promise.all([
+          api.getAttemptSolutions(attemptId, testId),
+          api.getTestById(testId).catch(() => null),
+        ]);
         setSolutions(data);
+        setTestMeta(test);
       } catch (err) {
         console.error('Failed to load solutions:', err);
       } finally {
@@ -59,6 +65,13 @@ export const TestSolutions: React.FC = () => {
   const correctCount = solutions.filter((s) => s.isCorrect).length;
   const wrongCount = solutions.filter((s) => s.selectedOption !== null && !s.isCorrect).length;
   const skippedCount = solutions.filter((s) => s.selectedOption === null).length;
+
+  // Mathematics tests keep the classic step-by-step Explanation;
+  // every other subject renders শর্ট নোটস (Short Notes) bullets.
+  const isMathTest = isMathematicsSubject(testMeta?.subjectName || testMeta?.subjectId, {
+    chapterName: testMeta?.chapterName,
+    topicName: testMeta?.topicName,
+  });
 
   if (loading) {
     return (
@@ -255,19 +268,13 @@ export const TestSolutions: React.FC = () => {
                 })}
               </div>
 
-              {/* Detailed Explanation */}
-              <div className="p-4 bg-indigo-50/60 rounded-xl border border-indigo-100 text-xs text-indigo-950 space-y-1.5">
-                <p className="font-bold text-[11px] text-brand-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Detailed Academic Explanation / ব্যাখ্যা:
-                </p>
-                <p className="leading-relaxed">{sol.explanation}</p>
-                {sol.explanationBengali && (
-                  <p className="text-slate-700 pt-1 border-t border-indigo-100/60 leading-relaxed font-sans">
-                    {sol.explanationBengali}
-                  </p>
-                )}
-              </div>
+              {/* Short Notes (non-Math) / Explanation (Math) */}
+              <ShortNotesBox
+                explanation={sol.explanationBengali || sol.explanation}
+                isMathematics={isMathTest}
+                defaultExpanded={true}
+                collapsible={false}
+              />
             </Card>
           );
         })}

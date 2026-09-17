@@ -5,6 +5,8 @@ import { api } from '@/services/api';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { isMathematicsQuestion } from '@/utils/shortNotes';
 import { TopicTests } from '@/pages/student/TopicTests';
 import {
   AlertTriangle,
@@ -468,22 +470,13 @@ export const Practice: React.FC = () => {
                   )}
                 </div>
 
-                {/* Detailed Explanation */}
-                <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2 text-xs">
-                  <p className="font-extrabold text-brand-700 uppercase tracking-wider text-[11px]">
-                    Detailed Explanation / সমাধান:
-                  </p>
-                  {currentQuestion.explanation && (
-                    <p className="text-slate-800 leading-relaxed font-normal">
-                      {currentQuestion.explanation}
-                    </p>
-                  )}
-                  {currentQuestion.explanationBengali && (
-                    <p className="text-slate-700 leading-relaxed font-sans pt-1 border-t border-indigo-100/60">
-                      {currentQuestion.explanationBengali}
-                    </p>
-                  )}
-                </div>
+                {/* Detailed Explanation / Short Notes (rendered ONLY after submit) */}
+                <ShortNotesBox
+                  explanation={currentQuestion.explanationBengali || currentQuestion.explanation}
+                  isMathematics={isMathematicsQuestion(currentQuestion)}
+                  defaultExpanded={true}
+                  collapsible={false}
+                />
               </div>
             )}
 
@@ -922,17 +915,12 @@ export const Practice: React.FC = () => {
                               })}
                             </div>
 
-                            <div className="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-100 text-xs text-indigo-950 space-y-1">
-                              <p className="font-extrabold text-[11px] text-brand-700 uppercase tracking-wider">
-                                Explanation / সমাধান:
-                              </p>
-                              <p className="leading-relaxed">{q.explanation}</p>
-                              {q.explanationBengali && (
-                                <p className="text-slate-600 font-sans pt-1 border-t border-indigo-100/60 leading-relaxed">
-                                  {q.explanationBengali}
-                                </p>
-                              )}
-                            </div>
+                            <ShortNotesBox
+                              explanation={q.explanationBengali || q.explanation}
+                              isMathematics={isMathematicsQuestion(q)}
+                              defaultExpanded={true}
+                              collapsible={false}
+                            />
 
                             <div className="flex items-center justify-end gap-2 pt-1">
                               <Button
@@ -1105,17 +1093,12 @@ export const Practice: React.FC = () => {
                               })}
                             </div>
 
-                            <div className="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-100 text-xs text-indigo-950 space-y-1">
-                              <p className="font-extrabold text-[11px] text-brand-700 uppercase tracking-wider">
-                                Explanation / সমাধান:
-                              </p>
-                              <p className="leading-relaxed">{q.explanation}</p>
-                              {q.explanationBengali && (
-                                <p className="text-slate-600 font-sans pt-1 border-t border-indigo-100/60 leading-relaxed">
-                                  {q.explanationBengali}
-                                </p>
-                              )}
-                            </div>
+                            <ShortNotesBox
+                              explanation={q.explanationBengali || q.explanation}
+                              isMathematics={isMathematicsQuestion(q)}
+                              defaultExpanded={true}
+                              collapsible={false}
+                            />
                           </div>
                         )}
                       </Card>

@@ -1,4 +1,5 @@
 import type { Question } from '../types/index.ts';
+import { isMathematicsSubject, validateShortNotes, normalizeShortNotes } from './shortNotes';
 
 export interface ParsedCsvQuestion {
   rowNumber: number;
@@ -245,8 +246,46 @@ export function parseQuestionsCsv(
       correctOption = rawCorrect as 'A' | 'B' | 'C' | 'D';
     }
 
-    if (explanation) rowErrors.push(...validateExplanationBullets(explanation));
-    if (explanationBengali) rowErrors.push(...validateExplanationBullets(explanationBengali));
+    const rowSubject = rowSubjectId || defaults?.defaultSubjectId;
+    const isMath = isMathematicsSubject(rowSubject, { chapterName: rowChapterId });
+    const rawExp = getVal(colExplanation);
+    const rawExpBn = getVal(colExplanationBengali);
+
+    let finalExplanation: string | undefined = explanation || undefined;
+    let finalExplanationBengali: string | undefined = explanationBengali || undefined;
+
+    if (isMath) {
+      if (explanation) rowErrors.push(...validateExplanationBullets(explanation));
+      if (explanationBengali) rowErrors.push(...validateExplanationBullets(explanationBengali));
+    } else {
+      // Non-mathematics: validate Short Notes
+      const notesRaw = rawExpBn || rawExp;
+      if (colExplanationBengali >= 0) {
+        if (!rawExpBn.trim()) {
+          rowErrors.push(
+            'Short Notes (explanation_bengali) is required for non-Mathematics questions.'
+          );
+        } else {
+          const notesErrors = validateShortNotes(rawExpBn, false);
+          if (notesErrors.length > 0) {
+            rowErrors.push(...notesErrors);
+          } else {
+            const normalized = normalizeShortNotes(rawExpBn);
+            finalExplanation = normalized;
+            finalExplanationBengali = normalized;
+          }
+        }
+      } else if (notesRaw.trim()) {
+        const notesErrors = validateShortNotes(notesRaw, false);
+        if (notesErrors.length > 0) {
+          rowErrors.push(...notesErrors);
+        } else {
+          const normalized = normalizeShortNotes(notesRaw);
+          finalExplanation = normalized;
+          finalExplanationBengali = normalized;
+        }
+      }
+    }
 
     const marks = rawMarks ? parseFloat(rawMarks) || 1.0 : 1.0;
     const negativeMarks = rawNegativeMarks ? parseFloat(rawNegativeMarks) || 0.25 : 0.25;
@@ -261,8 +300,8 @@ export function parseQuestionsCsv(
       optionC,
       optionD,
       correctOption,
-      explanation: explanation || undefined,
-      explanationBengali: explanationBengali || undefined,
+      explanation: finalExplanation,
+      explanationBengali: finalExplanationBengali,
       defaultMarks: marks,
       defaultNegativeMarks: negativeMarks,
       isActive: true,
@@ -331,10 +370,11 @@ export function parseQuestionsText(
     .map((b) => b.trim())
     .filter((b) => b.length > 0);
 
-  // If a block starts with "Explanation:" or "ব্যাখ্যা:", merge it into the preceding question block
+  // If a block starts with an explanation header, merge it into the preceding question block.
+  // Accepted headers: "Explanation:", "ব্যাখ্যা:", "Short Notes:", "শর্ট নোটস:"
   const blocks: string[] = [];
   for (const b of rawBlocks) {
-    if (blocks.length > 0 && /^(explanation|ব্যাখ্যা)/i.test(b)) {
+    if (blocks.length > 0 && /^(explanation|ব্যাখ্যা|short\s*notes|শর্ট\s*নোটস)/i.test(b)) {
       blocks[blocks.length - 1] += '\n\n' + b;
     } else {
       blocks.push(b);
@@ -362,13 +402,15 @@ export function parseQuestionsText(
     for (const line of lines) {
       if (!line) continue;
 
-      // Explanation marker line
+      // Explanation marker line ("Explanation:", "ব্যাখ্যা:", "Short Notes:", "শর্ট নোটস:")
       if (
-        /^(explanation|ব্যাখ্যা)\s*[:-]?$/i.test(line) ||
-        /^(explanation|ব্যাখ্যা)\s*[:-]/i.test(line)
+        /^(explanation|ব্যাখ্যা|short\s*notes|শর্ট\s*নোটস)\s*[:-]?$/i.test(line) ||
+        /^(explanation|ব্যাখ্যা|short\s*notes|শর্ট\s*নোটস)\s*[:-]/i.test(line)
       ) {
         inExplanation = true;
-        const inline = line.replace(/^(explanation|ব্যাখ্যা)\s*[:-]?\s*/i, '').trim();
+        const inline = line
+          .replace(/^(explanation|ব্যাখ্যা|short\s*notes|শর্ট\s*নোটস)\s*[:-]?\s*/i, '')
+          .trim();
         if (inline) explanationLines.push(inline);
         continue;
       }
@@ -401,7 +443,8 @@ export function parseQuestionsText(
       }
 
       if (inExplanation) {
-        explanationLines.push(line.replace(/^[-•*]\s*/, ''));
+        const bulletLine = line.startsWith('•') ? line : `• ${line.replace(/^[-*•]\s*/, '')}`;
+        explanationLines.push(bulletLine);
       } else {
         questionLines.push(line);
       }
@@ -429,8 +472,25 @@ export function parseQuestionsText(
       rowErrors.push('Duplicate question text within this import');
     }
 
-    const explanation = normalizeExplanationBullets(explanationLines.join('\n'));
-    if (explanation) rowErrors.push(...validateExplanationBullets(explanation));
+    const isMath = isMathematicsSubject(defaults?.defaultSubjectId, {
+      chapterName: defaults?.defaultChapterId,
+    });
+    const rawExpStr = explanationLines.join('\n');
+    let finalExplanation = normalizeExplanationBullets(rawExpStr);
+    let finalExplanationBengali: string | undefined = undefined;
+
+    if (isMath) {
+      if (finalExplanation) rowErrors.push(...validateExplanationBullets(finalExplanation));
+    } else if (rawExpStr.trim()) {
+      const notesErrors = validateShortNotes(rawExpStr, false);
+      if (notesErrors.length > 0) {
+        rowErrors.push(...notesErrors);
+      } else {
+        const normalized = normalizeShortNotes(rawExpStr);
+        finalExplanation = normalized;
+        finalExplanationBengali = normalized;
+      }
+    }
 
     const data: Omit<Question, 'id'> = {
       subjectId: defaults?.defaultSubjectId || undefined,
@@ -441,7 +501,8 @@ export function parseQuestionsText(
       optionC: options.C,
       optionD: options.D,
       correctOption: (correctOption || 'A') as 'A' | 'B' | 'C' | 'D',
-      explanation: explanation || undefined,
+      explanation: finalExplanation || undefined,
+      explanationBengali: finalExplanationBengali || finalExplanation || undefined,
       defaultMarks: 1.0,
       defaultNegativeMarks: 0.25,
       isActive: true,

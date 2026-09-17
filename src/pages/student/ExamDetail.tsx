@@ -615,7 +615,7 @@ export const ExamDetail: React.FC = () => {
             ) : filteredTopicTests.length === 0 && visibleSubjectGroups.length === 0 ? (
               <EmptyState
                 title="No topic tests available for this selection"
-                description="Topic tests for this subject are being linked to this exam curriculum."
+                description="No topic tests currently published for this selection."
               />
             ) : (
               <div className="space-y-6">
@@ -722,7 +722,7 @@ export const ExamDetail: React.FC = () => {
                     <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                         <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-                        Mapped Syllabus Topics (
+                        Syllabus & Practice Topics (
                         {visibleSubjectGroups.reduce((acc, g) => acc + g.topics.length, 0)} Topics)
                       </h3>
                       <span className="text-[11px] text-slate-400">

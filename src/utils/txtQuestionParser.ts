@@ -40,8 +40,14 @@ export interface TxtParseResult {
   errors: TxtParseError[];
 }
 
+import { isMathematicsSubject, validateShortNotes } from './shortNotes';
+
 /**
  * Standard Sample TXT content provided for Admins to view or download.
+ * Conforms strictly to PracticeKoro Short Notes rules:
+ * - 4-5 bullets starting with • on separate lines
+ * - Direct exam-relevant facts
+ * - No forbidden answer declarations
  */
 export const SAMPLE_TXT_CONTENT = `1. ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?
 (a) ড. রাজেন্দ্র প্রসাদ
@@ -52,11 +58,11 @@ export const SAMPLE_TXT_CONTENT = `1. ভারতের প্রথম রা�
 সঠিক উত্তর: (a) ড. রাজেন্দ্র প্রসাদ
 
 Explanation:
-- ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি (১৯৫০-১৯৬২)।
-- তিনি ভারতের একমাত্র রাষ্ট্রপতি যিনি টানা দুইবার এই সম্মানজনক পদে আসীন ছিলেন।
-- ১৯৪৬ সালে তিনি ভারতীয় গণপরিষদের (Constituent Assembly) স্থায়ী সভাপতি নির্বাচিত হন।
-- ১৯৬২ সালে দেশসেবার স্বীকৃতি হিসেবে তাঁকে ভারতের সর্বোচ্চ নাগরিক সম্মান 'ভারতরত্ন' প্রদান করা হয়।
-- তাঁর রচিত বিখ্যাত ঐতিহাসিক গ্রন্থের মধ্যে অন্যতম হলো 'ইন্ডিয়া ডিভাইডেড' (India Divided)।
+• ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি (১৯৫০-১৯৬২)।
+• তিনি ভারতের একমাত্র রাষ্ট্রপতি যিনি টানা দুইবার এই সম্মানজনক পদে আসীন ছিলেন।
+• ১৯৪৬ সালে তিনি ভারতীয় গণপরিষদের (Constituent Assembly) স্থায়ী সভাপতি নির্বাচিত হন।
+• ১৯৬২ সালে দেশসেবার স্বীকৃতি হিসেবে তাঁকে ভারতের সর্বোচ্চ নাগরিক সম্মান 'ভারতরত্ন' প্রদান করা হয়।
+• তাঁর রচিত বিখ্যাত ঐতিহাসিক গ্রন্থের মধ্যে অন্যতম হলো 'ইন্ডিয়া ডিভাইডেড' (India Divided)।
 
 2. মানবদেহের বৃহত্তম অঙ্গ কোনটি?
 (a) যকৃৎ (Liver)
@@ -67,11 +73,11 @@ Explanation:
 সঠিক উত্তর: (b) ত্বক (Skin)
 
 Explanation:
-- ত্বক (Integumentary system) হলো মানবদেহের বৃহত্তম বাহ্যিক অঙ্গ এবং সুরক্ষামূলক আবরণ।
-- মানবদেহের বৃহত্তম অভ্যন্তরীণ অঙ্গ ও বৃহত্তম গ্রন্থি হলো যকৃৎ (Liver)।
-- ত্বকের প্রধান কাজ হলো শরীরকে বাইরের আঘাত, জীবাণু সংক্রমণ এবং অতিবেগুনি রশ্মি থেকে রক্ষা করা।
-- মানবদেহের তাপমাত্রা নিয়ন্ত্রণ এবং ঘামের মাধ্যমে বর্জ্য নিষ্কাশনে ত্বক মুখ্য ভূমিকা পালন করে।
-- ত্বকের এপিডার্মিসে অবস্থিত মেলানিন রঞ্জক আমাদের ত্বকের বর্ণ নির্ধারণ করে।`;
+• ত্বক (Integumentary system) হলো মানবদেহের বৃহত্তম বাহ্যিক অঙ্গ এবং সুরক্ষামূলক আবরণ।
+• মানবদেহের বৃহত্তম অভ্যন্তরীণ অঙ্গ ও বৃহত্তম গ্রন্থি হলো যকৃৎ (Liver)।
+• ত্বকের প্রধান কাজ হলো শরীরকে বাইরের আঘাত, জীবাণু সংক্রমণ এবং অতিবেগুনি রশ্মি থেকে রক্ষা করা।
+• মানবদেহের তাপমাত্রা নিয়ন্ত্রণ এবং ঘামের মাধ্যমে বর্জ্য নিষ্কাশনে ত্বক মুখ্য ভূমিকা পালন করে।
+• ত্বকের এপিডার্মিসে অবস্থিত মেলানিন রঞ্জক আমাদের ত্বকের বর্ণ নির্ধারণ করে।`;
 
 /**
  * Helper to trigger browser download of sample TXT template.
@@ -99,10 +105,22 @@ export function normalizeBengaliNumerals(input: string): string {
 /**
  * Parses raw TXT content into structured questions with granular error tracking.
  */
-export function parseQuestionsTxt(content: string): TxtParseResult {
+export function parseQuestionsTxt(
+  content: string,
+  parseOptions?: { isMathematics?: boolean; subjectId?: string; enforceShortNotes?: boolean }
+): TxtParseResult {
   if (!content || !content.trim()) {
     return { totalDetected: 0, valid: [], errors: [] };
   }
+
+  const isMath = Boolean(
+    parseOptions?.isMathematics ??
+    (parseOptions?.subjectId ? isMathematicsSubject(parseOptions.subjectId) : false)
+  );
+  const shouldEnforceShortNotes = Boolean(
+    parseOptions?.enforceShortNotes ??
+    (parseOptions?.subjectId ? !isMath : parseOptions?.isMathematics === false)
+  );
 
   // Normalize line endings
   const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
@@ -179,10 +197,11 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
     // "সঠিক উত্তর: (a) ..." or "সঠিক উত্তর : a" or "Ans: (a)" or "Answer: a" or "Correct: (a)"
     const answerRegex =
       /^\s*(?:সঠিক\s*উত্তর|উত্তর|Answer|Ans|Correct\s*Answer|Correct\s*Option)\s*[:\-–—]\s*(?:\(([a-dA-D])\)|([a-dA-D]))/i;
-
     // Explanation pattern:
-    // "Explanation:" or "ব্যাখ্যা:" or "ব্যাখ্যা : "
-    const explanationRegex = /^\s*(?:Explanation|ব্যাখ্যা|Note|Notes)\s*[:\-–—]?\s*(.*)$/i;
+
+    // "Explanation:" or "ব্যাখ্যা:" or "ব্যাখ্যা : " or "Short Notes:" or "শর্ট নোটস:"
+    const explanationRegex =
+      /^\s*(?:Explanation|ব্যাখ্যা|Short\s*Notes|শর্ট\s*নোটস|Note|Notes)\s*[:\-–—]?\s*(.*)$/i;
 
     const questionLines: string[] = [questionFirstLine];
     const options: Record<'A' | 'B' | 'C' | 'D', string> = {
@@ -287,6 +306,28 @@ export function parseQuestionsTxt(content: string): TxtParseResult {
         rawText: block,
       });
       return;
+    }
+
+    // When explicitly validating for non-mathematics subjects, enforce Short Notes rules
+    if (shouldEnforceShortNotes) {
+      const expText = explanationLines.join('\n');
+      if (!expText.trim()) {
+        errors.push({
+          questionNumber: parsedNumber,
+          reason: 'শর্ট নোটস (Short Notes) প্রদান করা আবশ্যক। ৪–৫টি বুলেট পয়েন্ট দিন।',
+          rawText: block,
+        });
+        return;
+      }
+      const shortNotesErrors = validateShortNotes(expText, false);
+      if (shortNotesErrors.length > 0) {
+        errors.push({
+          questionNumber: parsedNumber,
+          reason: shortNotesErrors.join(' '),
+          rawText: block,
+        });
+        return;
+      }
     }
 
     // Valid question block

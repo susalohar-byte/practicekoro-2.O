@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
-import { Layers, Target, ArrowRight, FileQuestion } from 'lucide-react';
+import { Layers, Target, ArrowRight, ListPlus } from 'lucide-react';
 import type { Exam, MockTest } from '@/types';
 
 /**
@@ -128,12 +128,12 @@ export const AdminFullMockQuestions: React.FC = () => {
             </div>
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-xs font-bold"
-              leftIcon={<FileQuestion className="w-4 h-4" />}
+              className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold shadow-sm"
+              leftIcon={<ListPlus className="w-4 h-4" />}
               rightIcon={<ArrowRight className="w-4 h-4" />}
               onClick={() => navigate(`/admin/tests/${selectedTest.id}/questions`)}
             >
-              Open Question Manager
+              Manage Test Questions
             </Button>
           </div>
         )}

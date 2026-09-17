@@ -34,6 +34,7 @@ import type { MockTest, Question, TestQuestionAssignment, Subject, Chapter, Exam
 import { parseQuestionsTxt, SAMPLE_TXT_CONTENT } from '@/utils/txtQuestionParser';
 import { getErrorMessage } from '@/lib/errors';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 
 export const AdminTestQuestions: React.FC = () => {
   const { testId: routeTestId } = useParams<{ testId: string }>();
@@ -537,8 +538,9 @@ export const AdminTestQuestions: React.FC = () => {
   // ---------------------------------------------------------------------------
   const parsedBulkResult = useMemo(() => {
     if (!bulkRawText.trim()) return null;
-    return parseQuestionsTxt(bulkRawText);
-  }, [bulkRawText]);
+    // Subject context enforces Short Notes rules for non-Mathematics tests.
+    return parseQuestionsTxt(bulkRawText, { subjectId: test?.subjectId });
+  }, [bulkRawText, test?.subjectId]);
 
   const handleImportBulk = async () => {
     if (!test || !parsedBulkResult || parsedBulkResult.valid.length === 0) return;
@@ -562,6 +564,8 @@ export const AdminTestQuestions: React.FC = () => {
           optionD: q.optionD,
           correctOption: q.correctOption,
           explanation: q.explanation,
+          // Mirror notes into both columns so Short Notes display keeps working.
+          explanationBengali: q.explanation,
           difficulty: 'medium',
           defaultMarks: 1.0,
           defaultNegativeMarks: test.negativeMarking ?? 0.25,
@@ -1451,13 +1455,13 @@ export const AdminTestQuestions: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Short Notes Accordion if available */}
-                        {q.explanation && (
+                        {/* Short Notes (non-Math) / Explanation (Math) */}
+                        {(q.explanationBengali || q.explanation) && (
                           <div className="pt-2">
                             <ShortNotesBox
-                              explanation={q.explanation}
+                              explanation={q.explanationBengali || q.explanation}
+                              isMathematics={isMathematicsQuestion(q)}
                               defaultExpanded={false}
-                              title="Short Notes"
                             />
                           </div>
                         )}
@@ -1707,13 +1711,13 @@ export const AdminTestQuestions: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Short Notes Accordion if available */}
-                    {q.explanation && (
+                    {/* Short Notes (non-Math) / Explanation (Math) */}
+                    {(q.explanationBengali || q.explanation) && (
                       <div className="pt-2">
                         <ShortNotesBox
-                          explanation={q.explanation}
+                          explanation={q.explanationBengali || q.explanation}
+                          isMathematics={isMathematicsQuestion(q)}
                           defaultExpanded={false}
-                          title="Short Notes"
                         />
                       </div>
                     )}
@@ -2031,16 +2035,47 @@ export const AdminTestQuestions: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                  Explanation
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase">
+                    {isMathematicsSubject(test?.subjectId, {
+                      chapterName: test?.title,
+                      title: test?.title,
+                    })
+                      ? 'Explanation / গাণিতিক সমাধান'
+                      : 'Short Notes (শর্ট নোটস) - Bengali Bullet Points'}
+                  </label>
+                  <span className="text-[10px] text-slate-400">
+                    {isMathematicsSubject(test?.subjectId, {
+                      chapterName: test?.title,
+                      title: test?.title,
+                    })
+                      ? 'Steps & Formula'
+                      : '4–5 bullets starting with •'}
+                  </span>
+                </div>
                 <textarea
-                  rows={2}
+                  rows={4}
                   value={newExplanation}
                   onChange={(e) => setNewExplanation(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-slate-900 dark:text-white focus:outline-none focus:border-[#0075FF]"
-                  placeholder="Solution / Explanation"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-slate-900 dark:text-white focus:outline-none focus:border-[#0075FF] font-normal text-xs leading-relaxed"
+                  placeholder={
+                    isMathematicsSubject(test?.subjectId, {
+                      chapterName: test?.title,
+                      title: test?.title,
+                    })
+                      ? 'Step-by-step mathematical explanation, formulas, and working...'
+                      : '• পয়েন্ট ১...\n• পয়েন্ট ২...\n• পয়েন্ট ৩...\n• পয়েন্ট ৪...\n• পয়েন্ট ৫...'
+                  }
                 />
+                {!isMathematicsSubject(test?.subjectId, {
+                  chapterName: test?.title,
+                  title: test?.title,
+                }) && (
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    প্রতিটি বুলেট নতুন লাইনে '• ' দিয়ে শুরু করুন (৪–৫টি তথ্যবহুল পয়েন্ট)। কোনো
+                    "সঠিক উত্তর" বা অপশন ঘোষণা লিখবেন না।
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

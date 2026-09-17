@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -9,7 +9,6 @@ import {
   Search,
   Clock,
   X,
-  FileQuestion,
   AlertCircle,
   FolderTree,
   Target,
@@ -23,6 +22,10 @@ import {
   ChevronRight,
   Power,
   ArrowRight,
+  ListPlus,
+  PlusCircle,
+  HelpCircle,
+  RotateCcw,
 } from 'lucide-react';
 import type { MockTest, Exam, Subject, Chapter, PublishValidationResult } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
@@ -30,7 +33,15 @@ import { getErrorMessage } from '@/lib/errors';
 type MockTab = 'topic' | 'full_mock' | 'pyq' | 'structure';
 
 export const AdminTests: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<MockTab>('topic');
+  const [searchParams] = useSearchParams();
+
+  const initialTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<MockTab>(() => {
+    if (initialTab === 'full_mock' || initialTab === 'pyq' || initialTab === 'structure') {
+      return initialTab;
+    }
+    return 'topic';
+  });
 
   // Entities
   const [tests, setTests] = useState<MockTest[]>([]);
@@ -41,13 +52,38 @@ export const AdminTests: React.FC = () => {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterSubjectId, setFilterSubjectId] = useState('');
-  const [filterTopicId, setFilterTopicId] = useState('');
-  const [filterExamId, setFilterExamId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState(() => searchParams.get('subjectId') || '');
+  const [filterTopicId, setFilterTopicId] = useState(() => searchParams.get('topicId') || '');
+  const [filterExamId, setFilterExamId] = useState(() => searchParams.get('examId') || '');
   const [filterYear, setFilterYear] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>(
     'all'
   );
+
+  // Sync state if URL query params change
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (
+      tabParam === 'topic' ||
+      tabParam === 'full_mock' ||
+      tabParam === 'pyq' ||
+      tabParam === 'structure'
+    ) {
+      setActiveTab(tabParam);
+    }
+    const examParam = searchParams.get('examId');
+    if (examParam !== null) {
+      setFilterExamId(examParam);
+    }
+    const subParam = searchParams.get('subjectId');
+    if (subParam !== null) {
+      setFilterSubjectId(subParam);
+    }
+    const topParam = searchParams.get('topicId');
+    if (topParam !== null) {
+      setFilterTopicId(topParam);
+    }
+  }, [searchParams]);
 
   // Structure Management State
   const [selectedStructureSubjectId, setSelectedStructureSubjectId] = useState<string>('');
@@ -137,11 +173,12 @@ export const AdminTests: React.FC = () => {
     setModalType(type);
     setFormError('');
 
-    const defaultExam = exams[0]?.id || '';
-    const defaultSubject = subjects[0]?.id || '';
-    const defaultTopic = chapters.find((c) => c.subjectId === defaultSubject)?.id || '';
+    const defaultExam = filterExamId || exams[0]?.id || '';
+    const defaultSubject = filterSubjectId || subjects[0]?.id || '';
+    const defaultTopic =
+      filterTopicId || chapters.find((c) => c.subjectId === defaultSubject)?.id || '';
 
-    setFormExamId(defaultExam);
+    setFormExamId(type === 'topic' ? filterExamId || '' : defaultExam);
     setFormSubjectId(defaultSubject);
     setFormTopicId(defaultTopic);
     setFormTitle('');
@@ -164,7 +201,7 @@ export const AdminTests: React.FC = () => {
     setModalType(inferredType);
     setFormError('');
 
-    setFormExamId(test.examId || exams[0]?.id || '');
+    setFormExamId(test.examId || '');
     setFormSubjectId(test.subjectId || subjects[0]?.id || '');
     setFormTopicId(test.topicId || test.chapterId || '');
     setFormTitle(test.title);
@@ -214,7 +251,7 @@ export const AdminTests: React.FC = () => {
         await api.updateTest(editingTest.id, {
           title: formTitle.trim(),
           description: formDescription.trim() || undefined,
-          examId: modalType === 'topic' ? undefined : formExamId,
+          examId: formExamId ? formExamId : undefined,
           subjectId: modalType === 'topic' ? formSubjectId : undefined,
           chapterId: modalType === 'topic' ? formTopicId : undefined,
           topicId: modalType === 'topic' ? formTopicId : undefined,
@@ -233,7 +270,7 @@ export const AdminTests: React.FC = () => {
           title: formTitle.trim(),
           slug: formTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           description: formDescription.trim() || undefined,
-          examId: modalType === 'topic' ? undefined : formExamId,
+          examId: formExamId ? formExamId : undefined,
           subjectId: modalType === 'topic' ? formSubjectId : undefined,
           chapterId: modalType === 'topic' ? formTopicId : undefined,
           topicId: modalType === 'topic' ? formTopicId : undefined,
@@ -424,6 +461,7 @@ export const AdminTests: React.FC = () => {
   const topicTests = tests.filter((t) => {
     const isTopic = t.testType === 'topic' || t.testType === 'chapter_mock';
     if (!isTopic) return false;
+    if (filterExamId && t.examId && t.examId !== filterExamId) return false;
     if (filterSubjectId && t.subjectId !== filterSubjectId) return false;
     if (filterTopicId && t.chapterId !== filterTopicId && t.topicId !== filterTopicId) return false;
     if (filterStatus !== 'all' && t.status !== filterStatus) return false;
@@ -510,8 +548,8 @@ export const AdminTests: React.FC = () => {
                 {newlyCreatedTest.title}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Ready for questions! Click below to automatically load matching questions from the
-                Question Bank.
+                Ready for questions! Click below to add questions from the Question Bank or import
+                from a TXT file.
               </p>
             </div>
           </div>
@@ -525,9 +563,10 @@ export const AdminTests: React.FC = () => {
             </button>
             <Link
               to={`/admin/tests/${newlyCreatedTest.id}/questions`}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#0075FF] to-[#0052E0] hover:from-[#0066FF] hover:to-[#0047C7] text-white text-xs font-bold shadow-md shadow-[#0075FF]/30 flex items-center gap-1.5 transition-all"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 flex items-center gap-1.5 transition-all"
             >
-              <span>Manage Questions</span>
+              <ListPlus className="w-3.5 h-3.5" />
+              <span>Add Questions Now</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -614,6 +653,19 @@ export const AdminTests: React.FC = () => {
             </div>
 
             <select
+              value={filterExamId}
+              onChange={(e) => setFilterExamId(e.target.value)}
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+            >
+              <option value="">All Exams & Universal</option>
+              {exams.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.title}
+                </option>
+              ))}
+            </select>
+
+            <select
               value={filterSubjectId}
               onChange={(e) => {
                 setFilterSubjectId(e.target.value);
@@ -655,6 +707,21 @@ export const AdminTests: React.FC = () => {
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>
             </select>
+
+            {(searchTerm || filterSubjectId || filterTopicId || filterStatus !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterSubjectId('');
+                  setFilterTopicId('');
+                  setFilterStatus('all');
+                }}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors ml-auto sm:ml-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
 
           {/* Topic Tests Table */}
@@ -712,6 +779,20 @@ export const AdminTests: React.FC = () => {
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>
             </select>
+
+            {(searchTerm || filterExamId || filterStatus !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterExamId('');
+                  setFilterStatus('all');
+                }}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors ml-auto sm:ml-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
 
           <TestTable
@@ -776,6 +857,21 @@ export const AdminTests: React.FC = () => {
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>
             </select>
+
+            {(searchTerm || filterExamId || filterYear || filterStatus !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterExamId('');
+                  setFilterYear('');
+                  setFilterStatus('all');
+                }}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors ml-auto sm:ml-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
 
           <TestTable
@@ -959,52 +1055,76 @@ export const AdminTests: React.FC = () => {
             )}
 
             <form onSubmit={handleSaveTest} className="space-y-4">
-              {/* TOPIC TEST FLOW: Subject -> Topic */}
+              {/* TOPIC TEST FLOW: Target Exam (Optional/Universal) + Subject -> Topic */}
               {modalType === 'topic' && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Subject *
+                      Target Exam (Optional)
                     </label>
                     <select
-                      value={formSubjectId}
-                      onChange={(e) => {
-                        setFormSubjectId(e.target.value);
-                        const firstTop =
-                          chapters.find((c) => c.subjectId === e.target.value)?.id || '';
-                        setFormTopicId(firstTop);
-                      }}
-                      required
+                      value={formExamId}
+                      onChange={(e) => setFormExamId(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                     >
-                      <option value="">Select Subject</option>
-                      {subjects.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
+                      <option value="">All Exams / Universal (Available to all)</option>
+                      {exams.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.title}
                         </option>
                       ))}
                     </select>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Topic tests are available by default across all exams or can be specifically
+                      tagged to one exam.
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Topic *
-                    </label>
-                    <select
-                      value={formTopicId}
-                      onChange={(e) => setFormTopicId(e.target.value)}
-                      required
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
-                    >
-                      <option value="">Select Topic</option>
-                      {chapters
-                        .filter((c) => c.subjectId === formSubjectId)
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Subject *
+                      </label>
+                      <select
+                        value={formSubjectId}
+                        onChange={(e) => {
+                          setFormSubjectId(e.target.value);
+                          const firstTop =
+                            chapters.find((c) => c.subjectId === e.target.value)?.id || '';
+                          setFormTopicId(firstTop);
+                        }}
+                        required
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                      >
+                        <option value="">Select Subject</option>
+                        {subjects.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
                           </option>
                         ))}
-                    </select>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Topic *
+                      </label>
+                      <select
+                        value={formTopicId}
+                        onChange={(e) => setFormTopicId(e.target.value)}
+                        required
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                      >
+                        <option value="">Select Topic</option>
+                        {chapters
+                          .filter((c) => c.subjectId === formSubjectId)
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1505,17 +1625,25 @@ const TestTable: React.FC<TestTableProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="p-12 text-center text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl">
-        Loading test records...
+      <div className="p-12 text-center text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="font-semibold text-slate-700 dark:text-slate-300">Loading test records...</p>
       </div>
     );
   }
 
   if (tests.length === 0) {
     return (
-      <div className="p-12 text-center text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl">
-        <FileQuestion className="w-8 h-8 mx-auto mb-2 opacity-40 text-indigo-400" />
-        {emptyMessage}
+      <div className="p-12 text-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 border border-indigo-100 dark:border-indigo-900/50">
+          <BookOpen className="w-6 h-6" />
+        </div>
+        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
+          No Tests Found
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+          {emptyMessage}
+        </p>
       </div>
     );
   }
@@ -1524,67 +1652,138 @@ const TestTable: React.FC<TestTableProps> = ({
     <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-          <thead className="bg-slate-50 dark:bg-slate-900/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+          <thead className="bg-slate-50/90 dark:bg-slate-900/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
             <tr>
-              <th className="px-4 py-3">Test Title</th>
-              <th className="px-4 py-3">Category / Assignment</th>
-              <th className="px-4 py-3">Duration & Marks</th>
-              <th className="px-4 py-3">Questions</th>
-              <th className="px-4 py-3">Status & State</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-5 py-3.5">Test Title</th>
+              <th className="px-5 py-3.5">Category / Assignment</th>
+              <th className="px-5 py-3.5">Duration & Marks</th>
+              <th className="px-5 py-3.5">Questions</th>
+              <th className="px-5 py-3.5">Status & State</th>
+              <th className="px-5 py-3.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
             {tests.map((test) => {
               const status = test.status || 'draft';
               const isActive = test.isActive !== false;
+              const questionsCount = test.totalQuestions || 0;
+              const hasNoQuestions = questionsCount === 0;
+
               return (
                 <tr
                   key={test.id}
-                  className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors"
+                  className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors group"
                 >
-                  <td className="px-4 py-3 font-bold text-slate-900 dark:text-white max-w-[280px]">
-                    <div className="flex items-center gap-1.5">
-                      {test.isPremium && <Crown className="w-3 h-3 text-amber-500 shrink-0" />}
-                      <span className="truncate">{test.title}</span>
+                  {/* Column 1: Test Title */}
+                  <td className="px-5 py-4 font-bold text-slate-900 dark:text-white max-w-[280px]">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5">
+                        {test.isPremium && (
+                          <span title="Premium Mock Test" className="inline-flex items-center">
+                            <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          </span>
+                        )}
+                        <Link
+                          to={`/admin/tests/${test.id}/questions`}
+                          title="Click to view and manage questions"
+                          className="truncate text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                          {test.title}
+                        </Link>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-500">
+                        <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded text-[10px]">
+                          ID: {test.id.slice(0, 8)}
+                        </span>
+                        {test.negativeMarking ? (
+                          <span className="text-rose-500 font-medium">
+                            -{test.negativeMarking} Neg
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   </td>
 
-                  <td className="px-4 py-3 text-[11px] text-slate-500 dark:text-slate-400">
+                  {/* Column 2: Category / Assignment */}
+                  <td className="px-5 py-4 text-xs text-slate-600 dark:text-slate-400">
                     {test.testType === 'topic' || test.testType === 'chapter_mock' ? (
-                      <span>
-                        {test.subjectName || 'Subject'} • {test.chapterName || 'Topic'}
-                      </span>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
+                          <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          <span className="truncate">{test.subjectName || 'Subject'}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-5 truncate">
+                          ↳ {test.chapterName || 'All Topics'}
+                        </div>
+                      </div>
                     ) : test.testType === 'pyq' ? (
-                      <span>
-                        {test.examTitle || 'Exam'} • {test.year || 'PYQ'} (
-                        {test.paperName || 'Shift 1'})
-                      </span>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
+                          <ScrollText className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="truncate">{test.examTitle || 'Exam'}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-5 truncate">
+                          {test.year ? `${test.year} PYQ` : 'PYQ'}{' '}
+                          {test.paperName ? `• ${test.paperName}` : ''}
+                        </div>
+                      </div>
                     ) : (
-                      <span>{test.examTitle || 'Universal Exam'}</span>
+                      <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
+                        <Target className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                        <span className="truncate">{test.examTitle || 'Full Mock Exam'}</span>
+                      </div>
                     )}
                   </td>
 
-                  <td className="px-4 py-3 text-[11px] font-medium text-slate-600 dark:text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {test.durationMinutes}m • {test.totalMarks}M
-                    </span>
+                  {/* Column 3: Duration & Marks */}
+                  <td className="px-5 py-4 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{test.durationMinutes}m</span>
+                      <span className="text-slate-300 dark:text-slate-700">•</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {test.totalMarks} Marks
+                      </span>
+                    </div>
                   </td>
 
-                  <td className="px-4 py-3">
+                  {/* Column 4: Questions Count & Status Badge */}
+                  <td className="px-5 py-4 whitespace-nowrap">
                     <Link
                       to={`/admin/tests/${test.id}/questions`}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                      title={
+                        hasNoQuestions
+                          ? 'No questions added yet - Click to add questions!'
+                          : 'Click to view and manage questions'
+                      }
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs ${
+                        hasNoQuestions
+                          ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+                          : 'bg-slate-100/90 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-300'
+                      }`}
                     >
-                      <FileQuestion className="w-3 h-3" />
-                      {test.totalQuestions || 0} Questions
+                      {hasNoQuestions ? (
+                        <>
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>0 Questions</span>
+                          <span className="text-[9px] uppercase tracking-wider font-extrabold px-1 rounded bg-amber-200/70 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200">
+                            Empty
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <HelpCircle className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          <span>{questionsCount} Questions</span>
+                        </>
+                      )}
                     </Link>
                   </td>
 
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
+                  {/* Column 5: Status & State */}
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                           status === 'published'
                             ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
                             : status === 'draft'
@@ -1592,81 +1791,120 @@ const TestTable: React.FC<TestTableProps> = ({
                               : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
                         }`}
                       >
+                        {status === 'published' && <CheckCircle2 className="w-2.5 h-2.5" />}
                         {status}
                       </span>
                       <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
                           isActive
-                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
-                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40'
+                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                         }`}
                       >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                        />
                         {isActive ? 'Active' : 'Disabled'}
                       </span>
                     </div>
                   </td>
 
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
+                  {/* Column 6: Actions - Clear Hierarchy & Self-Explanatory Buttons */}
+                  <td className="px-5 py-4 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-2">
+                      {/* Primary Question Management Action: Add / Manage Questions */}
                       <Link
                         to={`/admin/tests/${test.id}/questions`}
-                        title="Manage Test Questions"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                      >
-                        <FileQuestion className="w-3.5 h-3.5" />
-                      </Link>
-
-                      <button
-                        onClick={() => onToggleActive(test)}
                         title={
-                          isActive
-                            ? 'Deactivate Test (Hide from students)'
-                            : 'Activate Test (Make available to students)'
+                          hasNoQuestions
+                            ? 'Add questions to this test from Question Bank or upload'
+                            : 'Manage questions, scoring, and upload files'
                         }
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          isActive
-                            ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-                            : 'text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-900'
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all shadow-xs shrink-0 group ${
+                          hasNoQuestions
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25 hover:shadow-md'
+                            : 'bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80'
                         }`}
                       >
-                        <Power className="w-3.5 h-3.5" />
-                      </button>
+                        {hasNoQuestions ? (
+                          <>
+                            <PlusCircle className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                            <span>Add Questions</span>
+                          </>
+                        ) : (
+                          <>
+                            <ListPlus className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
+                            <span>Manage Questions</span>
+                          </>
+                        )}
+                      </Link>
 
-                      <button
-                        onClick={() => onEdit(test)}
-                        title="Edit Details"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      {status === 'draft' && (
+                      {/* Secondary Action Toolbar */}
+                      <div className="flex items-center bg-slate-100/90 dark:bg-slate-900/90 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                        {/* Edit Details */}
                         <button
-                          onClick={() => onPublish(test)}
-                          title="Validate & Publish"
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                          onClick={() => onEdit(test)}
+                          title="Edit Test Details & Settings"
+                          aria-label="Edit Details"
+                          className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <Edit2 className="w-3.5 h-3.5" />
                         </button>
-                      )}
 
-                      {status !== 'archived' && (
+                        {/* Toggle Active / Disabled */}
                         <button
-                          onClick={() => onArchive(test)}
-                          title="Archive Test"
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                          onClick={() => onToggleActive(test)}
+                          title={
+                            isActive
+                              ? 'Deactivate Test (Hide from students)'
+                              : 'Activate Test (Make available to students)'
+                          }
+                          aria-label={isActive ? 'Deactivate Test' : 'Activate Test'}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            isActive
+                              ? 'text-emerald-600 hover:bg-white dark:hover:bg-slate-800'
+                              : 'text-slate-400 hover:text-emerald-600 hover:bg-white dark:hover:bg-slate-800'
+                          }`}
                         >
-                          <Archive className="w-3.5 h-3.5" />
+                          <Power className="w-3.5 h-3.5" />
                         </button>
-                      )}
 
-                      <button
-                        onClick={() => onDelete(test)}
-                        title="Delete Test"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors ml-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                        {/* Validate & Publish (if draft) */}
+                        {status === 'draft' && (
+                          <button
+                            onClick={() => onPublish(test)}
+                            title="Validate & Publish Test"
+                            aria-label="Validate and Publish"
+                            className="p-1.5 rounded-lg text-amber-600 hover:text-emerald-600 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {/* Archive (if not archived) */}
+                        {status !== 'archived' && (
+                          <button
+                            onClick={() => onArchive(test)}
+                            title="Archive Test"
+                            aria-label="Archive Test"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Archive className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        <div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+                        {/* Delete Test */}
+                        <button
+                          onClick={() => onDelete(test)}
+                          title="Delete Test Permanently"
+                          aria-label="Delete Test"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>

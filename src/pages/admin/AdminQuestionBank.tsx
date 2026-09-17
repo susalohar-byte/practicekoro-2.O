@@ -35,6 +35,7 @@ import {
   downloadSampleTxt,
 } from '@/utils/txtQuestionParser';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 import { getErrorMessage } from '@/lib/errors';
 import { useSearchParams } from 'react-router-dom';
 
@@ -47,20 +48,49 @@ export const AdminQuestionBank: React.FC = () => {
   // Master Entities
   const [questions, setQuestions] = useState<Question[]>([]);
   const [baseQuestions, setBaseQuestions] = useState<Question[]>([]);
+  const [totalUploadedCount, setTotalUploadedCount] = useState<number>(0);
+  const [expandedNotesIds, setExpandedNotesIds] = useState<Record<string, boolean>>({});
+
+  const toggleNotes = useCallback((qId: string) => {
+    setExpandedNotesIds((prev) => ({
+      ...prev,
+      [qId]: !prev[qId],
+    }));
+  }, []);
+
   const [exams, setExams] = useState<Exam[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [tests, setTests] = useState<MockTest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Clean, focused filters (Exam, Subject, Chapter, Question Type, Search)
+  // Clean, focused filters matching Question Upload hierarchy
+  const [filterSource, setFilterSource] = useState<'all' | 'topic' | 'exam'>(
+    querySource === 'topic' ? 'topic' : querySource === 'exam' ? 'exam' : 'all'
+  );
+
+  // When Source = 'topic':
+  const [filterSubjectId, setFilterSubjectId] = useState(querySubjectId || '');
+  const [filterChapterId, setFilterChapterId] = useState(queryTopicId || '');
+  const [filterTopicTestId, setFilterTopicTestId] = useState('');
+
+  // When Source = 'exam':
+  const [filterExamId, setFilterExamId] = useState(searchParams.get('examId') || '');
+  const [filterExamType, setFilterExamType] = useState<'' | 'full_mock' | 'pyq'>(
+    querySource === 'exam' ? 'full_mock' : ''
+  );
+  const [filterExamTestId, setFilterExamTestId] = useState('');
+
+  // When Source = 'all':
+  const [filterAllCategory, setFilterAllCategory] = useState<'' | 'topic' | 'full_mock' | 'pyq'>(
+    ''
+  );
+
+  // Search filter
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedExamId, setSelectedExamId] = useState(searchParams.get('examId') || '');
-  const [selectedSubjectId, setSelectedSubjectId] = useState(querySubjectId || '');
-  const [selectedChapterId, setSelectedChapterId] = useState(queryTopicId || '');
-  const [selectedQuestionType, setSelectedQuestionType] = useState<
-    '' | 'topic' | 'full_mock' | 'pyq'
-  >(querySource === 'topic' ? 'topic' : querySource === 'exam' ? 'full_mock' : '');
+
+  // Master bank questions for accurate bank-wide stats
+  const [allBankQuestions, setAllBankQuestions] = useState<Question[]>([]);
 
   // Sync with searchParams if they change
   useEffect(() => {
@@ -68,11 +98,22 @@ export const AdminQuestionBank: React.FC = () => {
     const sub = searchParams.get('subjectId');
     const top = searchParams.get('topicId') || searchParams.get('chapterId');
     const exam = searchParams.get('examId');
-    if (s === 'topic') setSelectedQuestionType('topic');
-    else if (s === 'exam') setSelectedQuestionType('full_mock');
-    if (sub !== null && sub !== undefined) setSelectedSubjectId(sub);
-    if (top !== null && top !== undefined) setSelectedChapterId(top);
-    if (exam !== null && exam !== undefined) setSelectedExamId(exam);
+
+    if (s === 'topic') {
+      setFilterSource('topic');
+      if (sub) setFilterSubjectId(sub);
+      if (top) setFilterChapterId(top);
+    } else if (s === 'exam') {
+      setFilterSource('exam');
+      if (exam) setFilterExamId(exam);
+    } else if (sub) {
+      setFilterSource('topic');
+      setFilterSubjectId(sub);
+      if (top) setFilterChapterId(top);
+    } else if (exam) {
+      setFilterSource('exam');
+      setFilterExamId(exam);
+    }
   }, [searchParams]);
 
   // Pagination (Section 5)
@@ -147,6 +188,17 @@ export const AdminQuestionBank: React.FC = () => {
   const [deleteError, setDeleteError] = useState('');
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
+  // Master summary loader for overall Question Bank statistics
+  const loadBankSummary = useCallback(async () => {
+    try {
+      const all = await api.getAllAdminQuestions();
+      setAllBankQuestions(all);
+      setTotalUploadedCount(all.length);
+    } catch (err) {
+      console.error('Failed to load bank summary:', err);
+    }
+  }, []);
+
   // Load Master Metadata once on mount
   useEffect(() => {
     let isMounted = true;
@@ -155,13 +207,16 @@ export const AdminQuestionBank: React.FC = () => {
       api.getAllAdminSubjects(),
       api.getAllAdminChapters(),
       api.getAllAdminTests(),
+      api.getAllAdminQuestions(),
     ])
-      .then(([allExams, allSubjects, allChapters, allTests]) => {
+      .then(([allExams, allSubjects, allChapters, allTests, allQuestions]) => {
         if (isMounted) {
           setExams(allExams);
           setSubjects(allSubjects);
           setChapters(allChapters);
           setTests(allTests);
+          setAllBankQuestions(allQuestions);
+          setTotalUploadedCount(allQuestions.length);
         }
       })
       .catch((err) => {
@@ -172,68 +227,207 @@ export const AdminQuestionBank: React.FC = () => {
     };
   }, []);
 
-  // Load Base Questions matching Exam, Subject, Chapter, and Search filters
+  // Load Base Questions matching chosen Source and cascading filters
   const loadQuestions = useCallback(async () => {
     try {
       setIsLoading(true);
-      const matching = await api.getAllAdminQuestions({
-        sourceExam: selectedExamId || undefined,
-        subjectId: selectedSubjectId || undefined,
-        chapterId: selectedChapterId || undefined,
-        topicId: selectedChapterId || undefined,
-        search: searchTerm.trim() || undefined,
-      });
+      const filterParams: Parameters<typeof api.getAllAdminQuestions>[0] = {};
 
+      if (filterSource === 'topic') {
+        if (filterTopicTestId) {
+          filterParams.testId = filterTopicTestId;
+        } else {
+          if (filterSubjectId) filterParams.subjectId = filterSubjectId;
+          if (filterChapterId) {
+            filterParams.chapterId = filterChapterId;
+            filterParams.topicId = filterChapterId;
+          }
+          filterParams.sourceType = 'topic';
+        }
+      } else if (filterSource === 'exam') {
+        if (filterExamTestId) {
+          filterParams.testId = filterExamTestId;
+        } else {
+          if (filterExamId) filterParams.sourceExam = filterExamId;
+          if (filterExamType) filterParams.sourceType = filterExamType;
+        }
+      } else {
+        // Source is 'all'
+        if (filterAllCategory) {
+          filterParams.sourceType = filterAllCategory;
+        }
+      }
+
+      if (searchTerm.trim()) {
+        filterParams.search = searchTerm.trim();
+      }
+
+      const matching = await api.getAllAdminQuestions(filterParams);
       setBaseQuestions(matching);
+      setQuestions(matching);
+
+      if (filterSource === 'all' && !filterAllCategory && !searchTerm.trim()) {
+        setTotalUploadedCount(matching.length);
+        setAllBankQuestions(matching);
+      }
     } catch (err) {
       console.error('Failed to load Question Bank data:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedExamId, selectedSubjectId, selectedChapterId, searchTerm]);
+  }, [
+    filterSource,
+    filterSubjectId,
+    filterChapterId,
+    filterTopicTestId,
+    filterExamId,
+    filterExamType,
+    filterExamTestId,
+    filterAllCategory,
+    searchTerm,
+  ]);
 
   useEffect(() => {
     loadQuestions();
   }, [loadQuestions]);
 
-  // Synchronize visible questions based on selectedQuestionType
-  useEffect(() => {
-    if (!selectedQuestionType) {
-      setQuestions(baseQuestions);
-    } else if (selectedQuestionType === 'topic') {
-      setQuestions(baseQuestions.filter((q) => q.sourceType === 'topic'));
-    } else if (selectedQuestionType === 'pyq') {
-      setQuestions(baseQuestions.filter((q) => q.sourceType === 'pyq'));
-    } else if (selectedQuestionType === 'full_mock') {
-      setQuestions(
-        baseQuestions.filter(
-          (q) => q.sourceType === 'other' || (!q.sourceType && Boolean(q.sourceExam))
-        )
-      );
+  // Overall Bank Statistics (All questions in the entire Question Bank)
+  const bankStats = useMemo(() => {
+    let topic = 0;
+    let fullMock = 0;
+    let pyq = 0;
+
+    for (const q of allBankQuestions) {
+      if (q.sourceType === 'topic') {
+        topic++;
+      } else if (q.sourceType === 'pyq') {
+        pyq++;
+      } else {
+        fullMock++;
+      }
     }
-  }, [baseQuestions, selectedQuestionType]);
+
+    return {
+      total: allBankQuestions.length,
+      topic,
+      fullMock,
+      pyq,
+    };
+  }, [allBankQuestions]);
+
+  // Filtered Category Counts matching currently active filter scope
+  const categoryCounts = useMemo(() => {
+    let topic = 0;
+    let fullMock = 0;
+    let pyq = 0;
+
+    for (const q of baseQuestions) {
+      if (q.sourceType === 'topic') {
+        topic++;
+      } else if (q.sourceType === 'pyq') {
+        pyq++;
+      } else {
+        fullMock++;
+      }
+    }
+
+    return {
+      total: baseQuestions.length,
+      topic,
+      fullMock,
+      pyq,
+    };
+  }, [baseQuestions]);
 
   // Reset page on filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedExamId, selectedSubjectId, selectedChapterId, selectedQuestionType, searchTerm]);
+  }, [
+    filterSource,
+    filterSubjectId,
+    filterChapterId,
+    filterTopicTestId,
+    filterExamId,
+    filterExamType,
+    filterExamTestId,
+    filterAllCategory,
+    searchTerm,
+  ]);
 
-  // Filtered chapters for dropdown
-  const availableChapters = useMemo(() => {
-    if (!selectedSubjectId) return chapters;
-    return chapters.filter((c) => c.subjectId === selectedSubjectId);
-  }, [chapters, selectedSubjectId]);
+  // Filtered chapters for Topic mode dropdown
+  const topicFilterChapters = useMemo(() => {
+    if (!filterSubjectId) return chapters;
+    return chapters.filter((c) => c.subjectId === filterSubjectId);
+  }, [chapters, filterSubjectId]);
+
+  // Filtered tests for Topic mode dropdown
+  const topicFilterTests = useMemo(() => {
+    return tests.filter((t) => {
+      const isTopic = t.testType === 'topic' || t.testType === 'chapter_mock';
+      if (!isTopic) return false;
+      if (filterSubjectId && t.subjectId && t.subjectId !== filterSubjectId) return false;
+      if (filterChapterId && t.chapterId !== filterChapterId && t.topicId !== filterChapterId)
+        return false;
+      return true;
+    });
+  }, [tests, filterSubjectId, filterChapterId]);
+
+  // Filtered tests for Exam mode dropdown
+  const examFilterTests = useMemo(() => {
+    return tests.filter((t) => {
+      const isExamTest = t.testType === 'full_mock' || t.testType === 'pyq';
+      if (!isExamTest) return false;
+      if (filterExamId && t.examId !== filterExamId && !t.associatedExamIds?.includes(filterExamId))
+        return false;
+      if (filterExamType && t.testType !== filterExamType) return false;
+      return true;
+    });
+  }, [tests, filterExamId, filterExamType]);
 
   const hasActiveFilters = Boolean(
-    searchTerm || selectedExamId || selectedSubjectId || selectedChapterId || selectedQuestionType
+    searchTerm ||
+    filterSource !== 'all' ||
+    filterSubjectId ||
+    filterChapterId ||
+    filterTopicTestId ||
+    filterExamId ||
+    filterExamType ||
+    filterExamTestId ||
+    filterAllCategory
   );
 
   const handleResetFilters = () => {
     setSearchTerm('');
-    setSelectedExamId('');
-    setSelectedSubjectId('');
-    setSelectedChapterId('');
-    setSelectedQuestionType('');
+    setFilterSource('all');
+    setFilterSubjectId('');
+    setFilterChapterId('');
+    setFilterTopicTestId('');
+    setFilterExamId('');
+    setFilterExamType('');
+    setFilterExamTestId('');
+    setFilterAllCategory('');
+  };
+
+  const handleSelectSource = (src: 'all' | 'topic' | 'exam') => {
+    setFilterSource(src);
+    if (src === 'topic') {
+      setFilterExamId('');
+      setFilterExamType('');
+      setFilterExamTestId('');
+      setFilterAllCategory('');
+    } else if (src === 'exam') {
+      setFilterSubjectId('');
+      setFilterChapterId('');
+      setFilterTopicTestId('');
+      setFilterAllCategory('');
+    } else {
+      setFilterSubjectId('');
+      setFilterChapterId('');
+      setFilterTopicTestId('');
+      setFilterExamId('');
+      setFilterExamType('');
+      setFilterExamTestId('');
+    }
   };
 
   // Single Question Modal Cascading
@@ -305,26 +499,27 @@ export const AdminQuestionBank: React.FC = () => {
 
   // Open Single Question Modal
   const handleOpenAddSingle = () => {
-    const defaultSub = selectedSubjectId || subjects[0]?.id || '';
+    const defaultSub = filterSubjectId || subjects[0]?.id || '';
     const defaultTopic =
-      selectedChapterId ||
+      filterChapterId ||
       chapters.find((c) => c.subjectId === defaultSub)?.id ||
       chapters[0]?.id ||
       '';
     const defaultTopicTest =
-      tests.find((t) => t.chapterId === defaultTopic || t.topicId === defaultTopic)?.id || '';
+      filterTopicTestId ||
+      tests.find((t) => t.chapterId === defaultTopic || t.topicId === defaultTopic)?.id ||
+      '';
 
-    const effectiveExam = selectedExamId || exams[0]?.id || '';
-    const effectiveExamType: 'full_mock' | 'pyq' =
-      selectedQuestionType === 'pyq' ? 'pyq' : 'full_mock';
+    const effectiveExam = filterExamId || exams[0]?.id || '';
+    const effectiveExamType: 'full_mock' | 'pyq' = filterExamType === 'pyq' ? 'pyq' : 'full_mock';
     const effectiveTests = tests.filter(
       (t) =>
         t.testType === effectiveExamType &&
         (t.examId === effectiveExam || t.associatedExamIds?.includes(effectiveExam))
     );
-    const defaultExamTest = effectiveTests[0]?.id || '';
+    const defaultExamTest = filterExamTestId || effectiveTests[0]?.id || '';
 
-    setSingleSource(selectedExamId ? 'exam' : 'topic');
+    setSingleSource(filterSource === 'exam' ? 'exam' : 'topic');
     setSingleSubjectId(defaultSub);
     setSingleTopicId(defaultTopic);
     setSingleTopicTestId(defaultTopicTest);
@@ -398,6 +593,7 @@ export const AdminQuestionBank: React.FC = () => {
           optionD: singleOptD.trim(),
           correctOption: singleCorrect,
           explanation: singleExplanation.trim() || undefined,
+          explanationBengali: singleExplanation.trim() || undefined,
           sourceExam: singleExamId,
           sourceType: singleExamType === 'pyq' ? 'pyq' : 'other',
           defaultMarks: singleMarks,
@@ -415,6 +611,7 @@ export const AdminQuestionBank: React.FC = () => {
           optionD: singleOptD.trim(),
           correctOption: singleCorrect,
           explanation: singleExplanation.trim() || undefined,
+          explanationBengali: singleExplanation.trim() || undefined,
           subjectId: singleSubjectId,
           topicId: singleTopicId,
           chapterId: singleTopicId,
@@ -434,6 +631,7 @@ export const AdminQuestionBank: React.FC = () => {
           optionD: singleOptD.trim(),
           correctOption: singleCorrect,
           explanation: singleExplanation.trim() || undefined,
+          explanationBengali: singleExplanation.trim() || undefined,
           subjectId: singleSource === 'topic' ? singleSubjectId : undefined,
           topicId: singleSource === 'topic' ? singleTopicId : undefined,
           chapterId: singleSource === 'topic' ? singleTopicId : undefined,
@@ -447,7 +645,7 @@ export const AdminQuestionBank: React.FC = () => {
       }
 
       setIsAddModalOpen(false);
-      await loadQuestions();
+      await Promise.all([loadQuestions(), loadBankSummary()]);
     } catch (err) {
       setSingleError(getErrorMessage(err, 'Failed to save question'));
     } finally {
@@ -457,26 +655,27 @@ export const AdminQuestionBank: React.FC = () => {
 
   // Open Bulk Modal (Section 7)
   const handleOpenBulkModal = () => {
-    const defaultSub = selectedSubjectId || subjects[0]?.id || '';
+    const defaultSub = filterSubjectId || subjects[0]?.id || '';
     const defaultTopic =
-      selectedChapterId ||
+      filterChapterId ||
       chapters.find((c) => c.subjectId === defaultSub)?.id ||
       chapters[0]?.id ||
       '';
     const defaultTopicTest =
-      tests.find((t) => t.chapterId === defaultTopic || t.topicId === defaultTopic)?.id || '';
+      filterTopicTestId ||
+      tests.find((t) => t.chapterId === defaultTopic || t.topicId === defaultTopic)?.id ||
+      '';
 
-    const effectiveExam = selectedExamId || exams[0]?.id || '';
-    const effectiveExamType: 'full_mock' | 'pyq' =
-      selectedQuestionType === 'pyq' ? 'pyq' : 'full_mock';
+    const effectiveExam = filterExamId || exams[0]?.id || '';
+    const effectiveExamType: 'full_mock' | 'pyq' = filterExamType === 'pyq' ? 'pyq' : 'full_mock';
     const effectiveTests = tests.filter(
       (t) =>
         t.testType === effectiveExamType &&
         (t.examId === effectiveExam || t.associatedExamIds?.includes(effectiveExam))
     );
-    const defaultExamTest = effectiveTests[0]?.id || '';
+    const defaultExamTest = filterExamTestId || effectiveTests[0]?.id || '';
 
-    setBulkSource(selectedExamId ? 'exam' : 'topic');
+    setBulkSource(filterSource === 'exam' ? 'exam' : 'topic');
     setBulkSubjectId(defaultSub);
     setBulkTopicId(defaultTopic);
     setBulkTopicTestId(defaultTopicTest);
@@ -540,7 +739,11 @@ export const AdminQuestionBank: React.FC = () => {
     }
 
     setBulkActionError('');
-    const result = parseQuestionsTxt(bulkRawText);
+    // Pass the selected subject so TXT imports enforce Short Notes rules for
+    // non-Mathematics subjects (Mathematics keeps classic Explanation).
+    const result = parseQuestionsTxt(bulkRawText, {
+      subjectId: bulkSource === 'topic' ? bulkSubjectId || undefined : undefined,
+    });
     setBulkParseResult(result);
     setBulkStep('preview');
   };
@@ -565,7 +768,7 @@ export const AdminQuestionBank: React.FC = () => {
       setBulkActionSuccess(
         `Successfully imported ${res.successCount} questions into Question Bank!`
       );
-      await loadQuestions();
+      await Promise.all([loadQuestions(), loadBankSummary()]);
 
       setTimeout(() => {
         setIsBulkModalOpen(false);
@@ -586,7 +789,7 @@ export const AdminQuestionBank: React.FC = () => {
     setEditQOptC(q.optionC);
     setEditQOptD(q.optionD);
     setEditQCorrect((q.correctOption as any) || 'A');
-    setEditQExplanation(q.explanation || '');
+    setEditQExplanation(q.explanationBengali || q.explanation || '');
     setEditQError('');
     setIsEditModalOpen(true);
   };
@@ -605,9 +808,10 @@ export const AdminQuestionBank: React.FC = () => {
         optionD: editQOptD.trim(),
         correctOption: editQCorrect,
         explanation: editQExplanation.trim() || undefined,
+        explanationBengali: editQExplanation.trim() || undefined,
       });
       setIsEditModalOpen(false);
-      await loadQuestions();
+      await Promise.all([loadQuestions(), loadBankSummary()]);
     } catch (err) {
       setEditQError(getErrorMessage(err, 'Failed to update question'));
     } finally {
@@ -623,7 +827,7 @@ export const AdminQuestionBank: React.FC = () => {
         status: isCurrentlyArchived ? 'active' : 'archived',
         isActive: isCurrentlyArchived,
       });
-      await loadQuestions();
+      await Promise.all([loadQuestions(), loadBankSummary()]);
     } catch (err) {
       console.error('Failed to toggle question archive status:', err);
     }
@@ -638,6 +842,8 @@ export const AdminQuestionBank: React.FC = () => {
       const success = await api.deleteQuestion(questionToDelete.id);
       if (success) {
         setQuestions((prev) => prev.filter((q) => q.id !== questionToDelete.id));
+        setAllBankQuestions((prev) => prev.filter((q) => q.id !== questionToDelete.id));
+        setTotalUploadedCount((prev) => Math.max(0, prev - 1));
         setSelectedQuestionIds((prev) => {
           const next = new Set(prev);
           next.delete(questionToDelete.id);
@@ -667,6 +873,8 @@ export const AdminQuestionBank: React.FC = () => {
         if (ok) count++;
       }
       setQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
+      setAllBankQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
+      setTotalUploadedCount((prev) => Math.max(0, prev - count));
       setSelectedQuestionIds(new Set());
       setIsBulkDeleteModalOpen(false);
       setBulkActionSuccess(`${count} questions deleted successfully.`);
@@ -719,10 +927,16 @@ export const AdminQuestionBank: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
-            <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            Question Bank
-          </h1>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+              <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              Question Bank
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/90 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs sm:text-sm shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              {totalUploadedCount} Total Uploaded Questions
+            </span>
+          </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Central repository of exam and practice questions. Real question records loaded
             directly.
@@ -754,7 +968,193 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       </div>
 
-      {/* Redesigned Clean, Compact, Modern Filters Bar */}
+      {/* ─── PROMINENT QUESTION STATS & CATEGORY BREAKDOWN ─── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Total Questions Card */}
+        <button
+          type="button"
+          onClick={() => handleSelectSource('all')}
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden group cursor-pointer ${
+            filterSource === 'all' && !filterAllCategory
+              ? 'bg-gradient-to-br from-indigo-50/90 to-white dark:from-indigo-950/40 dark:to-slate-900 border-indigo-400 dark:border-indigo-600 shadow-sm ring-2 ring-indigo-500/20'
+              : 'bg-white dark:bg-[#0a1226] border-slate-200/90 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-800 shadow-2xs'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              Total Questions
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <BookOpen className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {categoryCounts.total}
+            </span>
+            {bankStats.total > categoryCounts.total && (
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                of {bankStats.total} total
+              </span>
+            )}
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">
+              {hasActiveFilters ? 'Filtered questions' : 'Uploaded in Bank'}
+            </span>
+            {filterSource === 'all' && !filterAllCategory && (
+              <span className="text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">
+                Viewing All
+              </span>
+            )}
+          </div>
+        </button>
+
+        {/* Topic Practice Category Card */}
+        <button
+          type="button"
+          onClick={() => {
+            if (filterSource === 'topic') {
+              handleSelectSource('all');
+            } else {
+              handleSelectSource('topic');
+            }
+          }}
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden group cursor-pointer ${
+            filterSource === 'topic'
+              ? 'bg-gradient-to-br from-blue-50/90 to-white dark:from-blue-950/40 dark:to-slate-900 border-blue-400 dark:border-blue-600 shadow-sm ring-2 ring-blue-500/20'
+              : 'bg-white dark:bg-[#0a1226] border-slate-200/90 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 shadow-2xs'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              Topic Tests
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <Layers className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {categoryCounts.topic}
+            </span>
+            {bankStats.topic > categoryCounts.topic && (
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                of {bankStats.topic}
+              </span>
+            )}
+            <span className="text-xs font-semibold text-slate-400">questions</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">
+              Chapter & Topic tests
+            </span>
+            {filterSource === 'topic' && (
+              <span className="text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wider">
+                Active
+              </span>
+            )}
+          </div>
+        </button>
+
+        {/* Full Mock Test Category Card */}
+        <button
+          type="button"
+          onClick={() => {
+            if (filterSource === 'exam' && filterExamType === 'full_mock') {
+              handleSelectSource('all');
+            } else {
+              handleSelectSource('exam');
+              setFilterExamType('full_mock');
+            }
+          }}
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden group cursor-pointer ${
+            filterSource === 'exam' && filterExamType === 'full_mock'
+              ? 'bg-gradient-to-br from-emerald-50/90 to-white dark:from-emerald-950/40 dark:to-slate-900 border-emerald-400 dark:border-emerald-600 shadow-sm ring-2 ring-emerald-500/20'
+              : 'bg-white dark:bg-[#0a1226] border-slate-200/90 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-800 shadow-2xs'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              Full Mock Tests
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <Award className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {categoryCounts.fullMock}
+            </span>
+            {bankStats.fullMock > categoryCounts.fullMock && (
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                of {bankStats.fullMock}
+              </span>
+            )}
+            <span className="text-xs font-semibold text-slate-400">questions</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">
+              Full syllabus papers
+            </span>
+            {filterSource === 'exam' && filterExamType === 'full_mock' && (
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-wider">
+                Active
+              </span>
+            )}
+          </div>
+        </button>
+
+        {/* PYQ Papers Category Card */}
+        <button
+          type="button"
+          onClick={() => {
+            if (filterSource === 'exam' && filterExamType === 'pyq') {
+              handleSelectSource('all');
+            } else {
+              handleSelectSource('exam');
+              setFilterExamType('pyq');
+            }
+          }}
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden group cursor-pointer ${
+            filterSource === 'exam' && filterExamType === 'pyq'
+              ? 'bg-gradient-to-br from-amber-50/90 to-white dark:from-amber-950/40 dark:to-slate-900 border-amber-400 dark:border-amber-600 shadow-sm ring-2 ring-amber-500/20'
+              : 'bg-white dark:bg-[#0a1226] border-slate-200/90 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-800 shadow-2xs'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              PYQ Papers
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <Tag className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {categoryCounts.pyq}
+            </span>
+            {bankStats.pyq > categoryCounts.pyq && (
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                of {bankStats.pyq}
+              </span>
+            )}
+            <span className="text-xs font-semibold text-slate-400">questions</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">
+              Previous year questions
+            </span>
+            {filterSource === 'exam' && filterExamType === 'pyq' && (
+              <span className="text-amber-600 dark:text-amber-400 font-bold text-[10px] uppercase tracking-wider">
+                Active
+              </span>
+            )}
+          </div>
+        </button>
+      </div>
+
+      {/* ─── UPLOAD-MATCHED HIERARCHICAL FILTER BAR ─── */}
       <div className="bg-white dark:bg-[#0a1226] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
         {/* Row 1: Search and Header Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -762,7 +1162,7 @@ export const AdminQuestionBank: React.FC = () => {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 select-none" />
             <input
               type="text"
-              placeholder="Search questions by text, options, or notes..."
+              placeholder="Search questions by statement, options, or explanation..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-9 py-2.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors shadow-2xs font-medium"
@@ -771,7 +1171,7 @@ export const AdminQuestionBank: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -780,7 +1180,7 @@ export const AdminQuestionBank: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-800">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-800">
               {questions.length} {questions.length === 1 ? 'Question' : 'Questions'}
             </span>
 
@@ -798,101 +1198,248 @@ export const AdminQuestionBank: React.FC = () => {
           </div>
         </div>
 
-        {/* Row 2: 4 Clean, Focused Dropdown Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-          {/* 1. Exam Filter */}
-          <div className="space-y-1.5">
+        {/* Row 2: Source Type Selection (Matches Question Upload) */}
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between">
             <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-              Exam
+              <Filter className="w-3.5 h-3.5 text-indigo-500" />
+              Question Source Filter
             </label>
-            <select
-              value={selectedExamId}
-              onChange={(e) => setSelectedExamId(e.target.value)}
-              className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-2xs cursor-pointer truncate"
-            >
-              <option value="">All Exams</option>
-              {exams.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.title}
-                </option>
-              ))}
-            </select>
+            <span className="text-[11px] text-slate-400 font-medium">
+              {filterSource === 'all' && 'Showing all questions repository'}
+              {filterSource === 'topic' && 'Filtered by Subject & Topic hierarchy'}
+              {filterSource === 'exam' && 'Filtered by Exam Mock / PYQ hierarchy'}
+            </span>
           </div>
 
-          {/* 2. Subject Filter */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-              Subject
-            </label>
-            <select
-              value={selectedSubjectId}
-              onChange={(e) => {
-                const newSub = e.target.value;
-                setSelectedSubjectId(newSub);
-                if (selectedChapterId) {
-                  const ch = chapters.find((c) => c.id === selectedChapterId);
-                  if (ch && newSub && ch.subjectId !== newSub) {
-                    setSelectedChapterId('');
-                  }
-                }
-              }}
-              className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-2xs cursor-pointer truncate"
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleSelectSource('all')}
+              className={`p-2.5 sm:p-3 rounded-xl border text-left font-semibold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                filterSource === 'all'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 shadow-2xs ring-1 ring-indigo-500'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+              }`}
             >
-              <option value="">All Subjects</option>
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <div className="truncate">
+                <div className="font-bold truncate">All Sources</div>
+                <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                  Whole question bank
+                </div>
+              </div>
+            </button>
 
-          {/* 3. Chapter Filter */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              Chapter
-            </label>
-            <select
-              value={selectedChapterId}
-              onChange={(e) => setSelectedChapterId(e.target.value)}
-              className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-2xs cursor-pointer truncate"
+            <button
+              type="button"
+              onClick={() => handleSelectSource('topic')}
+              className={`p-2.5 sm:p-3 rounded-xl border text-left font-semibold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                filterSource === 'topic'
+                  ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-500 text-blue-700 dark:text-blue-300 shadow-2xs ring-1 ring-blue-500'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+              }`}
             >
-              <option value="">
-                {selectedSubjectId ? 'All Chapters in Subject' : 'All Chapters'}
-              </option>
-              {availableChapters.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <div className="truncate">
+                <div className="font-bold truncate">Topic Test</div>
+                <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                  Subject, Topic & Test
+                </div>
+              </div>
+            </button>
 
-          {/* 4. Question Type Filter */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              Question Type
-            </label>
-            <select
-              value={selectedQuestionType}
-              onChange={(e) => setSelectedQuestionType(e.target.value as any)}
-              className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-2xs cursor-pointer truncate"
+            <button
+              type="button"
+              onClick={() => handleSelectSource('exam')}
+              className={`p-2.5 sm:p-3 rounded-xl border text-left font-semibold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                filterSource === 'exam'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-2xs ring-1 ring-emerald-500'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+              }`}
             >
-              <option value="">All Question Types</option>
-              <option value="topic">Topic Practice</option>
-              <option value="full_mock">Full Mock Test</option>
-              <option value="pyq">PYQ (Previous Year)</option>
-            </select>
+              <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <div className="truncate">
+                <div className="font-bold truncate">Exam (Mock/PYQ)</div>
+                <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                  Full Mock & PYQs
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
-        {/* Row 3: Active Filters Pills */}
+        {/* Row 3: Cascading Dropdowns matching the selected source */}
+        {filterSource === 'topic' && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            {/* 1. Subject */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                1. Subject
+              </label>
+              <select
+                value={filterSubjectId}
+                onChange={(e) => {
+                  setFilterSubjectId(e.target.value);
+                  setFilterChapterId('');
+                  setFilterTopicTestId('');
+                }}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="">All Subjects</option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 2. Topic / Chapter */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                2. Topic / Chapter
+              </label>
+              <select
+                value={filterChapterId}
+                onChange={(e) => {
+                  setFilterChapterId(e.target.value);
+                  setFilterTopicTestId('');
+                }}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="">{filterSubjectId ? 'All Topics in Subject' : 'All Topics'}</option>
+                {topicFilterChapters.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 3. Topic Test */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                3. Topic Test
+              </label>
+              <select
+                value={filterTopicTestId}
+                onChange={(e) => setFilterTopicTestId(e.target.value)}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="">
+                  {filterChapterId ? 'All Tests in Topic' : 'All Topic Tests'}
+                </option>
+                {topicFilterTests.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {filterSource === 'exam' && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            {/* 1. Target Exam */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                1. Target Exam
+              </label>
+              <select
+                value={filterExamId}
+                onChange={(e) => {
+                  setFilterExamId(e.target.value);
+                  setFilterExamTestId('');
+                }}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="">All Exams</option>
+                {exams.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 2. Exam Type */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                2. Test Type
+              </label>
+              <select
+                value={filterExamType}
+                onChange={(e) => {
+                  setFilterExamType(e.target.value as any);
+                  setFilterExamTestId('');
+                }}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="">All Types (Full Mock & PYQ)</option>
+                <option value="full_mock">Full Mock Test</option>
+                <option value="pyq">PYQ (Previous Year Paper)</option>
+              </select>
+            </div>
+
+            {/* 3. Test / Paper */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                3. Test / Paper
+              </label>
+              <select
+                value={filterExamTestId}
+                onChange={(e) => setFilterExamTestId(e.target.value)}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="">
+                  {filterExamType === 'pyq'
+                    ? 'All PYQ Papers'
+                    : filterExamType === 'full_mock'
+                      ? 'All Full Mock Tests'
+                      : 'All Tests in Exam'}
+                </option>
+                {examFilterTests.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {filterSource === 'all' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                Quick Category Filter
+              </label>
+              <select
+                value={filterAllCategory}
+                onChange={(e) => setFilterAllCategory(e.target.value as any)}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="">All Categories</option>
+                <option value="topic">Topic Tests Only</option>
+                <option value="full_mock">Full Mock Tests Only</option>
+                <option value="pyq">PYQ Papers Only</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Row 4: Active Filters Chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
             <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1 mr-1">
               <Filter className="w-3 h-3" />
               Active Filters:
@@ -911,14 +1458,12 @@ export const AdminQuestionBank: React.FC = () => {
               </span>
             )}
 
-            {selectedExamId && (
+            {filterSource !== 'all' && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-medium text-[11px] border border-indigo-200 dark:border-indigo-800/60">
-                <span>
-                  Exam: {exams.find((e) => e.id === selectedExamId)?.title || selectedExamId}
-                </span>
+                <span>Source: {filterSource === 'topic' ? 'Topic Test' : 'Exam (Mock/PYQ)'}</span>
                 <button
                   type="button"
-                  onClick={() => setSelectedExamId('')}
+                  onClick={() => handleSelectSource('all')}
                   className="hover:text-rose-500 ml-0.5 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
@@ -926,17 +1471,17 @@ export const AdminQuestionBank: React.FC = () => {
               </span>
             )}
 
-            {selectedSubjectId && (
+            {filterSubjectId && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium text-[11px] border border-blue-200 dark:border-blue-800/60">
                 <span>
-                  Subject:{' '}
-                  {subjects.find((s) => s.id === selectedSubjectId)?.name || selectedSubjectId}
+                  Subject: {subjects.find((s) => s.id === filterSubjectId)?.name || filterSubjectId}
                 </span>
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedSubjectId('');
-                    setSelectedChapterId('');
+                    setFilterSubjectId('');
+                    setFilterChapterId('');
+                    setFilterTopicTestId('');
                   }}
                   className="hover:text-rose-500 ml-0.5 cursor-pointer"
                 >
@@ -945,15 +1490,17 @@ export const AdminQuestionBank: React.FC = () => {
               </span>
             )}
 
-            {selectedChapterId && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium text-[11px] border border-emerald-200 dark:border-emerald-800/60">
+            {filterChapterId && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium text-[11px] border border-blue-200 dark:border-blue-800/60">
                 <span>
-                  Chapter:{' '}
-                  {chapters.find((c) => c.id === selectedChapterId)?.name || selectedChapterId}
+                  Topic: {chapters.find((c) => c.id === filterChapterId)?.name || filterChapterId}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setSelectedChapterId('')}
+                  onClick={() => {
+                    setFilterChapterId('');
+                    setFilterTopicTestId('');
+                  }}
                   className="hover:text-rose-500 ml-0.5 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
@@ -961,19 +1508,81 @@ export const AdminQuestionBank: React.FC = () => {
               </span>
             )}
 
-            {selectedQuestionType && (
+            {filterTopicTestId && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium text-[11px] border border-blue-200 dark:border-blue-800/60">
+                <span>
+                  Test: {tests.find((t) => t.id === filterTopicTestId)?.title || filterTopicTestId}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFilterTopicTestId('')}
+                  className="hover:text-rose-500 ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {filterExamId && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium text-[11px] border border-emerald-200 dark:border-emerald-800/60">
+                <span>Exam: {exams.find((e) => e.id === filterExamId)?.title || filterExamId}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterExamId('');
+                    setFilterExamTestId('');
+                  }}
+                  className="hover:text-rose-500 ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {filterExamType && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium text-[11px] border border-emerald-200 dark:border-emerald-800/60">
+                <span>Type: {filterExamType === 'full_mock' ? 'Full Mock Test' : 'PYQ'}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterExamType('');
+                    setFilterExamTestId('');
+                  }}
+                  className="hover:text-rose-500 ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {filterExamTestId && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium text-[11px] border border-emerald-200 dark:border-emerald-800/60">
+                <span>
+                  Paper: {tests.find((t) => t.id === filterExamTestId)?.title || filterExamTestId}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFilterExamTestId('')}
+                  className="hover:text-rose-500 ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {filterAllCategory && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium text-[11px] border border-amber-200 dark:border-amber-800/60">
                 <span>
-                  Type:{' '}
-                  {selectedQuestionType === 'topic'
+                  Category:{' '}
+                  {filterAllCategory === 'topic'
                     ? 'Topic Practice'
-                    : selectedQuestionType === 'full_mock'
+                    : filterAllCategory === 'full_mock'
                       ? 'Full Mock Test'
                       : 'PYQ'}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setSelectedQuestionType('')}
+                  onClick={() => setFilterAllCategory('')}
                   className="hover:text-rose-500 ml-0.5 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
@@ -1191,17 +1800,17 @@ export const AdminQuestionBank: React.FC = () => {
                         <div className="space-y-2">
                           {/* Option A */}
                           <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
                               q.correctOption === 'A'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
-                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
+                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
                             }`}
                           >
                             <div className="flex items-baseline gap-2 min-w-0">
                               <span
                                 className={`font-bold shrink-0 ${
                                   q.correctOption === 'A'
-                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    ? 'text-emerald-700 dark:text-emerald-400'
                                     : 'text-slate-900 dark:text-white'
                                 }`}
                               >
@@ -1218,25 +1827,25 @@ export const AdminQuestionBank: React.FC = () => {
                               </span>
                             </div>
                             {q.correctOption === 'A' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
-                                ✓
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
+                                ✓ Correct
                               </span>
                             )}
                           </div>
 
                           {/* Option C */}
                           <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
                               q.correctOption === 'C'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
-                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
+                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
                             }`}
                           >
                             <div className="flex items-baseline gap-2 min-w-0">
                               <span
                                 className={`font-bold shrink-0 ${
                                   q.correctOption === 'C'
-                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    ? 'text-emerald-700 dark:text-emerald-400'
                                     : 'text-slate-900 dark:text-white'
                                 }`}
                               >
@@ -1253,8 +1862,8 @@ export const AdminQuestionBank: React.FC = () => {
                               </span>
                             </div>
                             {q.correctOption === 'C' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
-                                ✓
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
+                                ✓ Correct
                               </span>
                             )}
                           </div>
@@ -1264,17 +1873,17 @@ export const AdminQuestionBank: React.FC = () => {
                         <div className="space-y-2">
                           {/* Option B */}
                           <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
                               q.correctOption === 'B'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
-                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
+                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
                             }`}
                           >
                             <div className="flex items-baseline gap-2 min-w-0">
                               <span
                                 className={`font-bold shrink-0 ${
                                   q.correctOption === 'B'
-                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    ? 'text-emerald-700 dark:text-emerald-400'
                                     : 'text-slate-900 dark:text-white'
                                 }`}
                               >
@@ -1291,25 +1900,25 @@ export const AdminQuestionBank: React.FC = () => {
                               </span>
                             </div>
                             {q.correctOption === 'B' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
-                                ✓
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
+                                ✓ Correct
                               </span>
                             )}
                           </div>
 
                           {/* Option D */}
                           <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
                               q.correctOption === 'D'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium'
-                                : 'border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
+                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
                             }`}
                           >
                             <div className="flex items-baseline gap-2 min-w-0">
                               <span
                                 className={`font-bold shrink-0 ${
                                   q.correctOption === 'D'
-                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    ? 'text-emerald-700 dark:text-emerald-400'
                                     : 'text-slate-900 dark:text-white'
                                 }`}
                               >
@@ -1326,21 +1935,23 @@ export const AdminQuestionBank: React.FC = () => {
                               </span>
                             </div>
                             {q.correctOption === 'D' && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm select-none shrink-0 ml-1">
-                                ✓
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
+                                ✓ Correct
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      {/* Short Notes Accordion if available */}
-                      {q.explanation && (
-                        <div className="ml-8 mt-3">
+                      {/* Short Notes / Explanation Toggle Icon & Clean Format */}
+                      {Boolean(q.explanationBengali || q.explanation) && (
+                        <div className="ml-8 mt-3.5">
                           <ShortNotesBox
-                            explanation={q.explanation}
-                            defaultExpanded={false}
-                            title="Short Notes"
+                            explanation={q.explanationBengali || q.explanation}
+                            isExpanded={Boolean(expandedNotesIds[q.id])}
+                            collapsible={true}
+                            onToggle={() => toggleNotes(q.id)}
+                            isMathematics={isMathematicsQuestion(q)}
                           />
                         </div>
                       )}
@@ -1969,18 +2580,37 @@ export const AdminQuestionBank: React.FC = () => {
                 </div>
               </div>
 
-              {/* Explanation */}
+              {/* Explanation / Short Notes */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Explanation / Solution (English or Bengali)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    {isMathematicsSubject(subjects.find((s) => s.id === singleSubjectId))
+                      ? 'Explanation / গাণিতিক সমাধান'
+                      : 'Short Notes (শর্ট নোটস) - Bengali Bullet Points'}
+                  </label>
+                  <span className="text-[10px] text-slate-400">
+                    {isMathematicsSubject(subjects.find((s) => s.id === singleSubjectId))
+                      ? 'Formula & steps'
+                      : '4–5 bullets starting with •'}
+                  </span>
+                </div>
                 <textarea
-                  rows={3}
-                  placeholder="Detailed solution or points explaining the answer..."
+                  rows={4}
+                  placeholder={
+                    isMathematicsSubject(subjects.find((s) => s.id === singleSubjectId))
+                      ? 'Step-by-step mathematical explanation, formulas, and working...'
+                      : '• পয়েন্ট ১...\n• পয়েন্ট ২...\n• পয়েন্ট ৩...\n• পয়েন্ট ৪...\n• পয়েন্ট ৫...'
+                  }
                   value={singleExplanation}
                   onChange={(e) => setSingleExplanation(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-normal leading-relaxed"
                 />
+                {!isMathematicsSubject(subjects.find((s) => s.id === singleSubjectId)) && (
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    প্রতিটি বুলেট নতুন লাইনে '• ' দিয়ে শুরু করুন (৪–৫টি তথ্যবহুল পয়েন্ট)। কোনো
+                    "সঠিক উত্তর" বা অপশন ঘোষণা লিখবেন না।
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
@@ -2599,12 +3229,14 @@ export const AdminQuestionBank: React.FC = () => {
                 })}
               </div>
 
-              {previewingQuestion.explanation && (
+              {(previewingQuestion.explanationBengali || previewingQuestion.explanation) && (
                 <div className="space-y-2">
                   <ShortNotesBox
-                    explanation={previewingQuestion.explanation}
+                    explanation={
+                      previewingQuestion.explanationBengali || previewingQuestion.explanation
+                    }
+                    isMathematics={isMathematicsQuestion(previewingQuestion)}
                     defaultExpanded={true}
-                    title="Short Notes"
                   />
                 </div>
               )}
@@ -2732,16 +3364,37 @@ export const AdminQuestionBank: React.FC = () => {
                 </div>
               </div>
 
+              {/* Explanation / Short Notes */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Explanation Notes
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    {isMathematicsQuestion(editingQuestion)
+                      ? 'Explanation / গাণিতিক সমাধান'
+                      : 'Short Notes (শর্ট নোটস) - Bengali Bullet Points'}
+                  </label>
+                  <span className="text-[10px] text-slate-400">
+                    {isMathematicsQuestion(editingQuestion)
+                      ? 'Formula & steps'
+                      : '4–5 bullets starting with •'}
+                  </span>
+                </div>
                 <textarea
-                  rows={2}
+                  rows={4}
+                  placeholder={
+                    isMathematicsQuestion(editingQuestion)
+                      ? 'Step-by-step mathematical explanation, formulas, and working...'
+                      : '• পয়েন্ট ১...\n• পয়েন্ট ২...\n• পয়েন্ট ৩...\n• পয়েন্ট ৪...\n• পয়েন্ট ৫...'
+                  }
                   value={editQExplanation}
                   onChange={(e) => setEditQExplanation(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-normal leading-relaxed"
                 />
+                {!isMathematicsQuestion(editingQuestion) && (
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    প্রতিটি বুলেট নতুন লাইনে '• ' দিয়ে শুরু করুন (৪–৫টি তথ্যবহুল পয়েন্ট)। কোনো
+                    "সঠিক উত্তর" বা অপশন ঘোষণা লিখবেন না।
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">

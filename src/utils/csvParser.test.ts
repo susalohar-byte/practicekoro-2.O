@@ -54,8 +54,11 @@ describe('parseQuestionsText (formatted text blocks)', () => {
 সঠিক উত্তর: (b) মহেঞ্জোদারো
 
 Explanation:
-- মহেঞ্জোদারো সিন্ধু সভ্যতার অন্যতম গুরুত্বপূর্ণ নগরকেন্দ্র ছিল।
-- এখানে উন্নত পয়ঃনিষ্কাশন ও নিকাশি নালার ব্যবস্থা ছিল।
+• মহেঞ্জোদারো সিন্ধু সভ্যতার অন্যতম গুরুত্বপূর্ণ নগরকেন্দ্র ছিল।
+• এখানে উন্নত পয়ঃনিষ্কাশন ও নিকাশি নালার ব্যবস্থা ছিল।
+• ১৯২২ সালে রাখালদাস বন্দ্যোপাধ্যায় সিন্ধুর লারকানা জেলায় এটি আবিষ্কার করেন।
+• মহেঞ্জোদারোয় বিখ্যাত স্নানাগার ও ব্রোঞ্জের তৈরি নর্তকী মূর্তি পাওয়া গেছে।
+• সিন্ধু ভাষায় মহেঞ্জোদারো শব্দের অর্থ হলো মৃতের স্তূপ।
 
 2. Which Harappan site had an artificial tidal dockyard?
 a) Harappa
@@ -65,8 +68,11 @@ d) Kalibangan
 Answer: b
 
 Explanation:
-- Lothal in Gujarat had the world's earliest known tidal dockyard.
-- It was a vital ancient trading port connected to the Arabian Sea.`;
+• Lothal in Gujarat had the world's earliest known tidal dockyard.
+• It was a vital ancient trading port connected to the Arabian Sea.
+• S.R. Rao discovered this maritime trade center in 1954.
+• Rice husk remains and dock structures were excavated here.
+• Lothal traded extensively with Mesopotamia and Persian Gulf.`;
 
   it('parses Bengali and English blocks with answer and explanation', () => {
     const result = parseQuestionsText(sampleText);
@@ -96,5 +102,24 @@ Explanation:
 
     expect(result.validCount).toBe(0);
     expect(result.parsedRows[0].errors[0]).toContain('Correct answer missing');
+  });
+
+  it('rejects non-math questions with forbidden phrases in Short Notes', () => {
+    const badText = `1. হরিয়ানায় অবস্থিত হরপ্পা প্রত্নস্থল কোনটি?
+(a) রাখিগড়ি
+(b) লোথাল
+(c) ধোলাভিরা
+(d) কালীবঙ্গান
+সঠিক উত্তর: (a) রাখিগড়ি
+
+Explanation:
+• সঠিক উত্তর: রাখিগড়ি।
+• Option A সঠিক।
+• Option B ভুল কারণ লোথাল গুজরাটে অবস্থিত।
+• ধোলাভিরা গুজরাটে অবস্থিত।`;
+
+    const result = parseQuestionsText(badText);
+    expect(result.validCount).toBe(0);
+    expect(result.parsedRows[0].errors.some((e) => e.includes('"সঠিক উত্তর:"'))).toBe(true);
   });
 });

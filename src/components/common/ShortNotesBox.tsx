@@ -9,6 +9,7 @@ interface ShortNotesBoxProps {
   collapsible?: boolean;
   defaultExpanded?: boolean;
   className?: string;
+  isMathematics?: boolean;
 }
 
 /**
@@ -17,11 +18,10 @@ interface ShortNotesBoxProps {
  * semicolons, HTML line breaks, and Bengali sentence endings (।).
  *
  * STRICT PRODUCT RULE:
- * - Every question should display 4–5 meaningful Short Notes.
+ * - Every non-mathematics question should display 4–5 meaningful Short Notes.
  * - If the database contains 4 notes → display all 4.
  * - If the database contains 5 notes → display all 5.
  * - If more than 5 exist → never truncate artificially.
- * - Never omit an entire note just because it starts with "সঠিক উত্তর:".
  * - Never repeat pure answer declarations (e.g. "সঠিক উত্তর: (B)") as standalone notes.
  */
 export function parseShortNotePoints(text: string): string[] {
@@ -69,6 +69,8 @@ export function parseShortNotePoints(text: string): string[] {
     .replace(/\\r\\n/g, '\n')
     .replace(/\\n/g, '\n')
     .replace(/\\r/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/li>/gi, '\n')
     .replace(/<\/p>/gi, '\n\n')
@@ -118,91 +120,28 @@ export function parseShortNotePoints(text: string): string[] {
 
   const points = rawSegments.map(cleanLeadingNumbering).filter((s) => s.length > 0);
 
-  // Helper to detect and safely strip answer declarations
-  // e.g. "সঠিক উত্তর: (B) ১৮৬৫ সালে..." -> "১৮৬৫ সালে..."
-  const isAnsPattern =
-    /^(?:সঠিক\s*উত্তর(?:\s*(?:হলো|হল|হচ্ছে|হয়))?|উত্তর|Answer|Ans|Correct\s*Answer|Correct\s*Option)(?::|ঃ|[-–—=\s])/i;
-
-  const stripAnswerPrefix = (str: string): string => {
-    return str
-      .replace(
-        /^(?:সঠিক\s*উত্তর(?:\s*(?:হলো|হল|হচ্ছে|হয়))?|উত্তর|Answer|Ans|Correct\s*Answer|Correct\s*Option)\s*(?::|ঃ|[-–—=.])?\s*(?:\([a-dA-Dক-ঘ0-9০-৯]\)|[a-dA-Dক-ঘ0-9০-৯][.)]?)?\s*(?::|ঃ|[-–—=.])?\s*/i,
-        ''
-      )
-      .trim();
-  };
-
+  // Helper to detect pure answer declarations
   const isPureAnswerOnly = (str: string): boolean => {
     const trimmed = str.trim();
-    if (!trimmed || trimmed.length <= 2) return true;
+    if (!trimmed) return true;
     if (/^(?:\([a-dA-Dক-ঘ]\)|[a-dA-Dক-ঘ])$/i.test(trimmed)) return true;
     if (/^(?:option|বিকল্প)\s*[:\-–—]?\s*(?:\([a-dA-Dক-ঘ]\)|[a-dA-Dক-ঘ])$/i.test(trimmed)) {
       return true;
     }
+    if (
+      /^(?:সঠিক\s*উত্তর|উত্তর|Answer|Ans|Correct)\s*[:\-–—]?\s*(?:\([a-dA-Dক-ঘ0-9০-৯]\)|[a-dA-Dক-ঘ0-9০-৯][.)]?)?\s*$/i.test(
+        trimmed
+      )
+    ) {
+      return true;
+    }
+    // Bare 1–2 character fragments carry no note value (leftover markers etc.),
+    // unless they form a real Bengali word (e.g. "এক").
+    if (trimmed.length <= 2 && !/[\u0980-\u09FF]{2}/u.test(trimmed)) return true;
     return false;
   };
 
-  const cleanedPoints: string[] = [];
-  for (const pt of points) {
-    let trimmed = pt.trim();
-    // Strip explanation header if present
-    trimmed = trimmed
-      .replace(
-        /^(?:explanation|ব্যাখ্যা|Important\s*Notes?|গুরুত্বপূর্ণ\s*তথ্য)\s*(?::|ঃ|[-–—])?\s*/i,
-        ''
-      )
-      .trim();
-    if (!trimmed) continue;
-
-    // Check if line has an answer declaration
-    if (isAnsPattern.test(trimmed)) {
-      const stripped = stripAnswerPrefix(trimmed);
-      // Only keep if the line contains actual factual explanation beyond just option name
-      if (stripped && !isPureAnswerOnly(stripped)) {
-        cleanedPoints.push(stripped);
-      }
-      // If it was just repeating the correct answer with no explanation, omit to avoid redundant notes
-      continue;
-    }
-
-    cleanedPoints.push(trimmed);
-  }
-
-  // 4. Expand compound sentences if notes are < 4 so all factual points are surfaced
-  let finalPoints = cleanedPoints;
-  if (finalPoints.length < 4) {
-    const expanded: string[] = [];
-    for (const pt of finalPoints) {
-      // Check Bengali Dari (।)
-      if (pt.includes('।')) {
-        const sentences = pt
-          .split(/(?<=[।!?])\s+/)
-          .map((s) => cleanLeadingNumbering(s.trim()))
-          .filter(Boolean);
-        if (sentences.length > 1) {
-          expanded.push(...sentences);
-          continue;
-        }
-      }
-      // Check English period followed by space and uppercase letter (. [A-Z])
-      if (/\.\s+[A-Z]/.test(pt)) {
-        const sentences = pt
-          .split(/(?<=[.!?])\s+(?=[A-Z])/)
-          .map((s) => cleanLeadingNumbering(s.trim()))
-          .filter(Boolean);
-        if (sentences.length > 1) {
-          expanded.push(...sentences);
-          continue;
-        }
-      }
-      expanded.push(pt);
-    }
-    if (expanded.length >= finalPoints.length) {
-      finalPoints = expanded;
-    }
-  }
-
-  return finalPoints;
+  return points.filter((p) => !isPureAnswerOnly(p));
 }
 
 /**
@@ -259,22 +198,38 @@ export const ShortNotesBox: React.FC<ShortNotesBoxProps> = ({
   explanation,
   isExpanded: controlledExpanded,
   onToggle,
-  title = 'Short Notes',
+  title,
   collapsible = true,
   defaultExpanded = true,
   className = '',
+  isMathematics = false,
 }) => {
   const [uncontrolledExpanded, setUncontrolledExpanded] = useState(defaultExpanded);
 
-  const points = useMemo(() => {
-    if (!explanation || !explanation.trim()) return [];
-    return parseShortNotePoints(explanation);
+  // Determine display title based on mathematics vs non-mathematics
+  const displayTitle = title || (isMathematics ? 'Explanation' : 'শর্ট নোটস (Short Notes)');
+
+  // Normalize escaped \n or \\n from DB
+  const normalizedExplanation = useMemo(() => {
+    if (!explanation || !explanation.trim()) return '';
+    return explanation
+      .replace(/\\r\\n/g, '\n')
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\n')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .trim();
   }, [explanation]);
 
-  if (!explanation || !explanation.trim()) return null;
+  const points = useMemo(() => {
+    if (isMathematics || !normalizedExplanation) return [];
+    return parseShortNotePoints(normalizedExplanation);
+  }, [normalizedExplanation, isMathematics]);
 
-  // If all points were redundant answer lines and nothing remains, don't show an empty box
-  if (points.length === 0) return null;
+  if (!normalizedExplanation) return null;
+
+  // For non-mathematics: if no valid points remain, don't show empty box
+  if (!isMathematics && points.length === 0) return null;
 
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : uncontrolledExpanded;
 
@@ -297,7 +252,7 @@ export const ShortNotesBox: React.FC<ShortNotesBoxProps> = ({
         <div className="w-5 h-5 rounded-md bg-[#3b82f6] text-white flex items-center justify-center shrink-0 shadow-xs">
           <ClipboardList className="w-3 h-3 stroke-[2.5]" />
         </div>
-        <span>{title}</span>
+        <span>{displayTitle}</span>
         <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
       </button>
     );
@@ -314,7 +269,7 @@ export const ShortNotesBox: React.FC<ShortNotesBoxProps> = ({
             <ClipboardList className="w-4 h-4 stroke-[2.2]" />
           </div>
           <h4 className="text-sm sm:text-[15px] font-extrabold text-[#2563eb] dark:text-[#60a5fa] tracking-tight">
-            {title}
+            {displayTitle}
           </h4>
         </div>
 
@@ -322,7 +277,7 @@ export const ShortNotesBox: React.FC<ShortNotesBoxProps> = ({
           <button
             type="button"
             onClick={handleToggle}
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#2563eb] dark:text-[#60a5fa] hover:text-[#1d4ed8] dark:hover:text-[#93c5fd] transition-colors py-1 px-1.5 rounded-lg hover:bg-blue-100/50 dark:hover:bg-blue-900/30"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#2563eb] dark:text-[#60a5fa] hover:text-[#1d4ed8] dark:hover:text-[#93c5fd] transition-colors py-1 px-1.5 rounded-lg hover:bg-blue-100/50 dark:hover:bg-blue-900/30 cursor-pointer"
           >
             <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Hide</span>
@@ -330,17 +285,27 @@ export const ShortNotesBox: React.FC<ShortNotesBoxProps> = ({
         )}
       </div>
 
-      {/* Bullet Points List */}
-      <div className="mt-3.5 space-y-2.5">
-        {points.map((point, index) => (
-          <div key={index} className="flex items-start gap-3">
-            <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-sky-400 mt-1.5 shrink-0 ring-4 ring-blue-500/15 select-none" />
-            <div className="text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 leading-relaxed font-normal min-w-0 flex-1">
-              {formatInlineText(point)}
+      {/* Content Rendering */}
+      {isMathematics ? (
+        /* Mathematics: Preserve raw mathematical steps and formula layout */
+        <div className="mt-3.5 text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 leading-relaxed font-sans whitespace-pre-line">
+          {normalizedExplanation}
+        </div>
+      ) : (
+        /* Non-Mathematics Short Notes: Strict • bullet points without numbering */
+        <div className="mt-3.5 space-y-2.5">
+          {points.map((point, index) => (
+            <div key={index} className="flex items-start gap-2.5">
+              <span className="text-blue-600 dark:text-blue-400 font-black text-sm select-none leading-relaxed shrink-0">
+                •
+              </span>
+              <div className="text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 leading-relaxed font-normal min-w-0 flex-1">
+                {formatInlineText(point)}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

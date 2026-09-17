@@ -1,155 +1,233 @@
 import React from 'react';
 import { toolsFeatures } from '../data';
-import { Bell, Zap } from 'lucide-react';
+import { SectionHeading } from './SectionHeading';
+import { Reveal } from './Reveal';
+import { Bell, BookmarkCheck, Wifi } from 'lucide-react';
 
 export const Features: React.FC = () => {
   return (
-    <>
-      {/* =========================================================================
-          5. SECTION 4: TOOLS THAT HELP YOU IMPROVE ("Practice Smarter")
-          ========================================================================= */}
-      <section
-        id="features"
-        className="py-16 sm:py-20 bg-slate-50/50 border-t border-b border-slate-100"
-      >
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="text-center space-y-3 max-w-2xl mx-auto mb-12 sm:mb-16">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-extrabold uppercase tracking-wider text-blue-700">
-              PRACTICE SMARTER
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Tools That Help You <span className="text-blue-600">Improve</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Everything you need for focused and effective preparation.
-            </p>
-          </div>
+    <section
+      id="features"
+      className="relative py-16 sm:py-24 bg-slate-50/50 border-t border-b border-slate-100 scroll-mt-24 overflow-hidden"
+    >
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-24 -left-24 w-[420px] h-[420px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"
+      />
+      <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Practice Smarter"
+          title={
+            <>
+              Tools That Help You{' '}
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Improve
+              </span>
+            </>
+          }
+          description="Everything you need for focused and effective preparation."
+        />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-            {/* Left 6 Feature Cards (2x3 Grid) */}
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              {toolsFeatures.map((tool, index) => {
-                const IconComponent = tool.icon;
-                return (
-                  <div
-                    key={index}
-                    className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-300 space-y-2.5"
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center border ${tool.color}`}
-                    >
-                      <IconComponent className="w-5 h-5" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+          {/* Left 6 Feature Cards (2x3 Grid) */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+            {toolsFeatures.map((tool, index) => {
+              const IconComponent = tool.icon;
+              return (
+                <Reveal key={tool.title} delay={(index % 2) * 90} className="h-full">
+                  <div className="group h-full rounded-2xl bg-white border border-slate-200/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center border shadow-xs group-hover:scale-105 transition-transform ${tool.color}`}
+                      >
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500">
+                        {tool.bengaliTag}
+                      </span>
                     </div>
                     <div>
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                          {tool.title}
-                        </h3>
-                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                        {tool.title}
+                      </h3>
                       <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                         {tool.description}
                       </p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </Reveal>
+              );
+            })}
+          </div>
 
-            {/* Right Interactive Mobile Student App Showcase */}
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="w-[280px] sm:w-[320px] bg-slate-900 rounded-[2.8rem] p-3 shadow-2xl ring-1 ring-slate-800">
-                {/* Speaker Notch */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-4 bg-slate-900 rounded-full z-20" />
+          {/* Right Interactive Mobile Student App Showcase */}
+          <Reveal delay={150} className="lg:col-span-5 flex justify-center">
+            {/* Phone & Floating Badges Relative Container */}
+            <div className="relative w-fit mx-auto">
+              {/* Floating revision card */}
+              <div className="absolute left-[calc(100%+14px)] top-20 z-30 animate-float hidden lg:flex items-center gap-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pl-2.5 pr-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xl pointer-events-none select-none">
+                <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+                  <BookmarkCheck className="w-5 h-5 text-white" />
+                </span>
+                <span>
+                  <span className="block text-base font-black text-slate-900 dark:text-white leading-none">
+                    Mistake Fixed!
+                  </span>
+                  <span className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-1 whitespace-nowrap">
+                    Notebook updated
+                  </span>
+                </span>
+              </div>
 
-                {/* Inner Screen Content */}
-                <div className="bg-slate-50 rounded-[2.2rem] overflow-hidden p-4 space-y-3.5 border border-slate-100 text-slate-900">
-                  {/* Status Bar */}
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 px-1 pt-2">
-                    <span>9:41</span>
-                    <div className="flex items-center gap-1.5 text-slate-600">
-                      <Zap className="w-3 h-3" />
+              {/* Realistic Flagship Smartphone Mockup */}
+              <div className="relative z-10 w-[290px] sm:w-[315px] md:w-[325px] bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 p-[10px] sm:p-[12px] rounded-[3.2rem] sm:rounded-[3.6rem] shadow-[0_25px_70px_-15px_rgba(15,23,42,0.45),0_0_0_1px_rgba(255,255,255,0.12)_inset,0_0_30px_rgba(59,130,246,0.1)] ring-1 ring-slate-800 select-none">
+                {/* Hardware Side Buttons */}
+                <div className="absolute -left-[3.5px] top-24 w-[3.5px] h-6 bg-slate-700 rounded-l-xs shadow-inner" />
+                <div className="absolute -left-[3.5px] top-36 w-[3.5px] h-11 bg-slate-700 rounded-l-xs shadow-inner" />
+                <div className="absolute -left-[3.5px] top-50 w-[3.5px] h-11 bg-slate-700 rounded-l-xs shadow-inner" />
+                <div className="absolute -right-[3.5px] top-32 w-[3.5px] h-14 bg-slate-700 rounded-r-xs shadow-inner" />
+
+                {/* Screen Glass Surface */}
+                <div className="relative w-full bg-slate-50 dark:bg-slate-950 rounded-[2.4rem] sm:rounded-[2.8rem] overflow-hidden p-3.5 space-y-3 border border-slate-200/80 dark:border-slate-800 shadow-inner">
+                  {/* Subtle Screen Gloss Glare */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-30" />
+
+                  {/* iOS Status Bar & Centered Dynamic Island */}
+                  <div className="relative z-20 pt-1 px-2 flex items-center justify-between text-slate-800 dark:text-slate-200 shrink-0">
+                    <span className="text-[11px] font-semibold tracking-tight">9:41</span>
+
+                    {/* Dynamic Island (Centered Absolutely) */}
+                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-24 sm:w-26 h-5 bg-black rounded-full flex items-center justify-end pr-2.5 shadow-sm">
+                      <div className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-blue-950" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                      <Wifi className="w-3 h-3" />
+                      <div className="w-5 h-2.5 border border-slate-700 dark:border-slate-300 rounded-[3px] p-[1px] flex items-center">
+                        <div className="w-3 h-1.5 bg-slate-800 dark:bg-slate-200 rounded-[1.5px]" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* App Header */}
-                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-xs">
+                  {/* App Content */}
+                  <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs">
                     <div>
                       <p className="text-[10px] text-slate-400 font-medium">Good Morning,</p>
-                      <p className="text-xs font-black text-slate-900">Keep Practicing!</p>
+                      <p className="text-xs font-black text-slate-900 dark:text-white">
+                        Keep Practicing!
+                      </p>
                     </div>
-                    <div className="p-1.5 rounded-full bg-slate-100 text-slate-600">
+                    <div className="relative p-2 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900">
                       <Bell className="w-3.5 h-3.5" />
+                      <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 border border-white dark:border-slate-900" />
                     </div>
                   </div>
 
-                  {/* Your Progress Widget */}
-                  <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-xs space-y-2">
+                  <div className="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs space-y-2.5">
                     <div className="flex items-center justify-between text-[11px] font-bold">
-                      <span className="text-slate-800">Your Progress</span>
+                      <span className="text-slate-800 dark:text-slate-200">Your Progress</span>
                       <span className="text-blue-600 text-[10px]">View All</span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      {/* Radial indicator */}
-                      <div className="w-14 h-14 rounded-full border-4 border-blue-600 border-t-slate-100 flex flex-col items-center justify-center shrink-0">
-                        <span className="text-xs font-black text-slate-900">68%</span>
-                        <span className="text-[7px] text-slate-400">Overall</span>
+                      <div className="relative w-16 h-16 shrink-0">
+                        <svg viewBox="0 0 64 64" className="w-16 h-16 -rotate-90">
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="27"
+                            fill="none"
+                            strokeWidth="7"
+                            className="stroke-slate-100 dark:stroke-slate-800"
+                          />
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="27"
+                            fill="none"
+                            stroke="url(#featProgress)"
+                            strokeWidth="7"
+                            strokeLinecap="round"
+                            strokeDasharray={`${2 * Math.PI * 27}`}
+                            strokeDashoffset={`${2 * Math.PI * 27 * (1 - 0.68)}`}
+                          />
+                          <defs>
+                            <linearGradient id="featProgress" x1="0" y1="0" x2="1" y2="1">
+                              <stop offset="0%" stopColor="#2563eb" />
+                              <stop offset="100%" stopColor="#4f46e5" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-slate-900 dark:text-white">
+                          68%
+                        </span>
                       </div>
-                      <div className="text-[10px] space-y-1 text-slate-500">
-                        <p>
-                          <span className="font-bold text-slate-800">12</span> Tests Taken
-                        </p>
-                        <p>
-                          <span className="font-bold text-slate-800">8</span> Topics Completed
-                        </p>
-                        <p>
-                          <span className="font-bold text-slate-800">4</span> Tests Pending
-                        </p>
+                      <div className="text-[10px] space-y-1.5 text-slate-500 dark:text-slate-400">
+                        {[
+                          ['12', 'Tests Taken'],
+                          ['8', 'Topics Completed'],
+                          ['4', 'Tests Pending'],
+                        ].map(([n, label]) => (
+                          <p key={label}>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                              {n}
+                            </span>{' '}
+                            {label}
+                          </p>
+                        ))}
                       </div>
                     </div>
                   </div>
 
-                  {/* Recent Test Card */}
-                  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-xs space-y-1.5">
+                  <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs space-y-1.5">
                     <div className="flex items-center justify-between text-[10px] font-bold">
-                      <span className="text-slate-700">Recent Test</span>
+                      <span className="text-slate-700 dark:text-slate-300">Recent Test</span>
                       <span className="text-blue-600">See All</span>
                     </div>
-                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-left">
-                      <p className="text-[11px] font-bold text-slate-800">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 p-2.5 rounded-xl border border-blue-100 dark:border-blue-900 text-left">
+                      <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
                         WBP Constable Mock Test 01
                       </p>
                       <p className="text-[9px] text-slate-400">100 Questions • 60 Minutes</p>
                     </div>
                   </div>
 
-                  {/* Your Strength Bars */}
-                  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-xs space-y-2">
-                    <p className="text-[10px] font-bold text-slate-700">Your Strength</p>
+                  <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs space-y-2">
+                    <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                      Your Strength
+                    </p>
                     <div className="grid grid-cols-3 gap-1.5 text-center text-[9px] font-bold">
-                      <div className="bg-emerald-50 text-emerald-700 p-1.5 rounded-lg border border-emerald-100">
+                      <div className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 p-1.5 rounded-lg border border-emerald-100 dark:border-emerald-900">
                         85%
-                        <span className="block text-[8px] text-slate-500 font-normal">
+                        <span className="block text-[8px] text-slate-500 dark:text-slate-400 font-normal">
                           Reasoning
                         </span>
                       </div>
-                      <div className="bg-blue-50 text-blue-700 p-1.5 rounded-lg border border-blue-100">
+                      <div className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 p-1.5 rounded-lg border border-blue-100 dark:border-blue-900">
                         72%
-                        <span className="block text-[8px] text-slate-500 font-normal">GK</span>
+                        <span className="block text-[8px] text-slate-500 dark:text-slate-400 font-normal">
+                          GK
+                        </span>
                       </div>
-                      <div className="bg-rose-50 text-rose-700 p-1.5 rounded-lg border border-rose-100">
+                      <div className="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 p-1.5 rounded-lg border border-rose-100 dark:border-rose-900">
                         60%
-                        <span className="block text-[8px] text-slate-500 font-normal">Maths</span>
+                        <span className="block text-[8px] text-slate-500 dark:text-slate-400 font-normal">
+                          Maths
+                        </span>
                       </div>
                     </div>
                   </div>
+
+                  {/* iOS Home Indicator */}
+                  <div className="w-28 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2 mb-0.5" />
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };

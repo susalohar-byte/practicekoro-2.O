@@ -574,3 +574,128 @@ html.theme-anim *::after {
     transition: none !important;
   }
 }
+
+/* ============================================================================
+   LANDING PAGE MOTION UTILITIES (premium scroll-reveal, float, marquee)
+   Plain CSS classes (no tailwind config change). All animations are disabled
+   under prefers-reduced-motion for accessibility.
+   ========================================================================= */
+@keyframes pk-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pk-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pk-float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pk-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pk-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-float {
+  animation: pk-float 5s ease-in-out infinite;
+}
+
+.animate-float-soft {
+  animation: pk-float-soft 6s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: pk-marquee 32s linear infinite;
+}
+
+.animate-pulse-dot {
+  animation: pk-pulse-dot 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .animate-float,
+  .animate-float-soft,
+  .animate-marquee,
+  .animate-pulse-dot {
+    animation: none;
+  }
+}
+
+@layer utilities {
+  /* Landing gradient washes that need explicit dark equivalents */
+  .dark .from-blue-50\/80 {
+    --tw-gradient-from: rgb(15 23 42 / 0.9);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .dark .to-blue-50\/40 {
+    --tw-gradient-to: rgb(30 58 138 / 0.25);
+  }
+  .dark .to-indigo-50\/60 {
+    --tw-gradient-to: rgb(49 46 129 / 0.3);
+  }
+  .dark .bg-blue-600\/10 {
+    background-color: rgb(37 99 235 / 0.14);
+  }
+  .dark .bg-indigo-500\/10 {
+    background-color: rgb(99 102 241 / 0.14);
+  }
+  .dark .bg-cyan-400\/10 {
+    background-color: rgb(34 211 238 / 0.1);
+  }
+}
