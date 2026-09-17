@@ -138,10 +138,6 @@ export const AdminQuestionBank: React.FC = () => {
   const [selectedExamId, setSelectedExamId] = useState('');
   const [selectedExamType, setSelectedExamType] = useState<'' | 'full_mock' | 'pyq'>('');
   const [selectedExamTestId, setSelectedExamTestId] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'archived'>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>(
-    'all'
-  );
 
   // Inline solution expansion state (in Card View)
   const [expandedSolutions, setExpandedSolutions] = useState<Set<string>>(new Set());
@@ -268,8 +264,6 @@ export const AdminQuestionBank: React.FC = () => {
                   ? selectedExamTestId
                   : undefined,
             sourceExam: selectedSource === 'exam' && selectedExamId ? selectedExamId : undefined,
-            status: selectedStatus === 'all' ? undefined : selectedStatus,
-            difficulty: selectedDifficulty === 'all' ? undefined : selectedDifficulty,
             search: searchTerm.trim() || undefined,
           }),
           api.getAllAdminQuestions(), // for master stats
@@ -295,8 +289,6 @@ export const AdminQuestionBank: React.FC = () => {
     selectedExamId,
     selectedExamType,
     selectedExamTestId,
-    selectedStatus,
-    selectedDifficulty,
     searchTerm,
   ]);
 
@@ -315,8 +307,6 @@ export const AdminQuestionBank: React.FC = () => {
     selectedExamId,
     selectedExamType,
     selectedExamTestId,
-    selectedStatus,
-    selectedDifficulty,
     searchTerm,
   ]);
 
@@ -918,8 +908,6 @@ export const AdminQuestionBank: React.FC = () => {
     if (selectedExamId) count++;
     if (selectedExamType) count++;
     if (selectedExamTestId) count++;
-    if (selectedStatus !== 'all') count++;
-    if (selectedDifficulty !== 'all') count++;
     if (searchTerm.trim()) count++;
     return count;
   }, [
@@ -930,8 +918,6 @@ export const AdminQuestionBank: React.FC = () => {
     selectedExamId,
     selectedExamType,
     selectedExamTestId,
-    selectedStatus,
-    selectedDifficulty,
     searchTerm,
   ]);
 
@@ -943,8 +929,6 @@ export const AdminQuestionBank: React.FC = () => {
     setSelectedExamId('');
     setSelectedExamType('');
     setSelectedExamTestId('');
-    setSelectedStatus('all');
-    setSelectedDifficulty('all');
     setSearchTerm('');
   };
 
@@ -1137,223 +1121,204 @@ export const AdminQuestionBank: React.FC = () => {
             </button>
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
-            <button
-              type="button"
-              onClick={() => setViewMode('card')}
-              className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                viewMode === 'card'
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-              title="Card View (Bengali Question Paper Layout)"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Card View</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                viewMode === 'table'
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-              title="Table View (Compact Summary)"
-            >
-              <List className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Table View</span>
-            </button>
+          {/* View Mode Toggle & Export */}
+          <div className="flex items-center gap-2">
+            {questions.length > 0 && (
+              <button
+                type="button"
+                onClick={() => handleExportQuestionsTxt(questions)}
+                className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                title="Export all currently filtered questions as TXT"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Export (.txt)</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('card')}
+                className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
+                  viewMode === 'card'
+                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+                title="Card View (Bengali Question Paper Layout)"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Card View</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+                title="Table View (Compact Summary)"
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Table View</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Row 2: Cascading Filters Bar */}
-        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-xs font-semibold mr-1">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Filters:</span>
-          </div>
+        {/* Row 2: Cascading Filters Bar (only when Topic Tests or Exam Tests is selected) */}
+        {selectedSource !== 'all' && (
+          <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-xs font-semibold mr-1">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Filters:</span>
+            </div>
 
-          {/* IF SOURCE = TOPIC TEST: Subject -> Topic -> Topic Test */}
-          {selectedSource === 'topic' && (
-            <>
-              <select
-                value={selectedSubjectId}
-                onChange={(e) => {
-                  setSelectedSubjectId(e.target.value);
-                  setSelectedTopicId('');
-                  setSelectedTopicTestId('');
-                }}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
-              >
-                <option value="">All Subjects</option>
-                {subjects.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={selectedTopicId}
-                onChange={(e) => {
-                  setSelectedTopicId(e.target.value);
-                  setSelectedTopicTestId('');
-                }}
-                disabled={!selectedSubjectId}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-50"
-              >
-                <option value="">All Topics</option>
-                {filterTopics.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={selectedTopicTestId}
-                onChange={(e) => setSelectedTopicTestId(e.target.value)}
-                disabled={!selectedTopicId}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-50"
-              >
-                <option value="">All Topic Tests</option>
-                {filterTopicTests.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
-
-          {/* IF SOURCE = EXAM: Cascading Exam -> Type (Full Mock Test | PYQ) -> specific Full Mock Test / PYQ */}
-          {selectedSource === 'exam' && (
-            <>
-              {/* Exam Dropdown */}
-              <select
-                value={selectedExamId}
-                onChange={(e) => {
-                  setSelectedExamId(e.target.value);
-                  setSelectedExamType('');
-                  setSelectedExamTestId('');
-                }}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
-              >
-                <option value="">Select Exam</option>
-                {exams.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.title}
-                  </option>
-                ))}
-              </select>
-
-              {/* Type Dropdown (Appears once Exam is selected) */}
-              {selectedExamId && (
+            {/* IF SOURCE = TOPIC TEST: Subject -> Topic -> Topic Test */}
+            {selectedSource === 'topic' && (
+              <>
                 <select
-                  value={selectedExamType}
+                  value={selectedSubjectId}
                   onChange={(e) => {
-                    setSelectedExamType(e.target.value as any);
+                    setSelectedSubjectId(e.target.value);
+                    setSelectedTopicId('');
+                    setSelectedTopicTestId('');
+                  }}
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
+                >
+                  <option value="">All Subjects</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedTopicId}
+                  onChange={(e) => {
+                    setSelectedTopicId(e.target.value);
+                    setSelectedTopicTestId('');
+                  }}
+                  disabled={!selectedSubjectId}
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-50"
+                >
+                  <option value="">All Topics</option>
+                  {filterTopics.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedTopicTestId}
+                  onChange={(e) => setSelectedTopicTestId(e.target.value)}
+                  disabled={!selectedTopicId}
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-50"
+                >
+                  <option value="">All Topic Tests</option>
+                  {filterTopicTests.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.title}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+
+            {/* IF SOURCE = EXAM: Cascading Exam -> Type (Full Mock Test | PYQ) -> specific Full Mock Test / PYQ */}
+            {selectedSource === 'exam' && (
+              <>
+                {/* Exam Dropdown */}
+                <select
+                  value={selectedExamId}
+                  onChange={(e) => {
+                    setSelectedExamId(e.target.value);
+                    setSelectedExamType('');
                     setSelectedExamTestId('');
                   }}
                   className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
                 >
-                  <option value="">Select Type</option>
-                  <option value="full_mock">Full Mock Test</option>
-                  <option value="pyq">PYQ</option>
-                </select>
-              )}
-
-              {/* Specific Full Mock Test Dropdown */}
-              {selectedExamId && selectedExamType === 'full_mock' && (
-                <select
-                  value={selectedExamTestId}
-                  onChange={(e) => setSelectedExamTestId(e.target.value)}
-                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
-                >
-                  <option value="">
-                    {examFullMockTests.length === 0
-                      ? 'No Full Mock Tests Available'
-                      : 'Select Full Mock Test'}
-                  </option>
-                  {examFullMockTests.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title}{' '}
-                      {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
+                  <option value="">Select Exam</option>
+                  {exams.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.title}
                     </option>
                   ))}
                 </select>
-              )}
 
-              {/* Specific PYQ Paper Dropdown */}
-              {selectedExamId && selectedExamType === 'pyq' && (
-                <select
-                  value={selectedExamTestId}
-                  onChange={(e) => setSelectedExamTestId(e.target.value)}
-                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
-                >
-                  <option value="">
-                    {examPyqTests.length === 0 ? 'No PYQs Available' : 'Select PYQ Paper'}
-                  </option>
-                  {examPyqTests.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title || t.paperName}{' '}
-                      {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
+                {/* Type Dropdown (Appears once Exam is selected) */}
+                {selectedExamId && (
+                  <select
+                    value={selectedExamType}
+                    onChange={(e) => {
+                      setSelectedExamType(e.target.value as any);
+                      setSelectedExamTestId('');
+                    }}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                  >
+                    <option value="">Select Type</option>
+                    <option value="full_mock">Full Mock Test</option>
+                    <option value="pyq">PYQ</option>
+                  </select>
+                )}
+
+                {/* Specific Full Mock Test Dropdown */}
+                {selectedExamId && selectedExamType === 'full_mock' && (
+                  <select
+                    value={selectedExamTestId}
+                    onChange={(e) => setSelectedExamTestId(e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
+                  >
+                    <option value="">
+                      {examFullMockTests.length === 0
+                        ? 'No Full Mock Tests Available'
+                        : 'Select Full Mock Test'}
                     </option>
-                  ))}
-                </select>
-              )}
-            </>
-          )}
+                    {examFullMockTests.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title}{' '}
+                        {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
 
-          {/* Difficulty Dropdown */}
-          <select
-            value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value as any)}
-            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
-          >
-            <option value="all">All Difficulties</option>
-            <option value="easy">Easy (সহজ)</option>
-            <option value="medium">Medium (মাঝারি)</option>
-            <option value="hard">Hard (কঠিন)</option>
-          </select>
+                {/* Specific PYQ Paper Dropdown */}
+                {selectedExamId && selectedExamType === 'pyq' && (
+                  <select
+                    value={selectedExamTestId}
+                    onChange={(e) => setSelectedExamTestId(e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
+                  >
+                    <option value="">
+                      {examPyqTests.length === 0 ? 'No PYQs Available' : 'Select PYQ Paper'}
+                    </option>
+                    {examPyqTests.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title || t.paperName}{' '}
+                        {typeof t.totalQuestions === 'number' ? `(${t.totalQuestions} Qs)` : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </>
+            )}
 
-          {/* Status Dropdown */}
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value as any)}
-            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active Only</option>
-            <option value="archived">Archived Only</option>
-          </select>
-
-          {/* Reset Filters CTA with count */}
-          {activeFiltersCount > 0 && (
-            <button
-              onClick={resetAllFilters}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
-              title="Reset all active filters"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Reset ({activeFiltersCount})</span>
-            </button>
-          )}
-
-          {/* Export Filtered Questions TXT button */}
-          {questions.length > 0 && (
-            <button
-              onClick={() => handleExportQuestionsTxt(questions)}
-              className="ml-auto px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
-              title="Export all currently filtered questions as TXT"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Export Questions (.txt)</span>
-            </button>
-          )}
-        </div>
+            {/* Reset Filters CTA with count */}
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={resetAllFilters}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                title="Reset all active filters"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                <span>Reset ({activeFiltersCount})</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ─── Active Context Banner (Exam or Topic) ─── */}

@@ -1,6 +1,6 @@
 import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -16,11 +16,15 @@ import {
   Layers,
   X,
   BarChart2,
+  Wand2,
 } from 'lucide-react';
 import type { MockTest, Question, TestQuestionAssignment, Subject, Chapter } from '@/types';
 
 export const AdminTestQuestions: React.FC = () => {
-  const { testId } = useParams<{ testId: string }>();
+  const { testId: routeTestId } = useParams<{ testId: string }>();
+  const navigate = useNavigate();
+  const [allTests, setAllTests] = useState<MockTest[]>([]);
+  const [currentTestId, setCurrentTestId] = useState<string>(routeTestId || '');
   const [test, setTest] = useState<MockTest | null>(null);
   const [assignedQuestions, setAssignedQuestions] = useState<TestQuestionAssignment[]>([]);
   const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
@@ -30,6 +34,29 @@ export const AdminTestQuestions: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
+
+  // Sync route param with state
+  useEffect(() => {
+    if (routeTestId && routeTestId !== currentTestId) {
+      setCurrentTestId(routeTestId);
+    }
+  }, [routeTestId]);
+
+  // Load available tests list
+  useEffect(() => {
+    const fetchTests = async () => {
+      try {
+        const tests = await api.getAllAdminTests();
+        setAllTests(tests);
+        if (!routeTestId && tests.length > 0) {
+          setCurrentTestId(tests[0].id);
+        }
+      } catch (err) {
+        console.error('Error loading tests list:', err);
+      }
+    };
+    fetchTests();
+  }, [routeTestId]);
 
   // Add Questions Modal State & Advanced Filters
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
@@ -58,12 +85,15 @@ export const AdminTestQuestions: React.FC = () => {
   const [newChapterId, setNewChapterId] = useState(''); // OPTIONAL metadata
 
   const loadData = useCallback(async () => {
-    if (!testId) return;
+    if (!currentTestId) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       const [testData, assigned, bank, allSubjects, allChapters] = await Promise.all([
-        api.getTestById(testId),
-        api.getTestAssignedQuestions(testId),
+        api.getTestById(currentTestId),
+        api.getTestAssignedQuestions(currentTestId),
         api.getAllAdminQuestions(),
         api.getAllAdminSubjects(),
         api.getAllAdminChapters(),
@@ -78,11 +108,16 @@ export const AdminTestQuestions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [testId]);
+  }, [currentTestId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleSelectTest = (id: string) => {
+    setCurrentTestId(id);
+    navigate(`/admin/tests/${id}/questions`);
+  };
 
   // Reordering functions
   const moveQuestion = (fromIndex: number, toIndex: number) => {
@@ -110,9 +145,25 @@ export const AdminTestQuestions: React.FC = () => {
     setSaveSuccess(false);
   };
 
+  const handleApplyDefaultsToAll = () => {
+    const defMarks =
+      test?.totalMarks && test?.totalQuestions
+        ? Number((test.totalMarks / test.totalQuestions).toFixed(2))
+        : 1.0;
+    const defNeg = test?.negativeMarking ?? 0.25;
+    setAssignedQuestions((prev) =>
+      prev.map((q) => ({
+        ...q,
+        marks: defMarks,
+        negativeMarks: defNeg,
+      }))
+    );
+    setSaveSuccess(false);
+  };
+
   // Save changes
   const handleSave = async () => {
-    if (!testId) return;
+    if (!currentTestId) return;
     try {
       setIsSaving(true);
       setSaveError('');
@@ -123,12 +174,12 @@ export const AdminTestQuestions: React.FC = () => {
         negativeMarks: q.negativeMarks,
       }));
 
-      const res = await api.saveTestQuestions(testId, payload);
+      const res = await api.saveTestQuestions(currentTestId, payload);
       if (res.success) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 4000);
         // Reload test data to reflect updated totalQuestions and totalMarks
-        const updatedTest = await api.getTestById(testId);
+        const updatedTest = await api.getTestById(currentTestId);
         if (updatedTest) setTest(updatedTest);
       } else {
         setSaveError(res.error || 'Failed to save test questions');
@@ -222,7 +273,7 @@ export const AdminTestQuestions: React.FC = () => {
   };
 
   const handleCreateQuestion = async () => {
-    if (!testId || !test) return;
+    if (!currentTestId || !test) return;
     if (!newQuestionText.trim()) {
       setCreateError('Question text is required.');
       return;
@@ -235,7 +286,7 @@ export const AdminTestQuestions: React.FC = () => {
     try {
       setIsCreating(true);
       setCreateError('');
-      const res = await api.createQuestionForTest(testId, {
+      const res = await api.createQuestionForTest(currentTestId, {
         subjectId: newSubjectId || undefined, // optional metadata
         chapterId: newChapterId || undefined, // optional metadata
         topicId: newChapterId || undefined,
@@ -283,11 +334,29 @@ export const AdminTestQuestions: React.FC = () => {
 
   if (!test) {
     return (
-      <div className="p-8 text-center space-y-3">
-        <p className="text-sm font-bold text-white">Mock test not found.</p>
-        <Link to="/admin/tests" className="text-xs text-indigo-400 hover:underline">
-          Return to Tests List
-        </Link>
+      <div className="p-8 max-w-md mx-auto text-center space-y-4 bg-slate-950 border border-slate-800 rounded-2xl my-12">
+        <Layers className="w-10 h-10 text-indigo-400 mx-auto" />
+        <h3 className="text-base font-bold text-white">Select a Mock Test</h3>
+        <p className="text-xs text-slate-400">
+          Choose a test from the database to manage, reorder, and score questions.
+        </p>
+        <select
+          value={currentTestId}
+          onChange={(e) => handleSelectTest(e.target.value)}
+          className="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 font-medium"
+        >
+          <option value="">-- Choose a Mock Test --</option>
+          {allTests.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.title} ({t.totalQuestions || 0} Qs)
+            </option>
+          ))}
+        </select>
+        <div className="pt-2">
+          <Link to="/admin/tests" className="text-xs text-indigo-400 hover:underline">
+            ← Return to Mock Tests List
+          </Link>
+        </div>
       </div>
     );
   }
@@ -303,12 +372,33 @@ export const AdminTestQuestions: React.FC = () => {
       {/* Navigation Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <Link
-            to="/admin/tests"
-            className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white font-semibold mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Mock Tests
-          </Link>
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
+            <Link
+              to="/admin/tests"
+              className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white font-semibold"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Mock Tests
+            </Link>
+            {allTests.length > 0 && (
+              <div className="flex items-center gap-1.5 pl-3 border-l border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                  Switch Test:
+                </span>
+                <select
+                  value={currentTestId}
+                  onChange={(e) => handleSelectTest(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 text-xs text-indigo-300 font-semibold rounded-lg px-2.5 py-1 focus:outline-none focus:border-indigo-500 max-w-[220px] truncate"
+                >
+                  {allTests.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
               <Layers className="w-6 h-6 text-indigo-400" />
@@ -327,14 +417,24 @@ export const AdminTestQuestions: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-slate-700 text-xs font-bold text-slate-300 hover:text-white"
+            leftIcon={<Wand2 className="w-3.5 h-3.5 text-amber-400" />}
+            onClick={handleApplyDefaultsToAll}
+            title="Auto-fill uniform standard scoring across all questions in this test"
+          >
+            Auto Standard Marks
+          </Button>
           <Button
             size="sm"
             className="bg-emerald-600 hover:bg-emerald-700 text-xs font-bold"
             leftIcon={<Plus className="w-4 h-4" />}
             onClick={openCreateModal}
           >
-            Create &amp; Add Question
+            Create &amp; Add
           </Button>
           <Button
             size="sm"
@@ -343,7 +443,7 @@ export const AdminTestQuestions: React.FC = () => {
             leftIcon={<Plus className="w-4 h-4" />}
             onClick={openBankModal}
           >
-            Add Questions from Bank
+            Add from Bank
           </Button>
           <Button
             size="sm"
@@ -463,15 +563,26 @@ export const AdminTestQuestions: React.FC = () => {
               className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col md:flex-row md:items-start justify-between gap-4 transition-all hover:border-slate-700"
             >
               {/* Order & Reorder Controls */}
-              <div className="flex items-center md:flex-col gap-1 shrink-0">
-                <span className="w-7 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 font-mono font-bold text-xs flex items-center justify-center">
-                  #{idx + 1}
-                </span>
-                <div className="flex md:flex-col gap-1 ml-2 md:ml-0 md:mt-1">
+              <div className="flex items-center md:flex-col gap-1.5 shrink-0">
+                <input
+                  type="number"
+                  min={1}
+                  max={assignedQuestions.length}
+                  value={idx + 1}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val) && val >= 1 && val <= assignedQuestions.length) {
+                      moveQuestion(idx, val - 1);
+                    }
+                  }}
+                  className="w-10 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 font-mono font-bold text-xs text-center focus:outline-none focus:border-indigo-400"
+                  title="Change number to jump order position"
+                />
+                <div className="flex md:flex-col gap-1">
                   <button
                     disabled={idx === 0}
                     onClick={() => moveQuestion(idx, idx - 1)}
-                    className="p-1 rounded bg-slate-900 text-slate-400 hover:text-white disabled:opacity-30"
+                    className="p-1 rounded bg-slate-900 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
                     title="Move Question Up"
                   >
                     <ArrowUp className="w-3.5 h-3.5" />
@@ -479,7 +590,7 @@ export const AdminTestQuestions: React.FC = () => {
                   <button
                     disabled={idx === assignedQuestions.length - 1}
                     onClick={() => moveQuestion(idx, idx + 1)}
-                    className="p-1 rounded bg-slate-900 text-slate-400 hover:text-white disabled:opacity-30"
+                    className="p-1 rounded bg-slate-900 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
                     title="Move Question Down"
                   >
                     <ArrowDown className="w-3.5 h-3.5" />

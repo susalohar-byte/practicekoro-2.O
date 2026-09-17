@@ -3,8 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { FileQuestion, Plus, Edit2, Trash2, Search, Upload, X, Download } from 'lucide-react';
-import type { Question, Subject, Chapter } from '@/types';
-import { parseQuestionsCsv, CsvParseResult } from '@/utils/csvParser';
+import type { Question, Subject, Chapter, Exam, MockTest } from '@/types';
+import { parseQuestionsCsv, parseQuestionsText, CsvParseResult } from '@/utils/csvParser';
 
 export const AdminQuestions: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -25,6 +25,13 @@ export const AdminQuestions: React.FC = () => {
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
   const [sourceType, setSourceType] = useState<'topic' | 'pyq'>('topic');
+  // Unified upload destination picker (create mode only)
+  const [ownerType, setOwnerType] = useState<'subject' | 'full_mock' | 'pyq'>('subject');
+  const [ownerExams, setOwnerExams] = useState<Exam[]>([]);
+  const [ownerTests, setOwnerTests] = useState<MockTest[]>([]);
+  const [ownerExamId, setOwnerExamId] = useState('');
+  const [ownerYear, setOwnerYear] = useState('');
+  const [ownerTestId, setOwnerTestId] = useState('');
   const [sourceYear, setSourceYear] = useState('');
   const [sourceExam, setSourceExam] = useState('');
   const [sourcePaper, setSourcePaper] = useState('');
@@ -47,6 +54,7 @@ export const AdminQuestions: React.FC = () => {
   const [csvContent, setCsvContent] = useState('');
   const [csvDefaultSubject, setCsvDefaultSubject] = useState('');
   const [csvDefaultChapter, setCsvDefaultChapter] = useState('');
+  const [importFormat, setImportFormat] = useState<'csv' | 'text'>('csv');
   const [csvParseResult, setCsvParseResult] = useState<CsvParseResult | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importNotice, setImportNotice] = useState<{
@@ -82,11 +90,48 @@ export const AdminQuestions: React.FC = () => {
     loadData();
   }, [loadData]);
 
+  // Load exams & tests once for the unified upload destination picker
+  useEffect(() => {
+    async function loadOwnerData() {
+      try {
+        const [examList, allTests] = await Promise.all([
+          api.getAllAdminExams(),
+          api.getAllAdminTests(),
+        ]);
+        setOwnerExams(examList);
+        setOwnerTests(allTests);
+      } catch (err) {
+        console.error('Error loading upload destination data:', err);
+      }
+    }
+    loadOwnerData();
+  }, []);
+
   // Modal cascaded chapters
   const modalChapters = subjectId ? chapters.filter((c) => c.subjectId === subjectId) : chapters;
 
+  // Unified upload destination cascades
+  const ownerExamTests = ownerExamId
+    ? ownerTests.filter(
+        (t) =>
+          t.examId === ownerExamId &&
+          (ownerType === 'full_mock' ? t.testType === 'full_mock' : t.testType === 'pyq')
+      )
+    : [];
+  const ownerYears = Array.from(
+    new Set(ownerExamTests.map((t) => t.year).filter((y): y is number => !!y))
+  ).sort((a, b) => b - a);
+  const ownerPaperTests = ownerYear
+    ? ownerExamTests.filter((t) => String(t.year) === ownerYear)
+    : ownerExamTests;
+  const selectedOwnerTest = ownerTests.find((t) => t.id === ownerTestId);
+
   const openCreateModal = () => {
     setEditingQuestion(null);
+    setOwnerType('subject');
+    setOwnerExamId('');
+    setOwnerYear('');
+    setOwnerTestId('');
     setSubjectId(selectedSubjectId || subjects[0]?.id || '');
     setChapterId(selectedChapterId || '');
     setSourceType('topic');
@@ -144,7 +189,46 @@ export const AdminQuestions: React.FC = () => {
       return;
     }
 
+    const sharedFields = {
+      questionText: questionText.trim(),
+      questionBengaliText: questionBengaliText.trim() || undefined,
+      optionA: optionA.trim(),
+      optionB: optionB.trim(),
+      optionC: optionC.trim(),
+      optionD: optionD.trim(),
+      correctOption,
+      explanation: explanation.trim() || undefined,
+      explanationBengali: explanationBengali.trim() || undefined,
+      defaultMarks: Number(defaultMarks),
+      defaultNegativeMarks: Number(defaultNegativeMarks),
+    };
+
     try {
+      // NEW question with a Full Mock / PYQ destination: upload directly into the test
+      if (!editingQuestion && ownerType !== 'subject') {
+        if (!ownerTestId) {
+          setFormError(
+            ownerType === 'full_mock'
+              ? 'Please select an Exam and a Full Mock Test.'
+              : 'Please select an Exam, Year and Paper/Shift.'
+          );
+          return;
+        }
+        const res = await api.createQuestionForTest(ownerTestId, {
+          ...sharedFields,
+          difficulty: 'medium',
+          isActive: true,
+          status: 'active',
+        });
+        if (!res.success) {
+          setFormError(res.error || 'Failed to upload question to the test.');
+          return;
+        }
+        setIsModalOpen(false);
+        await loadData();
+        return;
+      }
+
       const parsedYear =
         sourceType === 'pyq' && sourceYear.trim() ? parseInt(sourceYear.trim(), 10) : undefined;
       if (editingQuestion) {
@@ -158,17 +242,7 @@ export const AdminQuestions: React.FC = () => {
           sourceExam: sourceType === 'pyq' && sourceExam.trim() ? sourceExam.trim() : undefined,
           sourcePaper: sourceType === 'pyq' && sourcePaper.trim() ? sourcePaper.trim() : undefined,
           sourceShift: sourceType === 'pyq' && sourceShift.trim() ? sourceShift.trim() : undefined,
-          questionText: questionText.trim(),
-          questionBengaliText: questionBengaliText.trim() || undefined,
-          optionA: optionA.trim(),
-          optionB: optionB.trim(),
-          optionC: optionC.trim(),
-          optionD: optionD.trim(),
-          correctOption,
-          explanation: explanation.trim() || undefined,
-          explanationBengali: explanationBengali.trim() || undefined,
-          defaultMarks: Number(defaultMarks),
-          defaultNegativeMarks: Number(defaultNegativeMarks),
+          ...sharedFields,
         });
       } else {
         await api.createQuestion({
@@ -176,22 +250,8 @@ export const AdminQuestions: React.FC = () => {
           chapterId: chapterId || undefined,
           topicId: chapterId || undefined,
           difficulty: 'medium',
-          sourceType,
-          sourceYear: parsedYear && !isNaN(parsedYear) ? parsedYear : undefined,
-          sourceExam: sourceType === 'pyq' && sourceExam.trim() ? sourceExam.trim() : undefined,
-          sourcePaper: sourceType === 'pyq' && sourcePaper.trim() ? sourcePaper.trim() : undefined,
-          sourceShift: sourceType === 'pyq' && sourceShift.trim() ? sourceShift.trim() : undefined,
-          questionText: questionText.trim(),
-          questionBengaliText: questionBengaliText.trim() || undefined,
-          optionA: optionA.trim(),
-          optionB: optionB.trim(),
-          optionC: optionC.trim(),
-          optionD: optionD.trim(),
-          correctOption,
-          explanation: explanation.trim() || undefined,
-          explanationBengali: explanationBengali.trim() || undefined,
-          defaultMarks: Number(defaultMarks),
-          defaultNegativeMarks: Number(defaultNegativeMarks),
+          sourceType: 'topic',
+          ...sharedFields,
           isActive: true,
           status: 'active',
         });
@@ -216,6 +276,7 @@ export const AdminQuestions: React.FC = () => {
   // CSV Import Handlers
   const openCsvModal = () => {
     setCsvContent('');
+    setImportFormat('csv');
     setCsvDefaultSubject(selectedSubjectId || subjects[0]?.id || '');
     setCsvDefaultChapter(selectedChapterId || '');
     setCsvParseResult(null);
@@ -229,10 +290,14 @@ export const AdminQuestions: React.FC = () => {
       setCsvParseResult(null);
       return;
     }
-    const result = parseQuestionsCsv(text, {
+    const parserArgs = {
       defaultSubjectId: csvDefaultSubject,
       defaultChapterId: csvDefaultChapter,
-    });
+    };
+    const result =
+      importFormat === 'text'
+        ? parseQuestionsText(text, parserArgs)
+        : parseQuestionsCsv(text, parserArgs);
     setCsvParseResult(result);
   };
 
@@ -252,7 +317,11 @@ export const AdminQuestions: React.FC = () => {
     try {
       setIsImporting(true);
       setImportNotice(null);
-      const res = await api.importQuestionsCSV(csvContent, csvDefaultSubject, csvDefaultChapter);
+      const importArgs = [csvDefaultSubject, csvDefaultChapter] as const;
+      const res =
+        importFormat === 'text'
+          ? await api.importQuestionsText(csvContent, ...importArgs)
+          : await api.importQuestionsCSV(csvContent, ...importArgs);
       setImportNotice({
         type: 'success',
         text: `Successfully imported ${res.successCount} questions into Question Bank!${
@@ -578,126 +647,351 @@ export const AdminQuestions: React.FC = () => {
                 </div>
               )}
 
-              {/* Subject & Chapter */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    Subject (Optional)
-                  </label>
-                  <select
-                    value={subjectId}
-                    onChange={(e) => {
-                      setSubjectId(e.target.value);
-                      setChapterId('');
-                    }}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="">None / General</option>
-                    {subjects.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    Topic / Chapter (Optional)
-                  </label>
-                  <select
-                    value={chapterId}
-                    onChange={(e) => setChapterId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="">None / General</option>
-                    {modalChapters.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Question Origin / Source */}
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                  Question Origin / Source
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSourceType('topic')}
-                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${
-                      sourceType === 'topic'
-                        ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    📚 Topic Bank
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSourceType('pyq')}
-                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${
-                      sourceType === 'pyq'
-                        ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    📜 PYQ Paper
-                  </button>
-                </div>
-              </div>
-
-              {/* Conditional PYQ Fields */}
-              {sourceType === 'pyq' && (
-                <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
-                      Previous Year Question (PYQ) Details
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                    <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Exam Name
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. WBCS Prelims, KP Constable"
-                        value={sourceExam}
-                        onChange={(e) => setSourceExam(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Year
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 2024"
-                        value={sourceYear}
-                        onChange={(e) => setSourceYear(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Shift / Session
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Shift 1"
-                        value={sourceShift}
-                        onChange={(e) => setSourceShift(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-                      />
+              {/* Upload Destination Picker (create mode only) */}
+              {!editingQuestion && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                      Where should this question be uploaded?
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          ['subject', '📚 Subject', 'indigo'],
+                          ['full_mock', '🎯 Full Mock', 'emerald'],
+                          ['pyq', '📜 PYQ', 'purple'],
+                        ] as const
+                      ).map(([value, label, color]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => {
+                            setOwnerType(value);
+                            setOwnerExamId('');
+                            setOwnerYear('');
+                            setOwnerTestId('');
+                          }}
+                          className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                            ownerType === value
+                              ? color === 'indigo'
+                                ? 'bg-indigo-600 text-white border-indigo-500'
+                                : color === 'emerald'
+                                  ? 'bg-emerald-600 text-white border-emerald-500'
+                                  : 'bg-purple-600 text-white border-purple-500'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
                   </div>
+
+                  {/* Destination: Subject → Topic */}
+                  {ownerType === 'subject' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                          Subject
+                        </label>
+                        <select
+                          value={subjectId}
+                          onChange={(e) => {
+                            setSubjectId(e.target.value);
+                            setChapterId('');
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                        >
+                          <option value="">None / General</option>
+                          {subjects.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                          Topic
+                        </label>
+                        <select
+                          value={chapterId}
+                          onChange={(e) => setChapterId(e.target.value)}
+                          disabled={!subjectId}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                        >
+                          <option value="">None / General</option>
+                          {modalChapters.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Edit mode: legacy Subject / Topic selectors */}
+              {editingQuestion && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                        Subject (Optional)
+                      </label>
+                      <select
+                        value={subjectId}
+                        onChange={(e) => {
+                          setSubjectId(e.target.value);
+                          setChapterId('');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="">None / General</option>
+                        {subjects.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                        Topic / Chapter (Optional)
+                      </label>
+                      <select
+                        value={chapterId}
+                        onChange={(e) => setChapterId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="">None / General</option>
+                        {modalChapters.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Question Origin / Source */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                      Question Origin / Source
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSourceType('topic')}
+                        className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                          sourceType === 'topic'
+                            ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        📚 Topic Bank
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSourceType('pyq')}
+                        className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                          sourceType === 'pyq'
+                            ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        📜 PYQ Paper
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Conditional PYQ Fields */}
+                  {sourceType === 'pyq' && (
+                    <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                          Previous Year Question (PYQ) Details
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <div className="sm:col-span-2">
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Exam Name
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. WBCS Prelims, KP Constable"
+                            value={sourceExam}
+                            onChange={(e) => setSourceExam(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Year
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 2024"
+                            value={sourceYear}
+                            onChange={(e) => setSourceYear(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Shift / Session
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Shift 1"
+                            value={sourceShift}
+                            onChange={(e) => setSourceShift(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Destination: Exam → Full Mock Test / PYQ Paper (create mode) */}
+              {!editingQuestion && (
+                <>
+                  {ownerType === 'full_mock' && (
+                    <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                          Exam Name
+                        </label>
+                        <select
+                          value={ownerExamId}
+                          onChange={(e) => {
+                            setOwnerExamId(e.target.value);
+                            setOwnerTestId('');
+                          }}
+                          className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500"
+                        >
+                          <option value="">— Select Exam —</option>
+                          {ownerExams.map((ex) => (
+                            <option key={ex.id} value={ex.id}>
+                              {ex.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                          Full Mock Test
+                        </label>
+                        <select
+                          value={ownerTestId}
+                          onChange={(e) => setOwnerTestId(e.target.value)}
+                          disabled={!ownerExamId}
+                          className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500 disabled:opacity-50"
+                        >
+                          <option value="">— Select Full Mock Test —</option>
+                          {ownerExamTests.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {ownerExamId && ownerExamTests.length === 0 && (
+                        <p className="sm:col-span-2 text-[11px] text-amber-400 font-semibold">
+                          No Full Mock tests for this exam yet — create one under “Full Mocks &amp;
+                          PYQ” (/admin/tests) first.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Destination: PYQ Paper (create mode) */}
+              {!editingQuestion && ownerType === 'pyq' && (
+                <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Exam Name
+                    </label>
+                    <select
+                      value={ownerExamId}
+                      onChange={(e) => {
+                        setOwnerExamId(e.target.value);
+                        setOwnerYear('');
+                        setOwnerTestId('');
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="">— Select Exam —</option>
+                      {ownerExams.map((ex) => (
+                        <option key={ex.id} value={ex.id}>
+                          {ex.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Year
+                    </label>
+                    <select
+                      value={ownerYear}
+                      onChange={(e) => {
+                        setOwnerYear(e.target.value);
+                        setOwnerTestId('');
+                      }}
+                      disabled={!ownerExamId || ownerYears.length === 0}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500 disabled:opacity-50"
+                    >
+                      <option value="">— Select Year —</option>
+                      {ownerYears.map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Paper / Shift
+                    </label>
+                    <select
+                      value={ownerTestId}
+                      onChange={(e) => setOwnerTestId(e.target.value)}
+                      disabled={!ownerExamId}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500 disabled:opacity-50"
+                    >
+                      <option value="">— Select Paper / Shift —</option>
+                      {ownerPaperTests.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.paperName || t.title}
+                          {t.shift ? ` • ${t.shift}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {ownerExamId && ownerExamTests.length === 0 && (
+                    <p className="sm:col-span-3 text-[11px] text-amber-400 font-semibold">
+                      No PYQ papers for this exam yet — create one (with year/paper/shift) under
+                      “Full Mocks &amp; PYQ” (/admin/tests) first.
+                    </p>
+                  )}
                 </div>
+              )}
+
+              {/* Destination confirmation (create mode) */}
+              {!editingQuestion && selectedOwnerTest && (
+                <p className="text-[11px] text-emerald-400 font-semibold">
+                  ✓ Will be uploaded into: {ownerType === 'full_mock' ? '🎯' : '📜'}{' '}
+                  {selectedOwnerTest.title}
+                </p>
               )}
 
               {/* Question Texts */}
@@ -962,23 +1256,87 @@ export const AdminQuestions: React.FC = () => {
                 </div>
               </div>
 
+              {/* Format Toggle */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  Import Format
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImportFormat('csv');
+                      setCsvParseResult(null);
+                    }}
+                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                      importFormat === 'csv'
+                        ? 'bg-indigo-600 text-white border-indigo-500'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    📄 CSV (headers)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImportFormat('text');
+                      setCsvParseResult(null);
+                    }}
+                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${
+                      importFormat === 'text'
+                        ? 'bg-purple-600 text-white border-purple-500'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    📝 Formatted Text (study material)
+                  </button>
+                </div>
+                {importFormat === 'text' && (
+                  <p className="text-[11px] text-slate-400 mt-1.5">
+                    Paste question blocks separated by a blank line. Each block: question line,
+                    options <span className="font-mono">(a)…(d)</span>, answer line like{' '}
+                    <span className="font-mono">সঠিক উত্তর: (b)</span> or{' '}
+                    <span className="font-mono">Answer: b</span>, then{' '}
+                    <span className="font-mono">Explanation:</span> lines.
+                  </p>
+                )}
+              </div>
+
               {/* Upload or Paste */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                    Paste CSV Data or Choose File
+                    {importFormat === 'text'
+                      ? 'Paste Formatted Questions (blank line between questions)'
+                      : 'Paste CSV Data or Choose File'}
                   </label>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileUpload}
-                    className="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
-                  />
+                  {importFormat === 'csv' && (
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                      className="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
+                    />
+                  )}
                 </div>
 
                 <textarea
-                  rows={5}
-                  placeholder={`Paste CSV content with headers: question_text, option_a, option_b, option_c, option_d, correct_option...`}
+                  rows={importFormat === 'text' ? 12 : 5}
+                  placeholder={
+                    importFormat === 'text'
+                      ? `1. সিন্ধু সভ্যতার কোন নগরটি উন্নত জল নিষ্কাশন ব্যবস্থার জন্য পরিচিত?
+(a) হরপ্পা
+(b) মহেঞ্জোদারো
+(c) লোথাল
+(d) কালীবঙ্গান
+সঠিক উত্তর: (b)
+
+Explanation:
+- মহেঞ্জোদারোতে উন্নত পয়ঃনিষ্কাশন ব্যবস্থা ছিল।
+
+(পরের প্রশ্ন — একটি ফাঁকা লাইন দিয়ে আলাদা করুন)`
+                      : `Paste CSV content with headers: question_text, option_a, option_b, option_c, option_d, correct_option...`
+                  }
                   value={csvContent}
                   onChange={(e) => handleCsvChange(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500"

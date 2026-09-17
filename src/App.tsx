@@ -260,6 +260,8 @@ export const App: React.FC = () => {
           {/* 4. Mock Test Management */}
           <Route path="tests" element={<AdminTests />} />
           <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
+          <Route path="test-questions" element={<AdminTestQuestions />} />
+          <Route path="test-questions/:testId" element={<AdminTestQuestions />} />
 
           {/* 5. Subscriptions & Pro Users */}
           <Route path="subscriptions" element={<AdminSubscriptions />} />

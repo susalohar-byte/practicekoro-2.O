@@ -196,6 +196,17 @@ export const AdminTestSeries: React.FC = () => {
       if (t) {
         setAvailableTests((prev) => prev.filter((x) => x.id !== testId));
         setSeriesTests((prev) => [...prev, { ...t, testSeriesId: manageSeriesTests.id }]);
+        setSeriesList((prev) =>
+          prev.map((s) =>
+            s.id === manageSeriesTests.id
+              ? {
+                  ...s,
+                  testCount: (s.testCount || 0) + 1,
+                  testsCount: (s.testsCount || 0) + 1,
+                }
+              : s
+          )
+        );
       }
     } catch (err) {
       console.error('Failed to assign test', err);
@@ -210,6 +221,17 @@ export const AdminTestSeries: React.FC = () => {
       if (t) {
         setSeriesTests((prev) => prev.filter((x) => x.id !== testId));
         setAvailableTests((prev) => [...prev, { ...t, testSeriesId: undefined }]);
+        setSeriesList((prev) =>
+          prev.map((s) =>
+            s.id === manageSeriesTests.id
+              ? {
+                  ...s,
+                  testCount: Math.max(0, (s.testCount || 0) - 1),
+                  testsCount: Math.max(0, (s.testsCount || 0) - 1),
+                }
+              : s
+          )
+        );
       }
     } catch (err) {
       console.error('Failed to unassign test', err);
@@ -292,6 +314,7 @@ export const AdminTestSeries: React.FC = () => {
                 <th className="p-4">Series Title</th>
                 <th className="p-4">Target Exam</th>
                 <th className="p-4">Access Tier</th>
+                <th className="p-4">Assigned Tests</th>
                 <th className="p-4">Order</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
@@ -300,19 +323,20 @@ export const AdminTestSeries: React.FC = () => {
             <tbody className="divide-y divide-slate-800/60">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-8 text-center text-slate-400">
                     Loading test series...
                   </td>
                 </tr>
               ) : filteredSeries.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-8 text-center text-slate-400">
                     No test series found for the selected filter.
                   </td>
                 </tr>
               ) : (
                 filteredSeries.map((series) => {
                   const parentExam = exams.find((e) => e.id === series.examId);
+                  const count = series.testCount ?? series.testsCount ?? 0;
                   return (
                     <tr key={series.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="p-4">
@@ -341,6 +365,16 @@ export const AdminTestSeries: React.FC = () => {
                             FREE
                           </span>
                         )}
+                      </td>
+                      <td className="p-4">
+                        <button
+                          onClick={() => openManageTests(series)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 font-medium text-[11px] transition-colors"
+                          title="Click to view & assign tests"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>{count} Tests</span>
+                        </button>
                       </td>
                       <td className="p-4 font-bold text-indigo-400">#{series.orderIndex}</td>
                       <td className="p-4">
