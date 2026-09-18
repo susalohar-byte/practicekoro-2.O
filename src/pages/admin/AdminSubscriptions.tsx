@@ -19,8 +19,13 @@ import {
   Clock,
   ChevronDown,
   Download,
+  CheckSquare2,
+  Send,
+  RotateCcw,
+  UsersRound,
+  Tag,
 } from 'lucide-react';
-import type { SubscriptionPlan, AdminPaymentRow, AdminStudentRow } from '@/types';
+import type { SubscriptionPlan, AdminPaymentRow, AdminStudentRow, AdminBatch } from '@/types';
 
 function exportToCSV(
   filename: string,
@@ -48,7 +53,7 @@ function exportToCSV(
   URL.revokeObjectURL(url);
 }
 
-// ─── Stat Card ──────────────────────────────────────────────────
+// âââ Stat Card ââââââââââââââââââââââââââââââââââââââââââââââââââ
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
@@ -79,7 +84,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle, gradi
   </div>
 );
 
-// ─── Status Badge ───────────────────────────────────────────────
+// âââ Status Badge âââââââââââââââââââââââââââââââââââââââââââââââ
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const config: Record<string, { bg: string; text: string; dot: string }> = {
     active: {
@@ -112,6 +117,11 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
       text: 'text-rose-600 dark:text-rose-400',
       dot: 'bg-rose-500',
     },
+    refunded: {
+      bg: 'bg-rose-500/10 dark:bg-rose-500/15',
+      text: 'text-rose-600 dark:text-rose-400',
+      dot: 'bg-rose-500',
+    },
   };
   const c = config[status] || config.cancelled;
   return (
@@ -124,7 +134,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   );
 };
 
-// ─── Avatar ─────────────────────────────────────────────────────
+// âââ Avatar âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const Avatar: React.FC<{ name: string; isPro?: boolean }> = ({ name, isPro }) => {
   const initials = name
     .split(' ')
@@ -152,7 +162,7 @@ const Avatar: React.FC<{ name: string; isPro?: boolean }> = ({ name, isPro }) =>
   );
 };
 
-// ─── Empty State ────────────────────────────────────────────────
+// âââ Empty State ââââââââââââââââââââââââââââââââââââââââââââââââ
 const EmptyState: React.FC<{
   icon: React.ReactNode;
   title: string;
@@ -172,7 +182,7 @@ const EmptyState: React.FC<{
   </div>
 );
 
-// ─── Search Bar ─────────────────────────────────────────────────
+// âââ Search Bar âââââââââââââââââââââââââââââââââââââââââââââââââ
 const SearchBar: React.FC<{
   value: string;
   onChange: (v: string) => void;
@@ -198,7 +208,7 @@ const SearchBar: React.FC<{
   </div>
 );
 
-// ─── Main Component ─────────────────────────────────────────────
+// âââ Main Component âââââââââââââââââââââââââââââââââââââââââââââ
 export const AdminSubscriptions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'aspirants' | 'payments' | 'plans'>('aspirants');
 
@@ -207,6 +217,18 @@ export const AdminSubscriptions: React.FC = () => {
   const [studentFilter, setStudentFilter] = useState<string>('all');
   const [studentSearch, setStudentSearch] = useState<string>('');
   const [studentLoading, setStudentLoading] = useState<boolean>(false);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<'plan' | 'batch' | 'notify' | null>(null);
+  const [batches, setBatches] = useState<AdminBatch[]>([]);
+  const [bulkPlanId, setBulkPlanId] = useState('pro_1_year');
+  const [bulkDurationDays, setBulkDurationDays] = useState(365);
+  const [bulkBatchId, setBulkBatchId] = useState('');
+  const [newBatchName, setNewBatchName] = useState('');
+  const [newBatchDescription, setNewBatchDescription] = useState('');
+  const [bulkTitle, setBulkTitle] = useState('');
+  const [bulkMessage, setBulkMessage] = useState('');
+  const [bulkWorking, setBulkWorking] = useState(false);
+  const [bulkFeedback, setBulkFeedback] = useState('');
 
   // Grant Pro modal state
   const [grantModalStudent, setGrantModalStudent] = useState<AdminStudentRow | null>(null);
@@ -220,6 +242,12 @@ export const AdminSubscriptions: React.FC = () => {
   const [payFilter, setPayFilter] = useState<string>('all');
   const [paySearch, setPaySearch] = useState<string>('');
   const [payLoading, setPayLoading] = useState<boolean>(false);
+  const [refundPayment, setRefundPayment] = useState<AdminPaymentRow | null>(null);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundId, setRefundId] = useState('');
+  const [refundReason, setRefundReason] = useState('');
+  const [refundWorking, setRefundWorking] = useState(false);
+  const [refundFeedback, setRefundFeedback] = useState('');
 
   // Plans state
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -275,6 +303,139 @@ export const AdminSubscriptions: React.FC = () => {
     }
   }, []);
 
+  const fetchBatches = useCallback(async () => {
+    try {
+      setBatches(await api.getAdminBatches());
+    } catch (err) {
+      console.error('Failed to load student batches:', err);
+    }
+  }, []);
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudentIds((current) =>
+      current.includes(studentId)
+        ? current.filter((id) => id !== studentId)
+        : [...current, studentId]
+    );
+  };
+
+  const toggleAllVisibleStudents = () => {
+    const visibleIds = students.map((student) => student.id);
+    setSelectedStudentIds((current) =>
+      visibleIds.length > 0 && visibleIds.every((id) => current.includes(id))
+        ? current.filter((id) => !visibleIds.includes(id))
+        : Array.from(new Set([...current, ...visibleIds]))
+    );
+  };
+
+  const openBulkAction = (action: 'plan' | 'batch' | 'notify') => {
+    setBulkAction(action);
+    setBulkFeedback('');
+    if (action === 'plan') {
+      setBulkPlanId(plans.find((plan) => plan.price > 0)?.id || 'pro_1_year');
+      setBulkDurationDays(365);
+    }
+    if (action === 'batch') {
+      setBulkBatchId(batches[0]?.id || '');
+      setNewBatchName('');
+      setNewBatchDescription('');
+    }
+    if (action === 'notify') {
+      setBulkTitle('');
+      setBulkMessage('');
+    }
+  };
+
+  const handleBulkAction = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (selectedStudentIds.length === 0 || !bulkAction) return;
+    setBulkWorking(true);
+    setBulkFeedback('');
+    try {
+      if (bulkAction === 'plan') {
+        const result = await api.bulkGrantStudentSubscription(
+          selectedStudentIds,
+          bulkPlanId,
+          Number(bulkDurationDays)
+        );
+        if (!result.success) throw new Error(result.error || 'Could not assign plan');
+        await fetchStudents();
+        setBulkFeedback(`${result.count || selectedStudentIds.length} students received the plan.`);
+      } else if (bulkAction === 'batch') {
+        let batchId = bulkBatchId;
+        if (!batchId && newBatchName.trim()) {
+          const created = await api.createAdminBatch(newBatchName, newBatchDescription);
+          if (!created.success || !created.batchId) {
+            throw new Error(created.error || 'Could not create batch');
+          }
+          batchId = created.batchId;
+        }
+        if (!batchId) throw new Error('Select an existing batch or enter a new batch name.');
+        const result = await api.bulkAssignStudentsToBatch(batchId, selectedStudentIds);
+        if (!result.success) throw new Error(result.error || 'Could not assign batch');
+        await fetchBatches();
+        setBulkFeedback(
+          `${result.count || selectedStudentIds.length} students were added to the batch.`
+        );
+      } else {
+        if (!bulkTitle.trim() || !bulkMessage.trim()) {
+          throw new Error('Notification title and message are required.');
+        }
+        const result = await api.createTargetedNotification({
+          title: bulkTitle.trim(),
+          message: bulkMessage.trim(),
+          channel: 'in_app',
+          userIds: selectedStudentIds,
+        });
+        if (!result.success) throw new Error(result.error || 'Could not send notification');
+        setBulkFeedback(`Notification sent to ${selectedStudentIds.length} students.`);
+      }
+    } catch (err) {
+      setBulkFeedback(err instanceof Error ? err.message : 'Bulk action failed.');
+    } finally {
+      setBulkWorking(false);
+    }
+  };
+
+  const handleRefund = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!refundPayment) return;
+    setRefundWorking(true);
+    setRefundFeedback('');
+    try {
+      const amount = Number(refundAmount);
+      if (!Number.isFinite(amount) || amount <= 0 || amount > refundPayment.amount) {
+        throw new Error('Enter a refund amount no greater than the payment amount.');
+      }
+      const result = await api.markPaymentRefunded(
+        refundPayment.id,
+        amount,
+        refundId,
+        refundReason
+      );
+      if (!result.success) throw new Error(result.error || 'Could not record refund');
+      setPayments((current) =>
+        current.map((payment) =>
+          payment.id === refundPayment.id
+            ? {
+                ...payment,
+                status: 'refunded',
+                refundAmount: amount,
+                refundId: refundId.trim() || undefined,
+                refundReason: refundReason.trim() || undefined,
+                refundedAt: new Date().toISOString(),
+              }
+            : payment
+        )
+      );
+      setRefundPayment(null);
+    } catch (err) {
+      setRefundFeedback(err instanceof Error ? err.message : 'Refund tracking update failed.');
+    } finally {
+      setRefundWorking(false);
+    }
+  };
+
   const handleGrantPro = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!grantModalStudent) return;
@@ -300,7 +461,9 @@ export const AdminSubscriptions: React.FC = () => {
   };
 
   const handleRevokePro = async (student: AdminStudentRow) => {
-    if (!window.confirm(`Are you sure you want to revoke Pro subscription for ${student.fullName}?`)) {
+    if (
+      !window.confirm(`Are you sure you want to revoke Pro subscription for ${student.fullName}?`)
+    ) {
       return;
     }
     try {
@@ -441,9 +604,10 @@ export const AdminSubscriptions: React.FC = () => {
     fetchStudents();
     fetchPayments();
     fetchPlans();
-  }, [fetchStudents, fetchPayments, fetchPlans]);
+    fetchBatches();
+  }, [fetchStudents, fetchPayments, fetchPlans, fetchBatches]);
 
-  // ─── Computed Stats ─────────────────────────────────────────
+  // âââ Computed Stats âââââââââââââââââââââââââââââââââââââââââ
   const stats = useMemo(() => {
     const proStudents = students.filter((s) => s.isPro).length;
     const freeStudents = students.length - proStudents;
@@ -453,7 +617,7 @@ export const AdminSubscriptions: React.FC = () => {
     return { proStudents, freeStudents, totalRevenue };
   }, [payments, students]);
 
-  // ─── Tab Config ─────────────────────────────────────────────
+  // âââ Tab Config âââââââââââââââââââââââââââââââââââââââââââââ
   const tabs = [
     { key: 'aspirants' as const, label: 'Aspirants', icon: Users, count: students.length },
     { key: 'payments' as const, label: 'Payments', icon: Receipt, count: payments.length },
@@ -462,7 +626,7 @@ export const AdminSubscriptions: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* ─── Header ────────────────────────────────────────── */}
+      {/* âââ Header ââââââââââââââââââââââââââââââââââââââââââ */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
@@ -477,13 +641,13 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       </div>
 
-      {/* ─── Stats Row ─────────────────────────────────────── */}
+      {/* âââ Stats Row âââââââââââââââââââââââââââââââââââââââ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<Users className="w-5 h-5 text-white" />}
           label="Total Aspirants"
           value={students.length}
-          subtitle={`${stats.proStudents} Paid • ${stats.freeStudents} Free`}
+          subtitle={`${stats.proStudents} Paid â¢ ${stats.freeStudents} Free`}
           gradient="bg-gradient-to-br from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600"
           iconBg="bg-white/20"
         />
@@ -498,7 +662,7 @@ export const AdminSubscriptions: React.FC = () => {
         <StatCard
           icon={<IndianRupee className="w-5 h-5 text-white" />}
           label="Total Revenue"
-          value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
+          value={`â¹${stats.totalRevenue.toLocaleString('en-IN')}`}
           subtitle={`${payments.length} transactions`}
           gradient="bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700"
           iconBg="bg-white/20"
@@ -513,7 +677,7 @@ export const AdminSubscriptions: React.FC = () => {
         />
       </div>
 
-      {/* ─── Tab Navigation ────────────────────────────────── */}
+      {/* âââ Tab Navigation ââââââââââââââââââââââââââââââââââ */}
       <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 p-1.5 shadow-sm">
         <div className="flex gap-1">
           {tabs.map((tab) => {
@@ -546,9 +710,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
+      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
           TAB 1: ASPIRANTS (Unified Free + Paid)
-      ═══════════════════════════════════════════════════════ */}
+      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
       {activeTab === 'aspirants' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -592,12 +756,63 @@ export const AdminSubscriptions: React.FC = () => {
             </div>
           </div>
 
+          {selectedStudentIds.length > 0 && (
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 rounded-2xl border border-indigo-200 bg-indigo-50/80 p-3 dark:border-indigo-500/30 dark:bg-indigo-500/10">
+              <div className="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                <CheckSquare2 className="h-4 w-4" />
+                {selectedStudentIds.length} student{selectedStudentIds.length === 1 ? '' : 's'}{' '}
+                selected
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => openBulkAction('plan')}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-500"
+                >
+                  <Tag className="h-3.5 w-3.5" />
+                  Assign Plan
+                </button>
+                <button
+                  onClick={() => openBulkAction('batch')}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 dark:border-indigo-500/30 dark:bg-slate-900 dark:text-indigo-300"
+                >
+                  <UsersRound className="h-3.5 w-3.5" />
+                  Assign Batch
+                </button>
+                <button
+                  onClick={() => openBulkAction('notify')}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 dark:border-indigo-500/30 dark:bg-slate-900 dark:text-indigo-300"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  Notify
+                </button>
+                <button
+                  onClick={() => setSelectedStudentIds([])}
+                  className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-white dark:hover:bg-slate-800"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Aspirants Table */}
           <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50/80 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700/50">
+                    <th className="w-12 px-5 py-3.5">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all visible students"
+                        checked={
+                          students.length > 0 &&
+                          students.every((student) => selectedStudentIds.includes(student.id))
+                        }
+                        onChange={toggleAllVisibleStudents}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </th>
                     <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Aspirant
                     </th>
@@ -621,7 +836,7 @@ export const AdminSubscriptions: React.FC = () => {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                   {students.length === 0 ? (
                     <tr>
-                      <td colSpan={6}>
+                      <td colSpan={7}>
                         <EmptyState
                           icon={<Users className="w-7 h-7 text-slate-400" />}
                           title="No aspirants found"
@@ -636,6 +851,15 @@ export const AdminSubscriptions: React.FC = () => {
                         key={st.id}
                         className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
                       >
+                        <td className="px-5 py-4">
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${st.fullName}`}
+                            checked={selectedStudentIds.includes(st.id)}
+                            onChange={() => toggleStudentSelection(st.id)}
+                            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                        </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <Avatar name={st.fullName || 'Aspirant'} isPro={st.isPro} />
@@ -676,7 +900,7 @@ export const AdminSubscriptions: React.FC = () => {
                               year: 'numeric',
                             })
                           ) : (
-                            <span className="text-slate-300 dark:text-slate-600">—</span>
+                            <span className="text-slate-300 dark:text-slate-600">â</span>
                           )}
                         </td>
                         <td className="px-5 py-4 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
@@ -724,9 +948,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════
+      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
           TAB 2: PAYMENTS
-      ═══════════════════════════════════════════════════════ */}
+      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
       {activeTab === 'payments' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -746,6 +970,7 @@ export const AdminSubscriptions: React.FC = () => {
                   <option value="completed">Completed</option>
                   <option value="pending">Pending</option>
                   <option value="failed">Failed</option>
+                  <option value="refunded">Refunded</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -798,12 +1023,15 @@ export const AdminSubscriptions: React.FC = () => {
                     <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">
+                      Refund
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                   {payments.length === 0 ? (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         <EmptyState
                           icon={<Receipt className="w-7 h-7 text-slate-400" />}
                           title="No payments found"
@@ -852,7 +1080,7 @@ export const AdminSubscriptions: React.FC = () => {
                         </td>
                         <td className="px-5 py-4">
                           <span className="text-base font-black text-slate-900 dark:text-white">
-                            ₹{p.amount.toLocaleString('en-IN')}
+                            â¹{p.amount.toLocaleString('en-IN')}
                           </span>
                         </td>
                         <td className="px-5 py-4">
@@ -875,6 +1103,40 @@ export const AdminSubscriptions: React.FC = () => {
                         <td className="px-5 py-4">
                           <StatusBadge status={p.status} />
                         </td>
+                        <td className="px-5 py-4 text-right">
+                          {p.status === 'refunded' ? (
+                            <div className="text-right">
+                              <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                                â¹{(p.refundAmount ?? p.amount).toLocaleString('en-IN')}
+                              </div>
+                              {p.refundId && (
+                                <div
+                                  className="max-w-[120px] truncate text-[10px] text-slate-400"
+                                  title={p.refundId}
+                                >
+                                  {p.refundId}
+                                </div>
+                              )}
+                            </div>
+                          ) : p.status === 'completed' ? (
+                            <button
+                              onClick={() => {
+                                setRefundPayment(p);
+                                setRefundAmount(String(p.amount));
+                                setRefundId('');
+                                setRefundReason('');
+                                setRefundFeedback('');
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2.5 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                              title="Record the Razorpay refund in the database"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              Record
+                            </button>
+                          ) : (
+                            <span className="text-xs text-slate-300 dark:text-slate-600">â</span>
+                          )}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -885,9 +1147,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════
+      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
           TAB 3: SUBSCRIPTION PLANS
-      ═══════════════════════════════════════════════════════ */}
+      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
       {activeTab === 'plans' && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
@@ -949,11 +1211,11 @@ export const AdminSubscriptions: React.FC = () => {
                   {/* Price */}
                   <div className="flex items-end gap-2 mb-4">
                     <span className="text-3xl font-black text-slate-900 dark:text-white">
-                      ₹{p.price}
+                      â¹{p.price}
                     </span>
                     {p.originalPrice && (
                       <span className="text-sm text-slate-400 line-through mb-1">
-                        ₹{p.originalPrice}
+                        â¹{p.originalPrice}
                       </span>
                     )}
                     <span className="text-xs text-slate-500 dark:text-slate-400 mb-1">
@@ -1019,9 +1281,298 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════
+      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+          BULK STUDENT ACTION MODAL
+      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {bulkAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="flex items-center gap-2.5 text-lg font-bold text-slate-900 dark:text-white">
+                  {bulkAction === 'plan' && <Tag className="h-5 w-5 text-indigo-500" />}
+                  {bulkAction === 'batch' && <UsersRound className="h-5 w-5 text-indigo-500" />}
+                  {bulkAction === 'notify' && <Send className="h-5 w-5 text-indigo-500" />}
+                  {bulkAction === 'plan'
+                    ? 'Assign plan to selected students'
+                    : bulkAction === 'batch'
+                      ? 'Assign batch to selected students'
+                      : 'Notify selected students'}
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  This action applies to {selectedStudentIds.length} selected student
+                  {selectedStudentIds.length === 1 ? '' : 's'}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBulkAction(null)}
+                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleBulkAction} className="space-y-4">
+              {bulkFeedback && (
+                <div
+                  className={`rounded-xl border p-3 text-sm font-medium ${
+                    bulkFeedback.includes('received') ||
+                    bulkFeedback.includes('added') ||
+                    bulkFeedback.includes('sent')
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
+                      : 'border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300'
+                  }`}
+                >
+                  {bulkFeedback}
+                </div>
+              )}
+
+              {bulkAction === 'plan' && (
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                      Plan
+                    </label>
+                    <select
+                      value={bulkPlanId}
+                      onChange={(event) => setBulkPlanId(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                    >
+                      {plans
+                        .filter((plan) => plan.price > 0)
+                        .map((plan) => (
+                          <option key={plan.id} value={plan.id}>
+                            {plan.title} ({plan.durationDays} days â â¹{plan.price})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                      Duration (days)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      required
+                      value={bulkDurationDays}
+                      onChange={(event) => setBulkDurationDays(Number(event.target.value))}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                    />
+                  </div>
+                </>
+              )}
+
+              {bulkAction === 'batch' && (
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                      Existing batch
+                    </label>
+                    <select
+                      value={bulkBatchId}
+                      onChange={(event) => setBulkBatchId(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                    >
+                      <option value="">Create a new batch below</option>
+                      {batches.map((batch) => (
+                        <option key={batch.id} value={batch.id}>
+                          {batch.name} ({batch.memberCount} students)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {!bulkBatchId && (
+                    <>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                          New batch name
+                        </label>
+                        <input
+                          value={newBatchName}
+                          onChange={(event) => setNewBatchName(event.target.value)}
+                          placeholder="e.g. WBP Constable 2026 â Morning"
+                          required
+                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                          Description (optional)
+                        </label>
+                        <input
+                          value={newBatchDescription}
+                          onChange={(event) => setNewBatchDescription(event.target.value)}
+                          placeholder="Batch notes or cohort details"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {bulkAction === 'notify' && (
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                      Title
+                    </label>
+                    <input
+                      value={bulkTitle}
+                      onChange={(event) => setBulkTitle(event.target.value)}
+                      required
+                      placeholder="Important update"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                      Message
+                    </label>
+                    <textarea
+                      value={bulkMessage}
+                      onChange={(event) => setBulkMessage(event.target.value)}
+                      required
+                      rows={4}
+                      placeholder="Write the message for these students..."
+                      className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700/50">
+                <button
+                  type="button"
+                  onClick={() => setBulkAction(null)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={bulkWorking}
+                  className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {bulkWorking
+                    ? 'Working...'
+                    : bulkAction === 'notify'
+                      ? 'Send Notification'
+                      : bulkAction === 'batch'
+                        ? 'Assign Batch'
+                        : 'Assign Plan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+          REFUND TRACKING MODAL
+      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {refundPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+                  <RotateCcw className="h-5 w-5 text-rose-500" />
+                  Record Razorpay refund
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Record the refund after it has been issued in Razorpay. This updates the payment
+                  status and keeps an audit trail.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRefundPayment(null)}
+                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleRefund} className="space-y-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+                <div className="font-semibold text-slate-900 dark:text-white">
+                  {refundPayment.studentName}
+                </div>
+                <div className="text-xs text-slate-500">{refundPayment.studentEmail}</div>
+                <div className="mt-2 font-bold text-slate-800 dark:text-slate-200">
+                  Original payment: â¹{refundPayment.amount.toLocaleString('en-IN')}
+                </div>
+              </div>
+              {refundFeedback && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
+                  {refundFeedback}
+                </div>
+              )}
+              <div>
+                <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                  Refund amount (â¹)
+                </label>
+                <input
+                  type="number"
+                  min={0.01}
+                  max={refundPayment.amount}
+                  step="0.01"
+                  required
+                  value={refundAmount}
+                  onChange={(event) => setRefundAmount(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                  Razorpay refund ID (optional)
+                </label>
+                <input
+                  value={refundId}
+                  onChange={(event) => setRefundId(event.target.value)}
+                  placeholder="rfnd_..."
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
+                  Reason (optional)
+                </label>
+                <textarea
+                  value={refundReason}
+                  onChange={(event) => setRefundReason(event.target.value)}
+                  rows={3}
+                  placeholder="Reason for refund"
+                  className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                />
+              </div>
+              <div className="flex justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700/50">
+                <button
+                  type="button"
+                  onClick={() => setRefundPayment(null)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={refundWorking}
+                  className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-rose-500 disabled:opacity-50"
+                >
+                  {refundWorking ? 'Saving...' : 'Save Refund Record'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
           GRANT PRO ACCESS MODAL
-      ═══════════════════════════════════════════════════════ */}
+      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
       {grantModalStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
@@ -1073,7 +1624,7 @@ export const AdminSubscriptions: React.FC = () => {
                   >
                     {plans.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.title} ({p.durationDays} Days — ₹{p.price})
+                        {p.title} ({p.durationDays} Days â â¹{p.price})
                       </option>
                     ))}
                   </select>
@@ -1116,9 +1667,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════
+      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
           PLAN EDIT / CREATE MODAL
-      ═══════════════════════════════════════════════════════ */}
+      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
       {isPlanModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
@@ -1190,7 +1741,7 @@ export const AdminSubscriptions: React.FC = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Price (₹) *
+                    Price (â¹) *
                   </label>
                   <input
                     type="number"
@@ -1203,7 +1754,7 @@ export const AdminSubscriptions: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Orig. Price (₹)
+                    Orig. Price (â¹)
                   </label>
                   <input
                     type="number"
