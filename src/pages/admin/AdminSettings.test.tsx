@@ -43,6 +43,8 @@ describe('AdminSettings & Maintenance Mode System', () => {
       isAdmin: true,
       isStudent: false,
       loading: false,
+      adminRole: 'super_admin',
+      hasPermission: () => true,
     });
   });
 

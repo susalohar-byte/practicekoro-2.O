@@ -2,13 +2,19 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { isAdminEmail } from '@/lib/authPolicy';
 import type { Database } from '@/types/database';
-import type { UserProfile, UserRole } from '@/types';
+import type { UserProfile, UserRole, AdminRole, AdminPermissions } from '@/types';
+import { getAdminPermissions } from '@/types';
 
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type ProfileRow = Database['public']['Tables']['profiles']['Row'] & {
+  admin_role?: string | null;
+};
 
 interface AuthContextType {
   user: UserProfile | null;
   role: UserRole;
+  adminRole: AdminRole;
+  permissions: AdminPermissions;
+  hasPermission: (permission: keyof AdminPermissions) => boolean;
   isAdmin: boolean;
   isStudent: boolean;
   isPro: boolean;
@@ -154,6 +160,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
+        const adminSubRole: AdminRole =
+          profile?.admin_role === 'content_writer' || profile?.admin_role === 'support_agent'
+            ? (profile.admin_role as AdminRole)
+            : 'super_admin';
+
         return {
           id: profile?.id || supabaseUser.id,
           fullName:
@@ -163,18 +174,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatarUrl: profile?.avatar_url || metaAvatar || undefined,
           targetExamId: profile?.target_exam_id ?? undefined,
           role: effectiveRole,
+          adminRole: effectiveRole === 'admin' ? adminSubRole : undefined,
           createdAt: profile?.created_at || new Date().toISOString(),
         };
       } catch (err) {
         console.error('Supabase profile resolve error:', err);
         const meta = supabaseUser.user_metadata || {};
+        const fallbackIsAdmin = isAdminEmail(supabaseUser.email);
         return {
           id: supabaseUser.id,
           fullName: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
           email: supabaseUser.email || '',
           avatarUrl: meta.avatar_url || meta.picture || undefined,
           // Fallback: use isAdminEmail only for the error path to avoid locking admins out
-          role: isAdminEmail(supabaseUser.email) ? 'admin' : 'student',
+          role: fallbackIsAdmin ? 'admin' : 'student',
+          adminRole: fallbackIsAdmin ? 'super_admin' : undefined,
           createdAt: new Date().toISOString(),
         };
       }
@@ -460,12 +474,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const role: UserRole = user?.role || 'student';
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
+  const adminRole: AdminRole = user?.adminRole || (isAdmin ? 'super_admin' : 'content_writer');
+  const permissions: AdminPermissions = getAdminPermissions(adminRole);
+
+  const hasPermission = (permission: keyof AdminPermissions): boolean => {
+    if (!isAdmin) return false;
+    return Boolean(permissions[permission]);
+  };
 
   return (
     <AuthContext.Provider
       value={{
         user,
         role,
+        adminRole,
+        permissions,
+        hasPermission,
         isAdmin,
         isStudent,
         isPro,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import {
   Tag,
   Search,
@@ -23,6 +24,7 @@ import { Button } from '@/components/common/Button';
 import type { CouponItem } from '@/types';
 
 export const AdminCoupons: React.FC = () => {
+  const { user: currentAdmin } = useAuth();
   const [coupons, setCoupons] = useState<CouponItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -158,6 +160,15 @@ export const AdminCoupons: React.FC = () => {
           isActive,
         });
         if (!res.success) throw new Error(res.error || 'Failed to update coupon');
+
+        await api.logAdminActivity({
+          action: 'COUPON_UPDATE',
+          entityType: 'coupon',
+          entityId: editingCoupon.id,
+          entityName: cleanCode,
+          details: { discountType, discountValue, minOrderAmount },
+          adminUser: currentAdmin,
+        });
       } else {
         const res = await api.createAdminCoupon({
           code: cleanCode,
@@ -174,6 +185,14 @@ export const AdminCoupons: React.FC = () => {
           isActive,
         });
         if (!res.success) throw new Error(res.error || 'Failed to create coupon');
+
+        await api.logAdminActivity({
+          action: 'COUPON_CREATE',
+          entityType: 'coupon',
+          entityName: cleanCode,
+          details: { discountType, discountValue, minOrderAmount },
+          adminUser: currentAdmin,
+        });
       }
 
       setIsModalOpen(false);
@@ -205,6 +224,14 @@ export const AdminCoupons: React.FC = () => {
     try {
       const res = await api.deleteAdminCoupon(id);
       if (res.success) {
+        await api.logAdminActivity({
+          action: 'COUPON_DELETE',
+          entityType: 'coupon',
+          entityId: id,
+          entityName: couponCode,
+          adminUser: currentAdmin,
+        });
+
         setCoupons((prev) => prev.filter((c) => c.id !== id));
       }
     } catch (err) {

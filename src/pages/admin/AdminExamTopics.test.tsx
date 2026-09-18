@@ -12,6 +12,8 @@ vi.mock('@/context/AuthContext', () => ({
     role: 'admin',
     isPro: true,
     isAdmin: true,
+    adminRole: 'super_admin',
+    hasPermission: () => true,
     logout: vi.fn(),
   }),
 }));

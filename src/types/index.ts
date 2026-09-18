@@ -1,4 +1,67 @@
 export type UserRole = 'student' | 'admin' | 'instructor';
+export type AdminRole = 'super_admin' | 'content_writer' | 'support_agent';
+
+export interface AdminPermissions {
+  canManageQuestions: boolean;
+  canManageTests: boolean;
+  canDeleteTests: boolean;
+  canManageExams: boolean;
+  canManageSubscriptions: boolean;
+  canManageCoupons: boolean;
+  canManageSupport: boolean;
+  canManageNotifications: boolean;
+  canManageSettings: boolean;
+  canManageStaff: boolean;
+  canViewAuditLogs: boolean;
+}
+
+export function getAdminPermissions(adminRole?: AdminRole): AdminPermissions {
+  switch (adminRole) {
+    case 'content_writer':
+      return {
+        canManageQuestions: true,
+        canManageTests: true,
+        canDeleteTests: false,
+        canManageExams: true,
+        canManageSubscriptions: false,
+        canManageCoupons: false,
+        canManageSupport: false,
+        canManageNotifications: false,
+        canManageSettings: false,
+        canManageStaff: false,
+        canViewAuditLogs: false,
+      };
+    case 'support_agent':
+      return {
+        canManageQuestions: false,
+        canManageTests: false,
+        canDeleteTests: false,
+        canManageExams: false,
+        canManageSubscriptions: false,
+        canManageCoupons: false,
+        canManageSupport: true,
+        canManageNotifications: true,
+        canManageSettings: false,
+        canManageStaff: false,
+        canViewAuditLogs: false,
+      };
+    case 'super_admin':
+    default:
+      return {
+        canManageQuestions: true,
+        canManageTests: true,
+        canDeleteTests: true,
+        canManageExams: true,
+        canManageSubscriptions: true,
+        canManageCoupons: true,
+        canManageSupport: true,
+        canManageNotifications: true,
+        canManageSettings: true,
+        canManageStaff: true,
+        canViewAuditLogs: true,
+      };
+  }
+}
 
 export interface UserProfile {
   id: string;
@@ -8,6 +71,7 @@ export interface UserProfile {
   avatarUrl?: string;
   targetExamId?: string;
   role: UserRole;
+  adminRole?: AdminRole;
   createdAt: string;
 }
 
@@ -451,6 +515,7 @@ export interface AdminPaymentRow {
   razorpayPaymentId?: string;
   status: PaymentStatus;
   createdAt: string;
+  created_at?: string;
 }
 
 export interface RevenueTrendPoint {
@@ -497,13 +562,15 @@ export interface AdminStudentRow {
   phone?: string;
   avatarUrl?: string;
   createdAt: string;
-  planTitle: string;
-  planId: string;
-  subscriptionStatus: 'active' | 'expired' | 'none' | string;
+  planTitle?: string;
+  planId?: string;
+  subscriptionStatus?: 'active' | 'expired' | 'none' | string;
   isPro: boolean;
   expiresAt?: string;
-  totalAttempts: number;
-  lastActive: string;
+  subscriptionExpiresAt?: string;
+  totalAttempts?: number;
+  testsCompleted?: number;
+  lastActive?: string;
 }
 
 export interface AdminStudentDetails extends AdminStudentRow {
@@ -598,3 +665,119 @@ export interface CouponValidationResult {
   message: string;
 }
 
+export interface AdminAuditLog {
+  id: string;
+  adminId?: string;
+  adminEmail: string;
+  adminName?: string;
+  adminRole: AdminRole;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  entityName?: string;
+  details?: Record<string, any>;
+  ipAddress?: string;
+  createdAt: string;
+}
+
+export interface AdminStaffMember {
+  id: string;
+  email: string;
+  fullName: string;
+  avatarUrl?: string;
+  phone?: string;
+  role: UserRole;
+  adminRole: AdminRole;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// ─── Item Analysis (Question Accuracy & Difficulty Psychometrics) ────
+export type EmpiricalDifficulty = 'very_easy' | 'easy' | 'moderate' | 'hard' | 'extreme';
+
+export interface QuestionItemAnalysis {
+  questionId: string;
+  questionText: string;
+  questionBengali?: string;
+  subjectId?: string;
+  subjectName?: string;
+  chapterId?: string;
+  chapterName?: string;
+  examId?: string;
+  examTitle?: string;
+  testId?: string;
+  testTitle?: string;
+  declaredDifficulty: 'easy' | 'medium' | 'hard';
+  empiricalDifficulty: EmpiricalDifficulty;
+  totalAttempts: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  accuracyRate: number; // percentage 0 to 100
+  failureRate: number; // percentage 0 to 100
+  avgTimeSpentSeconds: number; // average seconds
+  isHighFailure: boolean; // failureRate >= 80% (>= 80% wrong answers)
+  isTimeTrap: boolean; // avgTimeSpentSeconds >= 90s
+  isMisclassified: boolean; // declared difficulty does not match student empirical difficulty
+  optionDistribution: {
+    A: number; // percentage (0 - 100)
+    B: number;
+    C: number;
+    D: number;
+  };
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  correctOption: 'A' | 'B' | 'C' | 'D' | string;
+  explanation?: string;
+}
+
+export interface ItemAnalysisFilterOptions {
+  filterType?: 'all' | 'high_failure' | 'time_traps' | 'misclassified' | 'hardest' | 'easiest';
+  preset?: 'all' | 'high_failure' | 'time_traps' | 'misclassified' | 'hardest' | 'easiest';
+  subjectId?: string;
+  chapterId?: string;
+  examId?: string;
+  testId?: string;
+  searchQuery?: string;
+  minAttempts?: number;
+}
+
+// ─── Custom Date-Range Revenue Analytics ─────────────────────────────
+export type DateRangePreset =
+  | 'today'
+  | 'yesterday'
+  | '7d'
+  | 'last_7_days'
+  | 'this_month'
+  | '30d'
+  | 'last_30_days'
+  | 'this_year'
+  | 'custom';
+
+export interface DateRangeDailyPoint {
+  date: string; // YYYY-MM-DD
+  label: string; // e.g. "14 Jan"
+  amount: number;
+  transactions: number;
+  transactionCount?: number;
+  signups: number;
+}
+
+export interface DateRangeRevenueStats {
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  preset: DateRangePreset;
+  totalRevenue: number;
+  totalTransactions: number;
+  transactionCount?: number;
+  avgOrderValue: number;
+  averageOrderValue?: number;
+  newStudentSignups: number;
+  newSignupsCount?: number;
+  label?: string;
+  dailyTrend: DateRangeDailyPoint[];
+}

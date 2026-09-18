@@ -23,8 +23,16 @@ import {
   ChevronRight,
   Zap,
   GraduationCap,
+  Calendar,
+  AlertTriangle,
+  Filter,
 } from 'lucide-react';
-import type { AdminDashboardV2Stats } from '@/types';
+import type {
+  AdminDashboardV2Stats,
+  DateRangePreset,
+  DateRangeRevenueStats,
+  QuestionItemAnalysis,
+} from '@/types';
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -33,11 +41,68 @@ export const AdminDashboard: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
+  // Date-Range Revenue Analytics State
+  const [datePreset, setDatePreset] = useState<DateRangePreset>('this_month');
+  const [customStartDate, setCustomStartDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [customEndDate, setCustomEndDate] = useState<string>(() => {
+    return new Date().toISOString().slice(0, 10);
+  });
+  const [rangeStats, setRangeStats] = useState<DateRangeRevenueStats | null>(null);
+  const [isLoadingRange, setIsLoadingRange] = useState(false);
+
+  // Item Analysis Summary State
+  const [itemAnalysisSummary, setItemAnalysisSummary] = useState<{
+    highFailureCount: number;
+    timeTrapsCount: number;
+    topTrickyQuestions: QuestionItemAnalysis[];
+  }>({ highFailureCount: 0, timeTrapsCount: 0, topTrickyQuestions: [] });
+
+  const loadRangeStats = useCallback(
+    async (preset: DateRangePreset, start?: string, end?: string) => {
+      try {
+        setIsLoadingRange(true);
+        const data = await api.getDateRangeRevenueStats(start, end, preset);
+        setRangeStats(data);
+      } catch (err) {
+        console.error('Error fetching date range revenue stats:', err);
+      } finally {
+        setIsLoadingRange(false);
+      }
+    },
+    []
+  );
+
   const loadData = useCallback(async () => {
     try {
       setRefreshing(true);
-      const data = await api.getAdminDashboardV2Stats();
+      const [data, rangeData, items] = await Promise.all([
+        api.getAdminDashboardV2Stats(),
+        api.getDateRangeRevenueStats(
+          datePreset === 'custom' ? customStartDate : undefined,
+          datePreset === 'custom' ? customEndDate : undefined,
+          datePreset
+        ),
+        api.getItemAnalysis(),
+      ]);
       setStats(data);
+      setRangeStats(rangeData);
+
+      const highFailure = items.filter((q) => q.isHighFailure);
+      const timeTraps = items.filter((q) => q.isTimeTrap);
+      const tricky = [...items]
+        .sort((a, b) => b.failureRate - a.failureRate)
+        .slice(0, 4);
+
+      setItemAnalysisSummary({
+        highFailureCount: highFailure.length,
+        timeTrapsCount: timeTraps.length,
+        topTrickyQuestions: tricky,
+      });
+
       setLastRefreshed(new Date());
     } catch (err) {
       console.error('Error loading dashboard stats:', err);
@@ -45,14 +110,26 @@ export const AdminDashboard: React.FC = () => {
       setIsLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [datePreset, customStartDate, customEndDate]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Maximum value for revenue trend chart calculation
-  const maxTrend = Math.max(...(stats?.revenueTrend?.map((t) => t.amount) || [100]), 100);
+  const handlePresetChange = (preset: DateRangePreset) => {
+    setDatePreset(preset);
+    if (preset !== 'custom') {
+      loadRangeStats(preset);
+    } else {
+      loadRangeStats('custom', customStartDate, customEndDate);
+    }
+  };
+
+  const handleCustomApply = () => {
+    if (datePreset === 'custom') {
+      loadRangeStats('custom', customStartDate, customEndDate);
+    }
+  };
 
   // Conversion calculations
   const totalStudents = stats?.totalStudents ?? 0;
@@ -450,122 +527,214 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ─── 5. REVENUE PERFORMANCE & 7-DAY REVENUE ANALYTICS ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Financial Breakdown Cards */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      {/* ─── 5. DYNAMIC DATE-RANGE REVENUE & GROWTH ANALYTICS ─── */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-6 shadow-xs">
+        {/* Header & Date Range Controls */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <IndianRupee className="w-4 h-4" />
               </div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                Revenue Breakdown
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                Revenue & Growth Analytics (কাস্টম ডেট-রেঞ্জ রেভিনিউ ফিল্টার)
               </h2>
             </div>
-            <Link
-              to="/admin/subscriptions"
-              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 inline-flex items-center gap-1"
-            >
-              All Passes <ChevronRight className="w-3 h-3" />
-            </Link>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Filter by date presets or specify custom date ranges (e.g. 1st Jan to 15th Jan) to inspect revenue, orders, and student signups.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Total All-Time
-              </span>
-              <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1 block tracking-tight">
-                ₹{(stats?.totalRevenue ?? 0).toLocaleString('en-IN')}
-              </span>
-              <span className="text-[10px] text-slate-500 block mt-0.5">Lifetime gross</span>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Today
-              </span>
-              <span className="text-lg font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
-                ₹{(stats?.todayRevenue ?? 0).toLocaleString('en-IN')}
-              </span>
-              <span className="text-[10px] text-slate-500 block mt-0.5">Since midnight</span>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                This Month
-              </span>
-              <span className="text-lg font-black text-cyan-600 dark:text-cyan-400 mt-1 block tracking-tight">
-                ₹{(stats?.monthRevenue ?? 0).toLocaleString('en-IN')}
-              </span>
-              <span className="text-[10px] text-slate-500 block mt-0.5">Current month</span>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                This Year
-              </span>
-              <span className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-1 block tracking-tight">
-                ₹{(stats?.yearRevenue ?? 0).toLocaleString('en-IN')}
-              </span>
-              <span className="text-[10px] text-slate-500 block mt-0.5">Fiscal year</span>
-            </div>
+          {/* Quick Preset Selector Buttons */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(
+              [
+                { id: 'today', label: 'Today' },
+                { id: 'yesterday', label: 'Yesterday' },
+                { id: 'last_7_days', label: 'Last 7 Days' },
+                { id: 'this_month', label: 'This Month' },
+                { id: 'last_30_days', label: 'Last 30 Days' },
+                { id: 'this_year', label: 'This Year' },
+                { id: 'custom', label: 'Custom Range' },
+              ] as { id: DateRangePreset; label: string }[]
+            ).map((preset) => {
+              const active = datePreset === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handlePresetChange(preset.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    active
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20'
+                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Right Column: Real 7-Day Trend Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-                <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                  Revenue Analytics (Last 7 Days)
-                </h2>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Daily completed subscriptions volume verified via payment records.
-              </p>
+        {/* Custom Date Inputs Bar (Shown when 'custom' is selected) */}
+        {datePreset === 'custom' && (
+          <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/50 flex flex-wrap items-center gap-3 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 dark:text-indigo-200">
+              <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>Select Date Interval:</span>
             </div>
-            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800/60 shrink-0">
-              ₹
-              {(
-                stats?.revenueTrend?.reduce((acc, curr) => acc + curr.amount, 0) ?? 0
-              ).toLocaleString('en-IN')}{' '}
-              Past 7 Days
+
+            <div className="flex items-center gap-2">
+              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">From:</label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">To:</label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCustomApply}
+              disabled={isLoadingRange}
+              className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm active:scale-95 transition-all disabled:opacity-50"
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>{isLoadingRange ? 'Filtering...' : 'Apply Date Filter'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* 4 Range Metrics Summary Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Period Revenue
+            </span>
+            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block tracking-tight">
+              {isLoadingRange ? '...' : `₹${(rangeStats?.totalRevenue ?? 0).toLocaleString('en-IN')}`}
+            </span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">
+              {rangeStats?.label || (rangeStats?.preset ? rangeStats.preset.replace('_', ' ').toUpperCase() : 'Selected period')}
             </span>
           </div>
 
-          <div className="h-44 flex items-end justify-between gap-3 pt-4 px-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
-            {stats?.revenueTrend && stats.revenueTrend.length > 0 ? (
-              stats.revenueTrend.map((point) => {
-                const heightPercent = Math.max(8, Math.round((point.amount / maxTrend) * 100));
-                return (
-                  <div key={point.date} className="flex-1 flex flex-col items-center gap-2 group">
-                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                      ₹{point.amount}
-                    </span>
-                    <div className="w-full max-w-[40px] bg-slate-100 dark:bg-slate-950 rounded-t-xl overflow-hidden flex items-end h-28 border border-slate-200 dark:border-slate-800 group-hover:border-indigo-500 transition-colors">
-                      <div
-                        style={{ height: `${heightPercent}%` }}
-                        className="w-full bg-gradient-to-t from-indigo-600 via-indigo-500 to-purple-500 group-hover:from-emerald-600 group-hover:to-teal-400 transition-all duration-300 rounded-t-lg shadow-sm"
-                      />
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">
-                      {point.label}
-                    </span>
-                  </div>
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Completed Orders
+            </span>
+            <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
+              {isLoadingRange ? '...' : (rangeStats?.totalTransactions ?? rangeStats?.transactionCount ?? 0)}
+            </span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">Paid subscription passes</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Average Order Value
+            </span>
+            <span className="text-xl font-black text-cyan-600 dark:text-cyan-400 mt-1 block tracking-tight">
+              {isLoadingRange ? '...' : `₹${(rangeStats?.avgOrderValue ?? rangeStats?.averageOrderValue ?? 0).toLocaleString('en-IN')}`}
+            </span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">AOV per transaction</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              New Student Signups
+            </span>
+            <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1 block tracking-tight">
+              {isLoadingRange ? '...' : `+${rangeStats?.newStudentSignups ?? rangeStats?.newSignupsCount ?? 0}`}
+            </span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">Registered in period</span>
+          </div>
+        </div>
+
+        {/* Dynamic Daily Revenue Bar Chart */}
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-slate-700 dark:text-slate-300">
+              Daily Revenue Trend ({rangeStats?.startDate} to {rangeStats?.endDate})
+            </span>
+            <span className="text-[11px] font-semibold text-slate-500">
+              {rangeStats?.dailyTrend?.length ?? 0} active date points
+            </span>
+          </div>
+
+          <div className="min-h-[160px] flex items-end justify-between gap-2 pt-4 px-2 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/40 dark:bg-slate-950/50 pb-2 overflow-x-auto">
+            {rangeStats?.dailyTrend && rangeStats.dailyTrend.length > 0 ? (
+              (() => {
+                const maxVal = Math.max(
+                  ...(rangeStats.dailyTrend.map((t) => t.amount) || [100]),
+                  100
                 );
-              })
+                return rangeStats.dailyTrend.map((point) => {
+                  const heightPercent = Math.max(8, Math.round((point.amount / maxVal) * 100));
+                  return (
+                    <div
+                      key={point.date}
+                      className="flex-1 min-w-[36px] flex flex-col items-center gap-2 group"
+                    >
+                      <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        ₹{point.amount}
+                      </span>
+                      <div className="w-full max-w-[40px] bg-slate-200/70 dark:bg-slate-800 rounded-t-xl overflow-hidden flex items-end h-28 border border-slate-200 dark:border-slate-700 group-hover:border-indigo-500 transition-colors">
+                        <div
+                          style={{ height: `${heightPercent}%` }}
+                          className="w-full bg-gradient-to-t from-indigo-600 via-indigo-500 to-purple-500 group-hover:from-emerald-600 group-hover:to-teal-400 transition-all duration-300 rounded-t-lg shadow-xs"
+                          title={`${point.date}: ₹${point.amount} (${point.transactions} orders)`}
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors truncate max-w-[48px]">
+                        {point.label}
+                      </span>
+                    </div>
+                  );
+                });
+              })()
             ) : (
               <div className="w-full text-center text-xs text-slate-500 py-10">
-                No recent payment transactions recorded in the last 7 days.
+                No payment transactions recorded in this selected range.
               </div>
             )}
           </div>
+        </div>
+
+        {/* All-time and Standard Benchmarks Reference Row */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-4 flex-wrap">
+            <span>
+              Lifetime Gross: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.totalRevenue ?? 0).toLocaleString('en-IN')}</strong>
+            </span>
+            <span>
+              Today: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.todayRevenue ?? 0).toLocaleString('en-IN')}</strong>
+            </span>
+            <span>
+              This Month: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.monthRevenue ?? 0).toLocaleString('en-IN')}</strong>
+            </span>
+            <span>
+              This Year: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.yearRevenue ?? 0).toLocaleString('en-IN')}</strong>
+            </span>
+          </div>
+
+          <Link
+            to="/admin/subscriptions"
+            className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 inline-flex items-center gap-1"
+          >
+            Manage Subscription Passes <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
 
@@ -769,6 +938,151 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ─── ITEM ANALYSIS & QUESTION QUALITY WATCH (প্রশ্নভিত্তিক অ্যাকুরেসি ও ডিফিকাল্টি অ্যানালাইসিস) ─── */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  Question Item Analysis & Quality Watch (প্রশ্নভিত্তিক অ্যানালিটিক্স)
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/60">
+                  Psychometric Engine
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Detects questions with critical failure rate (≥80% wrong answers), excessive solution time (&gt;90s time traps), and distractor anomalies.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            to="/admin/item-analysis"
+            className="px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-xs font-bold inline-flex items-center gap-1.5 transition-colors shrink-0"
+          >
+            <span>Open Item Analysis Hub</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* Highlight Alert Counters */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link
+            to="/admin/item-analysis?preset=high_failure"
+            className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 hover:border-rose-400 transition-all flex items-center justify-between group"
+          >
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400 block">
+                High Failure Rate (≥80% Wrong)
+              </span>
+              <span className="text-2xl font-black text-rose-700 dark:text-rose-300 mt-1 block">
+                {itemAnalysisSummary.highFailureCount} Questions
+              </span>
+              <span className="text-[11px] text-rose-600/80 dark:text-rose-400/80 mt-0.5 block">
+                Requires content / ambiguity review
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-rose-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          <Link
+            to="/admin/item-analysis?preset=time_traps"
+            className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 hover:border-amber-400 transition-all flex items-center justify-between group"
+          >
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+                Time Traps (&gt;90s Avg Time)
+              </span>
+              <span className="text-2xl font-black text-amber-700 dark:text-amber-300 mt-1 block">
+                {itemAnalysisSummary.timeTrapsCount} Questions
+              </span>
+              <span className="text-[11px] text-amber-600/80 dark:text-amber-400/80 mt-0.5 block">
+                Slows students down excessively
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-amber-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                Repository Health
+              </span>
+              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+                {itemAnalysisSummary.highFailureCount === 0 ? 'Excellent' : 'Needs Attention'}
+              </span>
+              <span className="text-[11px] text-slate-500 mt-0.5 block">
+                {itemAnalysisSummary.highFailureCount} questions need explanation or key revision
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Tricky Questions Quick List */}
+        {itemAnalysisSummary.topTrickyQuestions.length > 0 && (
+          <div className="space-y-2 pt-1">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+              <span>Top Tricky Questions Under Watch</span>
+              <span className="text-[11px] text-slate-400">Sorted by failure rate</span>
+            </h3>
+
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/70 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+              {itemAnalysisSummary.topTrickyQuestions.map((q) => (
+                <div
+                  key={q.questionId}
+                  className="p-3.5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                >
+                  <div className="space-y-1 min-w-0 max-w-2xl">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                      <span className="px-2 py-0.5 rounded-md font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {q.subjectName || 'General'}
+                      </span>
+                      {q.chapterName && (
+                        <span className="text-slate-400">/ {q.chapterName}</span>
+                      )}
+                      {q.isHighFailure && (
+                        <span className="px-2 py-0.5 rounded-md font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                          ≥80% Wrong ({q.failureRate.toFixed(1)}%)
+                        </span>
+                      )}
+                      {q.isTimeTrap && (
+                        <span className="px-2 py-0.5 rounded-md font-bold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                          {q.avgTimeSpentSeconds}s Time Trap
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
+                      {q.questionText}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <div className="text-right">
+                      <span className="text-xs font-black text-rose-600 dark:text-rose-400 block">
+                        {q.failureRate.toFixed(1)}% Error
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">
+                        {q.totalAttempts} attempts
+                      </span>
+                    </div>
+                    <Link
+                      to={`/admin/item-analysis?search=${encodeURIComponent(q.questionText.slice(0, 15))}`}
+                      className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-400 transition-colors"
+                    >
+                      Analyze
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ─── 7. LIVE OPERATIONAL ACTIVITY FEED ─── */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import { useMaintenance } from '@/context/MaintenanceContext';
 import {
   Settings as SettingsIcon,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export const AdminSettings: React.FC = () => {
+  const { user: currentAdmin } = useAuth();
   const { checkMaintenanceMode } = useMaintenance();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -99,6 +101,24 @@ export const AdminSettings: React.FC = () => {
       if (!res.success) {
         throw new Error(res.error || 'Failed to save settings');
       }
+
+      await api.logAdminActivity({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'settings',
+        entityId: 'global_platform_settings',
+        entityName: 'Global Platform Settings',
+        details: {
+          maintenanceMode,
+          appName,
+          supportEmail,
+          defaultDuration,
+          defaultMarks,
+          defaultNegativeMarks,
+          defaultPassingPercent,
+          appVersion,
+        },
+        adminUser: currentAdmin,
+      });
 
       await checkMaintenanceMode();
       setSaveSuccess(true);

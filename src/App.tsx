@@ -91,6 +91,11 @@ const AdminQuestionBank = React.lazy(() =>
     default: module.AdminQuestionBank,
   }))
 );
+const AdminItemAnalysis = React.lazy(() =>
+  import('@/pages/admin/AdminItemAnalysis').then((module) => ({
+    default: module.AdminItemAnalysis,
+  }))
+);
 const AdminNotifications = React.lazy(() =>
   import('@/pages/admin/AdminNotifications').then((module) => ({
     default: module.AdminNotifications,
@@ -109,6 +114,16 @@ const AdminSettings = React.lazy(() =>
 const AdminCoupons = React.lazy(() =>
   import('@/pages/admin/AdminCoupons').then((module) => ({
     default: module.AdminCoupons,
+  }))
+);
+const AdminStaff = React.lazy(() =>
+  import('@/pages/admin/AdminStaff').then((module) => ({
+    default: module.AdminStaff,
+  }))
+);
+const AdminAuditLogs = React.lazy(() =>
+  import('@/pages/admin/AdminAuditLogs').then((module) => ({
+    default: module.AdminAuditLogs,
   }))
 );
 
@@ -266,32 +281,144 @@ export const App: React.FC = () => {
           {/* 1. Dashboard (Consolidated Home + Analytics) */}
           <Route index element={<AdminDashboard />} />
 
-          {/* 2. Question Bank */}
-          <Route path="question-bank" element={<AdminQuestionBank />} />
+          {/* 2. Question Bank & Item Analysis */}
+          <Route
+            path="question-bank"
+            element={
+              <AdminRoute requiredPermission="canManageQuestions">
+                <AdminQuestionBank />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="item-analysis"
+            element={
+              <AdminRoute requiredPermission="canManageQuestions">
+                <AdminItemAnalysis />
+              </AdminRoute>
+            }
+          />
 
           {/* 3. Manage Exams */}
-          <Route path="exams" element={<AdminExams />} />
-          <Route path="exam-topics" element={<AdminExamTopics />} />
+          <Route
+            path="exams"
+            element={
+              <AdminRoute requiredPermission="canManageExams">
+                <AdminExams />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="exam-topics"
+            element={
+              <AdminRoute requiredPermission="canManageExams">
+                <AdminExamTopics />
+              </AdminRoute>
+            }
+          />
 
           {/* 4. Mock Test Management */}
-          <Route path="tests" element={<AdminTests />} />
-          <Route path="tests/:testId/questions" element={<AdminTestQuestions />} />
-          <Route path="test-questions" element={<AdminTestQuestions />} />
-          <Route path="test-questions/:testId" element={<AdminTestQuestions />} />
+          <Route
+            path="tests"
+            element={
+              <AdminRoute requiredPermission="canManageTests">
+                <AdminTests />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="tests/:testId/questions"
+            element={
+              <AdminRoute requiredPermission="canManageTests">
+                <AdminTestQuestions />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="test-questions"
+            element={
+              <AdminRoute requiredPermission="canManageTests">
+                <AdminTestQuestions />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="test-questions/:testId"
+            element={
+              <AdminRoute requiredPermission="canManageTests">
+                <AdminTestQuestions />
+              </AdminRoute>
+            }
+          />
 
           {/* 5. Subscriptions & Pro Users */}
-          <Route path="subscriptions" element={<AdminSubscriptions />} />
-          <Route path="coupons" element={<AdminCoupons />} />
+          <Route
+            path="subscriptions"
+            element={
+              <AdminRoute requiredPermission="canManageSubscriptions">
+                <AdminSubscriptions />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="coupons"
+            element={
+              <AdminRoute requiredPermission="canManageCoupons">
+                <AdminCoupons />
+              </AdminRoute>
+            }
+          />
           <Route path="discounts" element={<Navigate to="/admin/coupons" replace />} />
 
-          {/* 6. Notifications */}
-          <Route path="notifications" element={<AdminNotifications />} />
+          {/* 6. Team & Staff RBAC */}
+          <Route
+            path="staff"
+            element={
+              <AdminRoute requiredPermission="canManageStaff">
+                <AdminStaff />
+              </AdminRoute>
+            }
+          />
 
-          {/* 7. Support & Help */}
-          <Route path="support" element={<AdminSupport />} />
+          {/* 7. Audit Trail Logs */}
+          <Route
+            path="audit-logs"
+            element={
+              <AdminRoute requiredPermission="canViewAuditLogs">
+                <AdminAuditLogs />
+              </AdminRoute>
+            }
+          />
 
-          {/* 8. Settings */}
-          <Route path="settings" element={<AdminSettings />} />
+          {/* 8. Notifications */}
+          <Route
+            path="notifications"
+            element={
+              <AdminRoute requiredPermission="canManageNotifications">
+                <AdminNotifications />
+              </AdminRoute>
+            }
+          />
+
+          {/* 9. Support & Help */}
+          <Route
+            path="support"
+            element={
+              <AdminRoute requiredPermission="canManageSupport">
+                <AdminSupport />
+              </AdminRoute>
+            }
+          />
+
+          {/* 10. Settings */}
+          <Route
+            path="settings"
+            element={
+              <AdminRoute requiredPermission="canManageSettings">
+                <AdminSettings />
+              </AdminRoute>
+            }
+          />
 
           {/* Backward compatibility & Consolidation Redirects */}
           <Route path="students" element={<Navigate to="/admin/subscriptions" replace />} />
@@ -303,11 +430,32 @@ export const App: React.FC = () => {
             path="full-mock-questions"
             element={<Navigate to="/admin/question-bank" replace />}
           />
-          <Route path="subjects" element={<AdminTopicManage />} />
-          <Route path="topic-manage" element={<AdminTopicManage />} />
+          <Route
+            path="subjects"
+            element={
+              <AdminRoute requiredPermission="canManageExams">
+                <AdminTopicManage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="topic-manage"
+            element={
+              <AdminRoute requiredPermission="canManageExams">
+                <AdminTopicManage />
+              </AdminRoute>
+            }
+          />
           <Route path="topics" element={<Navigate to="/admin/topic-manage" replace />} />
           <Route path="chapters" element={<Navigate to="/admin/topic-manage" replace />} />
-          <Route path="test-series" element={<AdminTestSeries />} />
+          <Route
+            path="test-series"
+            element={
+              <AdminRoute requiredPermission="canManageTests">
+                <AdminTestSeries />
+              </AdminRoute>
+            }
+          />
         </Route>
 
         {/* Fallback */}

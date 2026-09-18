@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { api } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import {
   BookOpen,
@@ -29,6 +30,7 @@ import {
   Image as ImageIcon,
   FileSpreadsheet,
   FileText,
+  Activity,
 } from 'lucide-react';
 import type { Question, Exam, Subject, Chapter, MockTest } from '@/types';
 import {
@@ -46,11 +48,12 @@ import {
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 import { getErrorMessage } from '@/lib/errors';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 export type QuestionCategory = 'all' | 'topic' | 'full_mock' | 'pyq';
 
 export const AdminQuestionBank: React.FC = () => {
+  const { user: currentAdmin } = useAuth();
   const [searchParams] = useSearchParams();
   const querySource = searchParams.get('source');
   const querySubjectId = searchParams.get('subjectId');
@@ -842,6 +845,20 @@ export const AdminQuestionBank: React.FC = () => {
         testId: bulkSource === 'topic' ? bulkTopicTestId || undefined : bulkExamTestId,
       });
 
+      await api.logAdminActivity({
+        action: 'QUESTION_BULK_IMPORT',
+        entityType: 'question',
+        entityName: `${res.successCount} questions imported (${bulkFormat === 'csv' ? 'Excel/CSV' : 'Standard TXT'})`,
+        details: {
+          format: bulkFormat,
+          successCount: res.successCount,
+          sourceType: bulkSource,
+          examId: bulkExamId,
+          subjectId: bulkSubjectId,
+        },
+        adminUser: currentAdmin,
+      });
+
       setBulkActionSuccess(
         `Successfully imported ${res.successCount} questions into Question Bank!`
       );
@@ -866,8 +883,8 @@ export const AdminQuestionBank: React.FC = () => {
     setEditQOptB(q.optionB);
     setEditQOptC(q.optionC);
     setEditQOptD(q.optionD);
-    setEditQCorrect((q.correctOption as any) || 'A');
-    setEditQExplanation(q.explanationBengali || q.explanation || '');
+    setEditQCorrect(q.correctOption);
+    setEditQExplanation(q.explanation || q.explanationBengali || '');
     setEditQError('');
     setIsEditModalOpen(true);
   };
@@ -889,6 +906,19 @@ export const AdminQuestionBank: React.FC = () => {
         explanation: editQExplanation.trim() || undefined,
         explanationBengali: editQExplanation.trim() || undefined,
       });
+
+      await api.logAdminActivity({
+        action: 'QUESTION_UPDATE',
+        entityType: 'question',
+        entityId: editingQuestion.id,
+        entityName: editQText.trim().slice(0, 60),
+        details: {
+          hasDiagram: Boolean(editQImageUrl.trim()),
+          correctOption: editQCorrect,
+        },
+        adminUser: currentAdmin,
+      });
+
       setIsEditModalOpen(false);
       await Promise.all([loadQuestions(), loadBankSummary()]);
     } catch (err) {
@@ -920,6 +950,18 @@ export const AdminQuestionBank: React.FC = () => {
       setDeleteError('');
       const success = await api.deleteQuestion(questionToDelete.id);
       if (success) {
+        await api.logAdminActivity({
+          action: 'QUESTION_DELETE',
+          entityType: 'question',
+          entityId: questionToDelete.id,
+          entityName: questionToDelete.questionText.slice(0, 60),
+          details: {
+            questionText: questionToDelete.questionText,
+            difficulty: questionToDelete.difficulty,
+          },
+          adminUser: currentAdmin,
+        });
+
         setQuestions((prev) => prev.filter((q) => q.id !== questionToDelete.id));
         setAllBankQuestions((prev) => prev.filter((q) => q.id !== questionToDelete.id));
         setTotalUploadedCount((prev) => Math.max(0, prev - 1));
@@ -951,6 +993,15 @@ export const AdminQuestionBank: React.FC = () => {
         const ok = await api.deleteQuestion(id);
         if (ok) count++;
       }
+
+      await api.logAdminActivity({
+        action: 'QUESTION_BULK_DELETE',
+        entityType: 'question',
+        entityName: `${count} questions deleted in bulk`,
+        details: { count, deletedIds: ids },
+        adminUser: currentAdmin,
+      });
+
       setQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
       setAllBankQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
       setTotalUploadedCount((prev) => Math.max(0, prev - count));
@@ -1077,7 +1128,17 @@ export const AdminQuestionBank: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link to="/admin/item-analysis">
+            <Button
+              variant="outline"
+              className="text-xs font-bold border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 flex items-center gap-1.5 shadow-2xs"
+            >
+              <Activity className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              Item Analysis
+            </Button>
+          </Link>
+
           <Button
             onClick={() => setIsFormatGuideOpen(true)}
             variant="outline"

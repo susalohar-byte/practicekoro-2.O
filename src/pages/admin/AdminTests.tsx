@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import {
   Layers,
@@ -38,6 +39,8 @@ import { getErrorMessage } from '@/lib/errors';
 type MockTab = 'topic' | 'full_mock' | 'pyq' | 'structure';
 
 export const AdminTests: React.FC = () => {
+  const { user: currentAdmin, hasPermission } = useAuth();
+  const canDeleteTests = hasPermission('canDeleteTests');
   const [searchParams] = useSearchParams();
 
   const initialTab = searchParams.get('tab');
@@ -376,6 +379,19 @@ export const AdminTests: React.FC = () => {
           paperName: modalType === 'pyq' ? formPaperName.trim() : undefined,
           shift: modalType === 'pyq' ? formShift.trim() : undefined,
         });
+
+        await api.logAdminActivity({
+          action: 'TEST_UPDATE',
+          entityType: 'test',
+          entityId: editingTest.id,
+          entityName: formTitle.trim(),
+          details: {
+            testType: mappedTestType,
+            examId: formExamId,
+            duration: Number(formDuration),
+          },
+          adminUser: currentAdmin,
+        });
       } else {
         const created = await api.createTest({
           title: formTitle.trim(),
@@ -400,6 +416,19 @@ export const AdminTests: React.FC = () => {
           status: 'draft',
         });
         setNewlyCreatedTest(created);
+
+        await api.logAdminActivity({
+          action: 'TEST_CREATE',
+          entityType: 'test',
+          entityId: created.id,
+          entityName: created.title,
+          details: {
+            testType: mappedTestType,
+            examId: created.examId,
+            duration: created.durationMinutes,
+          },
+          adminUser: currentAdmin,
+        });
       }
 
       setIsTestModalOpen(false);
@@ -558,6 +587,21 @@ export const AdminTests: React.FC = () => {
       setIsDeletingTest(true);
       setDeleteTestError('');
       await api.deleteTest(testToDelete.id);
+
+      await api.logAdminActivity({
+        action: 'TEST_DELETE',
+        entityType: 'test',
+        entityId: testToDelete.id,
+        entityName: testToDelete.title,
+        details: {
+          examId: testToDelete.examId,
+          testType: testToDelete.testType,
+          totalQuestions: testToDelete.totalQuestions,
+          totalMarks: testToDelete.totalMarks,
+        },
+        adminUser: currentAdmin,
+      });
+
       setIsDeleteModalOpen(false);
       setTestToDelete(null);
       await loadData();
@@ -868,7 +912,7 @@ export const AdminTests: React.FC = () => {
               setTestToArchive(t);
               setIsArchiveModalOpen(true);
             }}
-            onDelete={handleOpenDeleteModal}
+            onDelete={canDeleteTests ? handleOpenDeleteModal : undefined}
             onToggleActive={handleToggleActive}
             onDuplicate={(t) => handleDuplicateTest(t.id)}
             onAttempts={handleOpenAttempts}
@@ -944,7 +988,7 @@ export const AdminTests: React.FC = () => {
               setTestToArchive(t);
               setIsArchiveModalOpen(true);
             }}
-            onDelete={handleOpenDeleteModal}
+            onDelete={canDeleteTests ? handleOpenDeleteModal : undefined}
             onToggleActive={handleToggleActive}
             onDuplicate={(t) => handleDuplicateTest(t.id)}
             onAttempts={handleOpenAttempts}
@@ -1029,7 +1073,7 @@ export const AdminTests: React.FC = () => {
               setTestToArchive(t);
               setIsArchiveModalOpen(true);
             }}
-            onDelete={handleOpenDeleteModal}
+            onDelete={canDeleteTests ? handleOpenDeleteModal : undefined}
             onToggleActive={handleToggleActive}
             onDuplicate={(t) => handleDuplicateTest(t.id)}
             onAttempts={handleOpenAttempts}
@@ -1874,7 +1918,7 @@ interface TestTableProps {
   onEdit: (test: MockTest) => void;
   onPublish: (test: MockTest) => void;
   onArchive: (test: MockTest) => void;
-  onDelete: (test: MockTest) => void;
+  onDelete?: (test: MockTest) => void;
   onToggleActive: (test: MockTest) => void;
   onDuplicate?: (test: MockTest) => void;
   onAttempts?: (test: MockTest) => void;
@@ -2228,17 +2272,20 @@ const TestTable: React.FC<TestTableProps> = ({
                           </button>
                         )}
 
-                        <div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
-
-                        {/* Delete Test */}
-                        <button
-                          onClick={() => onDelete(test)}
-                          title="Delete Test Permanently"
-                          aria-label="Delete Test"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {onDelete && (
+                          <>
+                            <div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+                            {/* Delete Test (Super Admin only) */}
+                            <button
+                              onClick={() => onDelete(test)}
+                              title="Delete Test Permanently (Super Admin Only)"
+                              aria-label="Delete Test"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </td>

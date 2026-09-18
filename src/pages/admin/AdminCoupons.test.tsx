@@ -3,6 +3,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AdminCoupons } from './AdminCoupons';
 import { api } from '@/services/api';
 
+vi.mock('@/context/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'admin-1', fullName: 'Super Admin', email: 'admin@practicekoro.com' },
+    role: 'admin',
+    isPro: true,
+    isAdmin: true,
+    adminRole: 'super_admin',
+    hasPermission: () => true,
+    logout: vi.fn(),
+  }),
+}));
+
 vi.mock('@/services/api', () => ({
   api: {
     getAdminCoupons: vi.fn(),

@@ -14,6 +14,9 @@ import type {
   SupportTicketItem,
   AppSettingItem,
   StudentAttemptExportRow,
+  QuestionItemAnalysis,
+  ItemAnalysisFilterOptions,
+  EmpiricalDifficulty,
 } from '@/types';
 import { parseQuestionsCsv, parseQuestionsText } from '@/utils/csvParser';
 import type { ParsedTxtQuestion } from '@/utils/txtQuestionParser';
@@ -30,6 +33,7 @@ import {
   syncLocalScheduledNotifications,
   localAppSettings,
   localSupportTickets,
+  localItemAnalysisStore,
 } from '@/services/domains/localStore';
 import type { ChapterRow, ExamRow, QuestionRow, SubjectRow } from '@/services/domains/localStore';
 import { catalogApi } from '@/services/domains/catalog';
@@ -3413,6 +3417,220 @@ export const adminApi = {
     } catch {
       return false;
     }
+  },
+
+  /**
+   * Question-level Item Analysis (psychometrics, accuracy %, failure rate %, time traps, distractor distribution).
+   * Identifies questions where >= 80% students got it wrong or took unusually long time (>90s).
+   */
+  async getItemAnalysis(filters?: ItemAnalysisFilterOptions): Promise<QuestionItemAnalysis[]> {
+    let items: QuestionItemAnalysis[] = [];
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: answersData, error } = await supabase
+          .from('attempt_answers')
+          .select(`
+            question_id,
+            selected_option,
+            is_correct,
+            time_spent_seconds,
+            questions (
+              id,
+              question_text,
+              question_bengali_text,
+              subject_id,
+              chapter_id,
+              difficulty,
+              option_a,
+              option_b,
+              option_c,
+              option_d,
+              correct_option,
+              explanation,
+              subjects ( id, name ),
+              chapters ( id, name ),
+              exams ( id, title )
+            )
+          `);
+
+        if (!error && Array.isArray(answersData) && answersData.length > 0) {
+          const questionMap = new Map<
+            string,
+            {
+              qInfo: any;
+              total: number;
+              correct: number;
+              wrong: number;
+              skipped: number;
+              totalTime: number;
+              optionsCount: { A: number; B: number; C: number; D: number };
+            }
+          >();
+
+          answersData.forEach((row: any) => {
+            const qId = row.question_id;
+            if (!questionMap.has(qId)) {
+              questionMap.set(qId, {
+                qInfo: row.questions,
+                total: 0,
+                correct: 0,
+                wrong: 0,
+                skipped: 0,
+                totalTime: 0,
+                optionsCount: { A: 0, B: 0, C: 0, D: 0 },
+              });
+            }
+
+            const qStats = questionMap.get(qId)!;
+            qStats.total += 1;
+            qStats.totalTime += Number(row.time_spent_seconds || 0);
+
+            if (!row.selected_option) {
+              qStats.skipped += 1;
+            } else {
+              const opt = String(row.selected_option).toUpperCase() as 'A' | 'B' | 'C' | 'D';
+              if (qStats.optionsCount[opt] !== undefined) {
+                qStats.optionsCount[opt] += 1;
+              }
+              if (row.is_correct) {
+                qStats.correct += 1;
+              } else {
+                qStats.wrong += 1;
+              }
+            }
+          });
+
+          items = Array.from(questionMap.entries()).map(([qId, s]) => {
+            const accuracyRate = s.total > 0 ? Number(((s.correct / s.total) * 100).toFixed(1)) : 0;
+            const failureRate = s.total > 0 ? Number(((s.wrong / s.total) * 100).toFixed(1)) : 0;
+            const avgTimeSpentSeconds = s.total > 0 ? Math.round(s.totalTime / s.total) : 0;
+            const isHighFailure = failureRate >= 80;
+            const isTimeTrap = avgTimeSpentSeconds >= 90;
+
+            let empiricalDifficulty: EmpiricalDifficulty = 'moderate';
+            if (accuracyRate >= 85) empiricalDifficulty = 'very_easy';
+            else if (accuracyRate >= 70) empiricalDifficulty = 'easy';
+            else if (accuracyRate >= 45) empiricalDifficulty = 'moderate';
+            else if (accuracyRate >= 20) empiricalDifficulty = 'hard';
+            else empiricalDifficulty = 'extreme';
+
+            const declaredDiff = (s.qInfo?.difficulty?.toLowerCase() || 'medium') as
+              | 'easy'
+              | 'medium'
+              | 'hard';
+            const isMisclassified =
+              (declaredDiff === 'easy' &&
+                (empiricalDifficulty === 'hard' || empiricalDifficulty === 'extreme')) ||
+              (declaredDiff === 'hard' &&
+                (empiricalDifficulty === 'easy' || empiricalDifficulty === 'very_easy'));
+
+            const answeredTotal = s.correct + s.wrong;
+            const optA =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.A / answeredTotal) * 100).toFixed(1))
+                : 0;
+            const optB =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.B / answeredTotal) * 100).toFixed(1))
+                : 0;
+            const optC =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.C / answeredTotal) * 100).toFixed(1))
+                : 0;
+            const optD =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.D / answeredTotal) * 100).toFixed(1))
+                : 0;
+
+            return {
+              questionId: qId,
+              questionText: s.qInfo?.question_text || 'Question Text',
+              questionBengali: s.qInfo?.question_bengali_text || undefined,
+              subjectId: s.qInfo?.subject_id,
+              subjectName: s.qInfo?.subjects?.name || 'General Subject',
+              chapterId: s.qInfo?.chapter_id,
+              chapterName: s.qInfo?.chapters?.name || 'Topic Chapter',
+              examId: s.qInfo?.exams?.id,
+              examTitle: s.qInfo?.exams?.title || 'Competitive Exam',
+              declaredDifficulty: declaredDiff,
+              empiricalDifficulty,
+              totalAttempts: s.total,
+              correctCount: s.correct,
+              wrongCount: s.wrong,
+              skippedCount: s.skipped,
+              accuracyRate,
+              failureRate,
+              avgTimeSpentSeconds,
+              isHighFailure,
+              isTimeTrap,
+              isMisclassified,
+              options: {
+                A: s.qInfo?.option_a || 'Option A',
+                B: s.qInfo?.option_b || 'Option B',
+                C: s.qInfo?.option_c || 'Option C',
+                D: s.qInfo?.option_d || 'Option D',
+              },
+              correctOption: s.qInfo?.correct_option || 'A',
+              optionDistribution: { A: optA, B: optB, C: optC, D: optD },
+              explanation: s.qInfo?.explanation || undefined,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn('Failed querying attempt_answers from Supabase, using local fallback:', err);
+      }
+    }
+
+    // Fallback to localItemAnalysisStore
+    if (items.length === 0) {
+      items = [...localItemAnalysisStore];
+    }
+
+    // Apply Filters
+    let result = [...items];
+    if (filters) {
+      const activeFilter = filters.filterType || filters.preset;
+      if (activeFilter === 'high_failure') {
+        result = result.filter((item) => item.isHighFailure);
+      } else if (activeFilter === 'time_traps') {
+        result = result.filter((item) => item.isTimeTrap);
+      } else if (activeFilter === 'misclassified') {
+        result = result.filter((item) => item.isMisclassified);
+      } else if (activeFilter === 'hardest') {
+        result.sort((a, b) => a.accuracyRate - b.accuracyRate);
+      } else if (activeFilter === 'easiest') {
+        result.sort((a, b) => b.accuracyRate - a.accuracyRate);
+      }
+
+      if (filters.subjectId) {
+        result = result.filter((item) => item.subjectId === filters.subjectId);
+      }
+      if (filters.chapterId) {
+        result = result.filter((item) => item.chapterId === filters.chapterId);
+      }
+      if (filters.examId) {
+        result = result.filter((item) => item.examId === filters.examId);
+      }
+      if (filters.testId) {
+        result = result.filter((item) => item.testId === filters.testId);
+      }
+      if (filters.searchQuery) {
+        const q = filters.searchQuery.toLowerCase().trim();
+        result = result.filter(
+          (item) =>
+            item.questionText.toLowerCase().includes(q) ||
+            (item.questionBengali && item.questionBengali.toLowerCase().includes(q)) ||
+            (item.subjectName && item.subjectName.toLowerCase().includes(q)) ||
+            (item.chapterName && item.chapterName.toLowerCase().includes(q))
+        );
+      }
+      if (filters.minAttempts) {
+        result = result.filter((item) => item.totalAttempts >= filters.minAttempts!);
+      }
+    }
+
+    return result;
   },
 };
 
