@@ -14,6 +14,7 @@ import {
   X,
   Smartphone,
   Layers,
+  Calendar,
 } from 'lucide-react';
 import type { NotificationItem, Exam } from '@/types';
 
@@ -34,6 +35,7 @@ export const AdminNotifications: React.FC = () => {
   const [targetAudience, setTargetAudience] = useState<string>('all');
   const [channel, setChannel] = useState<'in_app' | 'push' | 'both'>('both');
   const [status, setStatus] = useState<'sent' | 'scheduled' | 'draft'>('sent');
+  const [scheduledAt, setScheduledAt] = useState<string>('');
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -61,6 +63,7 @@ export const AdminNotifications: React.FC = () => {
     setTargetAudience('all');
     setChannel('both');
     setStatus('sent');
+    setScheduledAt('');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -70,6 +73,22 @@ export const AdminNotifications: React.FC = () => {
     if (!title.trim() || !message.trim()) {
       setFormError('Both title and message are required.');
       return;
+    }
+
+    if (status === 'scheduled') {
+      if (!scheduledAt) {
+        setFormError('Please select a scheduled date and time.');
+        return;
+      }
+      const scheduledTime = new Date(scheduledAt).getTime();
+      if (isNaN(scheduledTime)) {
+        setFormError('Invalid scheduled date/time.');
+        return;
+      }
+      if (scheduledTime <= Date.now()) {
+        setFormError('Scheduled time must be set in the future.');
+        return;
+      }
     }
 
     try {
@@ -83,6 +102,7 @@ export const AdminNotifications: React.FC = () => {
         channel,
         status,
         sentAt: status === 'sent' ? new Date().toISOString() : undefined,
+        scheduledAt: status === 'scheduled' ? new Date(scheduledAt).toISOString() : undefined,
       });
 
       if (!res.success) {
@@ -96,6 +116,15 @@ export const AdminNotifications: React.FC = () => {
       setFormError(err instanceof Error ? err.message : 'Error sending notification.');
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleSendNow = async (id: string) => {
+    try {
+      await api.sendNotificationNow(id);
+      await loadNotifications();
+    } catch (err) {
+      console.error('Failed to send notification now:', err);
     }
   };
 
@@ -269,10 +298,11 @@ export const AdminNotifications: React.FC = () => {
                         minute: '2-digit',
                       })}
                     </span>
-                    {notif.sentAt && (
-                      <span>
-                        • Sent:{' '}
-                        {new Date(notif.sentAt).toLocaleDateString('en-IN', {
+                    {notif.scheduledAt && notif.status === 'scheduled' && (
+                      <span className="text-amber-400 font-semibold flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Scheduled for:{' '}
+                        {new Date(notif.scheduledAt).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
                           hour: '2-digit',
@@ -284,6 +314,16 @@ export const AdminNotifications: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {notif.status !== 'sent' && (
+                    <button
+                      onClick={() => handleSendNow(notif.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 transition-colors"
+                      title="Dispatch this broadcast immediately"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send Now</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(notif.id)}
                     className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/20 transition-colors"
@@ -396,15 +436,36 @@ export const AdminNotifications: React.FC = () => {
                   Dispatch Mode
                 </label>
                 <select
+                  aria-label="Dispatch Mode"
                   value={status}
                   onChange={(e) => setStatus(e.target.value as any)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200"
                 >
                   <option value="sent">Send Immediately</option>
-                  <option value="draft">Save as Draft</option>
                   <option value="scheduled">Schedule for Later</option>
+                  <option value="draft">Save as Draft</option>
                 </select>
               </div>
+
+              {status === 'scheduled' && (
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+                  <label className="block text-[11px] font-bold text-amber-300 uppercase flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Scheduled Dispatch Date & Time *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    required
+                    min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                    value={scheduledAt}
+                    onChange={(e) => setScheduledAt(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-500/40 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                  />
+                  <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                    ⏰ At this specified time, the notification will automatically transition to "SENT" and be delivered to candidate notification bells.
+                  </p>
+                </div>
+              )}
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
                 <button

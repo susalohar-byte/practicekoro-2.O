@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useExam } from '@/context/ExamContext';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { api } from '@/services/api';
 import type { NotificationItem } from '@/types';
@@ -25,7 +26,7 @@ import {
   Clock,
 } from 'lucide-react';
 
-export interface StudentNavbarProps {
+interface StudentNavbarProps {
   onToggleMobileSidebar?: () => void;
   onToggleCollapse?: () => void;
   isSidebarCollapsed?: boolean;
@@ -37,6 +38,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
   isSidebarCollapsed = false,
 }) => {
   const { user, isPro, isAdmin, logout } = useAuth();
+  const { selectedExam } = useExam();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -56,25 +58,48 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
   const loadNotifications = useCallback(async () => {
     try {
       const allNotifs = await api.getNotifications();
+      const now = new Date();
       const filtered = allNotifs.filter((n) => {
-        if (n.status !== 'sent') return false;
-        if (n.targetAudience === 'all') return true;
-        if (isPro && (n.targetAudience === 'pro' || n.targetAudience === 'pro_users')) return true;
-        if (!isPro && (n.targetAudience === 'free' || n.targetAudience === 'free_users')) return true;
-        if (
-          n.targetAudience.startsWith('exam:') &&
-          user?.targetExamId &&
-          n.targetAudience === `exam:${user.targetExamId}`
-        ) {
-          return true;
+        // 1. Status check: sent OR scheduled whose scheduled time has arrived
+        const isSent = n.status === 'sent';
+        const isScheduledDue =
+          n.status === 'scheduled' &&
+          n.scheduledAt &&
+          new Date(n.scheduledAt) <= now;
+
+        if (!isSent && !isScheduledDue) return false;
+
+        // 2. Audience check: Normalize audience string
+        const target = (n.targetAudience || 'all').toLowerCase().trim();
+
+        if (target === 'all') return true;
+
+        // Pro audience check: matches 'pro', 'pro_users', 'premium'
+        const isProAudience = target === 'pro' || target === 'pro_users' || target === 'premium';
+        if (isPro && isProAudience) return true;
+
+        // Free tier check: matches 'free', 'free_users'
+        const isFreeAudience = target === 'free' || target === 'free_users';
+        if (!isPro && isFreeAudience) return true;
+
+        // Exam specific check: matches exam:<exam_id> against candidate's target or selected exam
+        if (target.startsWith('exam:')) {
+          const targetExamId = target.replace('exam:', '').trim();
+          if (
+            (user?.targetExamId && user.targetExamId.toLowerCase() === targetExamId) ||
+            (selectedExam?.id && selectedExam.id.toLowerCase() === targetExamId)
+          ) {
+            return true;
+          }
         }
+
         return false;
       });
       setNotifications(filtered);
     } catch (err) {
       console.error('Failed to load student notifications:', err);
     }
-  }, [isPro, user?.targetExamId]);
+  }, [isPro, user?.targetExamId, selectedExam?.id]);
 
   useEffect(() => {
     loadNotifications();
@@ -240,7 +265,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
                               </h4>
                               <span className="text-[10px] text-slate-400 shrink-0 flex items-center gap-0.5">
                                 <Clock className="w-2.5 h-2.5" />
-                                {n.sentAt ? new Date(n.sentAt).toLocaleDateString() : ''}
+                                {new Date(n.sentAt || n.scheduledAt || n.createdAt).toLocaleDateString()}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">

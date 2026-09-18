@@ -18,6 +18,7 @@ import type {
   TestAttempt,
   TestSeries,
   CouponItem,
+  NotificationItem,
 } from '@/types';
 
 // Shared in-memory fallback stores (used when Supabase is unconfigured).
@@ -129,3 +130,51 @@ export const localCoupons: CouponItem[] = [
     updatedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
 ];
+
+// Fallback in-memory notification store
+export const localNotifications: NotificationItem[] = [
+  {
+    id: 'notif-1',
+    title: 'New WBP Constable Full Mock Test 05 Released',
+    message:
+      'The latest Full Mock Test is now live for all enrolled students. Complete your full 85-question simulation.',
+    targetAudience: 'all',
+    channel: 'in_app',
+    status: 'sent',
+    sentAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'notif-pro-1',
+    title: 'Pro Exclusive: New Subject-Wise GK Marathon Released',
+    message:
+      'Special 1500+ curated GK & Static Awareness question drill is now available for all Pro Pass aspirants.',
+    targetAudience: 'pro',
+    channel: 'in_app',
+    status: 'sent',
+    sentAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'notif-free-1',
+    title: 'Free Mock Test Available Today',
+    message:
+      'Take our free weekly demo mock test to analyze your West Bengal Police preparation level!',
+    targetAudience: 'free',
+    channel: 'in_app',
+    status: 'sent',
+    sentAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+  },
+];
+
+export function syncLocalScheduledNotifications(): NotificationItem[] {
+  const now = new Date();
+  localNotifications.forEach((n) => {
+    if (n.status === 'scheduled' && n.scheduledAt && new Date(n.scheduledAt) <= now) {
+      n.status = 'sent';
+      n.sentAt = n.scheduledAt;
+    }
+  });
+  return localNotifications;
+}

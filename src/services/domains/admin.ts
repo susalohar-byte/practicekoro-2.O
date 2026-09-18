@@ -23,6 +23,8 @@ import {
   localTests,
   localQuestions,
   localTestQuestions,
+  localNotifications,
+  syncLocalScheduledNotifications,
 } from '@/services/domains/localStore';
 import type { ChapterRow, ExamRow, QuestionRow, SubjectRow } from '@/services/domains/localStore';
 import { catalogApi } from '@/services/domains/catalog';
@@ -2707,6 +2709,13 @@ export const adminApi = {
   // --------------------------------------------------------------------------
   async getNotifications(): Promise<NotificationItem[]> {
     if (isSupabaseConfigured) {
+      // 1. Attempt background auto-transition for any scheduled notifications that have reached their time
+      try {
+        await supabase.rpc('process_scheduled_notifications');
+      } catch {
+        // Non-fatal if stored procedure is not yet applied in active environment
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -2714,34 +2723,32 @@ export const adminApi = {
 
       if (error) throw new Error(error.message);
       if (data && data.length > 0) {
-        return data.map((d: any) => ({
-          id: d.id,
-          title: d.title,
-          message: d.message,
-          targetAudience: d.target_audience,
-          channel: d.channel,
-          status: d.status,
-          sentAt: d.sent_at || undefined,
-          createdAt: d.created_at,
-          createdBy: d.created_by || undefined,
-        }));
+        const now = new Date();
+        return data.map((d: any) => {
+          const scheduledAt = d.scheduled_at || undefined;
+          const isDue = d.status === 'scheduled' && scheduledAt && new Date(scheduledAt) <= now;
+          const effectiveStatus = isDue ? 'sent' : d.status;
+          const effectiveSentAt = isDue ? (d.sent_at || scheduledAt) : (d.sent_at || undefined);
+
+          return {
+            id: d.id,
+            title: d.title,
+            message: d.message,
+            targetAudience: d.target_audience,
+            channel: d.channel,
+            status: effectiveStatus,
+            sentAt: effectiveSentAt,
+            scheduledAt,
+            createdAt: d.created_at,
+            createdBy: d.created_by || undefined,
+          };
+        });
       }
       return [];
     }
 
-    return [
-      {
-        id: 'notif-1',
-        title: 'New WBP Constable Full Mock Test 05 Released',
-        message:
-          'The latest Full Mock Test is now live for all enrolled students. Complete your full 85-question simulation.',
-        targetAudience: 'all',
-        channel: 'in_app',
-        status: 'sent',
-        sentAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-      },
-    ];
+    // Fallback: sync scheduled items in local in-memory store
+    return [...syncLocalScheduledNotifications()];
   },
 
   async createNotification(
@@ -2754,18 +2761,60 @@ export const adminApi = {
         target_audience: notif.targetAudience,
         channel: notif.channel,
         status: notif.status,
-        sent_at: notif.status === 'sent' ? new Date().toISOString() : undefined,
+        sent_at: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+        scheduled_at: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       });
       if (error) return { success: false, error: error.message };
       return { success: true };
     }
+
+    // Local fallback store
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      title: notif.title,
+      message: notif.message,
+      targetAudience: notif.targetAudience,
+      channel: notif.channel,
+      status: notif.status,
+      sentAt: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+      scheduledAt: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
+      createdAt: new Date().toISOString(),
+    };
+    localNotifications.unshift(newNotif);
     return { success: true };
+  },
+
+  async sendNotificationNow(id: string): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
+        .from('notifications')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+      return true;
+    }
+
+    const target = localNotifications.find((n) => n.id === id);
+    if (target) {
+      target.status = 'sent';
+      target.sentAt = new Date().toISOString();
+    }
+    return true;
   },
 
   async deleteNotification(id: string): Promise<boolean> {
     if (isSupabaseConfigured) {
       const { error } = await supabase.from('notifications').delete().eq('id', id);
       if (error) throw new Error(error.message);
+      return true;
+    }
+
+    const idx = localNotifications.findIndex((n) => n.id === id);
+    if (idx !== -1) {
+      localNotifications.splice(idx, 1);
     }
     return true;
   },

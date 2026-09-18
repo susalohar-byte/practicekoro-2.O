@@ -477,10 +477,11 @@ export interface NotificationItem {
   id: string;
   title: string;
   message: string;
-  targetAudience: 'all' | 'free' | 'pro' | string;
+  targetAudience: 'all' | 'free' | 'pro' | 'free_users' | 'pro_users' | string;
   channel: 'in_app' | 'push' | 'both';
   status: 'draft' | 'sent' | 'scheduled';
   sentAt?: string;
+  scheduledAt?: string;
   createdAt: string;
   createdBy?: string;
 }

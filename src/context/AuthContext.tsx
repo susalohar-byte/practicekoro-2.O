@@ -35,7 +35,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem('practicekoro_user');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Discard legacy mock/demo users (e.g. usr-student-001, usr-admin-001)
+        if (
+          parsed?.id?.startsWith('usr-') ||
+          parsed?.email === 'student@practicekoro.com' ||
+          (parsed?.id === 'usr-admin-001')
+        ) {
+          localStorage.removeItem('practicekoro_user');
+          localStorage.removeItem('practicekoro_is_pro');
+          return null;
+        }
+        return parsed;
       } catch {
         return null;
       }
@@ -198,6 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // No valid session — clear any stale cached user
           setUser(null);
           localStorage.removeItem('practicekoro_user');
+          localStorage.removeItem('practicekoro_is_pro');
         }
       } catch (err) {
         console.error('Supabase session load error:', err);
@@ -218,6 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUser(null);
         localStorage.removeItem('practicekoro_user');
+        localStorage.removeItem('practicekoro_is_pro');
       }
     });
 
