@@ -26,7 +26,7 @@ export const MOCK_STUDENT_USER: UserProfile = {
 export const MOCK_ADMIN_USER: UserProfile = {
   id: 'usr-admin-001',
   fullName: 'Admin PracticeKoro',
-  email: 'admin@practicekoro.com',
+  email: 'admin@practicekoro.online',
   phone: '+91 98300 12345',
   avatarUrl:
     'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',

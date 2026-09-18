@@ -16,7 +16,7 @@ const configuredAdminEmails: string[] =
     : [];
 
 export const ADMIN_EMAILS: string[] = Array.from(
-  new Set(['admin@practicekoro.com', 'admin@practicekoro.online', ...configuredAdminEmails])
+  new Set(['admin@practicekoro.online', ...configuredAdminEmails])
 );
 
 export const isAdminEmail = (email?: string | null): boolean => {

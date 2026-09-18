@@ -1,4 +1,5 @@
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isAdminEmail } from '@/lib/authPolicy';
 import type {
   AdminSubscriptionRow,
   AdminPaymentRow,
@@ -521,7 +522,7 @@ export const adminCommerceApi = {
           return data
             .filter((d) => {
               const email = (d.email || '').toLowerCase().trim();
-              return email !== 'admin@practicekoro.online' && email !== 'admin@practicekoro.com';
+              return !isAdminEmail(email);
             })
             .map((d) => ({
               id: d.id,
@@ -567,7 +568,7 @@ export const adminCommerceApi = {
           // Filter out admins
           const studentProfiles = profileData.filter((d: any) => {
             const email = (d.email || '').toLowerCase().trim();
-            if (email === 'admin@practicekoro.online' || email === 'admin@practicekoro.com') {
+            if (isAdminEmail(email)) {
               return false;
             }
             if (d.role === 'admin') return false;
