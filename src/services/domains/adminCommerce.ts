@@ -7,6 +7,7 @@ import type {
   AdminDashboardV2Stats,
   AdminStudentRow,
   AdminStudentDetails,
+  AdminBatch,
   SubscriptionPlan,
   TestAttempt,
   CouponItem,
@@ -159,6 +160,10 @@ export const adminCommerceApi = {
             transactionId: d.transaction_id || undefined,
             razorpayPaymentId: d.razorpay_payment_id || undefined,
             status: d.status,
+            refundId: d.refund_id || undefined,
+            refundAmount: d.refund_amount == null ? undefined : Number(d.refund_amount),
+            refundReason: d.refund_reason || undefined,
+            refundedAt: d.refunded_at || undefined,
             createdAt: d.created_at,
           }));
         }
@@ -183,6 +188,10 @@ export const adminCommerceApi = {
             transaction_id,
             razorpay_payment_id,
             status,
+            refund_id,
+            refund_amount,
+            refund_reason,
+            refunded_at,
             created_at,
             profiles:user_id(full_name, email),
             subscription_plans:plan_id(title)
@@ -221,6 +230,10 @@ export const adminCommerceApi = {
               transactionId: d.transaction_id || undefined,
               razorpayPaymentId: d.razorpay_payment_id || undefined,
               status: d.status,
+              refundId: d.refund_id || undefined,
+              refundAmount: d.refund_amount == null ? undefined : Number(d.refund_amount),
+              refundReason: d.refund_reason || undefined,
+              refundedAt: d.refunded_at || undefined,
               createdAt: d.created_at,
             }));
         }
@@ -596,7 +609,7 @@ export const adminCommerceApi = {
                 }
               }
             } catch {
-              // Subscriptions lookup is optional — students still show without it
+              // Subscriptions lookup is optional â students still show without it
             }
           }
 
@@ -702,6 +715,10 @@ export const adminCommerceApi = {
             orderId: p.order_id,
             transactionId: p.transaction_id,
             status: p.status,
+            refundId: p.refund_id || undefined,
+            refundAmount: p.refund_amount == null ? undefined : Number(p.refund_amount),
+            refundReason: p.refund_reason || undefined,
+            refundedAt: p.refunded_at || undefined,
             createdAt: p.created_at,
           }));
         }
@@ -819,9 +836,7 @@ export const adminCommerceApi = {
     return { success: true };
   },
 
-  async revokeStudentSubscription(
-    userId: string
-  ): Promise<{ success: boolean; error?: string }> {
+  async revokeStudentSubscription(userId: string): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
       try {
         const { error } = await supabase
@@ -844,9 +859,7 @@ export const adminCommerceApi = {
     return { success: true };
   },
 
-  async cancelSubscription(
-    subscriptionId: string
-  ): Promise<{ success: boolean; error?: string }> {
+  async cancelSubscription(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
       try {
         const { error } = await supabase
@@ -866,6 +879,108 @@ export const adminCommerceApi = {
       }
     }
     return { success: true };
+  },
+
+  async bulkGrantStudentSubscription(
+    userIds: string[],
+    planId: string,
+    durationDays: number
+  ): Promise<{ success: boolean; count?: number; error?: string }> {
+    if (userIds.length === 0) return { success: true, count: 0 };
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.rpc('bulk_grant_student_subscription', {
+          p_user_ids: userIds,
+          p_plan_id: planId,
+          p_duration_days: durationDays,
+        });
+        if (error) return { success: false, error: error.message };
+        return { success: true, count: Number(data || userIds.length) };
+      } catch (err) {
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Bulk subscription assignment failed',
+        };
+      }
+    }
+    return { success: true, count: userIds.length };
+  },
+
+  async getAdminBatches(): Promise<AdminBatch[]> {
+    if (!isSupabaseConfigured) return [];
+    const { data, error } = await supabase
+      .from('student_batches')
+      .select('id, name, description, is_active, created_at, student_batch_members(count)')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data || []).map((batch: any) => ({
+      id: batch.id,
+      name: batch.name,
+      description: batch.description || undefined,
+      memberCount: Number(batch.student_batch_members?.[0]?.count || 0),
+      isActive: Boolean(batch.is_active),
+      createdAt: batch.created_at,
+    }));
+  },
+
+  async createAdminBatch(
+    name: string,
+    description?: string
+  ): Promise<{ success: boolean; batchId?: string; error?: string }> {
+    if (!isSupabaseConfigured) return { success: true, batchId: `local-${Date.now()}` };
+    const { data, error } = await supabase
+      .from('student_batches')
+      .insert({ name: name.trim(), description: description?.trim() || null })
+      .select('id')
+      .single();
+    if (error) return { success: false, error: error.message };
+    return { success: true, batchId: data?.id };
+  },
+
+  async bulkAssignStudentsToBatch(
+    batchId: string,
+    userIds: string[]
+  ): Promise<{ success: boolean; count?: number; error?: string }> {
+    if (userIds.length === 0) return { success: true, count: 0 };
+    if (!isSupabaseConfigured) return { success: true, count: userIds.length };
+    try {
+      const { data, error } = await supabase.rpc('bulk_assign_students_to_batch', {
+        p_batch_id: batchId,
+        p_user_ids: userIds,
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true, count: Number(data || userIds.length) };
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Bulk batch assignment failed',
+      };
+    }
+  },
+
+  async markPaymentRefunded(
+    paymentId: string,
+    refundAmount: number,
+    refundId?: string,
+    refundReason?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!isSupabaseConfigured) return { success: true };
+    try {
+      const { error } = await supabase.rpc('mark_payment_refunded', {
+        p_payment_id: paymentId,
+        p_refund_amount: refundAmount,
+        p_refund_id: refundId || null,
+        p_refund_reason: refundReason?.trim() || null,
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Refund tracking update failed',
+      };
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -945,7 +1060,9 @@ export const adminCommerceApi = {
           description: data.description || undefined,
           discountType: data.discount_type,
           discountValue: Number(data.discount_value),
-          maxDiscountAmount: data.max_discount_amount ? Number(data.max_discount_amount) : undefined,
+          maxDiscountAmount: data.max_discount_amount
+            ? Number(data.max_discount_amount)
+            : undefined,
           minOrderAmount: Number(data.min_order_amount || 0),
           maxUses: data.max_uses ? Number(data.max_uses) : undefined,
           usedCount: Number(data.used_count || 0),
@@ -960,7 +1077,10 @@ export const adminCommerceApi = {
 
         return { success: true, coupon: newCoupon };
       } catch (err) {
-        return { success: false, error: err instanceof Error ? err.message : 'Create coupon failed' };
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Create coupon failed',
+        };
       }
     }
 
@@ -987,11 +1107,14 @@ export const adminCommerceApi = {
         if (updates.description !== undefined) payload.description = updates.description || null;
         if (updates.discountType) payload.discount_type = updates.discountType;
         if (updates.discountValue !== undefined) payload.discount_value = updates.discountValue;
-        if (updates.maxDiscountAmount !== undefined) payload.max_discount_amount = updates.maxDiscountAmount || null;
+        if (updates.maxDiscountAmount !== undefined)
+          payload.max_discount_amount = updates.maxDiscountAmount || null;
         if (updates.minOrderAmount !== undefined) payload.min_order_amount = updates.minOrderAmount;
         if (updates.maxUses !== undefined) payload.max_uses = updates.maxUses || null;
-        if (updates.maxUsesPerUser !== undefined) payload.max_uses_per_user = updates.maxUsesPerUser;
-        if (updates.applicablePlanId !== undefined) payload.applicable_plan_id = updates.applicablePlanId || null;
+        if (updates.maxUsesPerUser !== undefined)
+          payload.max_uses_per_user = updates.maxUsesPerUser;
+        if (updates.applicablePlanId !== undefined)
+          payload.applicable_plan_id = updates.applicablePlanId || null;
         if (updates.validFrom) payload.valid_from = updates.validFrom;
         if (updates.validUntil !== undefined) payload.valid_until = updates.validUntil || null;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
@@ -1000,7 +1123,10 @@ export const adminCommerceApi = {
         if (error) return { success: false, error: error.message };
         return { success: true };
       } catch (err) {
-        return { success: false, error: err instanceof Error ? err.message : 'Update coupon failed' };
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Update coupon failed',
+        };
       }
     }
 
@@ -1018,7 +1144,10 @@ export const adminCommerceApi = {
         if (error) return { success: false, error: error.message };
         return { success: true };
       } catch (err) {
-        return { success: false, error: err instanceof Error ? err.message : 'Delete coupon failed' };
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Delete coupon failed',
+        };
       }
     }
 
@@ -1066,15 +1195,30 @@ export const adminCommerceApi = {
     // Local evaluation fallback
     const matched = localCoupons.find((c) => c.code.toUpperCase() === normalizedCode && c.isActive);
     if (!matched) {
-      return { valid: false, discountAmount: 0, finalPrice: amount, message: 'Invalid or inactive coupon code.' };
+      return {
+        valid: false,
+        discountAmount: 0,
+        finalPrice: amount,
+        message: 'Invalid or inactive coupon code.',
+      };
     }
 
     if (matched.validUntil && new Date(matched.validUntil) < new Date()) {
-      return { valid: false, discountAmount: 0, finalPrice: amount, message: 'This coupon code has expired.' };
+      return {
+        valid: false,
+        discountAmount: 0,
+        finalPrice: amount,
+        message: 'This coupon code has expired.',
+      };
     }
 
     if (matched.applicablePlanId && matched.applicablePlanId !== planId) {
-      return { valid: false, discountAmount: 0, finalPrice: amount, message: 'This coupon is not valid for the selected plan.' };
+      return {
+        valid: false,
+        discountAmount: 0,
+        finalPrice: amount,
+        message: 'This coupon is not valid for the selected plan.',
+      };
     }
 
     if (amount < matched.minOrderAmount) {
@@ -1082,7 +1226,7 @@ export const adminCommerceApi = {
         valid: false,
         discountAmount: 0,
         finalPrice: amount,
-        message: `Minimum order value of ₹${matched.minOrderAmount} required for this coupon.`,
+        message: `Minimum order value of â¹${matched.minOrderAmount} required for this coupon.`,
       };
     }
 
