@@ -609,7 +609,7 @@ export const adminCommerceApi = {
                 }
               }
             } catch {
-              // Subscriptions lookup is optional â students still show without it
+              // Subscriptions lookup is optional — students still show without it
             }
           }
 
@@ -1226,7 +1226,7 @@ export const adminCommerceApi = {
         valid: false,
         discountAmount: 0,
         finalPrice: amount,
-        message: `Minimum order value of â¹${matched.minOrderAmount} required for this coupon.`,
+        message: `Minimum order value of ₹${matched.minOrderAmount} required for this coupon.`,
       };
     }
 
