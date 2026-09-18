@@ -532,13 +532,22 @@ export const AdminDashboard: React.FC = () => {
         {/* Header & Date Range Controls */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <IndianRupee className="w-4 h-4" />
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <IndianRupee className="w-4 h-4" />
+                </div>
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  Revenue & Growth Analytics (কাস্টম ডেট-রেঞ্জ রেভিনিউ ফিল্টার)
+                </h2>
               </div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                Revenue & Growth Analytics (কাস্টম ডেট-রেঞ্জ রেভিনিউ ফিল্টার)
-              </h2>
+              <Link
+                to="/admin/revenue-analytics"
+                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 inline-flex items-center gap-1 transition-colors"
+              >
+                <span>Full Ledger & Report</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Filter by date presets or specify custom date ranges (e.g. 1st Jan to 15th Jan) to inspect revenue, orders, and student signups.

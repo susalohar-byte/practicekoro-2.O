@@ -96,6 +96,11 @@ const AdminItemAnalysis = React.lazy(() =>
     default: module.AdminItemAnalysis,
   }))
 );
+const AdminRevenueAnalytics = React.lazy(() =>
+  import('@/pages/admin/AdminRevenueAnalytics').then((module) => ({
+    default: module.AdminRevenueAnalytics,
+  }))
+);
 const AdminNotifications = React.lazy(() =>
   import('@/pages/admin/AdminNotifications').then((module) => ({
     default: module.AdminNotifications,
@@ -290,6 +295,7 @@ export const App: React.FC = () => {
               </AdminRoute>
             }
           />
+          {/* Analytics & Reports */}
           <Route
             path="item-analysis"
             element={
@@ -298,6 +304,16 @@ export const App: React.FC = () => {
               </AdminRoute>
             }
           />
+          <Route
+            path="revenue-analytics"
+            element={
+              <AdminRoute requiredPermission="canManageSubscriptions">
+                <AdminRevenueAnalytics />
+              </AdminRoute>
+            }
+          />
+          <Route path="revenue" element={<Navigate to="/admin/revenue-analytics" replace />} />
+          <Route path="financials" element={<Navigate to="/admin/revenue-analytics" replace />} />
 
           {/* 3. Manage Exams */}
           <Route

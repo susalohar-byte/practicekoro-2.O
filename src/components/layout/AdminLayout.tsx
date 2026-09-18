@@ -24,6 +24,7 @@ import {
   Users,
   History,
   Activity,
+  TrendingUp,
 } from 'lucide-react';
 import { useMaintenance } from '@/context/MaintenanceContext';
 import { cn } from '@/lib/utils';
@@ -74,12 +75,6 @@ export const AdminLayout: React.FC = () => {
           permission: 'canManageQuestions',
         },
         {
-          label: 'Item Analysis',
-          path: '/admin/item-analysis',
-          icon: Activity,
-          permission: 'canManageQuestions',
-        },
-        {
           label: 'Manage Exams',
           path: '/admin/exams',
           icon: Shield,
@@ -109,6 +104,24 @@ export const AdminLayout: React.FC = () => {
           altPaths: ['/admin/subjects', '/admin/topics', '/admin/chapters'],
           icon: FolderTree,
           permission: 'canManageExams',
+        },
+      ],
+    },
+    {
+      title: 'Analytics & Reports',
+      items: [
+        {
+          label: 'Financial & Revenue',
+          path: '/admin/revenue-analytics',
+          altPaths: ['/admin/revenue', '/admin/financials'],
+          icon: TrendingUp,
+          permission: 'canManageSubscriptions',
+        },
+        {
+          label: 'Question Item Analysis',
+          path: '/admin/item-analysis',
+          icon: Activity,
+          permission: 'canManageQuestions',
         },
       ],
     },
