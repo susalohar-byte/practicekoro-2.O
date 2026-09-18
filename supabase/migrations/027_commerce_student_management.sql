@@ -1,5 +1,5 @@
 -- ============================================================================
--- PRACTICEKORO: MIGRATION 027 — BULK STUDENT ACTIONS & REFUND AUDIT
+-- PRACTICEKORO: MIGRATION 027 - BULK STUDENT ACTIONS & REFUND AUDIT
 -- ============================================================================
 
 -- Refund metadata is kept on the original payment row for simple reporting.
