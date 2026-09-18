@@ -2,7 +2,6 @@ import { getErrorMessage } from '@/lib/errors';
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type {
   Exam,
-  ExamCategory,
   Subject,
   Chapter,
   TestSeries,
@@ -13,13 +12,11 @@ import type {
   NotificationItem,
   SupportTicketItem,
   AppSettingItem,
-  StudentAttemptExportRow,
 } from '@/types';
 import { parseQuestionsCsv, parseQuestionsText } from '@/utils/csvParser';
 import type { ParsedTxtQuestion } from '@/utils/txtQuestionParser';
 import {
   localExams,
-  localExamCategories,
   localSubjects,
   localChapters,
   localTestSeries,
@@ -28,8 +25,6 @@ import {
   localTestQuestions,
   localNotifications,
   syncLocalScheduledNotifications,
-  localAppSettings,
-  localSupportTickets,
 } from '@/services/domains/localStore';
 import type { ChapterRow, ExamRow, QuestionRow, SubjectRow } from '@/services/domains/localStore';
 import { catalogApi } from '@/services/domains/catalog';
@@ -48,7 +43,6 @@ function mapQuestionRow(q: any): Question {
     subjectId: q.subject_id ?? undefined,
     questionText: q.question_text,
     questionBengaliText: q.question_bengali_text ?? undefined,
-    imageUrl: q.image_url ?? undefined,
     optionA: q.option_a,
     optionB: q.option_b,
     optionC: q.option_c,
@@ -71,28 +65,6 @@ function mapQuestionRow(q: any): Question {
     chapterName: q.chapters?.name || undefined,
     topicName: q.chapters?.name || undefined,
   };
-}
-
-function parseSettingValue(raw: unknown): unknown {
-  if (raw === null || raw === undefined) return raw;
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim();
-    if (trimmed === 'true') return true;
-    if (trimmed === 'false') return false;
-    if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
-    if (
-      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
-      (trimmed.startsWith('[') && trimmed.endsWith(']'))
-    ) {
-      try {
-        return JSON.parse(trimmed);
-      } catch {
-        return trimmed;
-      }
-    }
-    return trimmed.replace(/^"|"$/g, '');
-  }
-  return raw;
 }
 
 export const adminApi = {
@@ -1409,7 +1381,9 @@ export const adminApi = {
     }
     const { data, error } = await supabase
       .from('test_attempts')
-      .select('id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)')
+      .select(
+        'id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)'
+      )
       .eq('test_id', testId)
       .order('score', { ascending: false });
 
@@ -1419,189 +1393,32 @@ export const adminApi = {
         .select('*')
         .eq('test_id', testId)
         .order('score', { ascending: false });
-      return (fallbackData || []).map((d: any, idx: number) => ({
+      return (fallbackData || []).map((d: any) => ({
         id: d.id,
-        rank: idx + 1,
         userId: d.user_id,
         userName: 'Student Candidate',
         userEmail: '',
-        score: Number(d.score || 0),
-        totalMarks: Number(d.total_marks || 0),
-        accuracy: Number(d.accuracy || 0),
-        correctCount: Number(d.correct_count || 0),
-        wrongCount: Number(d.wrong_count || 0),
-        skippedCount: Number(d.skipped_count || 0),
-        timeSpentSeconds: Number(d.time_spent_seconds || 0),
-        status: d.status || 'completed',
+        score: d.score,
+        totalMarks: d.total_marks,
+        accuracy: d.accuracy,
+        timeSpentSeconds: d.time_spent_seconds,
+        status: d.status,
         createdAt: d.created_at,
       }));
     }
 
-    return (data || []).map((d: any, idx: number) => ({
+    return (data || []).map((d: any) => ({
       id: d.id,
-      rank: idx + 1,
       userId: d.user_id,
       userName: d.profiles?.full_name || 'Student Candidate',
       userEmail: d.profiles?.email || '',
-      score: Number(d.score || 0),
-      totalMarks: Number(d.total_marks || 0),
-      accuracy: Number(d.accuracy || 0),
-      correctCount: Number(d.correct_count || 0),
-      wrongCount: Number(d.wrong_count || 0),
-      skippedCount: Number(d.skipped_count || 0),
-      timeSpentSeconds: Number(d.time_spent_seconds || 0),
-      status: d.status || 'completed',
+      score: d.score,
+      totalMarks: d.total_marks,
+      accuracy: d.accuracy,
+      timeSpentSeconds: d.time_spent_seconds,
+      status: d.status,
       createdAt: d.created_at,
     }));
-  },
-
-  async getTestResultsForExport(testId: string): Promise<StudentAttemptExportRow[]> {
-    const rawAttempts = await this.getTestAttempts(testId);
-    return rawAttempts.map((att, idx) => {
-      const score = Number(att.score ?? 0);
-      const totalMarks = Number(att.totalMarks ?? 0);
-      const percentage = totalMarks > 0 ? Number(((score / totalMarks) * 100).toFixed(2)) : 0;
-      const accuracy = Number(att.accuracy ?? 0);
-      const seconds = Number(att.timeSpentSeconds ?? 0);
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      return {
-        rank: att.rank || idx + 1,
-        candidateName: att.userName || 'Student Candidate',
-        email: att.userEmail || '-',
-        phone: undefined,
-        score,
-        totalMarks,
-        percentage,
-        accuracy,
-        correctCount: Number(att.correctCount ?? 0),
-        wrongCount: Number(att.wrongCount ?? 0),
-        skippedCount: Number(att.skippedCount ?? 0),
-        timeSpentMinutes: `${m}m ${s}s`,
-        attemptDate: att.createdAt || new Date().toISOString(),
-      };
-    });
-  },
-
-  exportTestResultsToCsv(testTitle: string, rows: StudentAttemptExportRow[]): void {
-    const headers = [
-      'Rank',
-      'Candidate Name',
-      'Email / Phone',
-      'Score',
-      'Total Marks',
-      'Percentage (%)',
-      'Accuracy (%)',
-      'Correct',
-      'Wrong',
-      'Skipped / Unattempted',
-      'Time Spent (M:S)',
-      'Submitted At',
-    ];
-
-    const escapeCsv = (val: unknown) => {
-      const str = String(val ?? '');
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    };
-
-    const csvLines = [headers.join(',')];
-    for (const r of rows) {
-      csvLines.push(
-        [
-          r.rank,
-          escapeCsv(r.candidateName),
-          escapeCsv(r.email || r.phone || '-'),
-          r.score,
-          r.totalMarks,
-          r.percentage,
-          r.accuracy,
-          r.correctCount,
-          r.wrongCount,
-          r.skippedCount,
-          escapeCsv(r.timeSpentMinutes),
-          escapeCsv(new Date(r.attemptDate).toLocaleString('en-IN')),
-        ].join(',')
-      );
-    }
-
-    // Include UTF-8 BOM (\uFEFF) for Excel compatibility with Bengali & symbols
-    const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], {
-      type: 'text/csv;charset=utf-8;',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const safeTitle = testTitle.replace(/[^a-zA-Z0-9_\u0980-\u09FF]+/g, '_').slice(0, 40);
-    a.download = `${safeTitle}_results_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  },
-
-  exportTestQuestionsToCsv(testTitle: string, questions: Question[]): void {
-    const headers = [
-      'Question Number',
-      'Question Text (English/Bengali)',
-      'Option A',
-      'Option B',
-      'Option C',
-      'Option D',
-      'Correct Answer (A/B/C/D)',
-      'Marks',
-      'Negative Marks',
-      'Difficulty',
-      'Subject',
-      'Chapter / Topic',
-      'Diagram / Image URL',
-      'Explanation / Short Notes',
-    ];
-
-    const escapeCsv = (val: unknown) => {
-      const str = String(val ?? '');
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    };
-
-    const csvLines = [headers.join(',')];
-    questions.forEach((q, idx) => {
-      csvLines.push(
-        [
-          idx + 1,
-          escapeCsv(q.questionBengaliText || q.questionText),
-          escapeCsv(q.optionA),
-          escapeCsv(q.optionB),
-          escapeCsv(q.optionC),
-          escapeCsv(q.optionD),
-          q.correctOption,
-          q.defaultMarks ?? 1,
-          q.defaultNegativeMarks ?? 0.25,
-          escapeCsv(q.difficulty),
-          escapeCsv(q.subjectName || '-'),
-          escapeCsv(q.chapterName || q.topicName || '-'),
-          escapeCsv(q.imageUrl || ''),
-          escapeCsv(q.explanationBengali || q.explanation || ''),
-        ].join(',')
-      );
-    });
-
-    const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], {
-      type: 'text/csv;charset=utf-8;',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const safeTitle = testTitle.replace(/[^a-zA-Z0-9_\u0980-\u09FF]+/g, '_').slice(0, 40);
-    a.download = `${safeTitle}_questions_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   },
 
   async validateTestForPublish(testId: string): Promise<PublishValidationResult> {
@@ -1966,7 +1783,36 @@ export const adminApi = {
     if (error) throw new Error(error.message);
     if (!data) return null;
 
-    return mapQuestionRow(data);
+    const q = data as any;
+    return {
+      id: q.id,
+      chapterId: q.chapter_id ?? q.topic_id ?? undefined,
+      topicId: q.topic_id ?? q.chapter_id ?? undefined,
+      subjectId: q.subject_id ?? undefined,
+      questionText: q.question_text,
+      questionBengaliText: q.question_bengali_text ?? undefined,
+      optionA: q.option_a,
+      optionB: q.option_b,
+      optionC: q.option_c,
+      optionD: q.option_d,
+      correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+      explanation: q.explanation ?? undefined,
+      explanationBengali: q.explanation_bengali ?? undefined,
+      difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+      defaultMarks: Number(q.default_marks || 1),
+      defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+      questionType: q.question_type || 'mcq',
+      sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
+      sourceYear: q.source_year ? Number(q.source_year) : undefined,
+      sourceExam: q.source_exam ?? undefined,
+      sourcePaper: q.source_paper ?? undefined,
+      sourceShift: q.source_shift ?? undefined,
+      isActive: q.is_active,
+      status: (q.status as 'active' | 'archived' | 'draft') || 'active',
+      subjectName: q.subjects?.name || undefined,
+      chapterName: q.chapters?.name || undefined,
+      topicName: q.chapters?.name || undefined,
+    };
   },
 
   async createQuestion(qData: Omit<Question, 'id'>): Promise<Question> {
@@ -1996,7 +1842,6 @@ export const adminApi = {
         subject_id: qData.subjectId || null,
         question_text: qData.questionText,
         question_bengali_text: qData.questionBengaliText || null,
-        image_url: qData.imageUrl || null,
         option_a: qData.optionA,
         option_b: qData.optionB,
         option_c: qData.optionC,
@@ -2029,7 +1874,36 @@ export const adminApi = {
       throw new Error(error.message || 'Failed to create question in database');
     }
 
-    return mapQuestionRow(data);
+    const q = data as any;
+    return {
+      id: q.id,
+      chapterId: q.chapter_id ?? q.topic_id ?? undefined,
+      topicId: q.topic_id ?? q.chapter_id ?? undefined,
+      subjectId: q.subject_id ?? undefined,
+      questionText: q.question_text,
+      questionBengaliText: q.question_bengali_text ?? undefined,
+      optionA: q.option_a,
+      optionB: q.option_b,
+      optionC: q.option_c,
+      optionD: q.option_d,
+      correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+      explanation: q.explanation ?? undefined,
+      explanationBengali: q.explanation_bengali ?? undefined,
+      difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+      defaultMarks: Number(q.default_marks || 1),
+      defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+      questionType: q.question_type || 'mcq',
+      sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
+      sourceYear: q.source_year ? Number(q.source_year) : undefined,
+      sourceExam: q.source_exam ?? undefined,
+      sourcePaper: q.source_paper ?? undefined,
+      sourceShift: q.source_shift ?? undefined,
+      isActive: q.is_active,
+      status: (q.status as 'active' | 'archived' | 'draft') || 'active',
+      subjectName: q.subjects?.name || undefined,
+      chapterName: q.chapters?.name || undefined,
+      topicName: q.chapters?.name || undefined,
+    };
   },
 
   async updateQuestion(id: string, updates: Partial<Question>): Promise<Question> {
@@ -2045,7 +1919,6 @@ export const adminApi = {
     if (updates.questionText !== undefined) payload.question_text = updates.questionText;
     if (updates.questionBengaliText !== undefined)
       payload.question_bengali_text = updates.questionBengaliText;
-    if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl || null;
     if (updates.optionA !== undefined) payload.option_a = updates.optionA;
     if (updates.optionB !== undefined) payload.option_b = updates.optionB;
     if (updates.optionC !== undefined) payload.option_c = updates.optionC;
@@ -2093,7 +1966,36 @@ export const adminApi = {
       throw new Error(error.message || 'Failed to update question in database');
     }
 
-    return mapQuestionRow(data);
+    const q = data as any;
+    return {
+      id: q.id,
+      chapterId: q.chapter_id ?? q.topic_id ?? undefined,
+      topicId: q.topic_id ?? q.chapter_id ?? undefined,
+      subjectId: q.subject_id ?? undefined,
+      questionText: q.question_text,
+      questionBengaliText: q.question_bengali_text ?? undefined,
+      optionA: q.option_a,
+      optionB: q.option_b,
+      optionC: q.option_c,
+      optionD: q.option_d,
+      correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
+      explanation: q.explanation ?? undefined,
+      explanationBengali: q.explanation_bengali ?? undefined,
+      difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+      defaultMarks: Number(q.default_marks || 1),
+      defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+      questionType: q.question_type || 'mcq',
+      sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
+      sourceYear: q.source_year ? Number(q.source_year) : undefined,
+      sourceExam: q.source_exam ?? undefined,
+      sourcePaper: q.source_paper ?? undefined,
+      sourceShift: q.source_shift ?? undefined,
+      isActive: q.is_active,
+      status: (q.status as 'active' | 'archived' | 'draft') || 'active',
+      subjectName: q.subjects?.name || undefined,
+      chapterName: q.chapters?.name || undefined,
+      topicName: q.chapters?.name || undefined,
+    };
   },
 
   async deleteQuestion(id: string): Promise<boolean> {
@@ -2158,164 +2060,6 @@ export const adminApi = {
     return true;
   },
 
-  async uploadQuestionImage(file: File): Promise<string> {
-    if (!isSupabaseConfigured) {
-      return URL.createObjectURL(file);
-    }
-    const ext = file.name.split('.').pop() || 'png';
-    const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-    const filePath = `questions/${fileName}`;
-
-    const { data, error } = await supabase.storage
-      .from('question-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (error) {
-      throw new Error(`Failed to upload image: ${error.message}`);
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from('question-images')
-      .getPublicUrl(data.path);
-
-    return publicUrlData.publicUrl;
-  },
-
-  // --------------------------------------------------------------------------
-  // EXAM CATEGORIES (DATABASE BACKED)
-  // --------------------------------------------------------------------------
-  async getExamCategories(): Promise<ExamCategory[]> {
-    if (!isSupabaseConfigured) {
-      return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
-    }
-    try {
-      const { data, error } = await supabase
-        .from('exam_categories')
-        .select('*')
-        .order('order_index', { ascending: true });
-
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
-      }
-      return data.map((d: any) => ({
-        id: d.id,
-        name: d.name,
-        orderIndex: Number(d.order_index || 0),
-        isActive: d.is_active ?? true,
-        createdAt: d.created_at,
-      }));
-    } catch (err) {
-      console.warn('Failed to load categories from Supabase, using local fallback:', err);
-      return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
-    }
-  },
-
-  async createExamCategory(name: string, orderIndex?: number): Promise<ExamCategory> {
-    const trimmed = name.trim();
-    if (!trimmed) throw new Error('Category name cannot be empty');
-    const slug = 'cat_' + trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    const newCat: ExamCategory = {
-      id: slug,
-      name: trimmed,
-      orderIndex: orderIndex ?? (localExamCategories.length + 1),
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    if (!isSupabaseConfigured) {
-      localExamCategories.push(newCat);
-      return newCat;
-    }
-
-    const { data, error } = await supabase
-      .from('exam_categories')
-      .insert({
-        id: slug,
-        name: trimmed,
-        order_index: newCat.orderIndex,
-      })
-      .select('*')
-      .single();
-
-    if (error) {
-      throw new Error(error.message || 'Failed to create category');
-    }
-
-    return {
-      id: data.id,
-      name: data.name,
-      orderIndex: Number(data.order_index || 0),
-      isActive: data.is_active ?? true,
-      createdAt: data.created_at,
-    };
-  },
-
-  async updateExamCategory(id: string, name: string, orderIndex?: number): Promise<ExamCategory> {
-    const trimmed = name.trim();
-    if (!trimmed) throw new Error('Category name cannot be empty');
-
-    if (!isSupabaseConfigured) {
-      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
-      if (idx !== -1) {
-        localExamCategories[idx] = {
-          ...localExamCategories[idx],
-          name: trimmed,
-          orderIndex: orderIndex ?? localExamCategories[idx].orderIndex,
-        };
-        return localExamCategories[idx];
-      }
-      const created: ExamCategory = { id, name: trimmed, orderIndex: orderIndex || 1, isActive: true };
-      localExamCategories.push(created);
-      return created;
-    }
-
-    const updatePayload: Record<string, unknown> = { name: trimmed };
-    if (orderIndex !== undefined) updatePayload.order_index = orderIndex;
-
-    const { data, error } = await supabase
-      .from('exam_categories')
-      .update(updatePayload)
-      .eq('id', id)
-      .select('*')
-      .single();
-
-    if (error) {
-      throw new Error(error.message || 'Failed to update category');
-    }
-
-    return {
-      id: data.id,
-      name: data.name,
-      orderIndex: Number(data.order_index || 0),
-      isActive: data.is_active ?? true,
-      createdAt: data.created_at,
-    };
-  },
-
-  async deleteExamCategory(id: string): Promise<boolean> {
-    if (!isSupabaseConfigured) {
-      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
-      if (idx !== -1) {
-        localExamCategories.splice(idx, 1);
-      }
-      return true;
-    }
-
-    const { error } = await supabase
-      .from('exam_categories')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      throw new Error(error.message || 'Failed to delete category');
-    }
-    return true;
-  },
-
   // --------------------------------------------------------------------------
   // TEST QUESTIONS (ASSIGNMENTS & REORDERING)
   // --------------------------------------------------------------------------
@@ -2334,7 +2078,6 @@ export const adminApi = {
           negativeMarks: a.negativeMarks,
           questionText: q?.questionText,
           questionBengaliText: q?.questionBengaliText,
-          imageUrl: q?.imageUrl,
           difficulty: q?.difficulty ?? undefined,
           correctOption: q?.correctOption,
           optionA: q?.optionA,
@@ -2343,10 +2086,6 @@ export const adminApi = {
           optionD: q?.optionD,
           explanation: q?.explanation ?? undefined,
           explanationBengali: q?.explanationBengali ?? undefined,
-          subjectId: q?.subjectId,
-          subjectName: q?.subjectName,
-          chapterId: q?.chapterId,
-          chapterName: q?.chapterName,
         };
       });
     }
@@ -2359,11 +2098,7 @@ export const adminApi = {
         question_order,
         marks,
         negative_marks,
-        questions (
-          *,
-          subjects:subject_id (id, name),
-          chapters:chapter_id (id, name)
-        )
+        questions (*)
       `
       )
       .eq('test_id', testId)
@@ -2378,7 +2113,7 @@ export const adminApi = {
     }
 
     return data.map((item: any) => {
-      const q = item.questions as any;
+      const q = item.questions as QuestionRow | null;
       return {
         questionId: item.question_id,
         questionOrder: item.question_order,
@@ -2386,7 +2121,6 @@ export const adminApi = {
         negativeMarks: Number(item.negative_marks),
         questionText: q?.question_text ?? undefined,
         questionBengaliText: q?.question_bengali_text ?? undefined,
-        imageUrl: q?.image_url ?? undefined,
         difficulty: (q?.difficulty as 'easy' | 'medium' | 'hard') ?? undefined,
         correctOption: (q?.correct_option as 'A' | 'B' | 'C' | 'D' | null) ?? undefined,
         optionA: q?.option_a ?? undefined,
@@ -2395,10 +2129,6 @@ export const adminApi = {
         optionD: q?.option_d ?? undefined,
         explanation: q?.explanation ?? undefined,
         explanationBengali: q?.explanation_bengali ?? undefined,
-        subjectId: q?.subject_id ?? undefined,
-        subjectName: q?.subjects?.name || undefined,
-        chapterId: q?.chapter_id ?? undefined,
-        chapterName: q?.chapters?.name || undefined,
       };
     });
   },
@@ -2802,7 +2532,6 @@ export const adminApi = {
         const created = await this.createQuestion({
           questionText: q.questionText,
           questionBengaliText: /[\u0980-\u09FF]/.test(q.questionText) ? q.questionText : undefined,
-          imageUrl: q.imageUrl,
           optionA: q.optionA,
           optionB: q.optionB,
           optionC: q.optionC,
@@ -3001,7 +2730,7 @@ export const adminApi = {
           const scheduledAt = d.scheduled_at || undefined;
           const isDue = d.status === 'scheduled' && scheduledAt && new Date(scheduledAt) <= now;
           const effectiveStatus = isDue ? 'sent' : d.status;
-          const effectiveSentAt = isDue ? (d.sent_at || scheduledAt) : (d.sent_at || undefined);
+          const effectiveSentAt = isDue ? d.sent_at || scheduledAt : d.sent_at || undefined;
 
           return {
             id: d.id,
@@ -3034,7 +2763,7 @@ export const adminApi = {
         target_audience: notif.targetAudience,
         channel: notif.channel,
         status: notif.status,
-        sent_at: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+        sent_at: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
         scheduled_at: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       });
       if (error) return { success: false, error: error.message };
@@ -3049,11 +2778,39 @@ export const adminApi = {
       targetAudience: notif.targetAudience,
       channel: notif.channel,
       status: notif.status,
-      sentAt: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+      sentAt: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
       scheduledAt: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       createdAt: new Date().toISOString(),
     };
     localNotifications.unshift(newNotif);
+    return { success: true };
+  },
+
+  async createTargetedNotification(
+    notif: Pick<NotificationItem, 'title' | 'message' | 'channel'> & { userIds: string[] }
+  ): Promise<{ success: boolean; error?: string }> {
+    if (notif.userIds.length === 0) return { success: true };
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.rpc('create_targeted_notification', {
+        p_title: notif.title,
+        p_message: notif.message,
+        p_channel: notif.channel,
+        p_user_ids: notif.userIds,
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    }
+
+    localNotifications.unshift({
+      id: `notif-${Date.now()}`,
+      title: notif.title,
+      message: notif.message,
+      targetAudience: 'selected',
+      channel: notif.channel,
+      status: 'sent',
+      sentAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    });
     return { success: true };
   },
 
@@ -3097,50 +2854,39 @@ export const adminApi = {
   // --------------------------------------------------------------------------
   async getSupportTickets(): Promise<SupportTicketItem[]> {
     if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase
-          .from('support_tickets')
-          .select('*')
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (!error && data && data.length > 0) {
-          return data.map((d: any) => ({
-            id: d.id,
-            userId: d.user_id || undefined,
-            studentName: d.student_name || 'Student Aspirant',
-            studentEmail: d.student_email || '',
-            subject: d.subject,
-            issue: d.issue,
-            category: d.category,
-            priority: d.priority,
-            status: d.status,
-            assignedTo: d.assigned_to || undefined,
-            resolutionNotes: d.resolution_notes || undefined,
-            createdAt: d.created_at,
-            updatedAt: d.updated_at,
-          }));
-        }
-      } catch (err) {
-        console.warn('Failed to load support tickets from Supabase, falling back to local store:', err);
+      if (error) throw new Error(error.message);
+      if (data && data.length > 0) {
+        return data.map((d: any) => ({
+          id: d.id,
+          userId: d.user_id || undefined,
+          studentName: d.student_name || 'Student Aspirant',
+          studentEmail: d.student_email || '',
+          subject: d.subject,
+          issue: d.issue,
+          category: d.category,
+          priority: d.priority,
+          status: d.status,
+          assignedTo: d.assigned_to || undefined,
+          resolutionNotes: d.resolution_notes || undefined,
+          createdAt: d.created_at,
+          updatedAt: d.updated_at,
+        }));
       }
+      return [];
     }
 
-    return [...localSupportTickets];
+    return [];
   },
 
   async updateSupportTicket(
     id: string,
     updates: Partial<SupportTicketItem>
   ): Promise<{ success: boolean; error?: string }> {
-    const idx = localSupportTickets.findIndex((t) => t.id === id);
-    if (idx !== -1) {
-      localSupportTickets[idx] = {
-        ...localSupportTickets[idx],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
-    }
-
     if (isSupabaseConfigured) {
       const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (updates.status) payload.status = updates.status;
@@ -3148,37 +2894,16 @@ export const adminApi = {
       if (updates.resolutionNotes !== undefined) payload.resolution_notes = updates.resolutionNotes;
       if (updates.assignedTo !== undefined) payload.assigned_to = updates.assignedTo;
 
-      try {
-        const { error } = await supabase.from('support_tickets').update(payload).eq('id', id);
-        if (error) return { success: false, error: error.message };
-      } catch (err: any) {
-        return { success: false, error: err?.message || 'Update failed' };
-      }
+      const { error } = await supabase.from('support_tickets').update(payload).eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true };
     }
-
     return { success: true };
   },
 
   async createSupportTicket(
     ticket: Omit<SupportTicketItem, 'id' | 'createdAt' | 'updatedAt'>
-  ): Promise<{ success: boolean; error?: string; ticketId?: string }> {
-    const generatedId = `tkt_${Date.now()}`;
-    const newTicket: SupportTicketItem = {
-      id: generatedId,
-      userId: ticket.userId,
-      studentName: ticket.studentName || 'Student Candidate',
-      studentEmail: ticket.studentEmail || '',
-      subject: ticket.subject,
-      issue: ticket.issue,
-      category: ticket.category || 'Other',
-      priority: ticket.priority || 'medium',
-      status: ticket.status || 'open',
-      resolutionNotes: ticket.resolutionNotes,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    localSupportTickets.unshift(newTicket);
-
+  ): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
       let resolvedUserId = ticket.userId || null;
       if (!resolvedUserId) {
@@ -3190,27 +2915,21 @@ export const adminApi = {
         }
       }
 
-      try {
-        const { error } = await supabase.from('support_tickets').insert({
-          user_id: resolvedUserId,
-          student_name: ticket.studentName || 'Student Candidate',
-          student_email: ticket.studentEmail || '',
-          subject: ticket.subject,
-          issue: ticket.issue,
-          category: ticket.category || 'Other',
-          priority: ticket.priority || 'medium',
-          status: ticket.status || 'open',
-          resolution_notes: ticket.resolutionNotes || null,
-        });
-        if (error) {
-          console.warn('Supabase support_tickets insert notice (stored locally):', error.message);
-        }
-      } catch (err: any) {
-        console.warn('Supabase support_tickets exception (stored locally):', err?.message || err);
-      }
+      const { error } = await supabase.from('support_tickets').insert({
+        user_id: resolvedUserId,
+        student_name: ticket.studentName || 'Student Candidate',
+        student_email: ticket.studentEmail || '',
+        subject: ticket.subject,
+        issue: ticket.issue,
+        category: ticket.category || 'Other',
+        priority: ticket.priority || 'medium',
+        status: ticket.status || 'open',
+        resolution_notes: ticket.resolutionNotes || null,
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
     }
-
-    return { success: true, ticketId: generatedId };
+    return { success: true };
   },
 
   async getStudentSupportTickets(userId?: string): Promise<SupportTicketItem[]> {
@@ -3225,83 +2944,170 @@ export const adminApi = {
         }
       }
 
-      if (targetUserId) {
-        try {
-          const { data, error } = await supabase
-            .from('support_tickets')
-            .select('*')
-            .eq('user_id', targetUserId)
-            .order('created_at', { ascending: false });
+      if (!targetUserId) return [];
 
-          if (!error && data && data.length > 0) {
-            return data.map((d: any) => ({
-              id: d.id,
-              userId: d.user_id || undefined,
-              studentName: d.student_name || 'Student Candidate',
-              studentEmail: d.student_email || '',
-              subject: d.subject,
-              issue: d.issue,
-              category: d.category,
-              priority: d.priority,
-              status: d.status,
-              assignedTo: d.assigned_to || undefined,
-              resolutionNotes: d.resolution_notes || undefined,
-              createdAt: d.created_at,
-              updatedAt: d.updated_at,
-            }));
-          }
-        } catch (err) {
-          console.warn('Failed to load student support tickets from Supabase, using local store:', err);
-        }
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to load student support tickets:', error);
+        return [];
       }
-    }
 
-    if (userId) {
-      const filtered = localSupportTickets.filter((t) => !t.userId || t.userId === userId);
-      return filtered.length > 0 ? filtered : [...localSupportTickets];
+      if (data && data.length > 0) {
+        return data.map((d: any) => ({
+          id: d.id,
+          userId: d.user_id || undefined,
+          studentName: d.student_name || 'Student Candidate',
+          studentEmail: d.student_email || '',
+          subject: d.subject,
+          issue: d.issue,
+          category: d.category,
+          priority: d.priority,
+          status: d.status,
+          assignedTo: d.assigned_to || undefined,
+          resolutionNotes: d.resolution_notes || undefined,
+          createdAt: d.created_at,
+          updatedAt: d.updated_at,
+        }));
+      }
+      return [];
     }
-    return [...localSupportTickets];
+    return [];
   },
 
   // --------------------------------------------------------------------------
   // APP SETTINGS API
   // --------------------------------------------------------------------------
   async getAppSettings(): Promise<AppSettingItem[]> {
+    const DEFAULT_APP_SETTINGS: AppSettingItem[] = [
+      {
+        id: 'general_app_name',
+        category: 'general',
+        key: 'app_name',
+        value: 'PracticeKoro',
+        description: 'Platform name displayed across UI',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'general_support_email',
+        category: 'general',
+        key: 'support_email',
+        value: 'support@practicekoro.online',
+        description: 'Support contact email',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'general_support_phone',
+        category: 'general',
+        key: 'support_phone',
+        value: '+91 98765 43210',
+        description: 'Support phone helpline',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'general_website_url',
+        category: 'general',
+        key: 'website_url',
+        value: 'https://practicekoro.online',
+        description: 'Official web application domain',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_default_duration',
+        category: 'exam_defaults',
+        key: 'default_duration_minutes',
+        value: 60,
+        description: 'Standard default exam duration in minutes',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_default_marks',
+        category: 'exam_defaults',
+        key: 'default_marks_per_q',
+        value: 1.0,
+        description: 'Standard default marks per correct question',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_default_negative_marks',
+        category: 'exam_defaults',
+        key: 'default_negative_marks',
+        value: 0.25,
+        description: 'Standard default negative marking',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_passing_percentage',
+        category: 'exam_defaults',
+        key: 'default_passing_percentage',
+        value: 35,
+        description: 'Standard passing score percentage',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sub_currency',
+        category: 'subscription',
+        key: 'currency',
+        value: 'INR',
+        description: 'Platform transaction currency',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sub_expiry_warning_days',
+        category: 'subscription',
+        key: 'expiry_warning_days',
+        value: 7,
+        description: 'Days before expiry to display renewal warning',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sys_maintenance_mode',
+        category: 'system',
+        key: 'maintenance_mode',
+        value: false,
+        description: 'Enable platform maintenance splash mode',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sys_app_version',
+        category: 'system',
+        key: 'app_version',
+        value: '2.0.0',
+        description: 'Platform production release version',
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.from('app_settings').select('*');
         if (error) {
-          console.warn('Could not fetch app_settings from Supabase, using local defaults:', error.message);
-          return [...localAppSettings];
+          console.warn(
+            'Could not fetch app_settings from Supabase, using defaults:',
+            error.message
+          );
+          return DEFAULT_APP_SETTINGS;
         }
         if (data && data.length > 0) {
-          const fetched: AppSettingItem[] = data.map((d: any) => ({
+          return data.map((d: any) => ({
             id: d.id,
             category: d.category,
             key: d.key,
-            value: parseSettingValue(d.value),
+            value: d.value,
             description: d.description || undefined,
             updatedAt: d.updated_at,
           }));
-
-          // Sync into localAppSettings cache
-          fetched.forEach((f) => {
-            const idx = localAppSettings.findIndex((l) => l.id === f.id || l.key === f.key);
-            if (idx >= 0) {
-              localAppSettings[idx] = f;
-            } else {
-              localAppSettings.push(f);
-            }
-          });
-
-          return fetched;
         }
       } catch (err) {
-        console.warn('Failed to query app_settings, falling back to local defaults:', err);
+        console.warn('Failed to query app_settings, falling back to defaults:', err);
       }
     }
 
-    return [...localAppSettings];
+    return DEFAULT_APP_SETTINGS;
   },
 
   async updateAppSetting(
@@ -3314,105 +3120,92 @@ export const adminApi = {
   async updateAppSettings(
     updates: Array<{ id: string; value: unknown }>
   ): Promise<{ success: boolean; error?: string }> {
-    const SETTINGS_META: Record<string, { category: string; key: string; description: string }> = {
-      general_app_name: { category: 'general', key: 'app_name', description: 'Platform name displayed across UI' },
-      general_support_email: { category: 'general', key: 'support_email', description: 'Support contact email' },
-      general_support_phone: { category: 'general', key: 'support_phone', description: 'Support phone helpline' },
-      general_website_url: { category: 'general', key: 'website_url', description: 'Official web application domain' },
-      exam_default_duration: { category: 'exam_defaults', key: 'default_duration_minutes', description: 'Standard default exam duration in minutes' },
-      exam_default_marks: { category: 'exam_defaults', key: 'default_marks_per_q', description: 'Standard default marks per correct question' },
-      exam_default_negative_marks: { category: 'exam_defaults', key: 'default_negative_marks', description: 'Standard default negative marking' },
-      exam_passing_percentage: { category: 'exam_defaults', key: 'default_passing_percentage', description: 'Standard passing score percentage' },
-      sub_currency: { category: 'subscription', key: 'currency', description: 'Platform transaction currency' },
-      sub_expiry_warning_days: { category: 'subscription', key: 'expiry_warning_days', description: 'Days before expiry to display renewal warning' },
-      sys_maintenance_mode: { category: 'system', key: 'maintenance_mode', description: 'Enable platform maintenance splash mode' },
-      sys_app_version: { category: 'system', key: 'app_version', description: 'Platform production release version' },
-    };
-
-    // Always update or insert (upsert) into in-memory localAppSettings
-    updates.forEach((u) => {
-      const parsedVal = parseSettingValue(u.value);
-      const meta = SETTINGS_META[u.id] || {
-        category: 'general',
-        key: u.id,
-        description: 'Platform configuration setting',
-      };
-      const idx = localAppSettings.findIndex((l) => l.id === u.id || l.key === u.id);
-      if (idx >= 0) {
-        localAppSettings[idx] = {
-          ...localAppSettings[idx],
-          value: parsedVal,
-          updatedAt: new Date().toISOString(),
+    if (isSupabaseConfigured) {
+      const SETTINGS_META: Record<string, { category: string; key: string; description: string }> =
+        {
+          general_app_name: {
+            category: 'general',
+            key: 'app_name',
+            description: 'Platform name displayed across UI',
+          },
+          general_support_email: {
+            category: 'general',
+            key: 'support_email',
+            description: 'Support contact email',
+          },
+          general_support_phone: {
+            category: 'general',
+            key: 'support_phone',
+            description: 'Support phone helpline',
+          },
+          general_website_url: {
+            category: 'general',
+            key: 'website_url',
+            description: 'Official web application domain',
+          },
+          exam_default_duration: {
+            category: 'exam_defaults',
+            key: 'default_duration_minutes',
+            description: 'Standard default exam duration in minutes',
+          },
+          exam_default_marks: {
+            category: 'exam_defaults',
+            key: 'default_marks_per_q',
+            description: 'Standard default marks per correct question',
+          },
+          exam_default_negative_marks: {
+            category: 'exam_defaults',
+            key: 'default_negative_marks',
+            description: 'Standard default negative marking',
+          },
+          exam_passing_percentage: {
+            category: 'exam_defaults',
+            key: 'default_passing_percentage',
+            description: 'Standard passing score percentage',
+          },
+          sub_currency: {
+            category: 'subscription',
+            key: 'currency',
+            description: 'Platform transaction currency',
+          },
+          sub_expiry_warning_days: {
+            category: 'subscription',
+            key: 'expiry_warning_days',
+            description: 'Days before expiry to display renewal warning',
+          },
+          sys_maintenance_mode: {
+            category: 'system',
+            key: 'maintenance_mode',
+            description: 'Enable platform maintenance splash mode',
+          },
+          sys_app_version: {
+            category: 'system',
+            key: 'app_version',
+            description: 'Platform production release version',
+          },
         };
-      } else {
-        localAppSettings.push({
+
+      const rows = updates.map((u) => {
+        const meta = SETTINGS_META[u.id] || {
+          category: 'general',
+          key: u.id,
+          description: 'Platform configuration setting',
+        };
+        return {
           id: u.id,
           category: meta.category,
           key: meta.key,
-          value: parsedVal,
+          value: JSON.stringify(u.value),
           description: meta.description,
-          updatedAt: new Date().toISOString(),
-        });
-      }
-    });
+          updated_at: new Date().toISOString(),
+        };
+      });
 
-    if (isSupabaseConfigured) {
-      try {
-        const rows = updates.map((u) => {
-          const meta = SETTINGS_META[u.id] || {
-            category: 'general',
-            key: u.id,
-            description: 'Platform configuration setting',
-          };
-          return {
-            id: u.id,
-            category: meta.category,
-            key: meta.key,
-            value: u.value,
-            description: meta.description,
-            updated_at: new Date().toISOString(),
-          };
-        });
+      const { error } = await supabase.from('app_settings').upsert(rows, { onConflict: 'id' });
 
-        const { error } = await supabase
-          .from('app_settings')
-          .upsert(rows, { onConflict: 'id' });
-
-        if (error) {
-          console.warn('Supabase app_settings upsert error:', error.message);
-          if (
-            error.message.includes('schema cache') ||
-            error.code === 'PGRST205' ||
-            error.code === '42P01' ||
-            error.message.includes('does not exist')
-          ) {
-            // Table unmigrated in current database environment; local store already updated
-            return { success: true };
-          }
-          return { success: false, error: error.message };
-        }
-        return { success: true };
-      } catch (err) {
-        const msg = getErrorMessage(err, 'Failed to update app settings');
-        console.error('Exception during app_settings upsert:', msg);
-        return { success: false, error: msg };
-      }
+      if (error) return { success: false, error: error.message };
+      return { success: true };
     }
-
     return { success: true };
   },
-
-  async getMaintenanceMode(): Promise<boolean> {
-    try {
-      const settings = await this.getAppSettings();
-      const maint = settings.find(
-        (s) => s.id === 'sys_maintenance_mode' || s.key === 'maintenance_mode'
-      );
-      if (!maint) return false;
-      return maint.value === true || maint.value === 'true';
-    } catch {
-      return false;
-    }
-  },
 };
-
