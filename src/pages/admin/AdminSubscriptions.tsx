@@ -53,7 +53,7 @@ function exportToCSV(
   URL.revokeObjectURL(url);
 }
 
-// âââ Stat Card ââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Stat Card ──────────────────────────────────────────────────
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
@@ -84,7 +84,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle, gradi
   </div>
 );
 
-// âââ Status Badge âââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Status Badge ───────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const config: Record<string, { bg: string; text: string; dot: string }> = {
     active: {
@@ -134,7 +134,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   );
 };
 
-// âââ Avatar âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Avatar ─────────────────────────────────────────────────────
 const Avatar: React.FC<{ name: string; isPro?: boolean }> = ({ name, isPro }) => {
   const initials = name
     .split(' ')
@@ -162,7 +162,7 @@ const Avatar: React.FC<{ name: string; isPro?: boolean }> = ({ name, isPro }) =>
   );
 };
 
-// âââ Empty State ââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Empty State ────────────────────────────────────────────────
 const EmptyState: React.FC<{
   icon: React.ReactNode;
   title: string;
@@ -182,7 +182,7 @@ const EmptyState: React.FC<{
   </div>
 );
 
-// âââ Search Bar âââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Search Bar ─────────────────────────────────────────────────
 const SearchBar: React.FC<{
   value: string;
   onChange: (v: string) => void;
@@ -208,7 +208,7 @@ const SearchBar: React.FC<{
   </div>
 );
 
-// âââ Main Component âââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Main Component ─────────────────────────────────────────────
 export const AdminSubscriptions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'aspirants' | 'payments' | 'plans'>('aspirants');
 
@@ -607,7 +607,7 @@ export const AdminSubscriptions: React.FC = () => {
     fetchBatches();
   }, [fetchStudents, fetchPayments, fetchPlans, fetchBatches]);
 
-  // âââ Computed Stats âââââââââââââââââââââââââââââââââââââââââ
+  // ─── Computed Stats ─────────────────────────────────────────
   const stats = useMemo(() => {
     const proStudents = students.filter((s) => s.isPro).length;
     const freeStudents = students.length - proStudents;
@@ -617,7 +617,7 @@ export const AdminSubscriptions: React.FC = () => {
     return { proStudents, freeStudents, totalRevenue };
   }, [payments, students]);
 
-  // âââ Tab Config âââââââââââââââââââââââââââââââââââââââââââââ
+  // ─── Tab Config ─────────────────────────────────────────────
   const tabs = [
     { key: 'aspirants' as const, label: 'Aspirants', icon: Users, count: students.length },
     { key: 'payments' as const, label: 'Payments', icon: Receipt, count: payments.length },
@@ -626,7 +626,7 @@ export const AdminSubscriptions: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* âââ Header ââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ─── Header ────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
@@ -641,13 +641,13 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       </div>
 
-      {/* âââ Stats Row âââââââââââââââââââââââââââââââââââââââ */}
+      {/* ─── Stats Row ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<Users className="w-5 h-5 text-white" />}
           label="Total Aspirants"
           value={students.length}
-          subtitle={`${stats.proStudents} Paid â¢ ${stats.freeStudents} Free`}
+          subtitle={`${stats.proStudents} Paid • ${stats.freeStudents} Free`}
           gradient="bg-gradient-to-br from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600"
           iconBg="bg-white/20"
         />
@@ -662,7 +662,7 @@ export const AdminSubscriptions: React.FC = () => {
         <StatCard
           icon={<IndianRupee className="w-5 h-5 text-white" />}
           label="Total Revenue"
-          value={`â¹${stats.totalRevenue.toLocaleString('en-IN')}`}
+          value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
           subtitle={`${payments.length} transactions`}
           gradient="bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700"
           iconBg="bg-white/20"
@@ -677,7 +677,7 @@ export const AdminSubscriptions: React.FC = () => {
         />
       </div>
 
-      {/* âââ Tab Navigation ââââââââââââââââââââââââââââââââââ */}
+      {/* ─── Tab Navigation ────────────────────────────────── */}
       <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 p-1.5 shadow-sm">
         <div className="flex gap-1">
           {tabs.map((tab) => {
@@ -710,9 +710,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       </div>
 
-      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      {/* ═══════════════════════════════════════════════════════
           TAB 1: ASPIRANTS (Unified Free + Paid)
-      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      ═══════════════════════════════════════════════════════ */}
       {activeTab === 'aspirants' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -900,7 +900,7 @@ export const AdminSubscriptions: React.FC = () => {
                               year: 'numeric',
                             })
                           ) : (
-                            <span className="text-slate-300 dark:text-slate-600">â</span>
+                            <span className="text-slate-300 dark:text-slate-600">—</span>
                           )}
                         </td>
                         <td className="px-5 py-4 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
@@ -948,9 +948,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      {/* ═══════════════════════════════════════════════════════
           TAB 2: PAYMENTS
-      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      ═══════════════════════════════════════════════════════ */}
       {activeTab === 'payments' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -1080,7 +1080,7 @@ export const AdminSubscriptions: React.FC = () => {
                         </td>
                         <td className="px-5 py-4">
                           <span className="text-base font-black text-slate-900 dark:text-white">
-                            â¹{p.amount.toLocaleString('en-IN')}
+                            ₹{p.amount.toLocaleString('en-IN')}
                           </span>
                         </td>
                         <td className="px-5 py-4">
@@ -1107,7 +1107,7 @@ export const AdminSubscriptions: React.FC = () => {
                           {p.status === 'refunded' ? (
                             <div className="text-right">
                               <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
-                                â¹{(p.refundAmount ?? p.amount).toLocaleString('en-IN')}
+                                ₹{(p.refundAmount ?? p.amount).toLocaleString('en-IN')}
                               </div>
                               {p.refundId && (
                                 <div
@@ -1134,7 +1134,7 @@ export const AdminSubscriptions: React.FC = () => {
                               Record
                             </button>
                           ) : (
-                            <span className="text-xs text-slate-300 dark:text-slate-600">â</span>
+                            <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
                           )}
                         </td>
                       </tr>
@@ -1147,9 +1147,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      {/* ═══════════════════════════════════════════════════════
           TAB 3: SUBSCRIPTION PLANS
-      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      ═══════════════════════════════════════════════════════ */}
       {activeTab === 'plans' && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
@@ -1211,11 +1211,11 @@ export const AdminSubscriptions: React.FC = () => {
                   {/* Price */}
                   <div className="flex items-end gap-2 mb-4">
                     <span className="text-3xl font-black text-slate-900 dark:text-white">
-                      â¹{p.price}
+                      ₹{p.price}
                     </span>
                     {p.originalPrice && (
                       <span className="text-sm text-slate-400 line-through mb-1">
-                        â¹{p.originalPrice}
+                        ₹{p.originalPrice}
                       </span>
                     )}
                     <span className="text-xs text-slate-500 dark:text-slate-400 mb-1">
@@ -1281,9 +1281,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      {/* ═══════════════════════════════════════════════════════
           BULK STUDENT ACTION MODAL
-      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      ═══════════════════════════════════════════════════════ */}
       {bulkAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
@@ -1343,7 +1343,7 @@ export const AdminSubscriptions: React.FC = () => {
                         .filter((plan) => plan.price > 0)
                         .map((plan) => (
                           <option key={plan.id} value={plan.id}>
-                            {plan.title} ({plan.durationDays} days â â¹{plan.price})
+                            {plan.title} ({plan.durationDays} days — ₹{plan.price})
                           </option>
                         ))}
                     </select>
@@ -1392,7 +1392,7 @@ export const AdminSubscriptions: React.FC = () => {
                         <input
                           value={newBatchName}
                           onChange={(event) => setNewBatchName(event.target.value)}
-                          placeholder="e.g. WBP Constable 2026 â Morning"
+                          placeholder="e.g. WBP Constable 2026 — Morning"
                           required
                           className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
                         />
@@ -1470,9 +1470,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      {/* ═══════════════════════════════════════════════════════
           REFUND TRACKING MODAL
-      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      ═══════════════════════════════════════════════════════ */}
       {refundPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
@@ -1503,7 +1503,7 @@ export const AdminSubscriptions: React.FC = () => {
                 </div>
                 <div className="text-xs text-slate-500">{refundPayment.studentEmail}</div>
                 <div className="mt-2 font-bold text-slate-800 dark:text-slate-200">
-                  Original payment: â¹{refundPayment.amount.toLocaleString('en-IN')}
+                  Original payment: ₹{refundPayment.amount.toLocaleString('en-IN')}
                 </div>
               </div>
               {refundFeedback && (
@@ -1513,7 +1513,7 @@ export const AdminSubscriptions: React.FC = () => {
               )}
               <div>
                 <label className="mb-1.5 block text-xs font-bold text-slate-600 dark:text-slate-300">
-                  Refund amount (â¹)
+                  Refund amount (₹)
                 </label>
                 <input
                   type="number"
@@ -1570,9 +1570,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      {/* ═══════════════════════════════════════════════════════
           GRANT PRO ACCESS MODAL
-      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      ═══════════════════════════════════════════════════════ */}
       {grantModalStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
@@ -1624,7 +1624,7 @@ export const AdminSubscriptions: React.FC = () => {
                   >
                     {plans.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.title} ({p.durationDays} Days â â¹{p.price})
+                        {p.title} ({p.durationDays} Days — ₹{p.price})
                       </option>
                     ))}
                   </select>
@@ -1667,9 +1667,9 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       )}
 
-      {/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      {/* ═══════════════════════════════════════════════════════
           PLAN EDIT / CREATE MODAL
-      âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      ═══════════════════════════════════════════════════════ */}
       {isPlanModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
@@ -1741,7 +1741,7 @@ export const AdminSubscriptions: React.FC = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Price (â¹) *
+                    Price (₹) *
                   </label>
                   <input
                     type="number"
@@ -1754,7 +1754,7 @@ export const AdminSubscriptions: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Orig. Price (â¹)
+                    Orig. Price (₹)
                   </label>
                   <input
                     type="number"
