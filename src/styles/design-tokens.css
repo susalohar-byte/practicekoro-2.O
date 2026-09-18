@@ -1,0 +1,66 @@
+/**
+ * PRACTICEKORO OFFICIAL BRAND DESIGN TOKENS
+ * Centralized Design Token System extracted from the official PracticeKoro logo/icon.
+ * 
+ * Brand Balance Guidelines:
+ * - 70% White / Very light surfaces (#FFFFFF, #F8FAFC, #EFF5FB)
+ * - 20% Navy / Neutral typography (#063585, #0B1F44, #334155)
+ * - 10% PracticeKoro Blue accents (#0158FC, #0198FD, #0062FD)
+ */
+
+:root {
+  /* ==========================================================================
+     PRIMARY BRAND BLUES
+     ========================================================================== */
+  --pk-primary: #0158fc;               /* Main Brand Blue - CTAs, active nav, primary links */
+  --pk-primary-bright: #0198fd;        /* Bright Blue - Gradients, highlights, illustrations */
+  --pk-primary-interactive: #0062fd;   /* Interactive Blue - Hover, active click states */
+  --pk-primary-accent: #1d8cf6;        /* Accent Blue - Decorative elements, secondary icons */
+
+  /* ==========================================================================
+     BRAND DARK COLORS (Typography & Strong Emphasis)
+     ========================================================================== */
+  --pk-navy: #063585;                  /* Primary Navy - Headings, logo text, strong emphasis */
+  --pk-dark: #0b1f44;                  /* Secondary Dark - Body headings, test questions, content */
+
+  /* ==========================================================================
+     LIGHT BRAND SURFACES & CONTAINERS
+     ========================================================================== */
+  --pk-blue-soft: #d9e7fd;             /* Soft Blue - Selected backgrounds, soft cards, borders */
+  --pk-blue-light: #eff5fb;            /* Very Light Blue - Secondary surfaces, section bg, inputs */
+
+  /* ==========================================================================
+     CANVAS & SURFACES
+     ========================================================================== */
+  --pk-background: #f8fafc;            /* Page canvas background */
+  --pk-surface: #ffffff;               /* Primary card & panel surface */
+
+  /* ==========================================================================
+     BRAND GRADIENTS (Use selectively: hero cards, primary badges, main CTAs)
+     ========================================================================== */
+  --pk-gradient-primary: linear-gradient(135deg, #0158fc 0%, #0198fd 100%);
+  --pk-gradient-subtle: linear-gradient(180deg, #eff5fb 0%, #ffffff 100%);
+  --pk-gradient-surface: linear-gradient(135deg, #ffffff 0%, #eff5fb 100%);
+}
+
+/* ============================================================================
+   DARK THEME COMPATIBILITY MAPPINGS
+   Ensures text remains high contrast and cards adapt gracefully without
+   violating the official PracticeKoro blue identity.
+   ============================================================================ */
+.dark {
+  --pk-background: #020617;
+  --pk-surface: #0f172a;
+
+  /* Surfaces adapt to translucent blue washes on dark slate */
+  --pk-blue-light: rgba(1, 88, 252, 0.12);
+  --pk-blue-soft: rgba(1, 88, 252, 0.24);
+
+  /* Typography adapts for dark canvas readability */
+  --pk-navy: #93c5fd;                  /* High contrast readable light blue for headings */
+  --pk-dark: #f8fafc;                  /* Crisp white for dark content headings */
+
+  /* Gradients adapt to deep blue luminescence */
+  --pk-gradient-subtle: linear-gradient(180deg, rgba(1, 88, 252, 0.12) 0%, #0f172a 100%);
+  --pk-gradient-surface: linear-gradient(135deg, #0f172a 0%, rgba(1, 88, 252, 0.1) 100%);
+}

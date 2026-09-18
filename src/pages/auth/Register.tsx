@@ -66,14 +66,14 @@ export const Register: React.FC = () => {
             className="h-11 sm:h-12 w-auto object-contain"
           />
         </Link>
-        <h2 className="text-xl font-bold text-slate-900">Create your student account</h2>
+        <h2 className="text-xl font-black text-pk-navy">Create your student account</h2>
         <p className="mt-1 text-xs text-slate-500">Start practicing high-yield mock tests today</p>
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white py-8 px-6 shadow-sm rounded-2xl border border-slate-200 sm:px-10">
+        <div className="bg-white py-8 px-6 shadow-xs rounded-2xl border border-slate-200 sm:px-10">
           {error && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg">
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
               {error}
             </div>
           )}
@@ -146,7 +146,7 @@ export const Register: React.FC = () => {
 
           <div className="mt-6 text-center text-xs text-slate-600">
             Already have an account?{' '}
-            <Link to="/login" className="font-bold text-brand-600 hover:text-brand-700">
+            <Link to="/login" className="font-bold text-pk-primary hover:text-pk-primary-interactive transition-colors">
               Sign In
             </Link>
           </div>

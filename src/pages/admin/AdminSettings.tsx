@@ -41,20 +41,20 @@ export const AdminSettings: React.FC = () => {
 
       data.forEach((s) => {
         const val = typeof s.value === 'string' ? s.value.replace(/^"|"$/g, '') : s.value;
-        if (s.key === 'app_name') setAppName(String(val));
-        if (s.key === 'support_email') setSupportEmail(String(val));
-        if (s.key === 'support_phone') setSupportPhone(String(val));
-        if (s.key === 'website_url') setWebsiteUrl(String(val));
+        if (s.key === 'app_name' || s.id === 'general_app_name') setAppName(String(val));
+        if (s.key === 'support_email' || s.id === 'general_support_email') setSupportEmail(String(val));
+        if (s.key === 'support_phone' || s.id === 'general_support_phone') setSupportPhone(String(val));
+        if (s.key === 'website_url' || s.id === 'general_website_url') setWebsiteUrl(String(val));
 
-        if (s.key === 'default_duration_minutes') setDefaultDuration(Number(val));
-        if (s.key === 'default_marks_per_q') setDefaultMarks(Number(val));
-        if (s.key === 'default_negative_marks') setDefaultNegativeMarks(Number(val));
-        if (s.key === 'default_passing_percentage') setDefaultPassingPercent(Number(val));
+        if (s.key === 'default_duration_minutes' || s.id === 'exam_default_duration') setDefaultDuration(Number(val));
+        if (s.key === 'default_marks_per_q' || s.id === 'exam_default_marks') setDefaultMarks(Number(val));
+        if (s.key === 'default_negative_marks' || s.id === 'exam_default_negative_marks') setDefaultNegativeMarks(Number(val));
+        if (s.key === 'default_passing_percentage' || s.id === 'exam_passing_percentage') setDefaultPassingPercent(Number(val));
 
-        if (s.key === 'currency') setCurrency(String(val));
-        if (s.key === 'expiry_warning_days') setExpiryWarningDays(Number(val));
-        if (s.key === 'maintenance_mode') setMaintenanceMode(Boolean(val));
-        if (s.key === 'app_version') setAppVersion(String(val));
+        if (s.key === 'currency' || s.id === 'sub_currency') setCurrency(String(val));
+        if (s.key === 'expiry_warning_days' || s.id === 'sub_expiry_warning_days') setExpiryWarningDays(Number(val));
+        if (s.key === 'maintenance_mode' || s.id === 'sys_maintenance_mode') setMaintenanceMode(Boolean(val));
+        if (s.key === 'app_version' || s.id === 'sys_app_version') setAppVersion(String(val));
       });
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -91,7 +91,10 @@ export const AdminSettings: React.FC = () => {
         { id: 'sys_app_version', value: appVersion },
       ];
 
-      await Promise.all(updates.map((u) => api.updateAppSetting(u.id, u.value)));
+      const res = await api.updateAppSettings(updates);
+      if (!res.success) {
+        throw new Error(res.error || 'Failed to save settings');
+      }
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);

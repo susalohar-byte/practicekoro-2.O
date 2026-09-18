@@ -22,6 +22,7 @@ import {
   X,
   Sparkles,
   ShieldAlert,
+  LifeBuoy,
 } from 'lucide-react';
 
 interface StudentSidebarProps {
@@ -69,6 +70,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     { label: 'Exams', path: '/exams', icon: Compass },
     { label: 'Practice', path: '/practice', icon: Zap },
     { label: 'Results', path: '/results', icon: BarChart3 },
+    { label: 'Help & Support', path: '/support', icon: LifeBuoy },
     { label: 'Profile', path: '/profile', icon: User },
   ];
 
@@ -131,7 +133,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
               className="flex items-center gap-3 overflow-hidden group"
               title="PracticeKoro Student Portal"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pk-primary to-pk-primary-bright flex items-center justify-center shadow-md shadow-pk-primary/25 group-hover:scale-105 transition-transform shrink-0">
                 <img
                   src="/logo-icon-transparent.png"
                   alt="PracticeKoro"
@@ -139,10 +141,10 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 />
               </div>
               <div className={cn('flex flex-col min-w-0', isCollapsed && 'lg:hidden')}>
-                <span className="font-black text-base text-slate-900 tracking-tight leading-tight flex items-center">
-                  Practice<span className="text-blue-600">Koro</span>
+                <span className="font-black text-base text-pk-navy dark:text-white tracking-tight leading-tight flex items-center">
+                  Practice<span className="text-pk-primary">Koro</span>
                 </span>
-                <span className="text-[10px] font-extrabold text-blue-600/80 uppercase tracking-wider">
+                <span className="text-[10px] font-extrabold text-pk-primary/90 uppercase tracking-wider">
                   Student Portal
                 </span>
               </div>
@@ -182,14 +184,14 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100/90 border border-slate-200/80 transition-all text-left group"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 font-bold text-[10px] border border-blue-200/60">
+                  <div className="w-6 h-6 rounded-lg bg-pk-blue-light text-pk-navy flex items-center justify-center shrink-0 font-bold text-[10px] border border-pk-blue-soft">
                     WB
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[9px] uppercase font-extrabold text-slate-400 tracking-wider leading-none">
                       Focus Exam
                     </p>
-                    <p className="text-xs font-bold text-slate-800 truncate mt-0.5 group-hover:text-blue-600 transition-colors">
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate mt-0.5 group-hover:text-pk-primary transition-colors">
                       {selectedExam?.title || 'Select Target Exam'}
                     </p>
                   </div>
@@ -197,17 +199,17 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 <ChevronDown
                   className={cn(
                     'w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1',
-                    examDropdownOpen && 'rotate-180 text-blue-600'
+                    examDropdownOpen && 'rotate-180 text-pk-primary'
                   )}
                 />
               </button>
 
               {examDropdownOpen && (
                 <div
-                  className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-60 overflow-y-auto"
+                  className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-60 overflow-y-auto"
                   onMouseLeave={() => setExamDropdownOpen(false)}
                 >
-                  <div className="px-3 py-1 border-b border-slate-100">
+                  <div className="px-3 py-1 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       Switch Exam Focus
                     </span>
@@ -222,13 +224,13 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                       className={cn(
                         'w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors',
                         selectedExam?.id === exam.id
-                          ? 'bg-blue-50 text-blue-700 font-bold'
-                          : 'text-slate-700 hover:bg-slate-50 font-medium'
+                          ? 'bg-pk-blue-light text-pk-navy font-bold'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
                       )}
                     >
                       <span className="truncate pr-2">{exam.title}</span>
                       {selectedExam?.id === exam.id && (
-                        <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-pk-primary shrink-0" />
                       )}
                     </button>
                   ))}
@@ -263,14 +265,14 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         'flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all group relative',
                         isCollapsed && 'lg:justify-center lg:px-2',
                         isActive
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
+                          ? 'bg-pk-primary text-white shadow-md shadow-pk-primary/25 font-bold'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-pk-navy dark:hover:text-white hover:bg-pk-blue-light/60 dark:hover:bg-slate-800'
                       )}
                     >
                       <Icon
                         className={cn(
                           'w-4 h-4 shrink-0 transition-transform group-hover:scale-110',
-                          isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'
+                          isActive ? 'text-white' : 'text-slate-400 group-hover:text-pk-primary'
                         )}
                       />
                       <span className={cn('truncate', isCollapsed && 'lg:hidden')}>
@@ -316,15 +318,15 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group',
                         isCollapsed && 'lg:justify-center lg:px-2',
                         isActive
-                          ? 'bg-blue-50 text-blue-700 font-bold'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
+                          ? 'bg-pk-blue-light text-pk-navy font-bold'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/90 dark:hover:bg-slate-800'
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <Icon
                           className={cn(
                             'w-4 h-4 shrink-0 transition-colors',
-                            isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-600'
+                            isActive ? 'text-pk-primary' : 'text-slate-400 group-hover:text-pk-primary'
                           )}
                         />
                         <span className={cn('truncate', isCollapsed && 'lg:hidden')}>
@@ -351,7 +353,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
             {/* Pro Pass Card Banner - Modern & Compact */}
             <div className={cn('pt-1', isCollapsed && 'lg:hidden')}>
               {isPro ? (
-                <div className="p-2.5 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white border border-amber-500/25 shadow-sm flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white border border-amber-500/25 shadow-xs flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
                       <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
@@ -375,7 +377,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                   </Link>
                 </div>
               ) : (
-                <div className="p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-gradient-to-r from-pk-primary to-pk-primary-bright text-white shadow-md shadow-pk-primary/20 flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                       <Crown className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
@@ -390,7 +392,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                       onClose();
                       navigate('/subscription');
                     }}
-                    className="py-1 px-2 rounded-lg bg-white text-blue-700 font-extrabold text-[10px] hover:bg-blue-50 transition-colors shrink-0 shadow-xs flex items-center gap-1"
+                    className="py-1 px-2 rounded-lg bg-white text-pk-navy font-extrabold text-[10px] hover:bg-pk-blue-light transition-colors shrink-0 shadow-xs flex items-center gap-1"
                   >
                     <Sparkles className="w-2.5 h-2.5 text-amber-500" />
                     Upgrade
@@ -409,7 +411,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     'w-9 h-9 rounded-xl flex items-center justify-center transition-all',
                     isPro
                       ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-600/20'
+                      : 'bg-pk-primary text-white hover:bg-pk-primary-interactive shadow-md shadow-pk-primary/20'
                   )}
                 >
                   <Crown className={cn('w-4 h-4', isPro && 'fill-slate-950')} />
@@ -420,7 +422,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
         </div>
 
         {/* Footer / Account Section */}
-        <div className="p-3 border-t border-slate-100 bg-slate-50/70 shrink-0">
+        <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 shrink-0">
           {/* Expanded Footer */}
           <div className={cn('space-y-2', isCollapsed && 'lg:hidden')}>
             <div className="flex items-center justify-between gap-2 px-1">
@@ -429,11 +431,11 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 onClick={onClose}
                 className="flex items-center gap-2.5 min-w-0 group"
               >
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-200 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 rounded-full bg-pk-blue-light text-pk-navy flex items-center justify-center font-bold text-xs border border-pk-blue-soft shrink-0 group-hover:scale-105 transition-transform">
                   {user?.fullName?.charAt(0) || 'U'}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-pk-primary transition-colors">
                     {user?.fullName || 'Student'}
                   </p>
                   <p className="text-[10px] text-slate-500 truncate capitalize">

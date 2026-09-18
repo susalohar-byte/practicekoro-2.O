@@ -294,7 +294,7 @@ export const Practice: React.FC = () => {
           <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-lg bg-brand-50 text-brand-700">
+                <span className="p-1.5 rounded-lg bg-pk-blue-light text-pk-navy">
                   {practiceSource === 'mistakes' ? (
                     <AlertTriangle className="w-4 h-4 text-amber-600" />
                   ) : (
@@ -311,8 +311,9 @@ export const Practice: React.FC = () => {
                 </div>
               </div>
 
+              {/* Controls */}
               <div className="flex items-center gap-2">
-                {/* Language Toggle */}
+                {/* Language Mode Toggle */}
                 <button
                   type="button"
                   onClick={() => {
@@ -327,7 +328,7 @@ export const Practice: React.FC = () => {
                   className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-colors"
                   title="Switch question language mode"
                 >
-                  <Languages className="w-3.5 h-3.5 text-brand-600" />
+                  <Languages className="w-3.5 h-3.5 text-pk-primary" />
                   <span className="capitalize">{languageMode}</span>
                 </button>
 
@@ -346,7 +347,7 @@ export const Practice: React.FC = () => {
             {/* Progress Bar */}
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
               <div
-                className="bg-brand-600 h-full rounded-full transition-all duration-300"
+                className="bg-pk-primary h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${((currentIndex + 1) / practiceQuestions.length) * 100}%`,
                 }}
@@ -373,7 +374,7 @@ export const Practice: React.FC = () => {
             {/* Question Text */}
             <div className="space-y-2">
               {(languageMode === 'bilingual' || languageMode === 'english') && (
-                <p className="text-base sm:text-lg font-bold text-slate-900 leading-relaxed">
+                <p className="text-base sm:text-lg font-bold text-pk-dark leading-relaxed">
                   {currentQuestion.questionText}
                 </p>
               )}
@@ -405,7 +406,7 @@ export const Practice: React.FC = () => {
                     stateStyles = 'border-slate-200 opacity-60 bg-slate-50';
                   }
                 } else if (isSelected) {
-                  stateStyles = 'border-brand-600 bg-brand-50 text-brand-950 ring-1 ring-brand-600';
+                  stateStyles = 'border-pk-primary bg-pk-blue-light text-pk-dark ring-1 ring-pk-primary';
                 }
 
                 return (
@@ -419,11 +420,11 @@ export const Practice: React.FC = () => {
                     <span
                       className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border ${
                         isAnswerSubmitted && isCorrectOption
-                          ? 'bg-emerald-600 text-white border-emerald-600'
+                           ? 'bg-emerald-600 text-white border-emerald-600'
                           : isAnswerSubmitted && isSelected && !isCorrectOption
                             ? 'bg-rose-600 text-white border-rose-600'
                             : isSelected
-                              ? 'bg-brand-600 text-white border-brand-600'
+                              ? 'bg-pk-primary text-white border-pk-primary'
                               : 'bg-white text-slate-700 border-slate-300'
                       }`}
                     >
@@ -550,9 +551,9 @@ export const Practice: React.FC = () => {
                 <p className="text-xl font-black text-rose-600 mt-0.5">{sessionWrong}</p>
               </div>
 
-              <div className="p-3 bg-brand-50 rounded-xl border border-brand-100">
-                <p className="text-[10px] uppercase font-bold text-brand-600">Accuracy</p>
-                <p className="text-xl font-black text-brand-700 mt-0.5">{sessionAccuracy}%</p>
+              <div className="p-3 bg-pk-blue-light rounded-xl border border-pk-blue-soft">
+                <p className="text-[10px] uppercase font-bold text-pk-primary">Accuracy</p>
+                <p className="text-xl font-black text-pk-navy mt-0.5">{sessionAccuracy}%</p>
               </div>
             </div>
 
@@ -581,7 +582,7 @@ export const Practice: React.FC = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-pk-navy tracking-tight">
                 Practice & Revision
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -670,11 +671,11 @@ export const Practice: React.FC = () => {
                 onClick={() => handleTabChange('topics')}
                 className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'topics'
-                    ? 'border-brand-600 text-brand-600'
+                    ? 'border-pk-primary text-pk-primary font-bold'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <BookOpen className="w-4 h-4 text-brand-500" />
+                <BookOpen className="w-4 h-4 text-pk-primary" />
                 <span>Topic Tests</span>
               </button>
 
@@ -683,7 +684,7 @@ export const Practice: React.FC = () => {
                 onClick={() => handleTabChange('mistakes')}
                 className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'mistakes'
-                    ? 'border-brand-600 text-brand-600'
+                    ? 'border-pk-primary text-pk-primary font-bold'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -699,7 +700,7 @@ export const Practice: React.FC = () => {
                 onClick={() => handleTabChange('bookmarks')}
                 className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
                   activeTab === 'bookmarks'
-                    ? 'border-brand-600 text-brand-600'
+                    ? 'border-pk-primary text-pk-primary font-bold'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -744,7 +745,7 @@ export const Practice: React.FC = () => {
                 onClick={() => setSelectedSubjectFilter('all')}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border ${
                   selectedSubjectFilter === 'all'
-                    ? 'bg-brand-600 text-white border-brand-600'
+                    ? 'bg-pk-primary text-white border-pk-primary'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                 }`}
               >
@@ -757,7 +758,7 @@ export const Practice: React.FC = () => {
                   onClick={() => setSelectedSubjectFilter(subj)}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border ${
                     selectedSubjectFilter === subj
-                      ? 'bg-brand-600 text-white border-brand-600'
+                      ? 'bg-pk-primary text-white border-pk-primary'
                       : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                   }`}
                 >

@@ -11,7 +11,7 @@ export const BottomCta: React.FC = () => {
     <section className="relative py-14 sm:py-20 bg-white overflow-hidden">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="relative rounded-[1.75rem] bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 p-8 sm:p-12 shadow-2xl shadow-blue-500/25 overflow-hidden flex flex-col md:flex-row items-center gap-8 md:gap-10">
+          <div className="relative rounded-[1.75rem] bg-gradient-to-br from-pk-primary via-pk-primary-interactive to-pk-navy p-8 sm:p-12 shadow-2xl shadow-pk-primary/25 overflow-hidden flex flex-col md:flex-row items-center gap-8 md:gap-10">
             {/* Decorative rings + dots */}
             <div
               aria-hidden="true"
@@ -45,10 +45,10 @@ export const BottomCta: React.FC = () => {
                   stroke="rgba(255,255,255,0.6)"
                   strokeWidth="3"
                 />
-                <circle cx="100" cy="100" r="50" fill="#3b82f6" />
+                <circle cx="100" cy="100" r="50" fill="#0158FC" />
                 <circle cx="100" cy="100" r="30" fill="#ffffff" />
-                <circle cx="100" cy="100" r="14" fill="#1d4ed8" />
-                <path d="M 100 100 L 160 40 L 170 50 L 110 110 Z" fill="#1e3a8a" />
+                <circle cx="100" cy="100" r="14" fill="#063585" />
+                <path d="M 100 100 L 160 40 L 170 50 L 110 110 Z" fill="#0B1F44" />
                 <polygon points="160,40 180,20 170,50" fill="#fbbf24" />
                 <circle cx="100" cy="100" r="4" fill="#ffffff" />
               </svg>
@@ -56,14 +56,14 @@ export const BottomCta: React.FC = () => {
 
             {/* Content */}
             <div className="relative space-y-3 text-center md:text-left flex-1">
-              <p className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-blue-100">
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-pk-blue-light">
                 <BadgeCheck className="w-4 h-4" />
                 Your dream is closer
               </p>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
                 Start Practicing Today
               </h2>
-              <p className="text-sm text-blue-100 leading-relaxed font-normal max-w-xl">
+              <p className="text-sm text-pk-blue-light/90 leading-relaxed font-normal max-w-xl">
                 Join thousands of aspirants and take a step closer to your goal. Free to start —
                 upgrade only when you&apos;re ready.
               </p>
@@ -74,12 +74,12 @@ export const BottomCta: React.FC = () => {
               <Button
                 size="lg"
                 onClick={() => navigate('/register')}
-                className="bg-white hover:bg-blue-50 text-blue-700 font-bold px-8 py-3.5 rounded-xl shadow-xl text-sm gap-2 transition-all hover:-translate-y-0.5 w-full md:w-auto"
+                className="bg-white hover:bg-pk-blue-light text-pk-primary font-bold px-8 py-3.5 rounded-xl shadow-xl text-sm gap-2 transition-all hover:-translate-y-0.5 w-full md:w-auto"
               >
                 <span>Get Started Free</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
-              <p className="text-[11px] font-medium text-blue-100">No card required</p>
+              <p className="text-[11px] font-medium text-pk-blue-light/90">No card required</p>
             </div>
           </div>
         </Reveal>

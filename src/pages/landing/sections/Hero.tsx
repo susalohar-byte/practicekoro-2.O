@@ -60,19 +60,19 @@ export const Hero: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/80 via-white to-white pt-12 pb-14 sm:pt-16 sm:pb-16 lg:pt-20 lg:pb-20">
+    <section className="relative overflow-hidden bg-gradient-to-b from-pk-blue-light/50 via-white to-white pt-12 pb-14 sm:pt-16 sm:pb-16 lg:pt-20 lg:pb-20">
       {/* Mesh gradient orbs */}
       <div
         aria-hidden="true"
-        className="absolute -top-32 -left-32 w-[420px] h-[420px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none"
+        className="absolute -top-32 -left-32 w-[420px] h-[420px] bg-pk-primary/10 rounded-full blur-3xl pointer-events-none"
       />
       <div
         aria-hidden="true"
-        className="absolute top-1/3 -right-32 w-[460px] h-[460px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"
+        className="absolute top-1/3 -right-32 w-[460px] h-[460px] bg-pk-primary-interactive/10 rounded-full blur-3xl pointer-events-none"
       />
       <div
         aria-hidden="true"
-        className="absolute bottom-0 left-1/3 w-[380px] h-[380px] bg-cyan-400/10 rounded-full blur-3xl pointer-events-none"
+        className="absolute bottom-0 left-1/3 w-[380px] h-[380px] bg-pk-primary-bright/10 rounded-full blur-3xl pointer-events-none"
       />
       {/* Dot grid texture */}
       <div
@@ -85,19 +85,19 @@ export const Hero: React.FC = () => {
           {/* Left Content Column */}
           <div className="lg:col-span-6 text-center lg:text-left">
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur border border-blue-100 text-[11px] font-extrabold tracking-[0.12em] text-blue-700 uppercase shadow-xs">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur border border-pk-blue-soft text-[11px] font-extrabold tracking-[0.12em] text-pk-navy uppercase shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
-              <Sparkles className="w-3 h-3 text-blue-600" />
+              <Sparkles className="w-3 h-3 text-pk-primary" />
               <span>Practice more. Worry less.</span>
             </div>
 
             {/* Main Headline */}
             <h1
               aria-label="Crack Your Dream Exam."
-              className="mt-5 text-4xl sm:text-5xl lg:text-[3.75rem] font-black text-slate-900 tracking-tight leading-[1.08]"
+              className="mt-5 text-4xl sm:text-5xl lg:text-[3.75rem] font-black text-pk-navy tracking-tight leading-[1.08]"
             >
               Crack Your{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-pk-primary via-pk-primary-interactive to-pk-primary-bright bg-clip-text text-transparent">
                 Dream
               </span>{' '}
               Exam.
@@ -106,7 +106,7 @@ export const Hero: React.FC = () => {
             {/* Subheadline */}
             <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
               Mock tests, PYQs &amp; topic-wise practice for West Bengal&apos;s competitive exams —
-              in <span className="font-semibold text-slate-800">বাংলা ও English</span>.
+              in <span className="font-semibold text-pk-navy">বাংলা ও English</span>.
             </p>
 
             {/* Action Buttons */}
@@ -115,13 +115,13 @@ export const Hero: React.FC = () => {
                 <InteractiveHoverButton
                   text="Dashboard"
                   onClick={() => navigate(dashboardUrl)}
-                  className="w-44 h-12 text-sm sm:text-base border-blue-200 text-blue-700 shadow-md"
+                  className="w-44 h-12 text-sm sm:text-base border-pk-blue-soft text-pk-primary shadow-md"
                 />
               ) : (
                 <Button
                   size="lg"
                   onClick={() => navigate('/register')}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/30 text-sm sm:text-base gap-2 transition-all hover:-translate-y-0.5"
+                  className="bg-gradient-to-r from-pk-primary to-pk-primary-bright hover:from-pk-primary-interactive hover:to-pk-primary text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-pk-primary/30 text-sm sm:text-base gap-2 transition-all hover:-translate-y-0.5"
                 >
                   <span>Get Started Free</span>
                   <ArrowRight className="w-4 h-4" />
@@ -134,7 +134,7 @@ export const Hero: React.FC = () => {
                   const el = document.getElementById('exams');
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="border-2 border-blue-500/70 bg-white/70 backdrop-blur text-blue-600 hover:bg-blue-50 font-bold px-7 py-3.5 rounded-xl text-sm sm:text-base"
+                className="border-2 border-pk-primary/70 bg-white/70 backdrop-blur text-pk-primary hover:bg-pk-blue-light font-bold px-7 py-3.5 rounded-xl text-sm sm:text-base"
               >
                 View Exams
               </Button>
@@ -153,7 +153,7 @@ export const Hero: React.FC = () => {
                     style={{ zIndex: testimonials.length - i }}
                   />
                 ))}
-                <span className="w-8 h-8 -ml-2.5 rounded-full bg-blue-600 text-white text-[10px] font-black border-2 border-white shadow-sm flex items-center justify-center">
+                <span className="w-8 h-8 -ml-2.5 rounded-full bg-pk-primary text-white text-[10px] font-black border-2 border-white shadow-sm flex items-center justify-center">
                   6+
                 </span>
               </div>

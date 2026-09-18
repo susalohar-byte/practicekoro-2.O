@@ -54,6 +54,7 @@ export interface Chapter {
   orderIndex: number;
   isActive: boolean;
   testsCount?: number;
+  updatedAt?: string;
 }
 
 export type Topic = Chapter;
@@ -515,3 +516,45 @@ export interface AppSettingItem {
   description?: string;
   updatedAt: string;
 }
+
+export interface CouponItem {
+  id: string;
+  code: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  maxDiscountAmount?: number;
+  minOrderAmount: number;
+  maxUses?: number;
+  usedCount: number;
+  maxUsesPerUser: number;
+  applicablePlanId?: string;
+  validFrom: string;
+  validUntil?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CouponUsageItem {
+  id: string;
+  couponId: string;
+  userId?: string;
+  paymentId?: string;
+  orderAmount: number;
+  discountAmount: number;
+  finalAmount: number;
+  usedAt: string;
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  couponId?: string;
+  code?: string;
+  discountType?: 'percentage' | 'fixed';
+  discountValue?: number;
+  discountAmount: number;
+  finalPrice: number;
+  message: string;
+}
+

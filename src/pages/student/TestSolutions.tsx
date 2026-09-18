@@ -14,7 +14,9 @@ import {
   Bookmark,
   ArrowLeft,
   AlertTriangle,
+  Flag,
 } from 'lucide-react';
+import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 import type { QuestionSolution, MockTest } from '@/types';
 
 export const TestSolutions: React.FC = () => {
@@ -26,6 +28,19 @@ export const TestSolutions: React.FC = () => {
   const [testMeta, setTestMeta] = useState<MockTest | null>(null);
   const [filter, setFilter] = useState<'all' | 'wrong' | 'correct' | 'skipped'>('all');
   const [loading, setLoading] = useState(true);
+
+  // Support / Report Modal State
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportSubject, setReportSubject] = useState('');
+  const [reportIssue, setReportIssue] = useState('');
+
+  const handleReportQuestion = (sol: QuestionSolution, index: number) => {
+    setReportSubject(`Question #${index + 1} Issue: ${sol.questionText.slice(0, 45)}...`);
+    setReportIssue(
+      `Test: ${testMeta?.title || 'Mock Test'}\nQuestion #${index + 1} (ID: ${sol.id})\nQuestion: ${sol.questionText}\n\nProblem details (e.g. wrong answer key, typo, translation error):\n`
+    );
+    setReportModalOpen(true);
+  };
 
   useEffect(() => {
     async function loadSolutions() {
@@ -165,7 +180,7 @@ export const TestSolutions: React.FC = () => {
 
       {/* Solutions List */}
       <div className="space-y-4">
-        {filteredSolutions.map((sol) => {
+        {filteredSolutions.map((sol, idx) => {
           const isWrong = sol.selectedOption !== null && !sol.isCorrect;
           const isSkipped = sol.selectedOption === null;
 
@@ -199,17 +214,29 @@ export const TestSolutions: React.FC = () => {
                   )}
                 </div>
 
-                <button
-                  onClick={() => handleToggleBookmark(sol.id)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    sol.isBookmarked
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                  }`}
-                  title={sol.isBookmarked ? 'Bookmarked' : 'Add to Bookmarks'}
-                >
-                  <Bookmark className={`w-4 h-4 ${sol.isBookmarked ? 'fill-current' : ''}`} />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleReportQuestion(sol, idx)}
+                    className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-1 text-xs font-semibold"
+                    title="Report question discrepancy / ডিসক্রিপেন্সি রিপোর্ট"
+                  >
+                    <Flag className="w-4 h-4" />
+                    <span className="hidden sm:inline text-[11px]">Report</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleToggleBookmark(sol.id)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      sol.isBookmarked
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                    }`}
+                    title={sol.isBookmarked ? 'Bookmarked' : 'Add to Bookmarks'}
+                  >
+                    <Bookmark className={`w-4 h-4 ${sol.isBookmarked ? 'fill-current' : ''}`} />
+                  </button>
+                </div>
               </div>
 
               {/* Question Text */}
@@ -279,6 +306,14 @@ export const TestSolutions: React.FC = () => {
           );
         })}
       </div>
+
+      <StudentSupportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        defaultCategory="Test Issue"
+        defaultSubject={reportSubject}
+        defaultIssue={reportIssue}
+      />
     </div>
   );
 };

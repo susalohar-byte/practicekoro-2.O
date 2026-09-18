@@ -112,13 +112,13 @@ export const TopicTests: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 to-indigo-50 p-4 sm:p-5">
+      <div className="rounded-2xl border border-pk-blue-soft bg-gradient-to-r from-pk-blue-light to-pk-blue-soft/30 p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <div className="rounded-xl bg-brand-600 p-2.5 text-white shadow-sm">
+          <div className="rounded-xl bg-pk-primary p-2.5 text-white shadow-sm">
             <BookOpen className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-black text-slate-900">Topic-wise Practice Tests</h2>
+            <h2 className="text-base font-black text-pk-navy">Topic-wise Practice Tests</h2>
             <p className="mt-1 text-xs leading-5 text-slate-600">
               Select a subject, choose a topic, and start a focused test for{' '}
               {selectedExam?.title ?? 'your exam'}.
@@ -129,10 +129,10 @@ export const TopicTests: React.FC = () => {
 
       <section className="space-y-3" aria-labelledby="subject-heading">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-black text-white">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-pk-primary text-xs font-black text-white">
             1
           </span>
-          <h3 id="subject-heading" className="text-sm font-black text-slate-900">
+          <h3 id="subject-heading" className="text-sm font-black text-pk-navy">
             Select Subject
           </h3>
         </div>
@@ -154,16 +154,16 @@ export const TopicTests: React.FC = () => {
                   type="button"
                   onClick={() => setSelectedSubjectId(subject.id)}
                   aria-pressed={selected}
-                  className={`shrink-0 rounded-xl border px-4 py-3 text-left transition-all focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+                  className={`shrink-0 rounded-xl border px-4 py-3 text-left transition-all focus:outline-none focus:ring-2 focus:ring-pk-primary focus:ring-offset-2 ${
                     selected
-                      ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50'
+                      ? 'border-pk-primary bg-pk-primary text-white shadow-xs'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-pk-blue-soft hover:bg-pk-blue-light'
                   }`}
                 >
                   <span className="block text-sm font-bold">{subject.name}</span>
                   {subject.chaptersCount !== undefined && (
                     <span
-                      className={`mt-0.5 block text-[11px] ${selected ? 'text-brand-100' : 'text-slate-400'}`}
+                      className={`mt-0.5 block text-[11px] ${selected ? 'text-pk-blue-light' : 'text-slate-400'}`}
                     >
                       {subject.chaptersCount} topics
                     </span>
@@ -178,11 +178,11 @@ export const TopicTests: React.FC = () => {
       {selectedSubjectId && (
         <section className="space-y-3" aria-labelledby="topic-heading">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-black text-white">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-pk-primary text-xs font-black text-white">
               2
             </span>
             <div>
-              <h3 id="topic-heading" className="text-sm font-black text-slate-900">
+              <h3 id="topic-heading" className="text-sm font-black text-pk-navy">
                 Select Topic
               </h3>
               <p className="text-[11px] text-slate-500">Topics from {selectedSubject?.name}</p>
@@ -206,15 +206,15 @@ export const TopicTests: React.FC = () => {
                     type="button"
                     onClick={() => setSelectedTopicId(topic.id)}
                     aria-pressed={selected}
-                    className={`rounded-xl border p-4 text-left transition-all focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+                    className={`rounded-xl border p-4 text-left transition-all focus:outline-none focus:ring-2 focus:ring-pk-primary focus:ring-offset-2 ${
                       selected
-                        ? 'border-brand-500 bg-brand-50 shadow-sm ring-1 ring-brand-200'
-                        : 'border-slate-200 bg-white hover:border-brand-300 hover:shadow-sm'
+                        ? 'border-pk-primary bg-pk-blue-light text-pk-dark shadow-xs ring-1 ring-pk-primary'
+                        : 'border-slate-200 bg-white hover:border-pk-blue-soft hover:shadow-xs'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div
-                        className={`rounded-lg p-2 ${selected ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'}`}
+                        className={`rounded-lg p-2 ${selected ? 'bg-pk-primary text-white' : 'bg-slate-100 text-slate-500'}`}
                       >
                         <Layers3 className="h-4 w-4" />
                       </div>
@@ -222,7 +222,7 @@ export const TopicTests: React.FC = () => {
                         Topic {index + 1}
                       </span>
                     </div>
-                    <h4 className="mt-3 text-sm font-bold leading-5 text-slate-900">
+                    <h4 className="mt-3 text-sm font-bold leading-5 text-pk-navy">
                       {topic.name}
                     </h4>
                     {topic.description && (
@@ -231,7 +231,7 @@ export const TopicTests: React.FC = () => {
                       </p>
                     )}
                     {topic.testsCount !== undefined && (
-                      <p className="mt-2 text-[11px] font-semibold text-brand-600">
+                      <p className="mt-2 text-[11px] font-semibold text-pk-primary">
                         {topic.testsCount} tests available
                       </p>
                     )}
@@ -246,11 +246,11 @@ export const TopicTests: React.FC = () => {
       {selectedTopicId && (
         <section className="space-y-3" aria-labelledby="test-heading">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-black text-white">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-pk-primary text-xs font-black text-white">
               3
             </span>
             <div>
-              <h3 id="test-heading" className="text-sm font-black text-slate-900">
+              <h3 id="test-heading" className="text-sm font-black text-pk-navy">
                 Available Tests
               </h3>
               <p className="text-[11px] text-slate-500">Tests for {selectedTopic?.name}</p>
@@ -279,7 +279,7 @@ export const TopicTests: React.FC = () => {
                             Topic Test
                           </span>
                         </div>
-                        <h4 className="text-sm font-black leading-5 text-slate-900 sm:text-base">
+                        <h4 className="text-sm font-black leading-5 text-pk-navy sm:text-base">
                           {test.title}
                         </h4>
                         {test.description && (
@@ -325,7 +325,7 @@ export const TopicTests: React.FC = () => {
 
 const LoadingRow: React.FC<{ label: string }> = ({ label }) => (
   <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-8 text-sm font-medium text-slate-500">
-    <Loader2 className="h-4 w-4 animate-spin text-brand-600" />
+    <Loader2 className="h-4 w-4 animate-spin text-pk-primary" />
     {label}...
   </div>
 );

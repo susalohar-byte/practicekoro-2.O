@@ -8,7 +8,6 @@ import {
   BookOpen,
   Shield,
   FileText,
-  Layers,
   CreditCard,
   Bell,
   HelpCircle,
@@ -17,6 +16,9 @@ import {
   Menu,
   X,
   Sparkles,
+  FolderTree,
+  ListOrdered,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -42,24 +44,23 @@ export const AdminLayout: React.FC = () => {
 
   const navSections: AdminNavSection[] = [
     {
-      title: 'Core',
+      title: 'Overview',
       items: [
         {
           label: 'Dashboard',
           path: '/admin',
-          end: true,
-          altPaths: ['/admin/analytics', '/admin/overview'],
           icon: LayoutDashboard,
+          end: true,
         },
       ],
     },
     {
-      title: 'Test & Question Engine',
+      title: 'Content Management',
       items: [
         {
           label: 'Question Bank',
-          path: '/admin/question-bank',
-          altPaths: ['/admin/questions', '/admin/full-mock-questions', '/admin/pyq-questions'],
+          path: '/admin/questions',
+          altPaths: ['/admin/question-bank'],
           icon: BookOpen,
         },
         {
@@ -71,14 +72,18 @@ export const AdminLayout: React.FC = () => {
         {
           label: 'Mock Test Management',
           path: '/admin/tests',
-          altPaths: ['/admin/test-series'],
           icon: FileText,
         },
         {
-          label: 'Subjects & Topics',
-          path: '/admin/subjects',
-          altPaths: ['/admin/topics', '/admin/chapters'],
-          icon: Layers,
+          label: 'Test Series',
+          path: '/admin/test-series',
+          icon: ListOrdered,
+        },
+        {
+          label: 'Topic & Subjects',
+          path: '/admin/topic-manage',
+          altPaths: ['/admin/subjects', '/admin/topics', '/admin/chapters'],
+          icon: FolderTree,
         },
       ],
     },
@@ -90,6 +95,12 @@ export const AdminLayout: React.FC = () => {
           path: '/admin/subscriptions',
           altPaths: ['/admin/students', '/admin/pro-users'],
           icon: CreditCard,
+        },
+        {
+          label: 'Coupons & Discounts',
+          path: '/admin/coupons',
+          altPaths: ['/admin/discounts'],
+          icon: Tag,
         },
         {
           label: 'Notifications',
@@ -131,7 +142,7 @@ export const AdminLayout: React.FC = () => {
         {/* Top Header */}
         <div className="h-16 flex items-center justify-between px-3.5 sm:px-4 border-b border-[#152347] shrink-0 bg-[#070d1d]/80 backdrop-blur-md">
           <Link to="/admin" className="flex items-center gap-2.5 group min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 flex items-center justify-center shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pk-primary to-pk-primary-bright flex items-center justify-center shadow-md shadow-pk-primary/25 group-hover:scale-105 transition-transform shrink-0">
               <img
                 src="/logo-icon-transparent.png"
                 alt="PracticeKoro"
@@ -192,7 +203,7 @@ export const AdminLayout: React.FC = () => {
                       className={cn(
                         'group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors duration-150 select-none',
                         isItemActive
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 !text-white font-bold shadow-md shadow-blue-600/40 border border-blue-400/40'
+                          ? 'bg-gradient-to-r from-pk-primary to-pk-primary-bright !text-white font-bold shadow-md shadow-pk-primary/40 border border-pk-primary-accent/40'
                           : '!text-white hover:bg-white/[0.12] border border-transparent'
                       )}
                     >
@@ -240,7 +251,7 @@ export const AdminLayout: React.FC = () => {
           <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0e1935] border border-[#1d2d54] shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-black flex items-center justify-center text-xs shadow-sm shadow-blue-500/30">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pk-primary to-pk-primary-bright text-white font-black flex items-center justify-center text-xs shadow-sm shadow-pk-primary/30">
                   {user?.fullName?.charAt(0) || 'A'}
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0a1226]" />

@@ -17,6 +17,7 @@ import type {
   Subject,
   TestAttempt,
   TestSeries,
+  CouponItem,
 } from '@/types';
 
 // Shared in-memory fallback stores (used when Supabase is unconfigured).
@@ -72,3 +73,59 @@ export const localAttemptsStore: Record<
     result?: GradedResult;
   }
 > = {};
+
+// Local in-memory store for promotional coupons
+export const localCoupons: CouponItem[] = [
+  {
+    id: 'coupon_welcome50',
+    code: 'WELCOME50',
+    description: 'Special ₹50 introductory discount for new aspirants',
+    discountType: 'fixed',
+    discountValue: 50,
+    minOrderAmount: 199,
+    maxUses: 500,
+    usedCount: 38,
+    maxUsesPerUser: 1,
+    applicablePlanId: 'pro_1_year',
+    validFrom: new Date(Date.now() - 30 * 86400000).toISOString(),
+    validUntil: new Date(Date.now() + 150 * 86400000).toISOString(),
+    isActive: true,
+    createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+  },
+  {
+    id: 'coupon_festive20',
+    code: 'FESTIVE20',
+    description: 'Festive 20% discount on 1-Year All-Access Pro Pass',
+    discountType: 'percentage',
+    discountValue: 20,
+    maxDiscountAmount: 100,
+    minOrderAmount: 299,
+    maxUses: 1000,
+    usedCount: 142,
+    maxUsesPerUser: 1,
+    applicablePlanId: 'pro_1_year',
+    validFrom: new Date(Date.now() - 15 * 86400000).toISOString(),
+    validUntil: new Date(Date.now() + 75 * 86400000).toISOString(),
+    isActive: true,
+    createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 15 * 86400000).toISOString(),
+  },
+  {
+    id: 'coupon_propass100',
+    code: 'PROPASS100',
+    description: 'Special seasonal ₹100 flat off on Pro Pass',
+    discountType: 'fixed',
+    discountValue: 100,
+    minOrderAmount: 299,
+    maxUses: 250,
+    usedCount: 89,
+    maxUsesPerUser: 1,
+    applicablePlanId: 'pro_1_year',
+    validFrom: new Date(Date.now() - 5 * 86400000).toISOString(),
+    validUntil: new Date(Date.now() + 55 * 86400000).toISOString(),
+    isActive: true,
+    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+];

@@ -608,6 +608,7 @@ export const adminApi = {
         isActive: item.is_active,
         parentId: (item as any).parent_id ?? undefined,
         testsCount,
+        updatedAt: (item as any).updated_at ?? undefined,
       };
     });
   },
@@ -1323,6 +1324,97 @@ export const adminApi = {
       throw new Error(error.message);
     }
     return true;
+  },
+
+  async duplicateTest(id: string): Promise<MockTest | null> {
+    const existing = await this.getTestById(id);
+    if (!existing) return null;
+
+    const newTest = await this.createTest({
+      title: `${existing.title} (Copy)`,
+      slug: `${existing.slug || 'test'}-copy-${Date.now()}`,
+      description: existing.description,
+      examId: existing.examId,
+      subjectId: existing.subjectId,
+      chapterId: existing.chapterId,
+      topicId: existing.topicId,
+      durationMinutes: existing.durationMinutes,
+      totalMarks: existing.totalMarks,
+      passingMarks: existing.passingMarks,
+      negativeMarking: existing.negativeMarking,
+      isPremium: existing.isPremium,
+      testType: existing.testType,
+      totalQuestions: existing.totalQuestions || 0,
+      orderIndex: (existing.orderIndex || 1) + 1,
+      isActive: false,
+      year: existing.year,
+      paperName: existing.paperName,
+      shift: existing.shift,
+      status: 'draft',
+    });
+
+    try {
+      const qAssigned = await this.getTestAssignedQuestions(id);
+      if (qAssigned && qAssigned.length > 0) {
+        await this.saveTestQuestions(
+          newTest.id,
+          qAssigned.map((q: TestQuestionAssignment, idx: number) => ({
+            questionId: q.questionId,
+            orderIndex: idx + 1,
+            marks: q.marks,
+            negativeMarks: q.negativeMarks,
+          }))
+        );
+      }
+    } catch (e) {
+      console.warn('Questions duplication note:', e);
+    }
+
+    return newTest;
+  },
+
+  async getTestAttempts(testId: string): Promise<any[]> {
+    if (!isSupabaseConfigured) {
+      return [];
+    }
+    const { data, error } = await supabase
+      .from('test_attempts')
+      .select('id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)')
+      .eq('test_id', testId)
+      .order('score', { ascending: false });
+
+    if (error) {
+      const { data: fallbackData } = await supabase
+        .from('test_attempts')
+        .select('*')
+        .eq('test_id', testId)
+        .order('score', { ascending: false });
+      return (fallbackData || []).map((d: any) => ({
+        id: d.id,
+        userId: d.user_id,
+        userName: 'Student Candidate',
+        userEmail: '',
+        score: d.score,
+        totalMarks: d.total_marks,
+        accuracy: d.accuracy,
+        timeSpentSeconds: d.time_spent_seconds,
+        status: d.status,
+        createdAt: d.created_at,
+      }));
+    }
+
+    return (data || []).map((d: any) => ({
+      id: d.id,
+      userId: d.user_id,
+      userName: d.profiles?.full_name || 'Student Candidate',
+      userEmail: d.profiles?.email || '',
+      score: d.score,
+      totalMarks: d.total_marks,
+      accuracy: d.accuracy,
+      timeSpentSeconds: d.time_spent_seconds,
+      status: d.status,
+      createdAt: d.created_at,
+    }));
   },
 
   async validateTestForPublish(testId: string): Promise<PublishValidationResult> {
@@ -2734,14 +2826,24 @@ export const adminApi = {
     ticket: Omit<SupportTicketItem, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
+      let resolvedUserId = ticket.userId || null;
+      if (!resolvedUserId) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          resolvedUserId = authData?.user?.id || null;
+        } catch {
+          // ignore auth error
+        }
+      }
+
       const { error } = await supabase.from('support_tickets').insert({
-        user_id: ticket.userId || null,
-        student_name: ticket.studentName,
-        student_email: ticket.studentEmail,
+        user_id: resolvedUserId,
+        student_name: ticket.studentName || 'Student Candidate',
+        student_email: ticket.studentEmail || '',
         subject: ticket.subject,
         issue: ticket.issue,
-        category: ticket.category,
-        priority: ticket.priority,
+        category: ticket.category || 'Other',
+        priority: ticket.priority || 'medium',
         status: ticket.status || 'open',
         resolution_notes: ticket.resolutionNotes || null,
       });
@@ -2751,32 +2853,64 @@ export const adminApi = {
     return { success: true };
   },
 
-  // --------------------------------------------------------------------------
-  // APP SETTINGS API
-  // --------------------------------------------------------------------------
-  async getAppSettings(): Promise<AppSettingItem[]> {
+  async getStudentSupportTickets(userId?: string): Promise<SupportTicketItem[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('app_settings').select('*');
-      if (error) throw new Error(error.message);
+      let targetUserId = userId;
+      if (!targetUserId) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          targetUserId = authData?.user?.id;
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!targetUserId) return [];
+
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to load student support tickets:', error);
+        return [];
+      }
+
       if (data && data.length > 0) {
         return data.map((d: any) => ({
           id: d.id,
+          userId: d.user_id || undefined,
+          studentName: d.student_name || 'Student Candidate',
+          studentEmail: d.student_email || '',
+          subject: d.subject,
+          issue: d.issue,
           category: d.category,
-          key: d.key,
-          value: d.value,
-          description: d.description || undefined,
+          priority: d.priority,
+          status: d.status,
+          assignedTo: d.assigned_to || undefined,
+          resolutionNotes: d.resolution_notes || undefined,
+          createdAt: d.created_at,
           updatedAt: d.updated_at,
         }));
       }
       return [];
     }
+    return [];
+  },
 
-    return [
+  // --------------------------------------------------------------------------
+  // APP SETTINGS API
+  // --------------------------------------------------------------------------
+  async getAppSettings(): Promise<AppSettingItem[]> {
+    const DEFAULT_APP_SETTINGS: AppSettingItem[] = [
       {
         id: 'general_app_name',
         category: 'general',
         key: 'app_name',
         value: 'PracticeKoro',
+        description: 'Platform name displayed across UI',
         updatedAt: new Date().toISOString(),
       },
       {
@@ -2784,6 +2918,15 @@ export const adminApi = {
         category: 'general',
         key: 'support_email',
         value: 'support@practicekoro.online',
+        description: 'Support contact email',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'general_support_phone',
+        category: 'general',
+        key: 'support_phone',
+        value: '+91 98765 43210',
+        description: 'Support phone helpline',
         updatedAt: new Date().toISOString(),
       },
       {
@@ -2791,20 +2934,146 @@ export const adminApi = {
         category: 'general',
         key: 'website_url',
         value: 'https://practicekoro.online',
+        description: 'Official web application domain',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_default_duration',
+        category: 'exam_defaults',
+        key: 'default_duration_minutes',
+        value: 60,
+        description: 'Standard default exam duration in minutes',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_default_marks',
+        category: 'exam_defaults',
+        key: 'default_marks_per_q',
+        value: 1.0,
+        description: 'Standard default marks per correct question',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_default_negative_marks',
+        category: 'exam_defaults',
+        key: 'default_negative_marks',
+        value: 0.25,
+        description: 'Standard default negative marking',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'exam_passing_percentage',
+        category: 'exam_defaults',
+        key: 'default_passing_percentage',
+        value: 35,
+        description: 'Standard passing score percentage',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sub_currency',
+        category: 'subscription',
+        key: 'currency',
+        value: 'INR',
+        description: 'Platform transaction currency',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sub_expiry_warning_days',
+        category: 'subscription',
+        key: 'expiry_warning_days',
+        value: 7,
+        description: 'Days before expiry to display renewal warning',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sys_maintenance_mode',
+        category: 'system',
+        key: 'maintenance_mode',
+        value: false,
+        description: 'Enable platform maintenance splash mode',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'sys_app_version',
+        category: 'system',
+        key: 'app_version',
+        value: '2.0.0',
+        description: 'Platform production release version',
         updatedAt: new Date().toISOString(),
       },
     ];
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.from('app_settings').select('*');
+        if (error) {
+          console.warn('Could not fetch app_settings from Supabase, using defaults:', error.message);
+          return DEFAULT_APP_SETTINGS;
+        }
+        if (data && data.length > 0) {
+          return data.map((d: any) => ({
+            id: d.id,
+            category: d.category,
+            key: d.key,
+            value: d.value,
+            description: d.description || undefined,
+            updatedAt: d.updated_at,
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to query app_settings, falling back to defaults:', err);
+      }
+    }
+
+    return DEFAULT_APP_SETTINGS;
   },
 
   async updateAppSetting(
     id: string,
     value: unknown
   ): Promise<{ success: boolean; error?: string }> {
+    return this.updateAppSettings([{ id, value }]);
+  },
+
+  async updateAppSettings(
+    updates: Array<{ id: string; value: unknown }>
+  ): Promise<{ success: boolean; error?: string }> {
     if (isSupabaseConfigured) {
+      const SETTINGS_META: Record<string, { category: string; key: string; description: string }> = {
+        general_app_name: { category: 'general', key: 'app_name', description: 'Platform name displayed across UI' },
+        general_support_email: { category: 'general', key: 'support_email', description: 'Support contact email' },
+        general_support_phone: { category: 'general', key: 'support_phone', description: 'Support phone helpline' },
+        general_website_url: { category: 'general', key: 'website_url', description: 'Official web application domain' },
+        exam_default_duration: { category: 'exam_defaults', key: 'default_duration_minutes', description: 'Standard default exam duration in minutes' },
+        exam_default_marks: { category: 'exam_defaults', key: 'default_marks_per_q', description: 'Standard default marks per correct question' },
+        exam_default_negative_marks: { category: 'exam_defaults', key: 'default_negative_marks', description: 'Standard default negative marking' },
+        exam_passing_percentage: { category: 'exam_defaults', key: 'default_passing_percentage', description: 'Standard passing score percentage' },
+        sub_currency: { category: 'subscription', key: 'currency', description: 'Platform transaction currency' },
+        sub_expiry_warning_days: { category: 'subscription', key: 'expiry_warning_days', description: 'Days before expiry to display renewal warning' },
+        sys_maintenance_mode: { category: 'system', key: 'maintenance_mode', description: 'Enable platform maintenance splash mode' },
+        sys_app_version: { category: 'system', key: 'app_version', description: 'Platform production release version' },
+      };
+
+      const rows = updates.map((u) => {
+        const meta = SETTINGS_META[u.id] || {
+          category: 'general',
+          key: u.id,
+          description: 'Platform configuration setting',
+        };
+        return {
+          id: u.id,
+          category: meta.category,
+          key: meta.key,
+          value: JSON.stringify(u.value),
+          description: meta.description,
+          updated_at: new Date().toISOString(),
+        };
+      });
+
       const { error } = await supabase
         .from('app_settings')
-        .update({ value: JSON.stringify(value), updated_at: new Date().toISOString() })
-        .eq('id', id);
+        .upsert(rows, { onConflict: 'id' });
+
       if (error) return { success: false, error: error.message };
       return { success: true };
     }

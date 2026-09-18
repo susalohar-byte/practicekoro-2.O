@@ -143,13 +143,13 @@ export const Home: React.FC = () => {
       {/* =========================================================================
           SECTION 1: HEADER & TARGET EXAM QUICK-SWITCHER
           ========================================================================= */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-white via-blue-50/25 to-white border border-slate-200/80 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.04)] p-6 sm:p-8 text-center flex flex-col items-center justify-center space-y-4">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-white via-pk-blue-light/30 to-white dark:from-slate-900 dark:via-slate-900/60 dark:to-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 sm:p-8 text-center flex flex-col items-center justify-center space-y-4">
         {/* Subtle Ambient Radial Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-gradient-to-r from-blue-400/10 via-indigo-400/15 to-blue-400/10 blur-2xl pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-gradient-to-r from-pk-primary/10 via-pk-primary-bright/15 to-pk-primary/10 blur-2xl pointer-events-none" />
 
         {/* Top Badges Row (Centered) */}
         <div className="relative inline-flex items-center gap-2 flex-wrap justify-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100/90 text-slate-700 border border-slate-200/80 shadow-xs">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="uppercase tracking-wider">{getGreeting()}</span>
           </span>
@@ -162,9 +162,9 @@ export const Home: React.FC = () => {
           ) : (
             <Link
               to="/subscription"
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-pk-blue-light hover:bg-pk-blue-soft text-pk-navy border border-pk-blue-soft transition-colors"
             >
-              <Sparkles className="w-3 h-3 text-blue-600" />
+              <Sparkles className="w-3 h-3 text-pk-primary" />
               Free Tier
             </Link>
           )}
@@ -172,14 +172,14 @@ export const Home: React.FC = () => {
 
         {/* Grand Centered Student Greeting & Name */}
         <div className="relative space-y-2 max-w-2xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-pk-navy dark:text-white leading-tight">
             Welcome back,{' '}
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-pk-primary via-pk-primary-interactive to-pk-primary-bright bg-clip-text text-transparent">
               {user?.fullName || 'Student Aspirant'}
             </span>{' '}
             👋
           </h1>
-          <p className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium leading-relaxed">
+          <p className="text-xs sm:text-sm lg:text-base text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
             Targeted preparation and rigorous mock tests for West Bengal competitive exams.
           </p>
         </div>
@@ -190,16 +190,16 @@ export const Home: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsExamDropdownOpen(!isExamDropdownOpen)}
-              className="inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/10 hover:bg-blue-50/40 transition-all text-xs sm:text-sm font-bold text-slate-800 active:scale-[0.98]"
+              className="inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-pk-primary hover:shadow-md hover:shadow-pk-primary/10 hover:bg-pk-blue-light/40 transition-all text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 active:scale-[0.98]"
               title="Click to switch your target exam"
             >
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
+              <div className="w-2.5 h-2.5 rounded-full bg-pk-primary animate-pulse" />
               <span className="text-slate-500 font-medium">Target Exam:</span>
-              <span className="text-blue-700 font-extrabold max-w-[200px] sm:max-w-[280px] truncate">
+              <span className="text-pk-navy dark:text-pk-blue-soft font-extrabold max-w-[200px] sm:max-w-[280px] truncate">
                 {selectedExam?.title || 'Select Exam'}
               </span>
               <ChevronDown
-                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExamDropdownOpen ? 'rotate-180 text-blue-600' : ''}`}
+                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExamDropdownOpen ? 'rotate-180 text-pk-primary' : ''}`}
               />
             </button>
 
@@ -224,8 +224,8 @@ export const Home: React.FC = () => {
                           }}
                           className={`w-full px-4 py-2.5 text-left text-xs flex items-center justify-between transition-colors ${
                             isSelected
-                              ? 'bg-blue-50 text-blue-700 font-bold'
-                              : 'text-slate-700 hover:bg-slate-50 font-medium'
+                              ? 'bg-pk-blue-light text-pk-navy font-bold'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
                           }`}
                         >
                           <div className="flex flex-col">
@@ -235,7 +235,7 @@ export const Home: React.FC = () => {
                               Vacancies
                             </span>
                           </div>
-                          {isSelected && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                          {isSelected && <Check className="w-4 h-4 text-pk-primary shrink-0" />}
                         </button>
                       );
                     })}
@@ -248,15 +248,15 @@ export const Home: React.FC = () => {
 
         {/* Quick Features Row (Centered) */}
         <div className="pt-1 flex items-center justify-center gap-2 sm:gap-3 flex-wrap text-[11px] sm:text-xs font-semibold text-slate-500">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200/60">
-            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-pk-blue-light/60 dark:bg-slate-800 text-pk-navy dark:text-slate-200 border border-pk-blue-soft/60">
+            <CheckCircle2 className="w-3.5 h-3.5 text-pk-primary" />
             <span>{tests.length} Mock Tests Available</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200/60">
-            <Target className="w-3.5 h-3.5 text-indigo-600" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700">
+            <Target className="w-3.5 h-3.5 text-pk-primary" />
             <span>Syllabus Aligned</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200/60">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700">
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             <span>Real Exam Simulator</span>
           </span>

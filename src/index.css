@@ -1,3 +1,5 @@
+@import './styles/design-tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,7 +13,28 @@
 
   body {
     font-family: var(--font-sans);
+    background-color: var(--pk-background);
+    color: #0f172a;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .dark body {
+    background-color: var(--pk-background);
+    color: #f1f5f9;
+  }
+}
+
+@layer utilities {
+  .bg-pk-gradient {
+    background-image: var(--pk-gradient-primary);
+  }
+  .bg-pk-subtle {
+    background-image: var(--pk-gradient-subtle);
+  }
+  .text-pk-gradient {
+    background-image: var(--pk-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 }
 
@@ -543,6 +566,10 @@
   /* Preserve white text on solid colored primary action buttons & badges */
   html:not(.dark) .admin-scope button.bg-indigo-600,
   html:not(.dark) .admin-scope a.bg-indigo-600,
+  html:not(.dark) .admin-scope button.bg-pk-primary,
+  html:not(.dark) .admin-scope a.bg-pk-primary,
+  html:not(.dark) .admin-scope button.bg-brand-600,
+  html:not(.dark) .admin-scope a.bg-brand-600,
   html:not(.dark) .admin-scope button.bg-emerald-600,
   html:not(.dark) .admin-scope a.bg-emerald-600,
   html:not(.dark) .admin-scope button.bg-rose-600,

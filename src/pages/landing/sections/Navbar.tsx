@@ -46,15 +46,15 @@ export const Navbar: React.FC = () => {
           className="flex items-center gap-2.5 group shrink-0"
           aria-label="PracticeKoro home"
         >
-          <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
+          <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-pk-primary to-pk-primary-bright flex items-center justify-center shadow-md shadow-pk-primary/25 group-hover:scale-105 transition-transform">
             <img
               src="/logo-icon-transparent.png"
               alt="PracticeKoro"
               className="w-6 h-6 object-contain"
             />
           </span>
-          <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight flex items-center">
-            Practice<span className="text-blue-600 dark:text-blue-400">Koro</span>
+          <span className="font-black text-xl sm:text-2xl text-pk-navy tracking-tight flex items-center">
+            Practice<span className="text-pk-primary">Koro</span>
           </span>
         </Link>
 
@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
             <a
               key={link.href}
               href={link.href}
-              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:rounded-full after:bg-blue-600 hover:after:w-full after:transition-all"
+              className="hover:text-pk-primary transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:rounded-full after:bg-pk-primary hover:after:w-full after:transition-all"
             >
               {link.label}
             </a>
@@ -80,7 +80,7 @@ export const Navbar: React.FC = () => {
             <InteractiveHoverButton
               text="Dashboard"
               onClick={() => navigate(dashboardUrl)}
-              className="w-32 sm:w-36 text-xs sm:text-sm h-9 sm:h-10 border-blue-200 text-blue-600 shadow-sm"
+              className="w-32 sm:w-36 text-xs sm:text-sm h-9 sm:h-10 border-pk-blue-soft text-pk-primary shadow-xs"
             />
           ) : (
             <div className="hidden sm:flex items-center gap-2.5">
@@ -88,14 +88,14 @@ export const Navbar: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate('/login')}
-                className="text-sm font-semibold text-blue-600 border-slate-200 hover:bg-blue-50 hover:border-blue-300 px-5 py-2 rounded-xl"
+                className="text-sm font-semibold text-pk-primary border-slate-200 hover:bg-pk-blue-light hover:border-pk-blue-soft px-5 py-2 rounded-xl"
               >
                 Login
               </Button>
               <Button
                 size="sm"
                 onClick={() => navigate('/register')}
-                className="text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2 rounded-xl shadow-md shadow-blue-500/25"
+                className="text-sm font-bold bg-gradient-to-r from-pk-primary to-pk-primary-bright hover:from-pk-primary-interactive hover:to-pk-primary text-white px-5 py-2 rounded-xl shadow-md shadow-pk-primary/25"
               >
                 Get Started
               </Button>
@@ -126,7 +126,7 @@ export const Navbar: React.FC = () => {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-pk-blue-light hover:text-pk-primary transition-colors"
               >
                 {link.label}
               </a>
@@ -138,7 +138,7 @@ export const Navbar: React.FC = () => {
                   setMenuOpen(false);
                   navigate('/login');
                 }}
-                className="font-semibold text-blue-600 border-slate-200 rounded-xl"
+                className="font-semibold text-pk-primary border-slate-200 rounded-xl"
               >
                 Login
               </Button>
@@ -147,7 +147,7 @@ export const Navbar: React.FC = () => {
                   setMenuOpen(false);
                   navigate('/register');
                 }}
-                className="font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+                className="font-bold bg-pk-primary hover:bg-pk-primary-interactive text-white rounded-xl"
               >
                 Get Started
               </Button>

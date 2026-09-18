@@ -52,5 +52,9 @@ export function isStudentNavActive(pathname: string, label: string): boolean {
     return p.startsWith('/profile') || p.startsWith('/settings');
   }
 
+  if (label === 'Help & Support' || label === 'Support') {
+    return p.startsWith('/support');
+  }
+
   return false;
 }

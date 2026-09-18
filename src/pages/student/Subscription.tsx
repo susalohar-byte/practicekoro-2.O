@@ -20,9 +20,10 @@ import {
   Sparkles,
   Lock,
   RefreshCw,
+  Tag,
 } from 'lucide-react';
 import { openRazorpayCheckout } from '@/utils/razorpay';
-import type { Payment, SubscriptionPlan } from '@/types';
+import type { Payment, SubscriptionPlan, CouponValidationResult } from '@/types';
 
 export const Subscription: React.FC = () => {
   const { user } = useAuth();
@@ -43,6 +44,36 @@ export const Subscription: React.FC = () => {
     expiresAt: string;
     isRenewal: boolean;
   } | null>(null);
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim() || !activePlan) return;
+    try {
+      setIsValidatingCoupon(true);
+      setCouponError('');
+      const res = await api.validateCoupon(
+        couponInput.trim(),
+        activePlan.id,
+        activePlan.price,
+        user?.id
+      );
+      if (res.valid) {
+        setAppliedCoupon(res);
+        setCouponInput('');
+      } else {
+        setCouponError(res.message || 'Invalid coupon code');
+      }
+    } catch {
+      setCouponError('Failed to validate coupon code');
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
 
   useEffect(() => {
     if (plans.length > 0 && !selectedPlan) {
@@ -376,15 +407,27 @@ export const Subscription: React.FC = () => {
             {/* Pricing Callout (NO DARK PATTERNS, NO CROSSED-OUT FAKE PRICES) */}
             <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-baseline justify-between">
               <div>
-                <div className="flex items-baseline gap-1.5">
+                <div className="flex items-baseline gap-2">
                   <span className="text-3xl sm:text-4xl font-black text-slate-900">
-                    ₹{activePlan.price}
+                    ₹{appliedCoupon ? appliedCoupon.finalPrice : activePlan.price}
                   </span>
+                  {appliedCoupon && (
+                    <span className="text-base line-through text-slate-400 font-bold">
+                      ₹{activePlan.price}
+                    </span>
+                  )}
                   <span className="text-xs font-bold text-slate-500">/ 365 Days</span>
                 </div>
-                <p className="text-xs font-semibold text-emerald-700 mt-1">
-                  Transparent All-Inclusive Pricing • Single One-Time Payment
-                </p>
+                {appliedCoupon ? (
+                  <p className="text-xs font-bold text-emerald-700 mt-1 flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Coupon {appliedCoupon.code} applied: ₹{appliedCoupon.discountAmount} saved!
+                  </p>
+                ) : (
+                  <p className="text-xs font-semibold text-emerald-700 mt-1">
+                    Transparent All-Inclusive Pricing • Single One-Time Payment
+                  </p>
+                )}
               </div>
               <span className="text-xs font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border border-brand-100">
                 Universal Access
@@ -443,6 +486,59 @@ export const Subscription: React.FC = () => {
               </ul>
             </div>
 
+            {/* Coupon Code Redemption Box */}
+            <div className="pt-2">
+              {appliedCoupon ? (
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-950">
+                  <div className="flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <span className="font-mono font-black">{appliedCoupon.code}</span> applied:
+                      <span className="font-bold ml-1 text-emerald-700">₹{appliedCoupon.discountAmount} Off</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAppliedCoupon(null)}
+                    className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="relative grow">
+                      <Tag className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Coupon code (e.g. WELCOME50)"
+                        value={couponInput}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value.toUpperCase());
+                          setCouponError('');
+                        }}
+                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-bold uppercase placeholder:normal-case placeholder:font-normal text-slate-900 focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleApplyCoupon}
+                      disabled={isValidatingCoupon || !couponInput.trim()}
+                      className="text-xs font-bold shrink-0"
+                    >
+                      {isValidatingCoupon ? 'Checking…' : 'Apply'}
+                    </Button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[11px] font-semibold text-rose-600 pl-1">{couponError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Primary CTA & Duplicate Click Protection (PART D) */}
             <div className="pt-2 space-y-2.5">
               <Button
@@ -463,8 +559,8 @@ export const Subscription: React.FC = () => {
                 {paymentStatus === 'preparing'
                   ? 'Preparing secure checkout…'
                   : activeSub
-                    ? `Extend Pass (+365 Days) — ₹${activePlan.price}`
-                    : `Get Pro Pass — ₹${activePlan.price}`}
+                    ? `Extend Pass (+365 Days) — ₹${appliedCoupon ? appliedCoupon.finalPrice : activePlan.price}`
+                    : `Get Pro Pass — ₹${appliedCoupon ? appliedCoupon.finalPrice : activePlan.price}`}
               </Button>
             </div>
           </div>

@@ -15,10 +15,11 @@ import {
   Smartphone,
   Layers,
 } from 'lucide-react';
-import type { NotificationItem } from '@/types';
+import type { NotificationItem, Exam } from '@/types';
 
 export const AdminNotifications: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [exams, setExams] = useState<Exam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'sent' | 'scheduled' | 'draft'>('all');
 
@@ -37,8 +38,12 @@ export const AdminNotifications: React.FC = () => {
   const loadNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await api.getNotifications();
-      setNotifications(data);
+      const [notifsData, examsData] = await Promise.all([
+        api.getNotifications(),
+        api.getAllAdminExams(),
+      ]);
+      setNotifications(notifsData);
+      setExams(examsData);
     } catch (err) {
       console.error('Failed to load notifications:', err);
     } finally {
@@ -203,11 +208,11 @@ export const AdminNotifications: React.FC = () => {
 
                     {/* Audience Badge */}
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-900 border border-slate-800 text-slate-300">
-                      {notif.targetAudience === 'pro' ? (
+                      {notif.targetAudience === 'pro' || notif.targetAudience === 'pro_users' ? (
                         <>
                           <Crown className="w-3 h-3 text-amber-400" /> Pro Members
                         </>
-                      ) : notif.targetAudience === 'free' ? (
+                      ) : notif.targetAudience === 'free' || notif.targetAudience === 'free_users' ? (
                         <>
                           <Sparkles className="w-3 h-3 text-indigo-400" /> Free Tier
                         </>
@@ -215,9 +220,14 @@ export const AdminNotifications: React.FC = () => {
                         <>
                           <Users className="w-3 h-3 text-emerald-400" /> All Students
                         </>
+                      ) : notif.targetAudience.startsWith('exam:') ? (
+                        <>
+                          <Layers className="w-3 h-3 text-cyan-400" />
+                          {exams.find((e) => `exam:${e.id}` === notif.targetAudience)?.title || 'Target Exam'}
+                        </>
                       ) : (
                         <>
-                          <Layers className="w-3 h-3 text-cyan-400" /> Exam Specific
+                          <Layers className="w-3 h-3 text-cyan-400" /> {notif.targetAudience}
                         </>
                       )}
                     </span>
@@ -353,6 +363,15 @@ export const AdminNotifications: React.FC = () => {
                     <option value="all">All Registered Students</option>
                     <option value="pro">Pro Members Only</option>
                     <option value="free">Free Tier Users Only</option>
+                    {exams.length > 0 && (
+                      <optgroup label="Exam-Specific Aspirants">
+                        {exams.map((ex) => (
+                          <option key={ex.id} value={`exam:${ex.id}`}>
+                            {ex.title} Aspirants
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </div>
 

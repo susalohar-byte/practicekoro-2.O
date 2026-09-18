@@ -85,16 +85,16 @@ export const Login: React.FC = () => {
             className="h-11 sm:h-12 w-auto object-contain"
           />
         </Link>
-        <h2 className="text-xl font-bold text-slate-900">Sign in to your account</h2>
+        <h2 className="text-xl font-black text-pk-navy">Sign in to your account</h2>
         <p className="mt-1 text-xs text-slate-500">
           West Bengal Competitive Exam Mock & Practice Platform
         </p>
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white py-8 px-6 shadow-sm rounded-2xl border border-slate-200 sm:px-10">
+        <div className="bg-white py-8 px-6 shadow-xs rounded-2xl border border-slate-200 sm:px-10">
           {error && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg">
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
               {error}
             </div>
           )}
@@ -143,7 +143,7 @@ export const Login: React.FC = () => {
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-xs font-medium text-brand-600 hover:text-brand-700"
+                  className="text-xs font-medium text-pk-primary hover:text-pk-primary-interactive transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -170,7 +170,7 @@ export const Login: React.FC = () => {
 
           <div className="mt-6 text-center text-xs text-slate-600">
             Don&apos;t have an account?{' '}
-            <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700">
+            <Link to="/register" className="font-bold text-pk-primary hover:text-pk-primary-interactive transition-colors">
               Create an account
             </Link>
           </div>

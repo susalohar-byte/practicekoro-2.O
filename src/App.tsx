@@ -45,6 +45,9 @@ const Settings = React.lazy(() =>
 const Subscription = React.lazy(() =>
   import('@/pages/student/Subscription').then((module) => ({ default: module.Subscription }))
 );
+const Support = React.lazy(() =>
+  import('@/pages/student/Support').then((module) => ({ default: module.Support }))
+);
 const Login = React.lazy(() =>
   import('@/pages/auth/Login').then((module) => ({ default: module.Login }))
 );
@@ -60,8 +63,8 @@ const AdminDashboard = React.lazy(() =>
 const AdminExams = React.lazy(() =>
   import('@/pages/admin/AdminExams').then((module) => ({ default: module.AdminExams }))
 );
-const AdminSubjects = React.lazy(() =>
-  import('@/pages/admin/AdminSubjects').then((module) => ({ default: module.AdminSubjects }))
+const AdminTopicManage = React.lazy(() =>
+  import('@/pages/admin/AdminTopicManage').then((module) => ({ default: module.AdminTopicManage }))
 );
 const AdminExamTopics = React.lazy(() =>
   import('@/pages/admin/AdminExamTopics').then((module) => ({ default: module.AdminExamTopics }))
@@ -101,6 +104,11 @@ const AdminSupport = React.lazy(() =>
 const AdminSettings = React.lazy(() =>
   import('@/pages/admin/AdminSettings').then((module) => ({
     default: module.AdminSettings,
+  }))
+);
+const AdminCoupons = React.lazy(() =>
+  import('@/pages/admin/AdminCoupons').then((module) => ({
+    default: module.AdminCoupons,
   }))
 );
 
@@ -207,6 +215,14 @@ export const App: React.FC = () => {
             }
           />
           <Route path="subscription" element={<Subscription />} />
+          <Route
+            path="support"
+            element={
+              <ProtectedRoute>
+                <Support />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}
@@ -265,6 +281,8 @@ export const App: React.FC = () => {
 
           {/* 5. Subscriptions & Pro Users */}
           <Route path="subscriptions" element={<AdminSubscriptions />} />
+          <Route path="coupons" element={<AdminCoupons />} />
+          <Route path="discounts" element={<Navigate to="/admin/coupons" replace />} />
 
           {/* 6. Notifications */}
           <Route path="notifications" element={<AdminNotifications />} />
@@ -285,10 +303,10 @@ export const App: React.FC = () => {
             path="full-mock-questions"
             element={<Navigate to="/admin/question-bank" replace />}
           />
-          <Route path="pyq-questions" element={<Navigate to="/admin/question-bank" replace />} />
-          <Route path="subjects" element={<AdminSubjects />} />
-          <Route path="topics" element={<Navigate to="/admin/subjects" replace />} />
-          <Route path="chapters" element={<Navigate to="/admin/subjects" replace />} />
+          <Route path="subjects" element={<AdminTopicManage />} />
+          <Route path="topic-manage" element={<AdminTopicManage />} />
+          <Route path="topics" element={<Navigate to="/admin/topic-manage" replace />} />
+          <Route path="chapters" element={<Navigate to="/admin/topic-manage" replace />} />
           <Route path="test-series" element={<AdminTestSeries />} />
         </Route>
 

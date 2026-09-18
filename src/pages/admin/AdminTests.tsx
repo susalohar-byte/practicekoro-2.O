@@ -26,6 +26,9 @@ import {
   PlusCircle,
   HelpCircle,
   RotateCcw,
+  Copy,
+  Users,
+  ListOrdered,
 } from 'lucide-react';
 import type { MockTest, Exam, Subject, Chapter, PublishValidationResult } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
@@ -139,6 +142,22 @@ export const AdminTests: React.FC = () => {
   const [isDeletingTest, setIsDeletingTest] = useState(false);
   const [deleteTestError, setDeleteTestError] = useState('');
 
+  // Global Settings Defaults State
+  const [globalDefaults, setGlobalDefaults] = useState({
+    durationMinutes: 60,
+    marksPerQuestion: 1.0,
+    negativeMarks: 0.25,
+    passingPercentage: 35,
+  });
+
+  // Duplication State
+  const [isDuplicating, setIsDuplicating] = useState<string | null>(null);
+
+  // Attempts Modal State
+  const [viewingAttemptsTest, setViewingAttemptsTest] = useState<MockTest | null>(null);
+  const [attemptsList, setAttemptsList] = useState<any[]>([]);
+  const [isLoadingAttempts, setIsLoadingAttempts] = useState(false);
+
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -152,6 +171,23 @@ export const AdminTests: React.FC = () => {
       setSubjects(allSubjects);
       setChapters(allChapters);
       setTests(allTests);
+
+      // Fetch global settings defaults for tests
+      try {
+        const settings = await api.getAppSettings();
+        const dur = settings.find((s) => s.key === 'default_duration_minutes')?.value;
+        const marks = settings.find((s) => s.key === 'default_marks_per_q')?.value;
+        const neg = settings.find((s) => s.key === 'default_negative_marks')?.value;
+        const pass = settings.find((s) => s.key === 'default_passing_percentage')?.value;
+        setGlobalDefaults({
+          durationMinutes: dur ? Number(dur) : 60,
+          marksPerQuestion: marks ? Number(marks) : 1.0,
+          negativeMarks: neg ? Number(neg) : 0.25,
+          passingPercentage: pass ? Number(pass) : 35,
+        });
+      } catch (err) {
+        console.warn('Could not load global settings for tests defaults:', err);
+      }
 
       if (!selectedStructureSubjectId && allSubjects.length > 0) {
         setSelectedStructureSubjectId(allSubjects[0].id);
@@ -167,7 +203,35 @@ export const AdminTests: React.FC = () => {
     loadData();
   }, [loadData]);
 
-  // Open Create Test modal pre-configured for the active tab
+  const handleDuplicateTest = async (testId: string) => {
+    try {
+      setIsDuplicating(testId);
+      const dup = await api.duplicateTest(testId);
+      if (dup) {
+        await loadData();
+      }
+    } catch (err) {
+      alert(getErrorMessage(err, 'Failed to duplicate test'));
+    } finally {
+      setIsDuplicating(null);
+    }
+  };
+
+  const handleOpenAttempts = async (test: MockTest) => {
+    setViewingAttemptsTest(test);
+    setIsLoadingAttempts(true);
+    try {
+      const attempts = await api.getTestAttempts(test.id);
+      setAttemptsList(attempts);
+    } catch (err) {
+      console.error('Failed to load attempts:', err);
+      setAttemptsList([]);
+    } finally {
+      setIsLoadingAttempts(false);
+    }
+  };
+
+  // Open Create Test modal pre-configured for the active tab with global defaults
   const handleOpenCreateTest = (type: 'topic' | 'full_mock' | 'pyq') => {
     setEditingTest(null);
     setModalType(type);
@@ -178,15 +242,20 @@ export const AdminTests: React.FC = () => {
     const defaultTopic =
       filterTopicId || chapters.find((c) => c.subjectId === defaultSubject)?.id || '';
 
+    const defDuration =
+      type === 'topic' ? 15 : type === 'full_mock' ? globalDefaults.durationMinutes : 90;
+    const defMarks = type === 'topic' ? 25 : 100;
+    const defPassMarks = Math.round((defMarks * globalDefaults.passingPercentage) / 100);
+
     setFormExamId(type === 'topic' ? filterExamId || '' : defaultExam);
     setFormSubjectId(defaultSubject);
     setFormTopicId(defaultTopic);
     setFormTitle('');
     setFormDescription('');
-    setFormDuration(type === 'topic' ? 15 : type === 'full_mock' ? 60 : 90);
-    setFormTotalMarks(type === 'topic' ? 25 : type === 'full_mock' ? 100 : 100);
-    setFormPassingMarks(type === 'topic' ? 10 : type === 'full_mock' ? 40 : 40);
-    setFormNegativeMarking(0.25);
+    setFormDuration(defDuration);
+    setFormTotalMarks(defMarks);
+    setFormPassingMarks(defPassMarks);
+    setFormNegativeMarking(globalDefaults.negativeMarks);
     setFormIsPremium(false);
     setFormYear(new Date().getFullYear());
     setFormPaperName('Preliminary');
@@ -504,31 +573,53 @@ export const AdminTests: React.FC = () => {
           </p>
         </div>
 
-        {/* Tab-specific primary action */}
-        {activeTab === 'topic' && (
-          <Button
-            onClick={() => handleOpenCreateTest('topic')}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm"
+        <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+          <Link
+            to="/admin/test-series"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors shadow-2xs"
           >
-            <Plus className="w-4 h-4" /> Create Topic Test
-          </Button>
-        )}
-        {activeTab === 'full_mock' && (
-          <Button
-            onClick={() => handleOpenCreateTest('full_mock')}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Create Full Mock Test
-          </Button>
-        )}
-        {activeTab === 'pyq' && (
-          <Button
-            onClick={() => handleOpenCreateTest('pyq')}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Create PYQ Test
-          </Button>
-        )}
+            <ListOrdered className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Test Series</span>
+          </Link>
+
+          {/* Tab-specific primary action */}
+          {activeTab === 'topic' && (
+            <button
+              type="button"
+              onClick={() => handleOpenCreateTest('topic')}
+              className="group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-200 border border-indigo-400/25 cursor-pointer whitespace-nowrap"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors shrink-0">
+                <Plus className="w-3.5 h-3.5 stroke-[2.5] text-white" />
+              </span>
+              <span>Create Topic Test</span>
+            </button>
+          )}
+          {activeTab === 'full_mock' && (
+            <button
+              type="button"
+              onClick={() => handleOpenCreateTest('full_mock')}
+              className="group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-200 border border-indigo-400/25 cursor-pointer whitespace-nowrap"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors shrink-0">
+                <Plus className="w-3.5 h-3.5 stroke-[2.5] text-white" />
+              </span>
+              <span>Create Full Mock Test</span>
+            </button>
+          )}
+          {activeTab === 'pyq' && (
+            <button
+              type="button"
+              onClick={() => handleOpenCreateTest('pyq')}
+              className="group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-200 border border-indigo-400/25 cursor-pointer whitespace-nowrap"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors shrink-0">
+                <Plus className="w-3.5 h-3.5 stroke-[2.5] text-white" />
+              </span>
+              <span>Create PYQ Test</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Post Test-Creation Banner with Direct Manage Questions Action */}
@@ -737,6 +828,9 @@ export const AdminTests: React.FC = () => {
             }}
             onDelete={handleOpenDeleteModal}
             onToggleActive={handleToggleActive}
+            onDuplicate={(t) => handleDuplicateTest(t.id)}
+            onAttempts={handleOpenAttempts}
+            isDuplicating={isDuplicating}
           />
         </div>
       )}
@@ -807,6 +901,9 @@ export const AdminTests: React.FC = () => {
             }}
             onDelete={handleOpenDeleteModal}
             onToggleActive={handleToggleActive}
+            onDuplicate={(t) => handleDuplicateTest(t.id)}
+            onAttempts={handleOpenAttempts}
+            isDuplicating={isDuplicating}
           />
         </div>
       )}
@@ -886,6 +983,9 @@ export const AdminTests: React.FC = () => {
             }}
             onDelete={handleOpenDeleteModal}
             onToggleActive={handleToggleActive}
+            onDuplicate={(t) => handleDuplicateTest(t.id)}
+            onAttempts={handleOpenAttempts}
+            isDuplicating={isDuplicating}
           />
         </div>
       )}
@@ -1597,6 +1697,110 @@ export const AdminTests: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Student Attempts & Leaderboard Modal */}
+      {viewingAttemptsTest && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 flex items-center justify-center text-sky-600 dark:text-sky-400">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Student Attempts: {viewingAttemptsTest.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Total Attempts: {attemptsList.length} • Max Marks: {viewingAttemptsTest.totalMarks}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingAttemptsTest(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {isLoadingAttempts ? (
+                <div className="py-12 text-center text-xs text-slate-500">
+                  <div className="w-7 h-7 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  Loading candidate attempts...
+                </div>
+              ) : attemptsList.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-xs">
+                  No students have attempted this test yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 font-semibold border-b border-slate-100 dark:border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">Rank</th>
+                        <th className="px-3 py-2.5">Student</th>
+                        <th className="px-3 py-2.5">Score</th>
+                        <th className="px-3 py-2.5">Accuracy</th>
+                        <th className="px-3 py-2.5">Time Taken</th>
+                        <th className="px-3 py-2.5">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {attemptsList.map((att, idx) => (
+                        <tr key={att.id || idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                          <td className="px-3 py-2.5 font-bold text-slate-700 dark:text-slate-300">
+                            #{idx + 1}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="font-semibold text-slate-900 dark:text-white">
+                              {att.userName || 'Student Candidate'}
+                            </div>
+                            {att.userEmail && (
+                              <div className="text-[10px] text-slate-400">{att.userEmail}</div>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="font-black text-indigo-600 dark:text-indigo-400">
+                              {att.score}
+                            </span>
+                            <span className="text-slate-400 text-[11px]"> / {att.totalMarks || viewingAttemptsTest.totalMarks}</span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
+                              {att.accuracy != null ? `${Math.round(att.accuracy)}%` : 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-500">
+                            {att.timeSpentSeconds != null
+                              ? `${Math.floor(att.timeSpentSeconds / 60)}m ${att.timeSpentSeconds % 60}s`
+                              : '-'}
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-400">
+                            {att.createdAt ? new Date(att.createdAt).toLocaleDateString() : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewingAttemptsTest(null)}
+                className="text-xs"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1611,6 +1815,9 @@ interface TestTableProps {
   onArchive: (test: MockTest) => void;
   onDelete: (test: MockTest) => void;
   onToggleActive: (test: MockTest) => void;
+  onDuplicate?: (test: MockTest) => void;
+  onAttempts?: (test: MockTest) => void;
+  isDuplicating?: string | null;
 }
 
 const TestTable: React.FC<TestTableProps> = ({
@@ -1622,6 +1829,9 @@ const TestTable: React.FC<TestTableProps> = ({
   onArchive,
   onDelete,
   onToggleActive,
+  onDuplicate,
+  onAttempts,
+  isDuplicating,
 }) => {
   if (isLoading) {
     return (
@@ -1850,6 +2060,35 @@ const TestTable: React.FC<TestTableProps> = ({
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
+
+                        {/* View Student Attempts */}
+                        {onAttempts && (
+                          <button
+                            onClick={() => onAttempts(test)}
+                            title="View Student Attempts & Leaderboard"
+                            aria-label="View Student Attempts"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Users className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {/* Duplicate Test */}
+                        {onDuplicate && (
+                          <button
+                            onClick={() => onDuplicate(test)}
+                            disabled={isDuplicating === test.id}
+                            title="Duplicate Test"
+                            aria-label="Duplicate Test"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                          >
+                            {isDuplicating === test.id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        )}
 
                         {/* Toggle Active / Disabled */}
                         <button

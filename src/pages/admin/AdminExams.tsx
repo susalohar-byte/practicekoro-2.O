@@ -24,6 +24,7 @@ import {
   Trophy,
   Sparkles,
   AlertCircle,
+  AlertTriangle,
   ExternalLink,
   ChevronRight,
   Upload,
@@ -57,23 +58,45 @@ export const AdminExams: React.FC = () => {
 
   // Category Management States
   const STORAGE_KEY_CATEGORIES = 'practicekoro_exam_categories';
-  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+
+  const [categories, setCategories] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CATEGORIES);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {
-      console.error('Error reading custom categories:', e);
+      console.error('Error reading categories:', e);
     }
-    return [];
+    return [
+      'Police Exams',
+      'Teaching Exams',
+      'Civil Services',
+      'SSC & Staff Selection',
+      'Railways',
+      'Defence',
+      'Banking',
+      'State Govt.',
+    ];
   });
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryModalInput, setCategoryModalInput] = useState('');
   const [categoryModalError, setCategoryModalError] = useState('');
   const [isInlineCreatingCategory, setIsInlineCreatingCategory] = useState(false);
   const [inlineCategoryInput, setInlineCategoryInput] = useState('');
+
+  // Editing Category States
+  const [editingCategoryKey, setEditingCategoryKey] = useState<string | null>(null);
+  const [editingCategoryValue, setEditingCategoryValue] = useState('');
+  const [isRenamingCategory, setIsRenamingCategory] = useState(false);
+
+  // Deleting Category States (when linked to exams)
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    name: string;
+    examCount: number;
+  } | null>(null);
+  const [reassignCategoryTarget, setReassignCategoryTarget] = useState<string>('');
 
   // Form State
   const [title, setTitle] = useState('');
@@ -125,17 +148,31 @@ export const AdminExams: React.FC = () => {
     return counts;
   }, [tests]);
 
-  // Categories: combining custom categories and existing categories from exams
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    customCategories.forEach((c) => {
-      if (c && c.trim()) set.add(c.trim());
-    });
-    exams.forEach((e) => {
-      if (e.category && e.category.trim()) set.add(e.category.trim());
-    });
-    return Array.from(set).sort();
-  }, [customCategories, exams]);
+  // Ensure any category from existing exams is registered in categories list
+  useEffect(() => {
+    if (exams.length > 0) {
+      setCategories((prev) => {
+        const set = new Set<string>(prev);
+        let hasNew = false;
+        exams.forEach((e) => {
+          if (e.category && e.category.trim() && !set.has(e.category.trim())) {
+            set.add(e.category.trim());
+            hasNew = true;
+          }
+        });
+        if (hasNew) {
+          const updated = Array.from(set).sort();
+          try {
+            localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+          } catch (err) {
+            console.error('Error saving updated categories:', err);
+          }
+          return updated;
+        }
+        return prev;
+      });
+    }
+  }, [exams]);
 
   // Category helpers
   const addCategoryItem = (catName: string): boolean => {
@@ -144,8 +181,8 @@ export const AdminExams: React.FC = () => {
     if (categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
       return false;
     }
-    const updated = [...customCategories, trimmed];
-    setCustomCategories(updated);
+    const updated = [...categories, trimmed].sort();
+    setCategories(updated);
     try {
       localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
     } catch (e) {
@@ -154,13 +191,136 @@ export const AdminExams: React.FC = () => {
     return true;
   };
 
-  const removeCategoryItem = (catName: string) => {
-    const updated = customCategories.filter((c) => c.toLowerCase() !== catName.toLowerCase());
-    setCustomCategories(updated);
+  const handleRenameCategory = async (oldName: string, newName: string) => {
+    const trimmedNew = newName.trim();
+    if (!trimmedNew) {
+      setCategoryModalError('Category name cannot be empty.');
+      return;
+    }
+    if (trimmedNew.toLowerCase() === oldName.toLowerCase()) {
+      setEditingCategoryKey(null);
+      setEditingCategoryValue('');
+      return;
+    }
+    if (
+      categories.some(
+        (c) =>
+          c.toLowerCase() === trimmedNew.toLowerCase() &&
+          c.toLowerCase() !== oldName.toLowerCase()
+      )
+    ) {
+      setCategoryModalError(`Category "${trimmedNew}" already exists.`);
+      return;
+    }
+
     try {
-      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Error removing custom category:', e);
+      setIsRenamingCategory(true);
+      setCategoryModalError('');
+
+      // 1. Update exams in database if any are linked
+      const linkedExams = exams.filter(
+        (e) => (e.category || '').toLowerCase() === oldName.toLowerCase()
+      );
+      if (linkedExams.length > 0) {
+        await Promise.all(
+          linkedExams.map((e) => api.updateExam(e.id, { category: trimmedNew }))
+        );
+        setExams((prev) =>
+          prev.map((e) =>
+            (e.category || '').toLowerCase() === oldName.toLowerCase()
+              ? { ...e, category: trimmedNew }
+              : e
+          )
+        );
+      }
+
+      // 2. Update category list in state & localStorage
+      const updated = categories.map((c) => (c === oldName ? trimmedNew : c)).sort();
+      setCategories(updated);
+      try {
+        localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error saving renamed category:', e);
+      }
+
+      // 3. Update active form / filter states if applicable
+      if (category.toLowerCase() === oldName.toLowerCase()) {
+        setCategory(trimmedNew);
+      }
+      if (selectedCategory.toLowerCase() === oldName.toLowerCase()) {
+        setSelectedCategory(trimmedNew);
+      }
+
+      setEditingCategoryKey(null);
+      setEditingCategoryValue('');
+      setActionSuccessMessage(
+        linkedExams.length > 0
+          ? `Category renamed to "${trimmedNew}" and updated ${linkedExams.length} linked exam(s).`
+          : `Category renamed to "${trimmedNew}".`
+      );
+    } catch (err) {
+      setCategoryModalError(getErrorMessage(err, 'Failed to rename category'));
+    } finally {
+      setIsRenamingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (catName: string, reassignTo?: string) => {
+    try {
+      setIsRenamingCategory(true);
+      setCategoryModalError('');
+
+      const linkedExams = exams.filter(
+        (e) => (e.category || '').toLowerCase() === catName.toLowerCase()
+      );
+
+      // If exams are linked, reassign them to the chosen target
+      if (linkedExams.length > 0) {
+        const target = reassignTo && reassignTo.trim() ? reassignTo.trim() : 'General';
+        await Promise.all(
+          linkedExams.map((e) => api.updateExam(e.id, { category: target }))
+        );
+        setExams((prev) =>
+          prev.map((e) =>
+            (e.category || '').toLowerCase() === catName.toLowerCase()
+              ? { ...e, category: target }
+              : e
+          )
+        );
+      }
+
+      // Remove from categories list
+      let updated = categories.filter((c) => c.toLowerCase() !== catName.toLowerCase());
+      if (reassignTo && !updated.some((c) => c.toLowerCase() === reassignTo.toLowerCase())) {
+        updated.push(reassignTo);
+      }
+      updated = updated.sort();
+
+      setCategories(updated);
+      try {
+        localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error removing category:', e);
+      }
+
+      if (category.toLowerCase() === catName.toLowerCase()) {
+        setCategory(updated[0] || '');
+      }
+      if (selectedCategory.toLowerCase() === catName.toLowerCase()) {
+        setSelectedCategory('all');
+      }
+
+      setCategoryToDelete(null);
+      setReassignCategoryTarget('');
+      setActionSuccessMessage(
+        linkedExams.length > 0
+          ? `Category "${catName}" deleted and ${linkedExams.length} exam(s) reassigned to "${reassignTo || 'General'}".`
+          : `Category "${catName}" deleted successfully.`
+      );
+    } catch (err) {
+      setCategoryModalError(getErrorMessage(err, 'Failed to delete category'));
+    } finally {
+      setIsRenamingCategory(false);
     }
   };
 
@@ -1448,6 +1608,72 @@ export const AdminExams: React.FC = () => {
               </div>
             </div>
 
+            {/* Category Deletion Confirmation Card (When Linked Exams Exist) */}
+            {categoryToDelete && (
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 space-y-2.5 animate-fade-in">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200">
+                      Delete &ldquo;{categoryToDelete.name}&rdquo;?
+                    </h4>
+                    <p className="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5 leading-relaxed">
+                      This category is currently linked to <strong>{categoryToDelete.examCount}</strong> exam(s).
+                      Choose a category to reassign them to:
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <select
+                    value={reassignCategoryTarget}
+                    onChange={(e) => setReassignCategoryTarget(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
+                  >
+                    {categories
+                      .filter((c) => c.toLowerCase() !== categoryToDelete.name.toLowerCase())
+                      .map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    <option value="General">General</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryToDelete(null);
+                      setReassignCategoryTarget('');
+                    }}
+                    className="px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isRenamingCategory}
+                    onClick={() =>
+                      handleDeleteCategory(
+                        categoryToDelete.name,
+                        reassignCategoryTarget ||
+                          categories.filter(
+                            (c) => c.toLowerCase() !== categoryToDelete.name.toLowerCase()
+                          )[0] ||
+                          'General'
+                      )
+                    }
+                    className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-1 h-7 px-3 shadow-xs"
+                  >
+                    {isRenamingCategory ? 'Deleting...' : 'Reassign & Delete'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Existing Categories List */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
@@ -1460,40 +1686,108 @@ export const AdminExams: React.FC = () => {
                   </div>
                 ) : (
                   categories.map((cat) => {
-                    const examCount = exams.filter((e) => e.category === cat).length;
+                    const examCount = exams.filter(
+                      (e) => (e.category || '').toLowerCase() === cat.toLowerCase()
+                    ).length;
+                    const isEditing = editingCategoryKey === cat;
+
+                    if (isEditing) {
+                      return (
+                        <div
+                          key={cat}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs animate-fade-in"
+                        >
+                          <input
+                            type="text"
+                            value={editingCategoryValue}
+                            onChange={(e) => setEditingCategoryValue(e.target.value)}
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleRenameCategory(cat, editingCategoryValue);
+                              } else if (e.key === 'Escape') {
+                                setEditingCategoryKey(null);
+                                setEditingCategoryValue('');
+                              }
+                            }}
+                            disabled={isRenamingCategory}
+                            className="flex-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRenameCategory(cat, editingCategoryValue)}
+                            disabled={isRenamingCategory}
+                            className="p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors cursor-pointer"
+                            title="Save Changes"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCategoryKey(null);
+                              setEditingCategoryValue('');
+                            }}
+                            disabled={isRenamingCategory}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                            title="Cancel"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div
                         key={cat}
-                        className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                           <span className="font-bold text-slate-900 dark:text-white truncate">
                             {cat}
                           </span>
-                          <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800">
+                          <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 shrink-0">
                             {examCount} {examCount === 1 ? 'exam' : 'exams'}
                           </span>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (
-                              examCount > 0 &&
-                              !confirm(
-                                `"${cat}" is linked to ${examCount} exam(s). Delete category from list?`
-                              )
-                            ) {
-                              return;
-                            }
-                            removeCategoryItem(cat);
-                          }}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                          title="Delete Category"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCategoryKey(cat);
+                              setEditingCategoryValue(cat);
+                              setCategoryModalError('');
+                            }}
+                            className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+                            title="Edit Category Name"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCategoryModalError('');
+                              if (examCount > 0) {
+                                setCategoryToDelete({ name: cat, examCount });
+                                const other =
+                                  categories.find(
+                                    (c) => c.toLowerCase() !== cat.toLowerCase()
+                                  ) || 'General';
+                                setReassignCategoryTarget(other);
+                              } else {
+                                handleDeleteCategory(cat);
+                              }
+                            }}
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                            title="Delete Category"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })

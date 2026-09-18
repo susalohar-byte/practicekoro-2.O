@@ -18,8 +18,35 @@ import {
   Shield,
   Clock,
   ChevronDown,
+  Download,
 } from 'lucide-react';
 import type { SubscriptionPlan, AdminPaymentRow, AdminStudentRow } from '@/types';
+
+function exportToCSV(
+  filename: string,
+  headers: string[],
+  rows: (string | number | undefined | null)[][]
+) {
+  const escapeCell = (cell: any) => {
+    if (cell == null) return '""';
+    const str = String(cell).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+  const csvContent = [
+    headers.map(escapeCell).join(','),
+    ...rows.map((row) => row.map(escapeCell).join(',')),
+  ].join('\r\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 // ─── Stat Card ──────────────────────────────────────────────────
 interface StatCardProps {
@@ -272,6 +299,63 @@ export const AdminSubscriptions: React.FC = () => {
     }
   };
 
+  const handleRevokePro = async (student: AdminStudentRow) => {
+    if (!window.confirm(`Are you sure you want to revoke Pro subscription for ${student.fullName}?`)) {
+      return;
+    }
+    try {
+      setStudentLoading(true);
+      const res = await api.revokeStudentSubscription(student.id);
+      if (res.success) {
+        await fetchStudents();
+      } else {
+        alert(res.error || 'Failed to revoke subscription');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error revoking subscription');
+    } finally {
+      setStudentLoading(false);
+    }
+  };
+
+  const handleExportStudentsCSV = () => {
+    const headers = ['Name', 'Email', 'Phone', 'Type', 'Plan', 'Expires At', 'Registered At'];
+    const rows = students.map((s) => [
+      s.fullName,
+      s.email,
+      s.phone || '',
+      s.isPro ? 'Pro' : 'Free',
+      s.planTitle || (s.isPro ? 'Pro Pass' : 'Free Plan'),
+      s.expiresAt ? new Date(s.expiresAt).toLocaleDateString() : '',
+      s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '',
+    ]);
+    exportToCSV(`students_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+  };
+
+  const handleExportPaymentsCSV = () => {
+    const headers = [
+      'Date',
+      'Student Name',
+      'Student Email',
+      'Plan',
+      'Amount (INR)',
+      'Gateway',
+      'Payment ID',
+      'Status',
+    ];
+    const rows = payments.map((p) => [
+      p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '',
+      p.studentName,
+      p.studentEmail,
+      p.planTitle || '',
+      p.amount,
+      p.gateway,
+      p.razorpayPaymentId || p.transactionId || p.orderId || p.id,
+      p.status,
+    ]);
+    exportToCSV(`payments_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+  };
+
   const handleOpenCreatePlan = () => {
     setEditingPlan(null);
     setPlanId(`pro_${Date.now().toString().slice(-4)}`);
@@ -496,6 +580,15 @@ export const AdminSubscriptions: React.FC = () => {
                   className={`w-4 h-4 ${studentLoading ? 'animate-spin text-indigo-500' : ''}`}
                 />
               </button>
+              <button
+                onClick={handleExportStudentsCSV}
+                disabled={students.length === 0}
+                className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-semibold hover:border-indigo-300 dark:hover:border-indigo-600/50 transition-all disabled:opacity-50"
+                title="Export Aspirants as CSV"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Export CSV</span>
+              </button>
             </div>
           </div>
 
@@ -597,18 +690,29 @@ export const AdminSubscriptions: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <button
-                            onClick={() => {
-                              setGrantModalStudent(st);
-                              setGrantFeedback('');
-                              setGrantDurationDays(365);
-                              setGrantPlanId(plans.find((p) => p.price > 0)?.id || 'pro_1_year');
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-sm shadow-amber-500/20 hover:shadow-md hover:shadow-amber-500/30 transition-all active:scale-95"
-                          >
-                            <Crown className="w-3 h-3" />
-                            {st.isPro ? 'Extend' : 'Grant Pro'}
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setGrantModalStudent(st);
+                                setGrantFeedback('');
+                                setGrantDurationDays(365);
+                                setGrantPlanId(plans.find((p) => p.price > 0)?.id || 'pro_1_year');
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-sm shadow-amber-500/20 hover:shadow-md hover:shadow-amber-500/30 transition-all active:scale-95"
+                            >
+                              <Crown className="w-3 h-3" />
+                              {st.isPro ? 'Extend' : 'Grant Pro'}
+                            </button>
+                            {st.isPro && (
+                              <button
+                                onClick={() => handleRevokePro(st)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 transition-colors"
+                                title="Revoke Pro Access"
+                              >
+                                Revoke
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -654,6 +758,15 @@ export const AdminSubscriptions: React.FC = () => {
                 <RefreshCw
                   className={`w-4 h-4 ${payLoading ? 'animate-spin text-indigo-500' : ''}`}
                 />
+              </button>
+              <button
+                onClick={handleExportPaymentsCSV}
+                disabled={payments.length === 0}
+                className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-semibold hover:border-indigo-300 dark:hover:border-indigo-600/50 transition-all disabled:opacity-50"
+                title="Export Payments as CSV"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Export CSV</span>
               </button>
             </div>
           </div>
