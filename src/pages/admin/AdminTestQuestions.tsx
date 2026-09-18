@@ -29,6 +29,7 @@ import {
   Target,
   Sparkles,
   Check,
+  Image as ImageIcon,
 } from 'lucide-react';
 import type { MockTest, Question, TestQuestionAssignment, Subject, Chapter, Exam } from '@/types';
 import { parseQuestionsTxt, SAMPLE_TXT_CONTENT } from '@/utils/txtQuestionParser';
@@ -502,6 +503,61 @@ export const AdminTestQuestions: React.FC = () => {
       }))
     );
     setSaveSuccess(false);
+  };
+
+  // Sectional Marking States & Logic
+  const assignedSections = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; count: number }>();
+    assignedQuestions.forEach((q) => {
+      const sId = q.subjectId || 'general';
+      const sName =
+        q.subjectName ||
+        subjects.find((s) => s.id === q.subjectId)?.name ||
+        'General Section';
+      if (!map.has(sId)) {
+        map.set(sId, { id: sId, name: sName, count: 1 });
+      } else {
+        map.get(sId)!.count++;
+      }
+    });
+    return Array.from(map.values());
+  }, [assignedQuestions, subjects]);
+
+  const [sectionalSubjectId, setSectionalSubjectId] = useState<string>('');
+  const [sectionalMarks, setSectionalMarks] = useState<number>(1);
+  const [sectionalNegativeMarks, setSectionalNegativeMarks] = useState<number>(0.25);
+  const [isSectionalOpen, setIsSectionalOpen] = useState(false);
+
+  // Set default sectional subject when assignedSections updates
+  useEffect(() => {
+    if (assignedSections.length > 0 && !sectionalSubjectId) {
+      setSectionalSubjectId(assignedSections[0].id);
+    }
+  }, [assignedSections, sectionalSubjectId]);
+
+  const handleApplySectionalMarks = () => {
+    if (!sectionalSubjectId) {
+      alert('Please select a section / subject.');
+      return;
+    }
+    setAssignedQuestions((prev) =>
+      prev.map((q) => {
+        const qSubId = q.subjectId || 'general';
+        if (sectionalSubjectId === 'all' || qSubId === sectionalSubjectId) {
+          return {
+            ...q,
+            marks: Number(sectionalMarks),
+            negativeMarks: Number(sectionalNegativeMarks),
+          };
+        }
+        return q;
+      })
+    );
+    setSaveSuccess(true);
+    setSaveMessage(
+      `Applied ${sectionalMarks} Marks (-${sectionalNegativeMarks} Neg) to selected section questions.`
+    );
+    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   const handleSaveAssigned = async () => {
@@ -1084,18 +1140,115 @@ export const AdminTestQuestions: React.FC = () => {
         </div>
 
         {activeTab === 'assigned' && assignedQuestions.length > 0 && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 self-start sm:self-auto hover:border-[#0075FF]"
-            leftIcon={<Wand2 className="w-3.5 h-3.5 text-amber-500" />}
-            onClick={handleApplyDefaultsToAll}
-            title="Auto-fill uniform standard scoring across all questions in this test"
-          >
-            Auto Standard Marks
-          </Button>
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              className={`text-xs font-bold transition-all ${
+                isSectionalOpen
+                  ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                  : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-500'
+              }`}
+              leftIcon={<SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />}
+              onClick={() => setIsSectionalOpen((v) => !v)}
+              title="Bulk assign marks & negative marks by subject/section"
+            >
+              Sectional Marking
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-[#0075FF]"
+              leftIcon={<Wand2 className="w-3.5 h-3.5 text-amber-500" />}
+              onClick={handleApplyDefaultsToAll}
+              title="Auto-fill uniform standard scoring across all questions in this test"
+            >
+              Auto Standard Marks
+            </Button>
+          </div>
         )}
       </div>
+
+      {/* Sectional Marking Toolbar Panel */}
+      {isSectionalOpen && activeTab === 'assigned' && (
+        <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 shadow-sm animate-fade-in space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                Bulk Sectional Marking & Negative Marking
+              </h4>
+            </div>
+            <button
+              onClick={() => setIsSectionalOpen(false)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-[11px] text-slate-600 dark:text-slate-400">
+            Select a subject/section to assign customized positive and negative marks to all its questions at once.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Target Section
+              </label>
+              <select
+                value={sectionalSubjectId}
+                onChange={(e) => setSectionalSubjectId(e.target.value)}
+                className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white"
+              >
+                <option value="all">All Sections ({assignedQuestions.length} Qs)</option>
+                {assignedSections.map((sec) => (
+                  <option key={sec.id} value={sec.id}>
+                    {sec.name} ({sec.count} Qs)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Marks per Q
+              </label>
+              <input
+                type="number"
+                step="0.25"
+                min="0"
+                value={sectionalMarks}
+                onChange={(e) => setSectionalMarks(parseFloat(e.target.value) || 0)}
+                className="w-20 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white text-center"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Negative Marks
+              </label>
+              <input
+                type="number"
+                step="0.05"
+                min="0"
+                value={sectionalNegativeMarks}
+                onChange={(e) => setSectionalNegativeMarks(parseFloat(e.target.value) || 0)}
+                className="w-20 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white text-center"
+              />
+            </div>
+
+            <div className="self-end">
+              <Button
+                size="sm"
+                onClick={handleApplySectionalMarks}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs"
+              >
+                Apply to Section
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===================================================================== */}
       {/* 3. TAB CONTENT A: QUESTION SELECTOR (PRIMARY ENHANCED WORKFLOW)       */}
@@ -1386,6 +1539,13 @@ export const AdminTestQuestions: React.FC = () => {
                             </span>
                           )}
 
+                          {q.imageUrl && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center gap-1">
+                              <ImageIcon className="w-3 h-3" />
+                              Diagram
+                            </span>
+                          )}
+
                           <span className="text-[10px] font-mono font-bold text-slate-400">
                             Marks: {q.defaultMarks || 1.0}
                           </span>
@@ -1401,6 +1561,18 @@ export const AdminTestQuestions: React.FC = () => {
                           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
                             {q.questionBengaliText}
                           </p>
+                        )}
+
+                        {/* Question Diagram (if provided) */}
+                        {q.imageUrl && (
+                          <div className="my-2 max-w-xs rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1">
+                            <img
+                              src={q.imageUrl}
+                              alt="Question Diagram"
+                              className="max-h-36 w-auto object-contain mx-auto rounded-lg"
+                              loading="lazy"
+                            />
+                          </div>
                         )}
 
                         {/* Options Grid */}
@@ -1647,6 +1819,17 @@ export const AdminTestQuestions: React.FC = () => {
                           {q.difficulty}
                         </span>
                       )}
+                      {q.subjectName && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {q.subjectName}
+                        </span>
+                      )}
+                      {q.imageUrl && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" />
+                          Diagram
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-relaxed">
@@ -1657,6 +1840,18 @@ export const AdminTestQuestions: React.FC = () => {
                       <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
                         {q.questionBengaliText}
                       </p>
+                    )}
+
+                    {/* Question Diagram (if provided) */}
+                    {q.imageUrl && (
+                      <div className="my-2 max-w-sm rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1.5 shadow-xs">
+                        <img
+                          src={q.imageUrl}
+                          alt={`Question ${idx + 1} Diagram`}
+                          className="max-h-48 w-auto object-contain mx-auto rounded-lg"
+                          loading="lazy"
+                        />
+                      </div>
                     )}
 
                     {/* Options List */}

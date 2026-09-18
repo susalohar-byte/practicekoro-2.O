@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
+import { useMaintenance } from '@/context/MaintenanceContext';
 import {
   Settings as SettingsIcon,
   Save,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 
 export const AdminSettings: React.FC = () => {
+  const { checkMaintenanceMode } = useMaintenance();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -53,7 +55,9 @@ export const AdminSettings: React.FC = () => {
 
         if (s.key === 'currency' || s.id === 'sub_currency') setCurrency(String(val));
         if (s.key === 'expiry_warning_days' || s.id === 'sub_expiry_warning_days') setExpiryWarningDays(Number(val));
-        if (s.key === 'maintenance_mode' || s.id === 'sys_maintenance_mode') setMaintenanceMode(Boolean(val));
+        if (s.key === 'maintenance_mode' || s.id === 'sys_maintenance_mode') {
+          setMaintenanceMode(val === true || val === 'true');
+        }
         if (s.key === 'app_version' || s.id === 'sys_app_version') setAppVersion(String(val));
       });
     } catch (err) {
@@ -96,6 +100,7 @@ export const AdminSettings: React.FC = () => {
         throw new Error(res.error || 'Failed to save settings');
       }
 
+      await checkMaintenanceMode();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
     } catch (err: unknown) {
@@ -322,20 +327,43 @@ export const AdminSettings: React.FC = () => {
             <h3 className="text-sm font-bold text-white">System Environment & Controls</h3>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-            <div>
-              <p className="text-xs font-bold text-white">Maintenance Mode</p>
-              <p className="text-[11px] text-slate-400">
-                When enabled, student test taking will show a maintenance notice.
+          <div
+            className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-colors ${
+              maintenanceMode
+                ? 'bg-amber-950/40 border-amber-500/40'
+                : 'bg-slate-900 border-slate-800'
+            }`}
+          >
+            <div className="mb-3 sm:mb-0">
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold text-white">Maintenance Mode (প্ল্যাটফর্ম রক্ষণাবেক্ষণ)</p>
+                {maintenanceMode ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    সক্রিয় (Active)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    নিষ্ক্রিয় (Live)
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-xl">
+                {maintenanceMode
+                  ? '⚠️ সতর্কতা: মেইনটেন্যান্স মোড সক্রিয় রয়েছে। পরীক্ষার্থীদের জন্য পরীক্ষা ও ড্যাশবোর্ড সাময়িক বন্ধ থাকবে এবং রক্ষণাবেক্ষণ স্ক্রিন প্রদর্শিত হবে।'
+                  : 'সক্রিয় করলে স্টুডেন্ট অ্যাপে মেইনটেন্যান্স স্ক্রিন প্রদর্শিত হবে এবং পরীক্ষা গ্রহণ সাময়িকভাবে বন্ধ থাকবে।'}
               </p>
             </div>
-            <input
-              type="checkbox"
-              id="maintenanceToggle"
-              checked={maintenanceMode}
-              onChange={(e) => setMaintenanceMode(e.target.checked)}
-              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-700"
-            />
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                id="maintenanceToggle"
+                checked={maintenanceMode}
+                onChange={(e) => setMaintenanceMode(e.target.checked)}
+                className="w-5 h-5 rounded text-amber-500 focus:ring-amber-400 bg-slate-800 border-slate-700 cursor-pointer"
+              />
+            </label>
           </div>
 
           <div className="flex items-center justify-between text-xs text-slate-400 pt-2">

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { ExamProvider } from '@/context/ExamContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { MaintenanceProvider } from '@/context/MaintenanceContext';
 import { App } from './App';
 import './index.css';
 
@@ -24,7 +25,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <ThemeProvider>
           <AuthProvider>
             <ExamProvider>
-              <App />
+              <MaintenanceProvider>
+                <App />
+              </MaintenanceProvider>
             </ExamProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -26,14 +26,23 @@ import {
   Layers,
   Tag,
   Filter,
+  Image as ImageIcon,
+  FileSpreadsheet,
+  FileText,
 } from 'lucide-react';
 import type { Question, Exam, Subject, Chapter, MockTest } from '@/types';
 import {
   parseQuestionsTxt,
   TxtParseResult,
+  TxtParseError,
+  ParsedTxtQuestion,
   SAMPLE_TXT_CONTENT,
   downloadSampleTxt,
 } from '@/utils/txtQuestionParser';
+import {
+  downloadSampleCsvFile,
+  parseQuestionsCsv,
+} from '@/utils/csvParser';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 import { getErrorMessage } from '@/lib/errors';
@@ -131,6 +140,8 @@ export const AdminQuestionBank: React.FC = () => {
   const [singleExamType, setSingleExamType] = useState<'full_mock' | 'pyq'>('full_mock');
   const [singleExamTestId, setSingleExamTestId] = useState('');
   const [singleQuestionText, setSingleQuestionText] = useState('');
+  const [singleImageUrl, setSingleImageUrl] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [singleOptA, setSingleOptA] = useState('');
   const [singleOptB, setSingleOptB] = useState('');
   const [singleOptC, setSingleOptC] = useState('');
@@ -142,8 +153,9 @@ export const AdminQuestionBank: React.FC = () => {
   const [isSavingSingle, setIsSavingSingle] = useState(false);
   const [singleError, setSingleError] = useState('');
 
-  // Bulk TXT Upload Modal (Section 7, 8, 9)
+  // Bulk TXT / CSV Upload Modal (Section 7, 8, 9)
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkFormat, setBulkFormat] = useState<'txt' | 'csv'>('txt');
   const [bulkStep, setBulkStep] = useState<'upload' | 'preview'>('upload');
   const [bulkSource, setBulkSource] = useState<'topic' | 'exam'>('topic');
   const [bulkSubjectId, setBulkSubjectId] = useState('');
@@ -170,6 +182,8 @@ export const AdminQuestionBank: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [editQText, setEditQText] = useState('');
+  const [editQImageUrl, setEditQImageUrl] = useState('');
+  const [isEditUploadingImage, setIsEditUploadingImage] = useState(false);
   const [editQOptA, setEditQOptA] = useState('');
   const [editQOptB, setEditQOptB] = useState('');
   const [editQOptC, setEditQOptC] = useState('');
@@ -521,6 +535,7 @@ export const AdminQuestionBank: React.FC = () => {
     setSingleExamType(effectiveExamType);
     setSingleExamTestId(defaultExamTest);
     setSingleQuestionText('');
+    setSingleImageUrl('');
     setSingleOptA('');
     setSingleOptB('');
     setSingleOptC('');
@@ -531,6 +546,25 @@ export const AdminQuestionBank: React.FC = () => {
     setSingleNegativeMarks(0.25);
     setSingleError('');
     setIsAddModalOpen(true);
+  };
+
+  // Upload question diagram / image
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      if (isEdit) setIsEditUploadingImage(true);
+      else setIsUploadingImage(true);
+      const url = await api.uploadQuestionImage(file);
+      if (isEdit) setEditQImageUrl(url);
+      else setSingleImageUrl(url);
+    } catch (err) {
+      if (isEdit) setEditQError(getErrorMessage(err, 'Failed to upload image'));
+      else setSingleError(getErrorMessage(err, 'Failed to upload image'));
+    } finally {
+      if (isEdit) setIsEditUploadingImage(false);
+      else setIsUploadingImage(false);
+    }
   };
 
   // Submit Single Question (Section 6A)
@@ -581,6 +615,7 @@ export const AdminQuestionBank: React.FC = () => {
         // Create and link directly to selected Full Mock Test or PYQ (Section 12, 15)
         await api.createQuestionForTest(singleExamTestId, {
           questionText: singleQuestionText.trim(),
+          imageUrl: singleImageUrl.trim() || undefined,
           optionA: singleOptA.trim(),
           optionB: singleOptB.trim(),
           optionC: singleOptC.trim(),
@@ -599,6 +634,7 @@ export const AdminQuestionBank: React.FC = () => {
         // Create and assign directly to the selected Topic Test
         await api.createQuestionForTest(singleTopicTestId, {
           questionText: singleQuestionText.trim(),
+          imageUrl: singleImageUrl.trim() || undefined,
           optionA: singleOptA.trim(),
           optionB: singleOptB.trim(),
           optionC: singleOptC.trim(),
@@ -619,6 +655,7 @@ export const AdminQuestionBank: React.FC = () => {
         // Save to question repository with metadata
         await api.createQuestion({
           questionText: singleQuestionText.trim(),
+          imageUrl: singleImageUrl.trim() || undefined,
           optionA: singleOptA.trim(),
           optionB: singleOptB.trim(),
           optionC: singleOptC.trim(),
@@ -638,6 +675,7 @@ export const AdminQuestionBank: React.FC = () => {
         });
       }
 
+      setSingleImageUrl('');
       setIsAddModalOpen(false);
       await Promise.all([loadQuestions(), loadBankSummary()]);
     } catch (err) {
@@ -678,6 +716,7 @@ export const AdminQuestionBank: React.FC = () => {
     setBulkExamTestId(defaultExamTest);
     setBulkRawText('');
     setBulkFileName('');
+    setBulkFormat('txt');
     setBulkParseResult(null);
     setBulkStep('upload');
     setBulkActionError('');
@@ -685,11 +724,16 @@ export const AdminQuestionBank: React.FC = () => {
     setIsBulkModalOpen(true);
   };
 
-  // Handle TXT File Input
+  // Handle File Input (TXT or CSV)
   const handleTxtFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setBulkFileName(file.name);
+    if (file.name.toLowerCase().endsWith('.csv')) {
+      setBulkFormat('csv');
+    } else if (file.name.toLowerCase().endsWith('.txt')) {
+      setBulkFormat('txt');
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
@@ -698,10 +742,14 @@ export const AdminQuestionBank: React.FC = () => {
     reader.readAsText(file, 'utf-8');
   };
 
-  // Parse TXT to Preview (Section 8, 9, 10)
+  // Parse TXT or CSV to Preview (Section 8, 9, 10)
   const handleParseTxt = () => {
     if (!bulkRawText.trim()) {
-      setBulkActionError('Please select a TXT file or paste question content.');
+      setBulkActionError(
+        bulkFormat === 'csv'
+          ? 'Please select a CSV file or paste CSV question content.'
+          : 'Please select a TXT file or paste question content.'
+      );
       return;
     }
     if (bulkSource === 'topic') {
@@ -733,6 +781,41 @@ export const AdminQuestionBank: React.FC = () => {
     }
 
     setBulkActionError('');
+
+    if (bulkFormat === 'csv') {
+      const csvParsed = parseQuestionsCsv(bulkRawText, {
+        defaultSubjectId: bulkSource === 'topic' ? bulkSubjectId : undefined,
+        defaultChapterId: bulkSource === 'topic' ? bulkTopicId : undefined,
+      });
+
+      const validQuestions: ParsedTxtQuestion[] = csvParsed.questions.map((q, idx) => ({
+        questionNumber: idx + 1,
+        questionText: q.questionBengaliText || q.questionText,
+        imageUrl: q.imageUrl,
+        optionA: q.optionA,
+        optionB: q.optionB,
+        optionC: q.optionC,
+        optionD: q.optionD,
+        correctOption: q.correctOption,
+        explanation: q.explanationBengali || q.explanation,
+        rawText: `Question ${idx + 1}: ${q.questionText}`,
+      }));
+
+      const parseErrors: TxtParseError[] = csvParsed.errors.map((err, idx) => ({
+        questionNumber: idx + 1,
+        reason: err,
+        rawText: '',
+      }));
+
+      setBulkParseResult({
+        totalDetected: csvParsed.totalRows,
+        valid: validQuestions,
+        errors: parseErrors,
+      });
+      setBulkStep('preview');
+      return;
+    }
+
     // Pass the selected subject so TXT imports enforce Short Notes rules for
     // non-Mathematics subjects (Mathematics keeps classic Explanation).
     const result = parseQuestionsTxt(bulkRawText, {
@@ -778,6 +861,7 @@ export const AdminQuestionBank: React.FC = () => {
   const handleOpenEdit = (q: Question) => {
     setEditingQuestion(q);
     setEditQText(q.questionText);
+    setEditQImageUrl(q.imageUrl || '');
     setEditQOptA(q.optionA);
     setEditQOptB(q.optionB);
     setEditQOptC(q.optionC);
@@ -796,6 +880,7 @@ export const AdminQuestionBank: React.FC = () => {
       setEditQError('');
       await api.updateQuestion(editingQuestion.id, {
         questionText: editQText.trim(),
+        imageUrl: editQImageUrl.trim() || undefined,
         optionA: editQOptA.trim(),
         optionB: editQOptB.trim(),
         optionC: editQOptC.trim(),
@@ -1941,6 +2026,18 @@ export const AdminQuestionBank: React.FC = () => {
                                   {q.questionText}
                                 </p>
                               )}
+                            {q.imageUrl && (
+                              <div className="pt-2 max-w-sm">
+                                <div className="p-1.5 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 inline-block">
+                                  <img
+                                    src={q.imageUrl}
+                                    alt="Question diagram"
+                                    className="max-h-44 max-w-full rounded-lg object-contain bg-white dark:bg-black"
+                                    loading="lazy"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -2215,6 +2312,11 @@ export const AdminQuestionBank: React.FC = () => {
                                 <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
                                   {q.difficulty || 'medium'}
                                 </span>
+                                {q.imageUrl && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                    <ImageIcon className="w-2.5 h-2.5" /> Diagram
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -2673,6 +2775,59 @@ export const AdminQuestionBank: React.FC = () => {
                 />
               </div>
 
+              {/* Question Diagram / Image (Optional) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    Question Diagram / Image (Optional)
+                  </label>
+                  <span className="text-[10px] text-slate-400">For Reasoning Venn, Geometry, Maps</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    placeholder="Image URL (https://...) or click Upload"
+                    value={singleImageUrl}
+                    onChange={(e) => setSingleImageUrl(e.target.value)}
+                    className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                  />
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold transition-all shrink-0 border border-indigo-200 dark:border-indigo-800">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploadingImage}
+                      onChange={(e) => handleImageUpload(e, false)}
+                      className="hidden"
+                    />
+                  </label>
+                  {singleImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setSingleImageUrl('')}
+                      className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
+                      title="Remove diagram"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                {singleImageUrl && (
+                  <div className="mt-2 p-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                    <img
+                      src={singleImageUrl}
+                      alt="Question diagram preview"
+                      className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
+                    />
+                    <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
+                      <span className="font-bold text-slate-900 dark:text-white block">Diagram Attached</span>
+                      <span className="truncate block text-slate-400">{singleImageUrl}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* 4 Options */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -3044,38 +3199,89 @@ export const AdminQuestionBank: React.FC = () => {
                   </div>
                 )}
 
+                {/* Format Selector: TXT vs Excel/CSV */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    File Format *
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setBulkFormat('txt')}
+                      className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                        bulkFormat === 'txt'
+                          ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Standard TXT</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBulkFormat('csv')}
+                      className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                        bulkFormat === 'csv'
+                          ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <span>Excel / CSV</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Upload & Sample buttons */}
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    Upload TXT File (UTF-8)
+                    {bulkFormat === 'csv' ? 'Upload Excel/CSV File (UTF-8)' : 'Upload TXT File (UTF-8)'}
                   </span>
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsFormatGuideOpen(true)}
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
-                    >
-                      View TXT Format
-                    </button>
-                    <span className="text-slate-300 dark:text-slate-700">•</span>
-                    <button
-                      type="button"
-                      onClick={() => downloadSampleTxt()}
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
-                    >
-                      <Download className="w-3 h-3" /> Download Sample TXT
-                    </button>
+                    {bulkFormat === 'txt' ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setIsFormatGuideOpen(true)}
+                          className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
+                        >
+                          View TXT Format
+                        </button>
+                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                        <button
+                          type="button"
+                          onClick={() => downloadSampleTxt()}
+                          className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> Download Sample TXT
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => downloadSampleCsvFile()}
+                        className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1"
+                      >
+                        <Download className="w-3 h-3" /> Download Sample CSV (Excel Ready)
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 {/* File picker */}
                 <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center space-y-2 hover:border-indigo-500 transition-colors">
-                  <Upload className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
+                  {bulkFormat === 'csv' ? (
+                    <FileSpreadsheet className="w-8 h-8 text-emerald-500 mx-auto opacity-70" />
+                  ) : (
+                    <Upload className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
+                  )}
                   <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                     {bulkFileName ? (
                       <span className="font-bold text-indigo-600 dark:text-indigo-400">
                         Selected: {bulkFileName}
                       </span>
+                    ) : bulkFormat === 'csv' ? (
+                      'Choose a .csv file or drag it here (UTF-8 Bengali supported)'
                     ) : (
                       'Choose a .txt file or drag it here'
                     )}
@@ -3086,7 +3292,7 @@ export const AdminQuestionBank: React.FC = () => {
                     </span>
                     <input
                       type="file"
-                      accept=".txt,text/plain"
+                      accept={bulkFormat === 'csv' ? '.csv,text/csv,application/vnd.ms-excel' : '.txt,text/plain'}
                       onChange={handleTxtFileUpload}
                       className="hidden"
                     />
@@ -3096,11 +3302,16 @@ export const AdminQuestionBank: React.FC = () => {
                 {/* Paste Area */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Or Paste TXT Content Directly:
+                    {bulkFormat === 'csv' ? 'Or Paste CSV Content Directly:' : 'Or Paste TXT Content Directly:'}
                   </label>
                   <textarea
                     rows={6}
-                    placeholder="1. ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?&#10;(a) ড. রাজেন্দ্র প্রসাদ&#10;(b) জওহরলাল নেহরু&#10;(c) সর্বপল্লী রাধাকৃষ্ণন&#10;(d) ড. বি. আর. আম্বেদকর&#10;&#10;সঠিক উত্তর: (a) ড. রাজেন্দ্র প্রসাদ&#10;&#10;Explanation:&#10;- ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি।"
+                    placeholder={
+                      bulkFormat === 'csv'
+                        ? 'Question Text,Option A,Option B,Option C,Option D,Correct Option,Explanation,Image URL\n' +
+                          'ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?,ড. রাজেন্দ্র প্রসাদ,জওহরলাল নেহরু,সর্বপল্লী রাধাকৃষ্ণন,ড. বি. আর. আম্বেদকর,A,ড. রাজেন্দ্র প্রসাদ স্বাধীন ভারতের প্রথম রাষ্ট্রপতি,'
+                        : '1. ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?\n(a) ড. রাজেন্দ্র প্রসাদ\n(b) জওহরলাল নেহরু\n(c) সর্বপল্লী রাধাকৃষ্ণন\n(d) ড. বি. আর. আম্বেদকর\n\nসঠিক উত্তর: (a) ড. রাজেন্দ্র প্রসাদ\n\nExplanation:\n- ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি।'
+                    }
                     value={bulkRawText}
                     onChange={(e) => setBulkRawText(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono leading-relaxed"
@@ -3121,7 +3332,7 @@ export const AdminQuestionBank: React.FC = () => {
                     onClick={handleParseTxt}
                     className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
                   >
-                    Parse TXT & Preview Questions
+                    {bulkFormat === 'csv' ? 'Parse CSV & Preview Questions' : 'Parse TXT & Preview Questions'}
                   </Button>
                 </div>
               </div>
@@ -3222,9 +3433,25 @@ export const AdminQuestionBank: React.FC = () => {
                           key={q.questionNumber}
                           className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs space-y-1"
                         >
-                          <p className="font-bold text-slate-900 dark:text-white">
-                            {q.questionNumber}. {q.questionText}
-                          </p>
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="font-bold text-slate-900 dark:text-white">
+                              {q.questionNumber}. {q.questionText}
+                            </p>
+                            {q.imageUrl && (
+                              <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                <ImageIcon className="w-3 h-3" /> Diagram
+                              </span>
+                            )}
+                          </div>
+                          {q.imageUrl && (
+                            <div className="my-1.5 max-w-[200px] rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1">
+                              <img
+                                src={q.imageUrl}
+                                alt={`Question ${q.questionNumber} Diagram`}
+                                className="max-h-24 w-auto object-contain mx-auto rounded"
+                              />
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-500">
                             <span
                               className={
@@ -3371,6 +3598,16 @@ export const AdminQuestionBank: React.FC = () => {
                 {previewingQuestion.questionBengaliText || previewingQuestion.questionText}
               </p>
 
+              {previewingQuestion.imageUrl && (
+                <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center">
+                  <img
+                    src={previewingQuestion.imageUrl}
+                    alt="Question diagram"
+                    className="max-h-56 max-w-full rounded-lg object-contain bg-white dark:bg-black"
+                  />
+                </div>
+              )}
+
               <div className="space-y-1.5 pt-1">
                 {[
                   { key: 'A', text: previewingQuestion.optionA },
@@ -3461,6 +3698,59 @@ export const AdminQuestionBank: React.FC = () => {
                   required
                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                 />
+              </div>
+
+              {/* Edit Question Diagram / Image (Optional) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    Question Diagram / Image (Optional)
+                  </label>
+                  <span className="text-[10px] text-slate-400">For Reasoning Venn, Geometry, Maps</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    placeholder="Image URL (https://...) or click Upload"
+                    value={editQImageUrl}
+                    onChange={(e) => setEditQImageUrl(e.target.value)}
+                    className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                  />
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold transition-all shrink-0 border border-indigo-200 dark:border-indigo-800">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isEditUploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isEditUploadingImage}
+                      onChange={(e) => handleImageUpload(e, true)}
+                      className="hidden"
+                    />
+                  </label>
+                  {editQImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setEditQImageUrl('')}
+                      className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
+                      title="Remove diagram"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                {editQImageUrl && (
+                  <div className="mt-2 p-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                    <img
+                      src={editQImageUrl}
+                      alt="Question diagram preview"
+                      className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
+                    />
+                    <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
+                      <span className="font-bold text-slate-900 dark:text-white block">Diagram Attached</span>
+                      <span className="truncate block text-slate-400">{editQImageUrl}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">

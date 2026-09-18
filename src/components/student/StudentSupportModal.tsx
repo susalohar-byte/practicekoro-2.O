@@ -32,6 +32,7 @@ export interface StudentSupportModalProps {
   defaultCategory?: SupportCategory;
   defaultSubject?: string;
   defaultIssue?: string;
+  initialTab?: 'create' | 'history';
 }
 
 export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
@@ -40,10 +41,11 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
   defaultCategory = 'Technical Issue',
   defaultSubject = '',
   defaultIssue = '',
+  initialTab = 'create',
 }) => {
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'history'>(initialTab);
 
   // Form State
   const [category, setCategory] = useState<SupportCategory>(defaultCategory);
@@ -58,23 +60,11 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
   const [myTickets, setMyTickets] = useState<SupportTicketItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Update form if default props change
-  useEffect(() => {
-    if (isOpen) {
-      if (defaultCategory) setCategory(defaultCategory);
-      if (defaultSubject) setSubject(defaultSubject);
-      if (defaultIssue) setIssue(defaultIssue);
-      setIsSuccess(false);
-      setErrorMsg('');
-    }
-  }, [isOpen, defaultCategory, defaultSubject, defaultIssue]);
-
   // Load ticket history
   const loadHistory = useCallback(async () => {
-    if (!user?.id) return;
     try {
       setIsLoadingHistory(true);
-      const tickets = await api.getStudentSupportTickets(user.id);
+      const tickets = await api.getStudentSupportTickets(user?.id);
       setMyTickets(tickets);
     } catch (err) {
       console.error('Failed to load tickets:', err);
@@ -83,11 +73,18 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
     }
   }, [user?.id]);
 
+  // Update form and load history if modal opens or props change
   useEffect(() => {
-    if (isOpen && user?.id) {
+    if (isOpen) {
+      if (defaultCategory) setCategory(defaultCategory);
+      if (defaultSubject) setSubject(defaultSubject);
+      if (defaultIssue) setIssue(defaultIssue);
+      if (initialTab) setActiveTab(initialTab);
+      setIsSuccess(false);
+      setErrorMsg('');
       loadHistory();
     }
-  }, [isOpen, user?.id, loadHistory]);
+  }, [isOpen, defaultCategory, defaultSubject, defaultIssue, initialTab, loadHistory]);
 
   if (!isOpen) return null;
 
@@ -231,7 +228,7 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 {errorMsg && (
                   <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />

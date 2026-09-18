@@ -19,6 +19,7 @@
 export interface ParsedTxtQuestion {
   questionNumber: number;
   questionText: string;
+  imageUrl?: string;
   optionA: string;
   optionB: string;
   optionC: string;
@@ -198,12 +199,27 @@ export function parseQuestionsTxt(
     const answerRegex =
       /^\s*(?:সঠিক\s*উত্তর|উত্তর|Answer|Ans|Correct\s*Answer|Correct\s*Option)\s*[:\-–—]\s*(?:\(([a-dA-D])\)|([a-dA-D]))/i;
     // Explanation pattern:
-
     // "Explanation:" or "ব্যাখ্যা:" or "ব্যাখ্যা : " or "Short Notes:" or "শর্ট নোটস:"
     const explanationRegex =
       /^\s*(?:Explanation|ব্যাখ্যা|Short\s*Notes|শর্ট\s*নোটস|Note|Notes)\s*[:\-–—]?\s*(.*)$/i;
 
-    const questionLines: string[] = [questionFirstLine];
+    // Image/Diagram pattern:
+    // "[Image: https://...]" or "Image: https://..." or "ছবি: https://..." or "[ছবি: https://...]"
+    const imageRegex =
+      /^\s*(?:\[?\s*(?:Image|ছবি|Diagram|চিত্র)\s*[:\-–—]\s*(https?:\/\/[^\s\]]+)\s*\]?)\s*$/i;
+
+    let imageUrl: string | undefined = undefined;
+
+    // Check if the question first line itself contains an image tag
+    const firstLineImgMatch = questionFirstLine.match(imageRegex);
+    let initialQuestionLines: string[] = [];
+    if (firstLineImgMatch) {
+      imageUrl = firstLineImgMatch[1];
+    } else {
+      initialQuestionLines = [questionFirstLine];
+    }
+
+    const questionLines: string[] = initialQuestionLines;
     const options: Record<'A' | 'B' | 'C' | 'D', string> = {
       A: '',
       B: '',
@@ -220,6 +236,13 @@ export function parseQuestionsTxt(
       const rawLine = blockLines[l];
       const trimmed = rawLine.trim();
       if (!trimmed) continue;
+
+      // Check for standalone image URL tag in question section
+      const imgMatch = trimmed.match(imageRegex);
+      if (imgMatch) {
+        imageUrl = imgMatch[1];
+        continue;
+      }
 
       // Check for Answer line
       const ansMatch = trimmed.match(answerRegex);
@@ -340,6 +363,7 @@ export function parseQuestionsTxt(
       optionD: options.D,
       correctOption,
       explanation: explanationLines.length > 0 ? explanationLines.join('\n') : undefined,
+      imageUrl,
       rawText: block,
     });
   });

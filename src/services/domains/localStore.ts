@@ -11,6 +11,7 @@ import type {
   AttemptAnswerState,
   Chapter,
   Exam,
+  ExamCategory,
   GradedResult,
   MockTest,
   Question,
@@ -19,6 +20,8 @@ import type {
   TestSeries,
   CouponItem,
   NotificationItem,
+  AppSettingItem,
+  SupportTicketItem,
 } from '@/types';
 
 // Shared in-memory fallback stores (used when Supabase is unconfigured).
@@ -40,6 +43,17 @@ export const localChapters: Chapter[] = Object.values(MOCK_CHAPTERS).flat();
 export const localTestSeries: TestSeries[] = Object.values(MOCK_TEST_SERIES).flat();
 export const localTests: MockTest[] = Object.values(MOCK_TESTS).flat();
 export const localQuestions: Question[] = Object.values(MOCK_QUESTIONS).flat();
+
+export const localExamCategories: ExamCategory[] = [
+  { id: 'cat_police', name: 'Police Exams', orderIndex: 1, isActive: true },
+  { id: 'cat_teaching', name: 'Teaching Exams', orderIndex: 2, isActive: true },
+  { id: 'cat_civil', name: 'Civil Services', orderIndex: 3, isActive: true },
+  { id: 'cat_ssc', name: 'SSC & Staff Selection', orderIndex: 4, isActive: true },
+  { id: 'cat_railways', name: 'Railways', orderIndex: 5, isActive: true },
+  { id: 'cat_defence', name: 'Defence', orderIndex: 6, isActive: true },
+  { id: 'cat_banking', name: 'Banking', orderIndex: 7, isActive: true },
+  { id: 'cat_state_govt', name: 'State Govt.', orderIndex: 8, isActive: true },
+];
 
 // Local test-question assignments store for offline demo
 export const localTestQuestions: {
@@ -178,3 +192,134 @@ export function syncLocalScheduledNotifications(): NotificationItem[] {
   });
   return localNotifications;
 }
+
+export const localAppSettings: AppSettingItem[] = [
+  {
+    id: 'general_app_name',
+    category: 'general',
+    key: 'app_name',
+    value: 'PracticeKoro',
+    description: 'Platform name displayed across UI',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'general_support_email',
+    category: 'general',
+    key: 'support_email',
+    value: 'support@practicekoro.online',
+    description: 'Support contact email',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'general_support_phone',
+    category: 'general',
+    key: 'support_phone',
+    value: '+91 98765 43210',
+    description: 'Support phone helpline',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'general_website_url',
+    category: 'general',
+    key: 'website_url',
+    value: 'https://practicekoro.online',
+    description: 'Official web application domain',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'exam_default_duration',
+    category: 'exam_defaults',
+    key: 'default_duration_minutes',
+    value: 60,
+    description: 'Standard default exam duration in minutes',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'exam_default_marks',
+    category: 'exam_defaults',
+    key: 'default_marks_per_q',
+    value: 1.0,
+    description: 'Standard default marks per correct question',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'exam_default_negative_marks',
+    category: 'exam_defaults',
+    key: 'default_negative_marks',
+    value: 0.25,
+    description: 'Standard default negative marking',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'exam_passing_percentage',
+    category: 'exam_defaults',
+    key: 'default_passing_percentage',
+    value: 35,
+    description: 'Standard passing score percentage',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sub_currency',
+    category: 'subscription',
+    key: 'currency',
+    value: 'INR',
+    description: 'Platform transaction currency',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sub_expiry_warning_days',
+    category: 'subscription',
+    key: 'expiry_warning_days',
+    value: 7,
+    description: 'Days before expiry to display renewal warning',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sys_maintenance_mode',
+    category: 'system',
+    key: 'maintenance_mode',
+    value: false,
+    description: 'Enable platform maintenance splash mode',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sys_app_version',
+    category: 'system',
+    key: 'app_version',
+    value: '2.0.0',
+    description: 'Platform production release version',
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+export const localSupportTickets: SupportTicketItem[] = [
+  {
+    id: 'tkt_101',
+    userId: 'user_student_1',
+    studentName: 'Sourav Ganguly',
+    studentEmail: 'sourav.aspirant@example.com',
+    subject: 'Question 14 Answer Key in WBCS Prelims Mock #2',
+    issue: 'In question 14, option B was marked correct, but according to latest syllabus Option C is verified by standard texts.',
+    category: 'Test Issue',
+    priority: 'medium',
+    status: 'open',
+    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+  },
+  {
+    id: 'tkt_102',
+    userId: 'user_student_2',
+    studentName: 'Ananya Roy',
+    studentEmail: 'ananya.wb@example.com',
+    subject: 'UPI Payment debited but Pro Pass delayed',
+    issue: 'I paid ₹499 via Google Pay for 1-Year Pro Pass. UTR 428198271891. Please verify and activate.',
+    category: 'Payment Issue',
+    priority: 'high',
+    status: 'resolved',
+    resolutionNotes: 'Verified with gateway logs. Transaction was captured. Pro Pass manually renewed for 365 days.',
+    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+  },
+];
+
+

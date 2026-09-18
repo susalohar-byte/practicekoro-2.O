@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -18,10 +18,13 @@ import type { Exam, Subject, Chapter } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
 
 export const AdminExamTopics: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryExamId = searchParams.get('examId');
+
   const [exams, setExams] = useState<Exam[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [selectedExamId, setSelectedExamId] = useState<string>('');
+  const [selectedExamId, setSelectedExamId] = useState<string>(queryExamId || '');
   const [mappedTopicIds, setMappedTopicIds] = useState<Set<string>>(new Set());
   const [initialMappedIds, setInitialMappedIds] = useState<Set<string>>(new Set());
 
@@ -45,7 +48,11 @@ export const AdminExamTopics: React.FC = () => {
         setSubjects(allSubjects);
         setChapters(allChapters);
         if (allExams.length > 0) {
-          setSelectedExamId(allExams[0].id);
+          const targetExam =
+            queryExamId && allExams.some((e) => e.id === queryExamId)
+              ? queryExamId
+              : allExams[0].id;
+          setSelectedExamId(targetExam);
         }
       } catch (err) {
         setErrorMessage(getErrorMessage(err, 'Failed to load initial data'));
@@ -54,7 +61,14 @@ export const AdminExamTopics: React.FC = () => {
       }
     }
     loadData();
-  }, []);
+  }, [queryExamId]);
+
+  // Sync selected exam if URL query parameter changes
+  useEffect(() => {
+    if (queryExamId && exams.some((e) => e.id === queryExamId) && queryExamId !== selectedExamId) {
+      setSelectedExamId(queryExamId);
+    }
+  }, [queryExamId, exams, selectedExamId]);
 
   // Load mappings when selected exam changes
   const loadMappingsForExam = useCallback(async (examId: string) => {
@@ -238,7 +252,11 @@ export const AdminExamTopics: React.FC = () => {
               <Shield className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <select
                 value={selectedExamId}
-                onChange={(e) => setSelectedExamId(e.target.value)}
+                onChange={(e) => {
+                  const newId = e.target.value;
+                  setSelectedExamId(newId);
+                  setSearchParams({ examId: newId });
+                }}
                 className="w-full pl-9 pr-3 py-2 text-xs font-bold bg-slate-900 text-white rounded-xl border border-slate-800 focus:border-indigo-500 focus:outline-none transition-colors"
               >
                 {exams.map((ex) => (

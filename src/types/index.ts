@@ -32,6 +32,14 @@ export interface Exam {
   totalVacancies?: number;
 }
 
+export interface ExamCategory {
+  id: string;
+  name: string;
+  orderIndex: number;
+  isActive?: boolean;
+  createdAt?: string;
+}
+
 export interface Subject {
   id: string;
   examId?: string;
@@ -125,6 +133,7 @@ export interface Question {
   subjectId?: string;
   questionText: string;
   questionBengaliText?: string;
+  imageUrl?: string;
   optionA: string;
   optionB: string;
   optionC: string;
@@ -174,6 +183,7 @@ export interface TestQuestionAssignment {
   negativeMarks: number;
   questionText?: string;
   questionBengaliText?: string;
+  imageUrl?: string;
   difficulty?: 'easy' | 'medium' | 'hard' | string;
   correctOption?: 'A' | 'B' | 'C' | 'D';
   optionA?: string;
@@ -182,6 +192,9 @@ export interface TestQuestionAssignment {
   optionD?: string;
   explanation?: string;
   explanationBengali?: string;
+  subjectId?: string;
+  subjectName?: string;
+  chapterId?: string;
   chapterName?: string;
 }
 
@@ -196,6 +209,11 @@ export interface StudentTestQuestion {
   questionOrder: number;
   questionText: string;
   questionBengaliText?: string;
+  imageUrl?: string;
+  subjectId?: string;
+  subjectName?: string;
+  chapterId?: string;
+  chapterName?: string;
   optionA: string;
   optionB: string;
   optionC: string;
@@ -210,6 +228,22 @@ export interface AttemptAnswerState {
   selectedOption: 'A' | 'B' | 'C' | 'D' | null;
   isMarkedForReview: boolean;
   timeSpentSeconds: number;
+}
+
+export interface StudentAttemptExportRow {
+  rank: number;
+  candidateName: string;
+  email: string;
+  phone?: string;
+  score: number;
+  totalMarks: number;
+  percentage: number;
+  accuracy: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  timeSpentMinutes: string;
+  attemptDate: string;
 }
 
 export interface TestAttempt {
@@ -264,6 +298,7 @@ export interface QuestionSolution {
   questionOrder: number;
   questionText: string;
   questionBengaliText?: string;
+  imageUrl?: string;
   optionA: string;
   optionB: string;
   optionC: string;
@@ -275,6 +310,10 @@ export interface QuestionSolution {
   explanation?: string;
   explanationBengali?: string;
   isBookmarked?: boolean;
+  subjectId?: string;
+  subjectName?: string;
+  chapterId?: string;
+  chapterName?: string;
 }
 
 export interface MistakeItem {

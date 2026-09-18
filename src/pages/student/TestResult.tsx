@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Card } from '@/components/common/Card';
@@ -12,15 +12,17 @@ import {
   RotateCcw,
   AlertTriangle,
   ChevronRight,
+  Layers,
 } from 'lucide-react';
 import { formatSeconds } from '@/lib/utils';
-import type { GradedResult } from '@/types';
+import type { GradedResult, QuestionSolution } from '@/types';
 
 export const TestResult: React.FC = () => {
   const { testId, attemptId } = useParams<{ testId: string; attemptId: string }>();
   const navigate = useNavigate();
 
   const [result, setResult] = useState<GradedResult | null>(null);
+  const [solutions, setSolutions] = useState<QuestionSolution[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +30,12 @@ export const TestResult: React.FC = () => {
       if (!attemptId) return;
       setLoading(true);
       try {
-        const data = await api.getAttemptResult(attemptId);
+        const [data, sols] = await Promise.all([
+          api.getAttemptResult(attemptId),
+          testId ? api.getAttemptSolutions(attemptId, testId).catch(() => []) : Promise.resolve([]),
+        ]);
         setResult(data);
+        setSolutions(sols || []);
       } catch (err) {
         console.error('Failed to load attempt result:', err);
       } finally {
@@ -37,7 +43,58 @@ export const TestResult: React.FC = () => {
       }
     }
     loadResult();
-  }, [attemptId]);
+  }, [attemptId, testId]);
+
+  // Compute section-wise breakdown
+  const sectionBreakdown = useMemo(() => {
+    if (!solutions || solutions.length === 0) return [];
+    const map = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        totalQs: number;
+        attempted: number;
+        correct: number;
+        wrong: number;
+        skipped: number;
+        score: number;
+      }
+    >();
+
+    solutions.forEach((sol) => {
+      const sId = sol.subjectId || 'general';
+      const sName = sol.subjectName || 'General Section';
+      if (!map.has(sId)) {
+        map.set(sId, {
+          id: sId,
+          name: sName,
+          totalQs: 0,
+          attempted: 0,
+          correct: 0,
+          wrong: 0,
+          skipped: 0,
+          score: 0,
+        });
+      }
+      const sec = map.get(sId)!;
+      sec.totalQs++;
+      if (sol.selectedOption !== null) {
+        sec.attempted++;
+        if (sol.isCorrect) {
+          sec.correct++;
+          sec.score += sol.marksAwarded;
+        } else {
+          sec.wrong++;
+          sec.score += sol.marksAwarded; // negative deduction
+        }
+      } else {
+        sec.skipped++;
+      }
+    });
+
+    return Array.from(map.values());
+  }, [solutions]);
 
   if (loading) {
     return (
@@ -171,6 +228,68 @@ export const TestResult: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {/* Section-Wise Performance Breakdown */}
+      {sectionBreakdown.length > 0 && (
+        <Card className="p-5 border-slate-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-sm font-bold text-slate-900">
+                Section-Wise Performance Breakdown
+              </h3>
+            </div>
+            <span className="text-[11px] text-slate-500 font-semibold">
+              {sectionBreakdown.length} Section{sectionBreakdown.length > 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                <tr>
+                  <th className="px-3.5 py-2.5">Section</th>
+                  <th className="px-3.5 py-2.5 text-center">Questions</th>
+                  <th className="px-3.5 py-2.5 text-center">Attempted</th>
+                  <th className="px-3.5 py-2.5 text-center text-emerald-600">Correct</th>
+                  <th className="px-3.5 py-2.5 text-center text-rose-600">Wrong</th>
+                  <th className="px-3.5 py-2.5 text-center">Accuracy</th>
+                  <th className="px-3.5 py-2.5 text-right font-bold">Score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sectionBreakdown.map((sec) => {
+                  const secAccuracy =
+                    sec.attempted > 0 ? Math.round((sec.correct / sec.attempted) * 100) : 0;
+                  return (
+                    <tr key={sec.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-3.5 py-2.5 font-bold text-slate-900">
+                        {sec.name}
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center text-slate-600">{sec.totalQs}</td>
+                      <td className="px-3.5 py-2.5 text-center text-slate-600">{sec.attempted}</td>
+                      <td className="px-3.5 py-2.5 text-center font-bold text-emerald-600">
+                        {sec.correct}
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center font-bold text-rose-600">
+                        {sec.wrong}
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                          {sec.attempted > 0 ? `${secAccuracy}%` : '—'}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-right font-black text-indigo-600">
+                        {sec.score.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {/* Automatic Mistakes Notebook Banner */}
       {result.wrongCount > 0 && (

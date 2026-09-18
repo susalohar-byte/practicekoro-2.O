@@ -180,6 +180,7 @@ export function parseQuestionsCsv(
   const colNegativeMarks = getCol(['negative_marks', 'default_negative_marks', 'negativemarking']);
   const colSubjectId = getCol(['subject_id', 'subjectid']);
   const colChapterId = getCol(['chapter_id', 'chapterid']);
+  const colImageUrl = getCol(['image_url', 'image', 'diagram_url', 'diagram', 'imageurl', 'diagramurl']);
 
   const errors: string[] = [];
 
@@ -230,6 +231,7 @@ export function parseQuestionsCsv(
     const rawNegativeMarks = getVal(colNegativeMarks);
     const rowSubjectId = getVal(colSubjectId) || defaults?.defaultSubjectId;
     const rowChapterId = getVal(colChapterId) || defaults?.defaultChapterId;
+    const imageUrl = getVal(colImageUrl) || undefined;
 
     if (!questionText) {
       rowErrors.push('Question text is empty');
@@ -295,6 +297,7 @@ export function parseQuestionsCsv(
       chapterId: rowChapterId || undefined,
       questionText,
       questionBengaliText: questionBengali || undefined,
+      imageUrl,
       optionA,
       optionB,
       optionC,
@@ -539,4 +542,95 @@ export function parseQuestionsText(
         : []),
     ],
   };
+}
+
+/**
+ * Generates standard UTF-8 BOM CSV template with sample questions (including diagram/image example).
+ */
+export function generateSampleCsvContent(): string {
+  const headers = [
+    'question_text',
+    'question_bengali_text',
+    'option_a',
+    'option_b',
+    'option_c',
+    'option_d',
+    'correct_option',
+    'explanation',
+    'marks',
+    'negative_marks',
+    'image_url',
+  ];
+
+  const rows = [
+    [
+      'Who was the first President of Independent India?',
+      'স্বাধীন ভারতের প্রথম রাষ্ট্রপতি কে ছিলেন?',
+      'Dr. Rajendra Prasad',
+      'Jawaharlal Nehru',
+      'Dr. S. Radhakrishnan',
+      'Dr. B. R. Ambedkar',
+      'A',
+      '• ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি (১৯৫০-১৯৬২)।\n• তিনি ভারতের একমাত্র রাষ্ট্রপতি যিনি টানা দুইবার এই সম্মানজনক পদে আসীন ছিলেন।\n• ১৯৬২ সালে দেশসেবার স্বীকৃতি হিসেবে তাঁকে ভারতরত্ন প্রদান করা হয়।',
+      '1.0',
+      '0.25',
+      '',
+    ],
+    [
+      'In the given Venn diagram, which region represents students who play both football and cricket?',
+      'প্রদত্ত ভেন চিত্রে কোন অঞ্চলটি ফুটবল ও ক্রিকেট উভয় খেলা শিক্ষার্থীদের নির্দেশ করে?',
+      'Region A',
+      'Region B',
+      'Region C',
+      'Region D',
+      'B',
+      '• Region B lies strictly in the mutual intersection.\n• Represents aspirants engaged in both sports simultaneously.',
+      '1.0',
+      '0.25',
+      'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600',
+    ],
+    [
+      'What is the capital of West Bengal?',
+      'পশ্চিমবঙ্গের রাজধানী কী?',
+      'Kolkata',
+      'Siliguri',
+      'Asansol',
+      'Durgapur',
+      'A',
+      '• Kolkata is the principal educational and cultural center of West Bengal.\n• Situated on the eastern bank of the Hooghly River.',
+      '1.0',
+      '0.25',
+      '',
+    ],
+  ];
+
+  const csvLines = [headers.join(',')];
+  for (const row of rows) {
+    const escaped = row.map((field) => {
+      if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+        return `"${field.replace(/"/g, '""')}"`;
+      }
+      return field;
+    });
+    csvLines.push(escaped.join(','));
+  }
+
+  // Prepend UTF-8 BOM so Microsoft Excel correctly renders Bengali unicode characters
+  return '\uFEFF' + csvLines.join('\r\n');
+}
+
+/**
+ * Triggers client-side download of the sample CSV template.
+ */
+export function downloadSampleCsvFile(fileName = 'practicekoro_question_template.csv'): void {
+  const content = generateSampleCsvContent();
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', fileName);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }

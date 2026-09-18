@@ -193,6 +193,12 @@ export const TestSolutions: React.FC = () => {
                     Q {sol.questionOrder}
                   </span>
 
+                  {sol.subjectName && (
+                    <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                      {sol.subjectName}
+                    </span>
+                  )}
+
                   {sol.isCorrect && (
                     <Badge variant="success" className="gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Correct (+{sol.marksAwarded})
@@ -248,6 +254,18 @@ export const TestSolutions: React.FC = () => {
                   <p className="text-xs sm:text-sm text-slate-600 font-medium">
                     {sol.questionBengaliText}
                   </p>
+                )}
+
+                {/* Question Diagram / Image */}
+                {sol.imageUrl && (
+                  <div className="my-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-2 max-w-lg mx-auto shadow-xs">
+                    <img
+                      src={sol.imageUrl}
+                      alt={`Question ${sol.questionOrder} Diagram`}
+                      className="max-h-72 w-auto object-contain mx-auto rounded-lg"
+                      loading="lazy"
+                    />
+                  </div>
                 )}
               </div>
 

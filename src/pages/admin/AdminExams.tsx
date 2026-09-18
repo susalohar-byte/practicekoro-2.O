@@ -28,6 +28,7 @@ import {
   ExternalLink,
   ChevronRight,
   Upload,
+  Network,
 } from 'lucide-react';
 import type { Exam, MockTest } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
@@ -120,12 +121,17 @@ export const AdminExams: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [allExams, allTests] = await Promise.all([
+      const [allExams, allTests, dbCats] = await Promise.all([
         api.getAllAdminExams(),
         api.getAllAdminTests(),
+        api.getExamCategories().catch(() => []),
       ]);
       setExams(allExams);
       setTests(allTests);
+      if (dbCats && dbCats.length > 0) {
+        const catNames = dbCats.map((c) => c.name);
+        setCategories((prev) => Array.from(new Set([...catNames, ...prev])).sort());
+      }
     } catch (err) {
       console.error('Error loading exams data:', err);
     } finally {
@@ -175,11 +181,16 @@ export const AdminExams: React.FC = () => {
   }, [exams]);
 
   // Category helpers
-  const addCategoryItem = (catName: string): boolean => {
+  const addCategoryItem = async (catName: string): Promise<boolean> => {
     const trimmed = catName.trim();
     if (!trimmed) return false;
     if (categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
       return false;
+    }
+    try {
+      await api.createExamCategory(trimmed);
+    } catch (e) {
+      console.warn('Failed to save category to DB, using local fallback:', e);
     }
     const updated = [...categories, trimmed].sort();
     setCategories(updated);
@@ -234,7 +245,15 @@ export const AdminExams: React.FC = () => {
         );
       }
 
-      // 2. Update category list in state & localStorage
+      // 2. Update category in database
+      try {
+        const catSlug = 'cat_' + oldName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        await api.updateExamCategory(catSlug, trimmedNew);
+      } catch (err) {
+        console.warn('Failed to update category in DB:', err);
+      }
+
+      // 3. Update category list in state & localStorage
       const updated = categories.map((c) => (c === oldName ? trimmedNew : c)).sort();
       setCategories(updated);
       try {
@@ -243,7 +262,7 @@ export const AdminExams: React.FC = () => {
         console.error('Error saving renamed category:', e);
       }
 
-      // 3. Update active form / filter states if applicable
+      // 4. Update active form / filter states if applicable
       if (category.toLowerCase() === oldName.toLowerCase()) {
         setCategory(trimmedNew);
       }
@@ -287,6 +306,14 @@ export const AdminExams: React.FC = () => {
               : e
           )
         );
+      }
+
+      // Delete category in database
+      try {
+        const catSlug = 'cat_' + catName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        await api.deleteExamCategory(catSlug);
+      } catch (err) {
+        console.warn('Failed to delete category in DB:', err);
       }
 
       // Remove from categories list
@@ -604,6 +631,14 @@ export const AdminExams: React.FC = () => {
             Exams Directory ({exams.length})
           </Link>
           <Link
+            to="/admin/exam-topics"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+            title="Map and customize syllabus topics for exams"
+          >
+            <Network className="w-3.5 h-3.5 text-indigo-500" />
+            Exam ↔ Topic Mapping
+          </Link>
+          <Link
             to="/admin/tests"
             className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
           >
@@ -658,6 +693,15 @@ export const AdminExams: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to="/admin/exam-topics"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
+            title="Map and customize syllabus topics for examinations"
+          >
+            <Network className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>Topic Mapping</span>
+          </Link>
+
           <Button
             size="sm"
             variant="outline"
@@ -1035,6 +1079,15 @@ export const AdminExams: React.FC = () => {
                     </Link>
                     <span className="text-slate-300 dark:text-slate-700">•</span>
                     <Link
+                      to={`/admin/exam-topics?examId=${exam.id}`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                      title="Configure syllabus topics mapped to this exam"
+                    >
+                      <Network className="w-3 h-3" />
+                      <span>Topic Scope</span>
+                    </Link>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <Link
                       to="/admin/tests"
                       className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     >
@@ -1192,6 +1245,13 @@ export const AdminExams: React.FC = () => {
                           >
                             <Layers className="w-4 h-4" />
                           </Link>
+                          <Link
+                            to={`/admin/exam-topics?examId=${exam.id}`}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            title="Configure Exam-Topic Mapping & Syllabus Scope"
+                          >
+                            <Network className="w-4 h-4" />
+                          </Link>
                           <button
                             type="button"
                             onClick={() => openEditModal(exam)}
@@ -1250,13 +1310,33 @@ export const AdminExams: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>
-                  No syllabus mapping required. Standard topic tests and subjects are automatically
-                  enabled for this exam.
-                </span>
-              </div>
+              {editingExam ? (
+                <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200">
+                    <Network className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                    <span className="text-[11px] font-medium">
+                      Want to customize or restrict specific syllabus topics for this exam?
+                    </span>
+                  </div>
+                  <Link
+                    to={`/admin/exam-topics?examId=${editingExam.id}`}
+                    className="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors inline-flex items-center gap-1 shrink-0 shadow-xs"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <span>Topic Scope</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span>
+                    No syllabus mapping required. Standard topic tests and subjects are automatically
+                    enabled for this exam.
+                  </span>
+                </div>
+              )}
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -1370,11 +1450,11 @@ export const AdminExams: React.FC = () => {
                         value={inlineCategoryInput}
                         onChange={(e) => setInlineCategoryInput(e.target.value)}
                         autoFocus
-                        onKeyDown={(e) => {
+                        onKeyDown={async (e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
                             if (inlineCategoryInput.trim()) {
-                              addCategoryItem(inlineCategoryInput.trim());
+                              await addCategoryItem(inlineCategoryInput.trim());
                               setCategory(inlineCategoryInput.trim());
                               setInlineCategoryInput('');
                               setIsInlineCreatingCategory(false);
@@ -1385,9 +1465,9 @@ export const AdminExams: React.FC = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           if (inlineCategoryInput.trim()) {
-                            addCategoryItem(inlineCategoryInput.trim());
+                            await addCategoryItem(inlineCategoryInput.trim());
                             setCategory(inlineCategoryInput.trim());
                             setInlineCategoryInput('');
                             setIsInlineCreatingCategory(false);
@@ -1567,14 +1647,14 @@ export const AdminExams: React.FC = () => {
                     setCategoryModalInput(e.target.value);
                     setCategoryModalError('');
                   }}
-                  onKeyDown={(e) => {
+                  onKeyDown={async (e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       if (!categoryModalInput.trim()) {
                         setCategoryModalError('Category name is required.');
                         return;
                       }
-                      const added = addCategoryItem(categoryModalInput.trim());
+                      const added = await addCategoryItem(categoryModalInput.trim());
                       if (!added) {
                         setCategoryModalError('This category already exists.');
                         return;
@@ -1588,12 +1668,12 @@ export const AdminExams: React.FC = () => {
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => {
+                  onClick={async () => {
                     if (!categoryModalInput.trim()) {
                       setCategoryModalError('Category name is required.');
                       return;
                     }
-                    const added = addCategoryItem(categoryModalInput.trim());
+                    const added = await addCategoryItem(categoryModalInput.trim());
                     if (!added) {
                       setCategoryModalError('This category already exists.');
                       return;

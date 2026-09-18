@@ -3,8 +3,13 @@ import { Outlet } from 'react-router-dom';
 import { StudentNavbar } from './StudentNavbar';
 import { StudentSidebar } from './StudentSidebar';
 import { BottomNav } from './BottomNav';
+import { useMaintenance } from '@/context/MaintenanceContext';
+import { useAuth } from '@/context/AuthContext';
+import { MaintenanceScreen } from '@/components/common/MaintenanceScreen';
 
 export const AppLayout: React.FC = () => {
+  const { isMaintenanceMode, loading: maintLoading } = useMaintenance();
+  const { isAdmin } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     try {
@@ -13,6 +18,11 @@ export const AppLayout: React.FC = () => {
       return false;
     }
   });
+
+  // If platform maintenance mode is enabled and user is NOT an admin, block student access and display MaintenanceScreen
+  if (!maintLoading && isMaintenanceMode && !isAdmin) {
+    return <MaintenanceScreen />;
+  }
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => {

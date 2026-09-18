@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
@@ -11,12 +11,15 @@ import {
   ChevronRight,
   Send,
   AlertTriangle,
+  AlertCircle,
   Languages,
   Grid,
   X,
 } from 'lucide-react';
 import { formatSeconds } from '@/lib/utils';
 import type { MockTest, StudentTestQuestion, AttemptAnswerState } from '@/types';
+import { MaintenanceScreen } from '@/components/common/MaintenanceScreen';
+import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 
 export const TestRunner: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -29,6 +32,11 @@ export const TestRunner: React.FC = () => {
   const [questions, setQuestions] = useState<StudentTestQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+
+  // Question error report modal state
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportIssue, setSupportIssue] = useState('');
 
   // Attempt State
   const [answers, setAnswers] = useState<Record<string, AttemptAnswerState>>({});
@@ -270,6 +278,21 @@ export const TestRunner: React.FC = () => {
   const unansweredCount = questions.length - answeredCount;
   const isTimeCritical = timeRemaining > 0 && timeRemaining <= 120; // less than 2 minutes
 
+  // Multi-subject section mapping for sectional exams
+  const testSections = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; firstIndex: number; count: number }>();
+    questions.forEach((q, idx) => {
+      const secId = q.subjectId || 'general';
+      const secName = q.subjectName || 'General Section';
+      if (!map.has(secId)) {
+        map.set(secId, { id: secId, name: secName, firstIndex: idx, count: 1 });
+      } else {
+        map.get(secId)!.count++;
+      }
+    });
+    return Array.from(map.values());
+  }, [questions]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
@@ -282,27 +305,7 @@ export const TestRunner: React.FC = () => {
   }
 
   if (isMaintenanceMode) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-white">
-        <div className="max-w-md w-full bg-slate-800 border border-slate-700/80 rounded-2xl p-6 text-center space-y-4 shadow-2xl">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-inner">
-            <AlertTriangle className="w-7 h-7" />
-          </div>
-          <div className="space-y-1.5">
-            <h2 className="text-lg font-black text-white">Platform Maintenance in Progress</h2>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              We are currently performing scheduled system updates to ensure optimal test-taking stability and scoring accuracy. Mock test sessions are temporarily paused.
-            </p>
-          </div>
-          <Button
-            onClick={() => navigate('/exams')}
-            className="w-full bg-pk-primary hover:bg-pk-primary-interactive text-white font-bold text-xs shadow-md"
-          >
-            Return to Exams Hub
-          </Button>
-        </div>
-      </div>
-    );
+    return <MaintenanceScreen />;
   }
 
   if (!currentQ) {
@@ -386,6 +389,43 @@ export const TestRunner: React.FC = () => {
         </div>
       </header>
 
+      {/* Multi-Section / Multi-Subject Tabs Bar */}
+      {testSections.length > 1 && (
+        <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2 flex items-center gap-2 overflow-x-auto shadow-xs z-30">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+            Sections:
+          </span>
+          {testSections.map((sec) => {
+            const isCurrentSection =
+              (currentQ.subjectId || 'general') === sec.id;
+            return (
+              <button
+                key={sec.id}
+                type="button"
+                onClick={() => {
+                  setCurrentIndex(sec.firstIndex);
+                  setVisited((prev) => new Set([...prev, questions[sec.firstIndex].id]));
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                  isCurrentSection
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                }`}
+              >
+                <span>{sec.name}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    isCurrentSection ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                  }`}
+                >
+                  {sec.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* 2. MAIN BODY (QUESTION PANE & PALETTE) */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT / CENTER: QUESTION AREA */}
@@ -393,10 +433,15 @@ export const TestRunner: React.FC = () => {
           <div className="space-y-6">
             {/* Question Top Info Bar */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-black uppercase text-slate-800 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
                   Q {currentIndex + 1}
                 </span>
+                {currentQ.subjectName && (
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+                    {currentQ.subjectName}
+                  </span>
+                )}
                 <span className="text-xs text-slate-500 font-semibold">
                   Marks: <strong className="text-emerald-600">+{currentQ.marks}</strong> /{' '}
                   <span className="text-rose-600">-{currentQ.negativeMarks}</span>
@@ -410,6 +455,29 @@ export const TestRunner: React.FC = () => {
                     Marked for Review
                   </Badge>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const snippet =
+                      displayedQuestionText.length > 120
+                        ? `${displayedQuestionText.substring(0, 120)}...`
+                        : displayedQuestionText;
+                    setSupportSubject(
+                      `Question Discrepancy: ${test?.title || 'Mock Test'} - Q${currentIndex + 1}`
+                    );
+                    setSupportIssue(
+                      `Reported from live Test Runner for Question #${currentIndex + 1} (ID: ${currentQ.id}):\n\nQuestion Text:\n"${snippet}"\n\nPlease describe the issue (e.g., incorrect answer key, confusing translation, broken options, missing data): `
+                    );
+                    setIsSupportModalOpen(true);
+                  }}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 px-2 py-1 rounded-md border border-slate-200 hover:border-rose-200 transition-colors cursor-pointer"
+                  title="Report an issue or error with this question"
+                >
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                  <span className="hidden sm:inline">প্রশ্ন রিপোর্ট</span>
+                  <span className="sm:hidden">Report</span>
+                </button>
               </div>
             </div>
 
@@ -418,6 +486,18 @@ export const TestRunner: React.FC = () => {
               <p className="text-base sm:text-lg font-bold text-pk-dark leading-relaxed">
                 {displayedQuestionText}
               </p>
+
+              {/* Question Diagram / Image (if present) */}
+              {currentQ.imageUrl && (
+                <div className="my-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-2 max-w-lg mx-auto shadow-xs">
+                  <img
+                    src={currentQ.imageUrl}
+                    alt={`Question ${currentIndex + 1} Diagram`}
+                    className="max-h-72 w-auto object-contain mx-auto rounded-lg"
+                    loading="eager"
+                  />
+                </div>
+              )}
 
               {/* If Bengali selected and English exists, show secondary subtext */}
               {language === 'bn' && currentQ.questionBengaliText && (
@@ -670,6 +750,15 @@ export const TestRunner: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Student Question Error / Support Ticket Modal */}
+      <StudentSupportModal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        defaultCategory="Test Issue"
+        defaultSubject={supportSubject}
+        defaultIssue={supportIssue}
+      />
     </div>
   );
 };

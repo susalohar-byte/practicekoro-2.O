@@ -116,4 +116,56 @@ describe('StudentSupportModal', () => {
       expect(screen.getByText(/Verified and corrected answer key/i)).toBeInTheDocument();
     });
   });
+
+  it('renders directly with initialTab="history" and shows tickets', async () => {
+    vi.mocked(api.getStudentSupportTickets).mockResolvedValue([
+      {
+        id: 'ticket-102',
+        userId: 'test-user-123',
+        studentName: 'Suman Roy',
+        studentEmail: 'suman@example.com',
+        subject: 'UPI transaction delayed',
+        issue: 'UTR 982173981729 payment deduction',
+        category: 'Payment Issue',
+        priority: 'high',
+        status: 'open',
+        createdAt: '2026-03-12T10:00:00Z',
+        updatedAt: '2026-03-12T10:00:00Z',
+      },
+    ]);
+
+    render(
+      <StudentSupportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        initialTab="history"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('UPI transaction delayed')).toBeInTheDocument();
+      expect(screen.getByText('OPEN')).toBeInTheDocument();
+    });
+  });
+
+  it('validates required fields before submitting', async () => {
+    vi.mocked(api.getStudentSupportTickets).mockResolvedValue([]);
+
+    render(
+      <StudentSupportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        defaultSubject=""
+        defaultIssue=""
+      />
+    );
+
+    const submitBtn = screen.getByRole('button', { name: /Submit Ticket/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Please enter a specific subject/i)).toBeInTheDocument();
+      expect(api.createSupportTicket).not.toHaveBeenCalled();
+    });
+  });
 });

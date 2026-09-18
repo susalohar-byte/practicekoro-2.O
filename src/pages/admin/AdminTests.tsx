@@ -29,6 +29,8 @@ import {
   Copy,
   Users,
   ListOrdered,
+  Download,
+  FileSpreadsheet,
 } from 'lucide-react';
 import type { MockTest, Exam, Subject, Chapter, PublishValidationResult } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
@@ -228,6 +230,46 @@ export const AdminTests: React.FC = () => {
       setAttemptsList([]);
     } finally {
       setIsLoadingAttempts(false);
+    }
+  };
+
+  // Export Results / Rank Sheet to CSV
+  const [isExportingResults, setIsExportingResults] = useState(false);
+  const handleExportResults = async (test?: MockTest) => {
+    const targetTest = test || viewingAttemptsTest;
+    if (!targetTest) return;
+    setIsExportingResults(true);
+    try {
+      const rows = await api.getTestResultsForExport(targetTest.id);
+      if (!rows || rows.length === 0) {
+        alert('No candidate attempts recorded yet for this test.');
+        return;
+      }
+      api.exportTestResultsToCsv(targetTest.title, rows);
+    } catch (err) {
+      console.error('Failed to export test results:', err);
+      alert('Failed to export test results: ' + getErrorMessage(err, 'Export failed'));
+    } finally {
+      setIsExportingResults(false);
+    }
+  };
+
+  // Export Test Questions to CSV
+  const [exportingQuestionsTestId, setExportingQuestionsTestId] = useState<string | null>(null);
+  const handleExportQuestions = async (test: MockTest) => {
+    setExportingQuestionsTestId(test.id);
+    try {
+      const qs = await api.getTestQuestions(test.id);
+      if (!qs || qs.length === 0) {
+        alert('This test has no questions to export.');
+        return;
+      }
+      api.exportTestQuestionsToCsv(test.title, qs);
+    } catch (err) {
+      console.error('Failed to export questions:', err);
+      alert('Failed to export questions: ' + getErrorMessage(err, 'Export failed'));
+    } finally {
+      setExportingQuestionsTestId(null);
     }
   };
 
@@ -830,6 +872,9 @@ export const AdminTests: React.FC = () => {
             onToggleActive={handleToggleActive}
             onDuplicate={(t) => handleDuplicateTest(t.id)}
             onAttempts={handleOpenAttempts}
+            onExportResults={handleExportResults}
+            onExportQuestions={handleExportQuestions}
+            isExportingQuestions={exportingQuestionsTestId}
             isDuplicating={isDuplicating}
           />
         </div>
@@ -903,6 +948,9 @@ export const AdminTests: React.FC = () => {
             onToggleActive={handleToggleActive}
             onDuplicate={(t) => handleDuplicateTest(t.id)}
             onAttempts={handleOpenAttempts}
+            onExportResults={handleExportResults}
+            onExportQuestions={handleExportQuestions}
+            isExportingQuestions={exportingQuestionsTestId}
             isDuplicating={isDuplicating}
           />
         </div>
@@ -985,6 +1033,9 @@ export const AdminTests: React.FC = () => {
             onToggleActive={handleToggleActive}
             onDuplicate={(t) => handleDuplicateTest(t.id)}
             onAttempts={handleOpenAttempts}
+            onExportResults={handleExportResults}
+            onExportQuestions={handleExportQuestions}
+            isExportingQuestions={exportingQuestionsTestId}
             isDuplicating={isDuplicating}
           />
         </div>
@@ -1788,7 +1839,17 @@ export const AdminTests: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isExportingResults || attemptsList.length === 0}
+                onClick={() => handleExportResults(viewingAttemptsTest)}
+                className="text-xs flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {isExportingResults ? 'Exporting...' : 'Export Rank Sheet (CSV)'}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -1817,7 +1878,10 @@ interface TestTableProps {
   onToggleActive: (test: MockTest) => void;
   onDuplicate?: (test: MockTest) => void;
   onAttempts?: (test: MockTest) => void;
+  onExportResults?: (test: MockTest) => void;
+  onExportQuestions?: (test: MockTest) => void;
   isDuplicating?: string | null;
+  isExportingQuestions?: string | null;
 }
 
 const TestTable: React.FC<TestTableProps> = ({
@@ -1831,7 +1895,10 @@ const TestTable: React.FC<TestTableProps> = ({
   onToggleActive,
   onDuplicate,
   onAttempts,
+  onExportResults,
+  onExportQuestions,
   isDuplicating,
+  isExportingQuestions,
 }) => {
   if (isLoading) {
     return (
@@ -2070,6 +2137,35 @@ const TestTable: React.FC<TestTableProps> = ({
                             className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                           >
                             <Users className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {/* Export Student Results / Rank Sheet (CSV) */}
+                        {onExportResults && (
+                          <button
+                            onClick={() => onExportResults(test)}
+                            title="Export Student Results / Rank Sheet (CSV)"
+                            aria-label="Export Results (CSV)"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {/* Export Test Questions (CSV) */}
+                        {onExportQuestions && (
+                          <button
+                            onClick={() => onExportQuestions(test)}
+                            disabled={isExportingQuestions === test.id}
+                            title="Export Test Questions (CSV)"
+                            aria-label="Export Questions (CSV)"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                          >
+                            {isExportingQuestions === test.id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Download className="w-3.5 h-3.5" />
+                            )}
                           </button>
                         )}
 

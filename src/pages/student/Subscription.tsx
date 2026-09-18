@@ -21,9 +21,11 @@ import {
   Lock,
   RefreshCw,
   Tag,
+  LifeBuoy,
 } from 'lucide-react';
 import { openRazorpayCheckout } from '@/utils/razorpay';
 import type { Payment, SubscriptionPlan, CouponValidationResult } from '@/types';
+import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 
 export const Subscription: React.FC = () => {
   const { user } = useAuth();
@@ -50,6 +52,14 @@ export const Subscription: React.FC = () => {
   const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
+
+  // Support intake modal state
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportCategory, setSupportCategory] = useState<'Payment Issue' | 'Subscription Issue'>(
+    'Payment Issue'
+  );
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportIssue, setSupportIssue] = useState('');
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim() || !activePlan) return;
@@ -704,6 +714,22 @@ export const Subscription: React.FC = () => {
                 Try Again
               </Button>
               <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-slate-700 font-semibold"
+                onClick={() => {
+                  setSupportCategory('Payment Issue');
+                  setSupportSubject(`Payment Failed: ${selectedPlan?.title || 'Pro Pass'}`);
+                  setSupportIssue(
+                    `My payment for ${selectedPlan?.title || 'Pro Pass'} (₹${selectedPlan?.price || 0}) encountered an error.\nError message: "${errorMessage || 'Payment was not completed'}"\n\nPlease verify whether the amount was debited from my account.`
+                  );
+                  setIsSupportModalOpen(true);
+                }}
+                leftIcon={<LifeBuoy className="w-3.5 h-3.5 text-blue-600" />}
+              >
+                পেমেন্ট হেল্প টিকেট সাবমিট করুন (Report to Support)
+              </Button>
+              <Button
                 variant="ghost"
                 size="sm"
                 className="w-full text-slate-500"
@@ -715,6 +741,43 @@ export const Subscription: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Support & Billing Assistance Card */}
+      <Card className="p-5 border-blue-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-white border border-blue-200 text-blue-600 shadow-xs shrink-0">
+              <LifeBuoy className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                পেমেন্ট বা সাবস্ক্রিপশন সংক্রান্ত সহায়তা দরকার? (Need Billing Assistance?)
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
+                টাকা কেটে নেওয়া কিন্তু প্রো পাস চালু না হওয়া, ইউপিআই বিলম্ব বা কুপন সংক্রান্ত যেকোনো বিষয়ে আমাদের অ্যাডমিন ডেস্কে সরাসরি টিকেট তৈরি করুন।
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSupportCategory('Payment Issue');
+                setSupportSubject('Payment / Subscription Inquiry');
+                setSupportIssue(
+                  `I have a question or request regarding my Pro Pass subscription:\n\nSelected Plan: ${selectedPlan?.title || 'Pro Pass'} (₹${selectedPlan?.price || 0})\nInquiry Details: `
+                );
+                setIsSupportModalOpen(true);
+              }}
+              leftIcon={<LifeBuoy className="w-3.5 h-3.5 text-blue-600" />}
+              className="w-full sm:w-auto text-xs font-bold border-blue-300 text-blue-700 hover:bg-blue-100/50 cursor-pointer"
+            >
+              সাপোর্ট টিকেট সাবমিট করুন
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       {/* =========================================================================
           PAYMENT HISTORY SECTION
@@ -790,6 +853,15 @@ export const Subscription: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Student Support Modal */}
+      <StudentSupportModal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        defaultCategory={supportCategory}
+        defaultSubject={supportSubject}
+        defaultIssue={supportIssue}
+      />
     </div>
   );
 };

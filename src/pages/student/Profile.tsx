@@ -28,7 +28,10 @@ import {
   X,
   CheckCircle2,
   Phone,
+  LifeBuoy,
+  MessageSquare,
 } from 'lucide-react';
+import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 
 export const Profile: React.FC = () => {
   const { user, isPro, updateProfile } = useAuth();
@@ -47,6 +50,8 @@ export const Profile: React.FC = () => {
   const [isSavingName, setIsSavingName] = useState<boolean>(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState<boolean>(false);
+  const [supportModalTab, setSupportModalTab] = useState<'create' | 'history'>('create');
 
   const openNameEditor = () => {
     setNameInput(user?.fullName || '');
@@ -659,6 +664,75 @@ export const Profile: React.FC = () => {
             </div>
             <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-all" />
           </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSupportModalTab('create');
+              setIsSupportModalOpen(true);
+            }}
+            className="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between group text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-100">
+                <LifeBuoy className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                  Support & Help Desk
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  সাহায্য ও সাপোর্ট: Raise tickets & report issues
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+          </button>
+        </div>
+
+        {/* Dedicated Support Desk Card */}
+        <div className="mt-4 p-4 sm:p-5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <LifeBuoy className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span>সাপোর্ট ও অভিযোগ ডেস্ক (Direct Support Desk)</span>
+              </h4>
+              <p className="text-[11px] text-slate-600 mt-0.5">
+                পেমেন্ট বিলম্ব, টেস্টের প্রশ্ন বা স্কোরকার্ড সংক্রান্ত যেকোনো বিষয়ে সরাসরি অভিযোগ বা প্রশ্ন জানান।
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSupportModalTab('history');
+                setIsSupportModalOpen(true);
+              }}
+              leftIcon={<MessageSquare className="w-3.5 h-3.5" />}
+              className="text-xs font-bold grow sm:grow-0"
+            >
+              টিকেট হিস্ট্রি
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setSupportModalTab('create');
+                setIsSupportModalOpen(true);
+              }}
+              leftIcon={<LifeBuoy className="w-3.5 h-3.5" />}
+              className="text-xs font-bold grow sm:grow-0"
+            >
+              টিকেট তৈরি করুন
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -796,6 +870,13 @@ export const Profile: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Student Support Ticket Modal */}
+      <StudentSupportModal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        initialTab={supportModalTab}
+      />
     </div>
   );
 };
