@@ -282,4 +282,69 @@ describe('AdminQuestionBank Selection UI Updates', () => {
       expect(screen.queryByText('3 selected')).toBeNull();
     });
   });
+
+  it('displays singular "Select All (1 Question)" when context has exactly 1 question', async () => {
+    (api.getAllAdminQuestions as ReturnType<typeof vi.fn>).mockResolvedValue([mockQuestions[0]]);
+
+    render(
+      <MemoryRouter>
+        <AdminQuestionBank />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Select All (1 Question)')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('AdminExams Drag & Drop Reordering Execution', () => {
+  const mockCategories = [
+    { id: 'cat_police', name: 'Police Exams', orderIndex: 0, isActive: true },
+    { id: 'cat_ssc', name: 'SSC & Railway', orderIndex: 1, isActive: true },
+    { id: 'cat_civil', name: 'Civil Services', orderIndex: 2, isActive: true },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (api.getAllAdminExams as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (api.getAllAdminTests as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (api.getExamCategories as ReturnType<typeof vi.fn>).mockResolvedValue(mockCategories);
+    (api.reorderExamCategories as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+  });
+
+  it('triggers api.reorderExamCategories when dropping a category pill onto another', async () => {
+    render(
+      <MemoryRouter>
+        <AdminExams />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTitle(/Drag to reorder "Police Exams"/)).toBeInTheDocument();
+    });
+
+    const policePill = screen.getByTitle(/Drag to reorder "Police Exams"/);
+    const sscPill = screen.getByTitle(/Drag to reorder "SSC & Railway"/);
+
+    // Simulate HTML5 drag start on Police Exams (index 0)
+    const dataTransfer = {
+      setData: vi.fn(),
+      getData: vi.fn(() => '0'),
+      effectAllowed: 'move',
+      dropEffect: 'move',
+    };
+
+    fireEvent.dragStart(policePill, { dataTransfer });
+    fireEvent.dragOver(sscPill, { dataTransfer });
+    fireEvent.drop(sscPill, { dataTransfer });
+
+    await waitFor(() => {
+      expect(api.reorderExamCategories).toHaveBeenCalledWith([
+        { name: 'SSC & Railway', orderIndex: 1 },
+        { name: 'Police Exams', orderIndex: 2 },
+        { name: 'Civil Services', orderIndex: 3 },
+      ]);
+    });
+  });
 });

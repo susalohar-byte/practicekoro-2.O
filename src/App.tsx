@@ -57,6 +57,26 @@ const Register = React.lazy(() =>
 const ForgotPassword = React.lazy(() =>
   import('@/pages/auth/ForgotPassword').then((module) => ({ default: module.ForgotPassword }))
 );
+const TermsAndConditions = React.lazy(() =>
+  import('@/pages/legal/TermsAndConditions').then((module) => ({
+    default: module.TermsAndConditions,
+  }))
+);
+const PrivacyPolicy = React.lazy(() =>
+  import('@/pages/legal/PrivacyPolicy').then((module) => ({
+    default: module.PrivacyPolicy,
+  }))
+);
+const RefundPolicy = React.lazy(() =>
+  import('@/pages/legal/RefundPolicy').then((module) => ({
+    default: module.RefundPolicy,
+  }))
+);
+const ContactUs = React.lazy(() =>
+  import('@/pages/legal/ContactUs').then((module) => ({
+    default: module.ContactUs,
+  }))
+);
 const AdminDashboard = React.lazy(() =>
   import('@/pages/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
 );
@@ -273,6 +293,18 @@ export const App: React.FC = () => {
           }
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Public Legal & Compliance Routes (Razorpay & Statutory Policies) */}
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
+        <Route path="/cancellation-refund" element={<RefundPolicy />} />
+        <Route path="/refund" element={<RefundPolicy />} />
+        <Route path="/refunds" element={<RefundPolicy />} />
+        <Route path="/contact-us" element={<ContactUs />} />
+        <Route path="/contact" element={<ContactUs />} />
 
         {/* Admin Protected Routes */}
         <Route

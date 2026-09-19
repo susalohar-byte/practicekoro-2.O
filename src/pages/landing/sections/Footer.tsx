@@ -100,20 +100,9 @@ export const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2.5 text-xs font-semibold text-slate-600">
               <li>
-                <a
-                  href="mailto:support@practicekoro.com"
-                  className="hover:text-blue-600 transition-colors"
-                >
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:support@practicekoro.com"
-                  className="hover:text-blue-600 transition-colors"
-                >
+                <Link to="/contact-us" className="hover:text-blue-600 transition-colors">
                   Contact Us
-                </a>
+                </Link>
               </li>
               <li>
                 <Link to="/privacy" className="hover:text-blue-600 transition-colors">
@@ -123,6 +112,11 @@ export const Footer: React.FC = () => {
               <li>
                 <Link to="/terms" className="hover:text-blue-600 transition-colors">
                   Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/refund-policy" className="hover:text-blue-600 transition-colors">
+                  Refund Policy
                 </Link>
               </li>
             </ul>
