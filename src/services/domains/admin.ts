@@ -2,6 +2,7 @@ import { getErrorMessage } from '@/lib/errors';
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type {
   Exam,
+  ExamCategory,
   Subject,
   Chapter,
   TestSeries,
@@ -12,11 +13,16 @@ import type {
   NotificationItem,
   SupportTicketItem,
   AppSettingItem,
+  StudentAttemptExportRow,
+  QuestionItemAnalysis,
+  ItemAnalysisFilterOptions,
+  EmpiricalDifficulty,
 } from '@/types';
 import { parseQuestionsCsv, parseQuestionsText } from '@/utils/csvParser';
 import type { ParsedTxtQuestion } from '@/utils/txtQuestionParser';
 import {
   localExams,
+  localExamCategories,
   localSubjects,
   localChapters,
   localTestSeries,
@@ -25,6 +31,9 @@ import {
   localTestQuestions,
   localNotifications,
   syncLocalScheduledNotifications,
+  localAppSettings,
+  localSupportTickets,
+  localItemAnalysisStore,
 } from '@/services/domains/localStore';
 import type { ChapterRow, ExamRow, QuestionRow, SubjectRow } from '@/services/domains/localStore';
 import { catalogApi } from '@/services/domains/catalog';
@@ -43,6 +52,7 @@ function mapQuestionRow(q: any): Question {
     subjectId: q.subject_id ?? undefined,
     questionText: q.question_text,
     questionBengaliText: q.question_bengali_text ?? undefined,
+    imageUrl: q.image_url ?? undefined,
     optionA: q.option_a,
     optionB: q.option_b,
     optionC: q.option_c,
@@ -65,6 +75,28 @@ function mapQuestionRow(q: any): Question {
     chapterName: q.chapters?.name || undefined,
     topicName: q.chapters?.name || undefined,
   };
+}
+
+function parseSettingValue(raw: unknown): unknown {
+  if (raw === null || raw === undefined) return raw;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (trimmed === 'true') return true;
+    if (trimmed === 'false') return false;
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        return trimmed;
+      }
+    }
+    return trimmed.replace(/^"|"$/g, '');
+  }
+  return raw;
 }
 
 export const adminApi = {
@@ -1381,9 +1413,7 @@ export const adminApi = {
     }
     const { data, error } = await supabase
       .from('test_attempts')
-      .select(
-        'id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)'
-      )
+      .select('id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)')
       .eq('test_id', testId)
       .order('score', { ascending: false });
 
@@ -1393,32 +1423,189 @@ export const adminApi = {
         .select('*')
         .eq('test_id', testId)
         .order('score', { ascending: false });
-      return (fallbackData || []).map((d: any) => ({
+      return (fallbackData || []).map((d: any, idx: number) => ({
         id: d.id,
+        rank: idx + 1,
         userId: d.user_id,
         userName: 'Student Candidate',
         userEmail: '',
-        score: d.score,
-        totalMarks: d.total_marks,
-        accuracy: d.accuracy,
-        timeSpentSeconds: d.time_spent_seconds,
-        status: d.status,
+        score: Number(d.score || 0),
+        totalMarks: Number(d.total_marks || 0),
+        accuracy: Number(d.accuracy || 0),
+        correctCount: Number(d.correct_count || 0),
+        wrongCount: Number(d.wrong_count || 0),
+        skippedCount: Number(d.skipped_count || 0),
+        timeSpentSeconds: Number(d.time_spent_seconds || 0),
+        status: d.status || 'completed',
         createdAt: d.created_at,
       }));
     }
 
-    return (data || []).map((d: any) => ({
+    return (data || []).map((d: any, idx: number) => ({
       id: d.id,
+      rank: idx + 1,
       userId: d.user_id,
       userName: d.profiles?.full_name || 'Student Candidate',
       userEmail: d.profiles?.email || '',
-      score: d.score,
-      totalMarks: d.total_marks,
-      accuracy: d.accuracy,
-      timeSpentSeconds: d.time_spent_seconds,
-      status: d.status,
+      score: Number(d.score || 0),
+      totalMarks: Number(d.total_marks || 0),
+      accuracy: Number(d.accuracy || 0),
+      correctCount: Number(d.correct_count || 0),
+      wrongCount: Number(d.wrong_count || 0),
+      skippedCount: Number(d.skipped_count || 0),
+      timeSpentSeconds: Number(d.time_spent_seconds || 0),
+      status: d.status || 'completed',
       createdAt: d.created_at,
     }));
+  },
+
+  async getTestResultsForExport(testId: string): Promise<StudentAttemptExportRow[]> {
+    const rawAttempts = await this.getTestAttempts(testId);
+    return rawAttempts.map((att, idx) => {
+      const score = Number(att.score ?? 0);
+      const totalMarks = Number(att.totalMarks ?? 0);
+      const percentage = totalMarks > 0 ? Number(((score / totalMarks) * 100).toFixed(2)) : 0;
+      const accuracy = Number(att.accuracy ?? 0);
+      const seconds = Number(att.timeSpentSeconds ?? 0);
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return {
+        rank: att.rank || idx + 1,
+        candidateName: att.userName || 'Student Candidate',
+        email: att.userEmail || '-',
+        phone: undefined,
+        score,
+        totalMarks,
+        percentage,
+        accuracy,
+        correctCount: Number(att.correctCount ?? 0),
+        wrongCount: Number(att.wrongCount ?? 0),
+        skippedCount: Number(att.skippedCount ?? 0),
+        timeSpentMinutes: `${m}m ${s}s`,
+        attemptDate: att.createdAt || new Date().toISOString(),
+      };
+    });
+  },
+
+  exportTestResultsToCsv(testTitle: string, rows: StudentAttemptExportRow[]): void {
+    const headers = [
+      'Rank',
+      'Candidate Name',
+      'Email / Phone',
+      'Score',
+      'Total Marks',
+      'Percentage (%)',
+      'Accuracy (%)',
+      'Correct',
+      'Wrong',
+      'Skipped / Unattempted',
+      'Time Spent (M:S)',
+      'Submitted At',
+    ];
+
+    const escapeCsv = (val: unknown) => {
+      const str = String(val ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvLines = [headers.join(',')];
+    for (const r of rows) {
+      csvLines.push(
+        [
+          r.rank,
+          escapeCsv(r.candidateName),
+          escapeCsv(r.email || r.phone || '-'),
+          r.score,
+          r.totalMarks,
+          r.percentage,
+          r.accuracy,
+          r.correctCount,
+          r.wrongCount,
+          r.skippedCount,
+          escapeCsv(r.timeSpentMinutes),
+          escapeCsv(new Date(r.attemptDate).toLocaleString('en-IN')),
+        ].join(',')
+      );
+    }
+
+    // Include UTF-8 BOM (\uFEFF) for Excel compatibility with Bengali & symbols
+    const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeTitle = testTitle.replace(/[^a-zA-Z0-9_\u0980-\u09FF]+/g, '_').slice(0, 40);
+    a.download = `${safeTitle}_results_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  exportTestQuestionsToCsv(testTitle: string, questions: Question[]): void {
+    const headers = [
+      'Question Number',
+      'Question Text (English/Bengali)',
+      'Option A',
+      'Option B',
+      'Option C',
+      'Option D',
+      'Correct Answer (A/B/C/D)',
+      'Marks',
+      'Negative Marks',
+      'Difficulty',
+      'Subject',
+      'Chapter / Topic',
+      'Diagram / Image URL',
+      'Explanation / Short Notes',
+    ];
+
+    const escapeCsv = (val: unknown) => {
+      const str = String(val ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvLines = [headers.join(',')];
+    questions.forEach((q, idx) => {
+      csvLines.push(
+        [
+          idx + 1,
+          escapeCsv(q.questionBengaliText || q.questionText),
+          escapeCsv(q.optionA),
+          escapeCsv(q.optionB),
+          escapeCsv(q.optionC),
+          escapeCsv(q.optionD),
+          q.correctOption,
+          q.defaultMarks ?? 1,
+          q.defaultNegativeMarks ?? 0.25,
+          escapeCsv(q.difficulty),
+          escapeCsv(q.subjectName || '-'),
+          escapeCsv(q.chapterName || q.topicName || '-'),
+          escapeCsv(q.imageUrl || ''),
+          escapeCsv(q.explanationBengali || q.explanation || ''),
+        ].join(',')
+      );
+    });
+
+    const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeTitle = testTitle.replace(/[^a-zA-Z0-9_\u0980-\u09FF]+/g, '_').slice(0, 40);
+    a.download = `${safeTitle}_questions_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
 
   async validateTestForPublish(testId: string): Promise<PublishValidationResult> {
@@ -1783,36 +1970,7 @@ export const adminApi = {
     if (error) throw new Error(error.message);
     if (!data) return null;
 
-    const q = data as any;
-    return {
-      id: q.id,
-      chapterId: q.chapter_id ?? q.topic_id ?? undefined,
-      topicId: q.topic_id ?? q.chapter_id ?? undefined,
-      subjectId: q.subject_id ?? undefined,
-      questionText: q.question_text,
-      questionBengaliText: q.question_bengali_text ?? undefined,
-      optionA: q.option_a,
-      optionB: q.option_b,
-      optionC: q.option_c,
-      optionD: q.option_d,
-      correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
-      explanation: q.explanation ?? undefined,
-      explanationBengali: q.explanation_bengali ?? undefined,
-      difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
-      defaultMarks: Number(q.default_marks || 1),
-      defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
-      questionType: q.question_type || 'mcq',
-      sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
-      sourceYear: q.source_year ? Number(q.source_year) : undefined,
-      sourceExam: q.source_exam ?? undefined,
-      sourcePaper: q.source_paper ?? undefined,
-      sourceShift: q.source_shift ?? undefined,
-      isActive: q.is_active,
-      status: (q.status as 'active' | 'archived' | 'draft') || 'active',
-      subjectName: q.subjects?.name || undefined,
-      chapterName: q.chapters?.name || undefined,
-      topicName: q.chapters?.name || undefined,
-    };
+    return mapQuestionRow(data);
   },
 
   async createQuestion(qData: Omit<Question, 'id'>): Promise<Question> {
@@ -1842,6 +2000,7 @@ export const adminApi = {
         subject_id: qData.subjectId || null,
         question_text: qData.questionText,
         question_bengali_text: qData.questionBengaliText || null,
+        image_url: qData.imageUrl || null,
         option_a: qData.optionA,
         option_b: qData.optionB,
         option_c: qData.optionC,
@@ -1874,36 +2033,7 @@ export const adminApi = {
       throw new Error(error.message || 'Failed to create question in database');
     }
 
-    const q = data as any;
-    return {
-      id: q.id,
-      chapterId: q.chapter_id ?? q.topic_id ?? undefined,
-      topicId: q.topic_id ?? q.chapter_id ?? undefined,
-      subjectId: q.subject_id ?? undefined,
-      questionText: q.question_text,
-      questionBengaliText: q.question_bengali_text ?? undefined,
-      optionA: q.option_a,
-      optionB: q.option_b,
-      optionC: q.option_c,
-      optionD: q.option_d,
-      correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
-      explanation: q.explanation ?? undefined,
-      explanationBengali: q.explanation_bengali ?? undefined,
-      difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
-      defaultMarks: Number(q.default_marks || 1),
-      defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
-      questionType: q.question_type || 'mcq',
-      sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
-      sourceYear: q.source_year ? Number(q.source_year) : undefined,
-      sourceExam: q.source_exam ?? undefined,
-      sourcePaper: q.source_paper ?? undefined,
-      sourceShift: q.source_shift ?? undefined,
-      isActive: q.is_active,
-      status: (q.status as 'active' | 'archived' | 'draft') || 'active',
-      subjectName: q.subjects?.name || undefined,
-      chapterName: q.chapters?.name || undefined,
-      topicName: q.chapters?.name || undefined,
-    };
+    return mapQuestionRow(data);
   },
 
   async updateQuestion(id: string, updates: Partial<Question>): Promise<Question> {
@@ -1919,6 +2049,7 @@ export const adminApi = {
     if (updates.questionText !== undefined) payload.question_text = updates.questionText;
     if (updates.questionBengaliText !== undefined)
       payload.question_bengali_text = updates.questionBengaliText;
+    if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl || null;
     if (updates.optionA !== undefined) payload.option_a = updates.optionA;
     if (updates.optionB !== undefined) payload.option_b = updates.optionB;
     if (updates.optionC !== undefined) payload.option_c = updates.optionC;
@@ -1966,36 +2097,7 @@ export const adminApi = {
       throw new Error(error.message || 'Failed to update question in database');
     }
 
-    const q = data as any;
-    return {
-      id: q.id,
-      chapterId: q.chapter_id ?? q.topic_id ?? undefined,
-      topicId: q.topic_id ?? q.chapter_id ?? undefined,
-      subjectId: q.subject_id ?? undefined,
-      questionText: q.question_text,
-      questionBengaliText: q.question_bengali_text ?? undefined,
-      optionA: q.option_a,
-      optionB: q.option_b,
-      optionC: q.option_c,
-      optionD: q.option_d,
-      correctOption: (q.correct_option as 'A' | 'B' | 'C' | 'D') || 'A',
-      explanation: q.explanation ?? undefined,
-      explanationBengali: q.explanation_bengali ?? undefined,
-      difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
-      defaultMarks: Number(q.default_marks || 1),
-      defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
-      questionType: q.question_type || 'mcq',
-      sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || 'topic',
-      sourceYear: q.source_year ? Number(q.source_year) : undefined,
-      sourceExam: q.source_exam ?? undefined,
-      sourcePaper: q.source_paper ?? undefined,
-      sourceShift: q.source_shift ?? undefined,
-      isActive: q.is_active,
-      status: (q.status as 'active' | 'archived' | 'draft') || 'active',
-      subjectName: q.subjects?.name || undefined,
-      chapterName: q.chapters?.name || undefined,
-      topicName: q.chapters?.name || undefined,
-    };
+    return mapQuestionRow(data);
   },
 
   async deleteQuestion(id: string): Promise<boolean> {
@@ -2060,6 +2162,164 @@ export const adminApi = {
     return true;
   },
 
+  async uploadQuestionImage(file: File): Promise<string> {
+    if (!isSupabaseConfigured) {
+      return URL.createObjectURL(file);
+    }
+    const ext = file.name.split('.').pop() || 'png';
+    const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const filePath = `questions/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from('question-images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw new Error(`Failed to upload image: ${error.message}`);
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('question-images')
+      .getPublicUrl(data.path);
+
+    return publicUrlData.publicUrl;
+  },
+
+  // --------------------------------------------------------------------------
+  // EXAM CATEGORIES (DATABASE BACKED)
+  // --------------------------------------------------------------------------
+  async getExamCategories(): Promise<ExamCategory[]> {
+    if (!isSupabaseConfigured) {
+      return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+    }
+    try {
+      const { data, error } = await supabase
+        .from('exam_categories')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+      }
+      return data.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        orderIndex: Number(d.order_index || 0),
+        isActive: d.is_active ?? true,
+        createdAt: d.created_at,
+      }));
+    } catch (err) {
+      console.warn('Failed to load categories from Supabase, using local fallback:', err);
+      return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+    }
+  },
+
+  async createExamCategory(name: string, orderIndex?: number): Promise<ExamCategory> {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error('Category name cannot be empty');
+    const slug = 'cat_' + trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const newCat: ExamCategory = {
+      id: slug,
+      name: trimmed,
+      orderIndex: orderIndex ?? (localExamCategories.length + 1),
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (!isSupabaseConfigured) {
+      localExamCategories.push(newCat);
+      return newCat;
+    }
+
+    const { data, error } = await supabase
+      .from('exam_categories')
+      .insert({
+        id: slug,
+        name: trimmed,
+        order_index: newCat.orderIndex,
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to create category');
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      orderIndex: Number(data.order_index || 0),
+      isActive: data.is_active ?? true,
+      createdAt: data.created_at,
+    };
+  },
+
+  async updateExamCategory(id: string, name: string, orderIndex?: number): Promise<ExamCategory> {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error('Category name cannot be empty');
+
+    if (!isSupabaseConfigured) {
+      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
+      if (idx !== -1) {
+        localExamCategories[idx] = {
+          ...localExamCategories[idx],
+          name: trimmed,
+          orderIndex: orderIndex ?? localExamCategories[idx].orderIndex,
+        };
+        return localExamCategories[idx];
+      }
+      const created: ExamCategory = { id, name: trimmed, orderIndex: orderIndex || 1, isActive: true };
+      localExamCategories.push(created);
+      return created;
+    }
+
+    const updatePayload: Record<string, unknown> = { name: trimmed };
+    if (orderIndex !== undefined) updatePayload.order_index = orderIndex;
+
+    const { data, error } = await supabase
+      .from('exam_categories')
+      .update(updatePayload)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to update category');
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      orderIndex: Number(data.order_index || 0),
+      isActive: data.is_active ?? true,
+      createdAt: data.created_at,
+    };
+  },
+
+  async deleteExamCategory(id: string): Promise<boolean> {
+    if (!isSupabaseConfigured) {
+      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
+      if (idx !== -1) {
+        localExamCategories.splice(idx, 1);
+      }
+      return true;
+    }
+
+    const { error } = await supabase
+      .from('exam_categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to delete category');
+    }
+    return true;
+  },
+
   // --------------------------------------------------------------------------
   // TEST QUESTIONS (ASSIGNMENTS & REORDERING)
   // --------------------------------------------------------------------------
@@ -2078,6 +2338,7 @@ export const adminApi = {
           negativeMarks: a.negativeMarks,
           questionText: q?.questionText,
           questionBengaliText: q?.questionBengaliText,
+          imageUrl: q?.imageUrl,
           difficulty: q?.difficulty ?? undefined,
           correctOption: q?.correctOption,
           optionA: q?.optionA,
@@ -2086,6 +2347,10 @@ export const adminApi = {
           optionD: q?.optionD,
           explanation: q?.explanation ?? undefined,
           explanationBengali: q?.explanationBengali ?? undefined,
+          subjectId: q?.subjectId,
+          subjectName: q?.subjectName,
+          chapterId: q?.chapterId,
+          chapterName: q?.chapterName,
         };
       });
     }
@@ -2098,7 +2363,11 @@ export const adminApi = {
         question_order,
         marks,
         negative_marks,
-        questions (*)
+        questions (
+          *,
+          subjects:subject_id (id, name),
+          chapters:chapter_id (id, name)
+        )
       `
       )
       .eq('test_id', testId)
@@ -2113,7 +2382,7 @@ export const adminApi = {
     }
 
     return data.map((item: any) => {
-      const q = item.questions as QuestionRow | null;
+      const q = item.questions as any;
       return {
         questionId: item.question_id,
         questionOrder: item.question_order,
@@ -2121,6 +2390,7 @@ export const adminApi = {
         negativeMarks: Number(item.negative_marks),
         questionText: q?.question_text ?? undefined,
         questionBengaliText: q?.question_bengali_text ?? undefined,
+        imageUrl: q?.image_url ?? undefined,
         difficulty: (q?.difficulty as 'easy' | 'medium' | 'hard') ?? undefined,
         correctOption: (q?.correct_option as 'A' | 'B' | 'C' | 'D' | null) ?? undefined,
         optionA: q?.option_a ?? undefined,
@@ -2129,6 +2399,10 @@ export const adminApi = {
         optionD: q?.option_d ?? undefined,
         explanation: q?.explanation ?? undefined,
         explanationBengali: q?.explanation_bengali ?? undefined,
+        subjectId: q?.subject_id ?? undefined,
+        subjectName: q?.subjects?.name || undefined,
+        chapterId: q?.chapter_id ?? undefined,
+        chapterName: q?.chapters?.name || undefined,
       };
     });
   },
@@ -2532,6 +2806,7 @@ export const adminApi = {
         const created = await this.createQuestion({
           questionText: q.questionText,
           questionBengaliText: /[\u0980-\u09FF]/.test(q.questionText) ? q.questionText : undefined,
+          imageUrl: q.imageUrl,
           optionA: q.optionA,
           optionB: q.optionB,
           optionC: q.optionC,
@@ -2730,7 +3005,7 @@ export const adminApi = {
           const scheduledAt = d.scheduled_at || undefined;
           const isDue = d.status === 'scheduled' && scheduledAt && new Date(scheduledAt) <= now;
           const effectiveStatus = isDue ? 'sent' : d.status;
-          const effectiveSentAt = isDue ? d.sent_at || scheduledAt : d.sent_at || undefined;
+          const effectiveSentAt = isDue ? (d.sent_at || scheduledAt) : (d.sent_at || undefined);
 
           return {
             id: d.id,
@@ -2763,7 +3038,7 @@ export const adminApi = {
         target_audience: notif.targetAudience,
         channel: notif.channel,
         status: notif.status,
-        sent_at: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
+        sent_at: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
         scheduled_at: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       });
       if (error) return { success: false, error: error.message };
@@ -2778,7 +3053,7 @@ export const adminApi = {
       targetAudience: notif.targetAudience,
       channel: notif.channel,
       status: notif.status,
-      sentAt: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
+      sentAt: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
       scheduledAt: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       createdAt: new Date().toISOString(),
     };
@@ -2854,39 +3129,50 @@ export const adminApi = {
   // --------------------------------------------------------------------------
   async getSupportTickets(): Promise<SupportTicketItem[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('support_tickets')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) throw new Error(error.message);
-      if (data && data.length > 0) {
-        return data.map((d: any) => ({
-          id: d.id,
-          userId: d.user_id || undefined,
-          studentName: d.student_name || 'Student Aspirant',
-          studentEmail: d.student_email || '',
-          subject: d.subject,
-          issue: d.issue,
-          category: d.category,
-          priority: d.priority,
-          status: d.status,
-          assignedTo: d.assigned_to || undefined,
-          resolutionNotes: d.resolution_notes || undefined,
-          createdAt: d.created_at,
-          updatedAt: d.updated_at,
-        }));
+        if (!error && data && data.length > 0) {
+          return data.map((d: any) => ({
+            id: d.id,
+            userId: d.user_id || undefined,
+            studentName: d.student_name || 'Student Aspirant',
+            studentEmail: d.student_email || '',
+            subject: d.subject,
+            issue: d.issue,
+            category: d.category,
+            priority: d.priority,
+            status: d.status,
+            assignedTo: d.assigned_to || undefined,
+            resolutionNotes: d.resolution_notes || undefined,
+            createdAt: d.created_at,
+            updatedAt: d.updated_at,
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to load support tickets from Supabase, falling back to local store:', err);
       }
-      return [];
     }
 
-    return [];
+    return [...localSupportTickets];
   },
 
   async updateSupportTicket(
     id: string,
     updates: Partial<SupportTicketItem>
   ): Promise<{ success: boolean; error?: string }> {
+    const idx = localSupportTickets.findIndex((t) => t.id === id);
+    if (idx !== -1) {
+      localSupportTickets[idx] = {
+        ...localSupportTickets[idx],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
     if (isSupabaseConfigured) {
       const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (updates.status) payload.status = updates.status;
@@ -2894,16 +3180,37 @@ export const adminApi = {
       if (updates.resolutionNotes !== undefined) payload.resolution_notes = updates.resolutionNotes;
       if (updates.assignedTo !== undefined) payload.assigned_to = updates.assignedTo;
 
-      const { error } = await supabase.from('support_tickets').update(payload).eq('id', id);
-      if (error) return { success: false, error: error.message };
-      return { success: true };
+      try {
+        const { error } = await supabase.from('support_tickets').update(payload).eq('id', id);
+        if (error) return { success: false, error: error.message };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Update failed' };
+      }
     }
+
     return { success: true };
   },
 
   async createSupportTicket(
     ticket: Omit<SupportTicketItem, 'id' | 'createdAt' | 'updatedAt'>
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; ticketId?: string }> {
+    const generatedId = `tkt_${Date.now()}`;
+    const newTicket: SupportTicketItem = {
+      id: generatedId,
+      userId: ticket.userId,
+      studentName: ticket.studentName || 'Student Candidate',
+      studentEmail: ticket.studentEmail || '',
+      subject: ticket.subject,
+      issue: ticket.issue,
+      category: ticket.category || 'Other',
+      priority: ticket.priority || 'medium',
+      status: ticket.status || 'open',
+      resolutionNotes: ticket.resolutionNotes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    localSupportTickets.unshift(newTicket);
+
     if (isSupabaseConfigured) {
       let resolvedUserId = ticket.userId || null;
       if (!resolvedUserId) {
@@ -2915,21 +3222,27 @@ export const adminApi = {
         }
       }
 
-      const { error } = await supabase.from('support_tickets').insert({
-        user_id: resolvedUserId,
-        student_name: ticket.studentName || 'Student Candidate',
-        student_email: ticket.studentEmail || '',
-        subject: ticket.subject,
-        issue: ticket.issue,
-        category: ticket.category || 'Other',
-        priority: ticket.priority || 'medium',
-        status: ticket.status || 'open',
-        resolution_notes: ticket.resolutionNotes || null,
-      });
-      if (error) return { success: false, error: error.message };
-      return { success: true };
+      try {
+        const { error } = await supabase.from('support_tickets').insert({
+          user_id: resolvedUserId,
+          student_name: ticket.studentName || 'Student Candidate',
+          student_email: ticket.studentEmail || '',
+          subject: ticket.subject,
+          issue: ticket.issue,
+          category: ticket.category || 'Other',
+          priority: ticket.priority || 'medium',
+          status: ticket.status || 'open',
+          resolution_notes: ticket.resolutionNotes || null,
+        });
+        if (error) {
+          console.warn('Supabase support_tickets insert notice (stored locally):', error.message);
+        }
+      } catch (err: any) {
+        console.warn('Supabase support_tickets exception (stored locally):', err?.message || err);
+      }
     }
-    return { success: true };
+
+    return { success: true, ticketId: generatedId };
   },
 
   async getStudentSupportTickets(userId?: string): Promise<SupportTicketItem[]> {
@@ -2944,170 +3257,83 @@ export const adminApi = {
         }
       }
 
-      if (!targetUserId) return [];
+      if (targetUserId) {
+        try {
+          const { data, error } = await supabase
+            .from('support_tickets')
+            .select('*')
+            .eq('user_id', targetUserId)
+            .order('created_at', { ascending: false });
 
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Failed to load student support tickets:', error);
-        return [];
+          if (!error && data && data.length > 0) {
+            return data.map((d: any) => ({
+              id: d.id,
+              userId: d.user_id || undefined,
+              studentName: d.student_name || 'Student Candidate',
+              studentEmail: d.student_email || '',
+              subject: d.subject,
+              issue: d.issue,
+              category: d.category,
+              priority: d.priority,
+              status: d.status,
+              assignedTo: d.assigned_to || undefined,
+              resolutionNotes: d.resolution_notes || undefined,
+              createdAt: d.created_at,
+              updatedAt: d.updated_at,
+            }));
+          }
+        } catch (err) {
+          console.warn('Failed to load student support tickets from Supabase, using local store:', err);
+        }
       }
-
-      if (data && data.length > 0) {
-        return data.map((d: any) => ({
-          id: d.id,
-          userId: d.user_id || undefined,
-          studentName: d.student_name || 'Student Candidate',
-          studentEmail: d.student_email || '',
-          subject: d.subject,
-          issue: d.issue,
-          category: d.category,
-          priority: d.priority,
-          status: d.status,
-          assignedTo: d.assigned_to || undefined,
-          resolutionNotes: d.resolution_notes || undefined,
-          createdAt: d.created_at,
-          updatedAt: d.updated_at,
-        }));
-      }
-      return [];
     }
-    return [];
+
+    if (userId) {
+      const filtered = localSupportTickets.filter((t) => !t.userId || t.userId === userId);
+      return filtered.length > 0 ? filtered : [...localSupportTickets];
+    }
+    return [...localSupportTickets];
   },
 
   // --------------------------------------------------------------------------
   // APP SETTINGS API
   // --------------------------------------------------------------------------
   async getAppSettings(): Promise<AppSettingItem[]> {
-    const DEFAULT_APP_SETTINGS: AppSettingItem[] = [
-      {
-        id: 'general_app_name',
-        category: 'general',
-        key: 'app_name',
-        value: 'PracticeKoro',
-        description: 'Platform name displayed across UI',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'general_support_email',
-        category: 'general',
-        key: 'support_email',
-        value: 'support@practicekoro.online',
-        description: 'Support contact email',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'general_support_phone',
-        category: 'general',
-        key: 'support_phone',
-        value: '+91 98765 43210',
-        description: 'Support phone helpline',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'general_website_url',
-        category: 'general',
-        key: 'website_url',
-        value: 'https://practicekoro.online',
-        description: 'Official web application domain',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'exam_default_duration',
-        category: 'exam_defaults',
-        key: 'default_duration_minutes',
-        value: 60,
-        description: 'Standard default exam duration in minutes',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'exam_default_marks',
-        category: 'exam_defaults',
-        key: 'default_marks_per_q',
-        value: 1.0,
-        description: 'Standard default marks per correct question',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'exam_default_negative_marks',
-        category: 'exam_defaults',
-        key: 'default_negative_marks',
-        value: 0.25,
-        description: 'Standard default negative marking',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'exam_passing_percentage',
-        category: 'exam_defaults',
-        key: 'default_passing_percentage',
-        value: 35,
-        description: 'Standard passing score percentage',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'sub_currency',
-        category: 'subscription',
-        key: 'currency',
-        value: 'INR',
-        description: 'Platform transaction currency',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'sub_expiry_warning_days',
-        category: 'subscription',
-        key: 'expiry_warning_days',
-        value: 7,
-        description: 'Days before expiry to display renewal warning',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'sys_maintenance_mode',
-        category: 'system',
-        key: 'maintenance_mode',
-        value: false,
-        description: 'Enable platform maintenance splash mode',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'sys_app_version',
-        category: 'system',
-        key: 'app_version',
-        value: '2.0.0',
-        description: 'Platform production release version',
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.from('app_settings').select('*');
         if (error) {
-          console.warn(
-            'Could not fetch app_settings from Supabase, using defaults:',
-            error.message
-          );
-          return DEFAULT_APP_SETTINGS;
+          console.warn('Could not fetch app_settings from Supabase, using local defaults:', error.message);
+          return [...localAppSettings];
         }
         if (data && data.length > 0) {
-          return data.map((d: any) => ({
+          const fetched: AppSettingItem[] = data.map((d: any) => ({
             id: d.id,
             category: d.category,
             key: d.key,
-            value: d.value,
+            value: parseSettingValue(d.value),
             description: d.description || undefined,
             updatedAt: d.updated_at,
           }));
+
+          // Sync into localAppSettings cache
+          fetched.forEach((f) => {
+            const idx = localAppSettings.findIndex((l) => l.id === f.id || l.key === f.key);
+            if (idx >= 0) {
+              localAppSettings[idx] = f;
+            } else {
+              localAppSettings.push(f);
+            }
+          });
+
+          return fetched;
         }
       } catch (err) {
-        console.warn('Failed to query app_settings, falling back to defaults:', err);
+        console.warn('Failed to query app_settings, falling back to local defaults:', err);
       }
     }
 
-    return DEFAULT_APP_SETTINGS;
+    return [...localAppSettings];
   },
 
   async updateAppSetting(
@@ -3120,92 +3346,319 @@ export const adminApi = {
   async updateAppSettings(
     updates: Array<{ id: string; value: unknown }>
   ): Promise<{ success: boolean; error?: string }> {
-    if (isSupabaseConfigured) {
-      const SETTINGS_META: Record<string, { category: string; key: string; description: string }> =
-        {
-          general_app_name: {
-            category: 'general',
-            key: 'app_name',
-            description: 'Platform name displayed across UI',
-          },
-          general_support_email: {
-            category: 'general',
-            key: 'support_email',
-            description: 'Support contact email',
-          },
-          general_support_phone: {
-            category: 'general',
-            key: 'support_phone',
-            description: 'Support phone helpline',
-          },
-          general_website_url: {
-            category: 'general',
-            key: 'website_url',
-            description: 'Official web application domain',
-          },
-          exam_default_duration: {
-            category: 'exam_defaults',
-            key: 'default_duration_minutes',
-            description: 'Standard default exam duration in minutes',
-          },
-          exam_default_marks: {
-            category: 'exam_defaults',
-            key: 'default_marks_per_q',
-            description: 'Standard default marks per correct question',
-          },
-          exam_default_negative_marks: {
-            category: 'exam_defaults',
-            key: 'default_negative_marks',
-            description: 'Standard default negative marking',
-          },
-          exam_passing_percentage: {
-            category: 'exam_defaults',
-            key: 'default_passing_percentage',
-            description: 'Standard passing score percentage',
-          },
-          sub_currency: {
-            category: 'subscription',
-            key: 'currency',
-            description: 'Platform transaction currency',
-          },
-          sub_expiry_warning_days: {
-            category: 'subscription',
-            key: 'expiry_warning_days',
-            description: 'Days before expiry to display renewal warning',
-          },
-          sys_maintenance_mode: {
-            category: 'system',
-            key: 'maintenance_mode',
-            description: 'Enable platform maintenance splash mode',
-          },
-          sys_app_version: {
-            category: 'system',
-            key: 'app_version',
-            description: 'Platform production release version',
-          },
-        };
+    const SETTINGS_META: Record<string, { category: string; key: string; description: string }> = {
+      general_app_name: { category: 'general', key: 'app_name', description: 'Platform name displayed across UI' },
+      general_support_email: { category: 'general', key: 'support_email', description: 'Support contact email' },
+      general_support_phone: { category: 'general', key: 'support_phone', description: 'Support phone helpline' },
+      general_website_url: { category: 'general', key: 'website_url', description: 'Official web application domain' },
+      exam_default_duration: { category: 'exam_defaults', key: 'default_duration_minutes', description: 'Standard default exam duration in minutes' },
+      exam_default_marks: { category: 'exam_defaults', key: 'default_marks_per_q', description: 'Standard default marks per correct question' },
+      exam_default_negative_marks: { category: 'exam_defaults', key: 'default_negative_marks', description: 'Standard default negative marking' },
+      exam_passing_percentage: { category: 'exam_defaults', key: 'default_passing_percentage', description: 'Standard passing score percentage' },
+      sub_currency: { category: 'subscription', key: 'currency', description: 'Platform transaction currency' },
+      sub_expiry_warning_days: { category: 'subscription', key: 'expiry_warning_days', description: 'Days before expiry to display renewal warning' },
+      sys_maintenance_mode: { category: 'system', key: 'maintenance_mode', description: 'Enable platform maintenance splash mode' },
+      sys_app_version: { category: 'system', key: 'app_version', description: 'Platform production release version' },
+    };
 
-      const rows = updates.map((u) => {
-        const meta = SETTINGS_META[u.id] || {
-          category: 'general',
-          key: u.id,
-          description: 'Platform configuration setting',
+    // Always update or insert (upsert) into in-memory localAppSettings
+    updates.forEach((u) => {
+      const parsedVal = parseSettingValue(u.value);
+      const meta = SETTINGS_META[u.id] || {
+        category: 'general',
+        key: u.id,
+        description: 'Platform configuration setting',
+      };
+      const idx = localAppSettings.findIndex((l) => l.id === u.id || l.key === u.id);
+      if (idx >= 0) {
+        localAppSettings[idx] = {
+          ...localAppSettings[idx],
+          value: parsedVal,
+          updatedAt: new Date().toISOString(),
         };
-        return {
+      } else {
+        localAppSettings.push({
           id: u.id,
           category: meta.category,
           key: meta.key,
-          value: JSON.stringify(u.value),
+          value: parsedVal,
           description: meta.description,
-          updated_at: new Date().toISOString(),
-        };
-      });
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    });
 
-      const { error } = await supabase.from('app_settings').upsert(rows, { onConflict: 'id' });
+    if (isSupabaseConfigured) {
+      try {
+        const rows = updates.map((u) => {
+          const meta = SETTINGS_META[u.id] || {
+            category: 'general',
+            key: u.id,
+            description: 'Platform configuration setting',
+          };
+          return {
+            id: u.id,
+            category: meta.category,
+            key: meta.key,
+            value: u.value,
+            description: meta.description,
+            updated_at: new Date().toISOString(),
+          };
+        });
 
-      if (error) return { success: false, error: error.message };
-      return { success: true };
+        const { error } = await supabase
+          .from('app_settings')
+          .upsert(rows, { onConflict: 'id' });
+
+        if (error) {
+          console.warn('Supabase app_settings upsert error:', error.message);
+          if (
+            error.message.includes('schema cache') ||
+            error.code === 'PGRST205' ||
+            error.code === '42P01' ||
+            error.message.includes('does not exist')
+          ) {
+            // Table unmigrated in current database environment; local store already updated
+            return { success: true };
+          }
+          return { success: false, error: error.message };
+        }
+        return { success: true };
+      } catch (err) {
+        const msg = getErrorMessage(err, 'Failed to update app settings');
+        console.error('Exception during app_settings upsert:', msg);
+        return { success: false, error: msg };
+      }
     }
+
     return { success: true };
   },
+
+  async getMaintenanceMode(): Promise<boolean> {
+    try {
+      const settings = await this.getAppSettings();
+      const maint = settings.find(
+        (s) => s.id === 'sys_maintenance_mode' || s.key === 'maintenance_mode'
+      );
+      if (!maint) return false;
+      return maint.value === true || maint.value === 'true';
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * Question-level Item Analysis (psychometrics, accuracy %, failure rate %, time traps, distractor distribution).
+   * Identifies questions where >= 80% students got it wrong or took unusually long time (>90s).
+   */
+  async getItemAnalysis(filters?: ItemAnalysisFilterOptions): Promise<QuestionItemAnalysis[]> {
+    let items: QuestionItemAnalysis[] = [];
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: answersData, error } = await supabase
+          .from('attempt_answers')
+          .select(`
+            question_id,
+            selected_option,
+            is_correct,
+            time_spent_seconds,
+            questions (
+              id,
+              question_text,
+              question_bengali_text,
+              subject_id,
+              chapter_id,
+              difficulty,
+              option_a,
+              option_b,
+              option_c,
+              option_d,
+              correct_option,
+              explanation,
+              subjects ( id, name ),
+              chapters ( id, name ),
+              exams ( id, title )
+            )
+          `);
+
+        if (!error && Array.isArray(answersData) && answersData.length > 0) {
+          const questionMap = new Map<
+            string,
+            {
+              qInfo: any;
+              total: number;
+              correct: number;
+              wrong: number;
+              skipped: number;
+              totalTime: number;
+              optionsCount: { A: number; B: number; C: number; D: number };
+            }
+          >();
+
+          answersData.forEach((row: any) => {
+            const qId = row.question_id;
+            if (!questionMap.has(qId)) {
+              questionMap.set(qId, {
+                qInfo: row.questions,
+                total: 0,
+                correct: 0,
+                wrong: 0,
+                skipped: 0,
+                totalTime: 0,
+                optionsCount: { A: 0, B: 0, C: 0, D: 0 },
+              });
+            }
+
+            const qStats = questionMap.get(qId)!;
+            qStats.total += 1;
+            qStats.totalTime += Number(row.time_spent_seconds || 0);
+
+            if (!row.selected_option) {
+              qStats.skipped += 1;
+            } else {
+              const opt = String(row.selected_option).toUpperCase() as 'A' | 'B' | 'C' | 'D';
+              if (qStats.optionsCount[opt] !== undefined) {
+                qStats.optionsCount[opt] += 1;
+              }
+              if (row.is_correct) {
+                qStats.correct += 1;
+              } else {
+                qStats.wrong += 1;
+              }
+            }
+          });
+
+          items = Array.from(questionMap.entries()).map(([qId, s]) => {
+            const accuracyRate = s.total > 0 ? Number(((s.correct / s.total) * 100).toFixed(1)) : 0;
+            const failureRate = s.total > 0 ? Number(((s.wrong / s.total) * 100).toFixed(1)) : 0;
+            const avgTimeSpentSeconds = s.total > 0 ? Math.round(s.totalTime / s.total) : 0;
+            const isHighFailure = failureRate >= 80;
+            const isTimeTrap = avgTimeSpentSeconds >= 90;
+
+            let empiricalDifficulty: EmpiricalDifficulty = 'moderate';
+            if (accuracyRate >= 85) empiricalDifficulty = 'very_easy';
+            else if (accuracyRate >= 70) empiricalDifficulty = 'easy';
+            else if (accuracyRate >= 45) empiricalDifficulty = 'moderate';
+            else if (accuracyRate >= 20) empiricalDifficulty = 'hard';
+            else empiricalDifficulty = 'extreme';
+
+            const declaredDiff = (s.qInfo?.difficulty?.toLowerCase() || 'medium') as
+              | 'easy'
+              | 'medium'
+              | 'hard';
+            const isMisclassified =
+              (declaredDiff === 'easy' &&
+                (empiricalDifficulty === 'hard' || empiricalDifficulty === 'extreme')) ||
+              (declaredDiff === 'hard' &&
+                (empiricalDifficulty === 'easy' || empiricalDifficulty === 'very_easy'));
+
+            const answeredTotal = s.correct + s.wrong;
+            const optA =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.A / answeredTotal) * 100).toFixed(1))
+                : 0;
+            const optB =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.B / answeredTotal) * 100).toFixed(1))
+                : 0;
+            const optC =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.C / answeredTotal) * 100).toFixed(1))
+                : 0;
+            const optD =
+              answeredTotal > 0
+                ? Number(((s.optionsCount.D / answeredTotal) * 100).toFixed(1))
+                : 0;
+
+            return {
+              questionId: qId,
+              questionText: s.qInfo?.question_text || 'Question Text',
+              questionBengali: s.qInfo?.question_bengali_text || undefined,
+              subjectId: s.qInfo?.subject_id,
+              subjectName: s.qInfo?.subjects?.name || 'General Subject',
+              chapterId: s.qInfo?.chapter_id,
+              chapterName: s.qInfo?.chapters?.name || 'Topic Chapter',
+              examId: s.qInfo?.exams?.id,
+              examTitle: s.qInfo?.exams?.title || 'Competitive Exam',
+              declaredDifficulty: declaredDiff,
+              empiricalDifficulty,
+              totalAttempts: s.total,
+              correctCount: s.correct,
+              wrongCount: s.wrong,
+              skippedCount: s.skipped,
+              accuracyRate,
+              failureRate,
+              avgTimeSpentSeconds,
+              isHighFailure,
+              isTimeTrap,
+              isMisclassified,
+              options: {
+                A: s.qInfo?.option_a || 'Option A',
+                B: s.qInfo?.option_b || 'Option B',
+                C: s.qInfo?.option_c || 'Option C',
+                D: s.qInfo?.option_d || 'Option D',
+              },
+              correctOption: s.qInfo?.correct_option || 'A',
+              optionDistribution: { A: optA, B: optB, C: optC, D: optD },
+              explanation: s.qInfo?.explanation || undefined,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn('Failed querying attempt_answers from Supabase, using local fallback:', err);
+      }
+    }
+
+    // Fallback to localItemAnalysisStore
+    if (items.length === 0) {
+      items = [...localItemAnalysisStore];
+    }
+
+    // Apply Filters
+    let result = [...items];
+    if (filters) {
+      const activeFilter = filters.filterType || filters.preset;
+      if (activeFilter === 'high_failure') {
+        result = result.filter((item) => item.isHighFailure);
+      } else if (activeFilter === 'time_traps') {
+        result = result.filter((item) => item.isTimeTrap);
+      } else if (activeFilter === 'misclassified') {
+        result = result.filter((item) => item.isMisclassified);
+      } else if (activeFilter === 'hardest') {
+        result.sort((a, b) => a.accuracyRate - b.accuracyRate);
+      } else if (activeFilter === 'easiest') {
+        result.sort((a, b) => b.accuracyRate - a.accuracyRate);
+      }
+
+      if (filters.subjectId) {
+        result = result.filter((item) => item.subjectId === filters.subjectId);
+      }
+      if (filters.chapterId) {
+        result = result.filter((item) => item.chapterId === filters.chapterId);
+      }
+      if (filters.examId) {
+        result = result.filter((item) => item.examId === filters.examId);
+      }
+      if (filters.testId) {
+        result = result.filter((item) => item.testId === filters.testId);
+      }
+      if (filters.searchQuery) {
+        const q = filters.searchQuery.toLowerCase().trim();
+        result = result.filter(
+          (item) =>
+            item.questionText.toLowerCase().includes(q) ||
+            (item.questionBengali && item.questionBengali.toLowerCase().includes(q)) ||
+            (item.subjectName && item.subjectName.toLowerCase().includes(q)) ||
+            (item.chapterName && item.chapterName.toLowerCase().includes(q))
+        );
+      }
+      if (filters.minAttempts) {
+        result = result.filter((item) => item.totalAttempts >= filters.minAttempts!);
+      }
+    }
+
+    return result;
+  },
 };
+
