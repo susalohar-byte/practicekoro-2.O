@@ -15,16 +15,24 @@ import type { PlanRow } from '@/services/domains/localStore';
  */
 
 export const subscriptionApi = {
-  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    if (!isSupabaseConfigured) return MOCK_SUBSCRIPTION_PLANS;
+  async getSubscriptionPlans(includeInactive = false): Promise<SubscriptionPlan[]> {
+    if (!isSupabaseConfigured) {
+      return includeInactive
+        ? MOCK_SUBSCRIPTION_PLANS
+        : MOCK_SUBSCRIPTION_PLANS.filter((p) => p.isActive);
+    }
     try {
-      const { data, error } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
+      let query = supabase.from('subscription_plans').select('*');
+      if (!includeInactive) {
+        query = query.eq('is_active', true);
+      }
+      const { data, error } = await query.order('order_index', { ascending: true });
 
-      if (error || !data || data.length === 0) return MOCK_SUBSCRIPTION_PLANS;
+      if (error || !data || data.length === 0) {
+        return includeInactive
+          ? MOCK_SUBSCRIPTION_PLANS
+          : MOCK_SUBSCRIPTION_PLANS.filter((p) => p.isActive);
+      }
       return (data as PlanRow[]).map((d) => ({
         id: d.id,
         name: d.title ?? undefined,
@@ -39,7 +47,9 @@ export const subscriptionApi = {
         orderIndex: d.order_index,
       }));
     } catch {
-      return MOCK_SUBSCRIPTION_PLANS;
+      return includeInactive
+        ? MOCK_SUBSCRIPTION_PLANS
+        : MOCK_SUBSCRIPTION_PLANS.filter((p) => p.isActive);
     }
   },
 

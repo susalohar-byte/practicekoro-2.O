@@ -1,5 +1,6 @@
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { isAdminEmail } from '@/lib/authPolicy';
+import { MOCK_SUBSCRIPTION_PLANS } from '@/services/mockData';
 import type {
   AdminSubscriptionRow,
   AdminPaymentRow,
@@ -783,6 +784,10 @@ export const adminCommerceApi = {
         return { success: false, error: err instanceof Error ? err.message : 'Update failed' };
       }
     }
+    const idx = MOCK_SUBSCRIPTION_PLANS.findIndex((p) => p.id === id);
+    if (idx !== -1) {
+      MOCK_SUBSCRIPTION_PLANS[idx] = { ...MOCK_SUBSCRIPTION_PLANS[idx], ...updates };
+    }
     return { success: true };
   },
 
@@ -810,7 +815,109 @@ export const adminCommerceApi = {
         return { success: false, error: err instanceof Error ? err.message : 'Creation failed' };
       }
     }
+    const existingIdx = MOCK_SUBSCRIPTION_PLANS.findIndex((p) => p.id === plan.id);
+    if (existingIdx !== -1) {
+      MOCK_SUBSCRIPTION_PLANS[existingIdx] = plan;
+    } else {
+      MOCK_SUBSCRIPTION_PLANS.push(plan);
+    }
     return { success: true };
+  },
+
+  async deleteSubscriptionPlan(
+    id: string
+  ): Promise<{ success: boolean; archived?: boolean; error?: string; message?: string }> {
+    if (id === 'plan_free') {
+      return {
+        success: false,
+        error: 'The Free Starter plan (plan_free) cannot be deleted as it is a core system tier.',
+      };
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        // 1. Check if any student subscriptions are linked to this plan
+        const { count: subCount, error: subErr } = await supabase
+          .from('subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('plan_id', id);
+
+        if (subErr) {
+          console.warn('Could not verify subscriptions for plan deletion:', subErr);
+        }
+
+        // 2. Check if any payments are linked to this plan
+        const { count: payCount, error: payErr } = await supabase
+          .from('payments')
+          .select('*', { count: 'exact', head: true })
+          .eq('plan_id', id);
+
+        if (payErr) {
+          console.warn('Could not verify payments for plan deletion:', payErr);
+        }
+
+        const hasExistingUsage = Boolean((subCount && subCount > 0) || (payCount && payCount > 0));
+
+        if (hasExistingUsage) {
+          // Deactivate / Archive to preserve relational integrity & student billing records
+          const { error: archiveErr } = await supabase
+            .from('subscription_plans')
+            .update({ is_active: false })
+            .eq('id', id);
+
+          if (archiveErr) {
+            return { success: false, error: archiveErr.message };
+          }
+
+          return {
+            success: true,
+            archived: true,
+            message:
+              'This plan is linked to active or historical subscriptions/payments. To preserve user accounts and financial records, it has been deactivated and archived rather than permanently deleted.',
+          };
+        }
+
+        // If no subscriptions or payments reference it, we can safely hard-delete
+        const { error: deleteErr } = await supabase
+          .from('subscription_plans')
+          .delete()
+          .eq('id', id);
+
+        if (deleteErr) {
+          // If foreign key constraint still blocks it (e.g. coupons or other tables)
+          if (deleteErr.code === '23503' || deleteErr.message.includes('foreign key')) {
+            const { error: fallbackArchiveErr } = await supabase
+              .from('subscription_plans')
+              .update({ is_active: false })
+              .eq('id', id);
+
+            if (!fallbackArchiveErr) {
+              return {
+                success: true,
+                archived: true,
+                message:
+                  'Plan is referenced in historical records. It has been deactivated and archived.',
+              };
+            }
+          }
+          return { success: false, error: deleteErr.message };
+        }
+
+        return {
+          success: true,
+          archived: false,
+          message: 'Subscription plan was permanently deleted.',
+        };
+      } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Deletion failed' };
+      }
+    }
+
+    const idx = MOCK_SUBSCRIPTION_PLANS.findIndex((p) => p.id === id);
+    if (idx !== -1) {
+      MOCK_SUBSCRIPTION_PLANS.splice(idx, 1);
+    }
+    return { success: true, archived: false, message: 'Plan deleted.' };
   },
 
   async grantStudentSubscription(
