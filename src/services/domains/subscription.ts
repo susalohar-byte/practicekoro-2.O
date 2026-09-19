@@ -79,24 +79,19 @@ export const subscriptionApi = {
         }
 
         if (edgeError) {
-          const detail = (edgeError as any)?.context?.json?.error || edgeError.message;
-          if (detail && (detail.includes('Razorpay') || detail.includes('gateway'))) {
-            throw new Error(detail);
+          let detail = edgeError.message;
+          try {
+            if ((edgeError as any)?.context && typeof (edgeError as any).context.json === 'function') {
+              const body = await (edgeError as any).context.json();
+              if (body?.error) detail = body.error;
+            }
+          } catch {
+            // ignore
           }
+          throw new Error(detail);
         }
       } catch (err: any) {
-        if (
-          err.message &&
-          (err.message.includes('Razorpay') ||
-            err.message.includes('gateway') ||
-            err.message.includes('credentials'))
-        ) {
-          throw err;
-        }
-        console.warn(
-          'create-razorpay-order Edge Function failed, falling back to database RPC:',
-          err
-        );
+        throw err;
       }
 
       // 2. Fallback: database stored procedure
