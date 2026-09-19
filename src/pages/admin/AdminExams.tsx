@@ -158,7 +158,7 @@ export const AdminExams: React.FC = () => {
   // Compute test counts per exam
   const examTestCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    tests.forEach((t) => {
+    (tests || []).forEach((t) => {
       if (t.examId) {
         counts[t.examId] = (counts[t.examId] || 0) + 1;
       }
