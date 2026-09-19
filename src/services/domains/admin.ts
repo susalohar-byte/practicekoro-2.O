@@ -1413,7 +1413,9 @@ export const adminApi = {
     }
     const { data, error } = await supabase
       .from('test_attempts')
-      .select('id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)')
+      .select(
+        'id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)'
+      )
       .eq('test_id', testId)
       .order('score', { ascending: false });
 
@@ -2170,12 +2172,10 @@ export const adminApi = {
     const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
     const filePath = `questions/${fileName}`;
 
-    const { data, error } = await supabase.storage
-      .from('question-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+    const { data, error } = await supabase.storage.from('question-images').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
 
     if (error) {
       throw new Error(`Failed to upload image: ${error.message}`);
@@ -2189,11 +2189,47 @@ export const adminApi = {
   },
 
   // --------------------------------------------------------------------------
-  // EXAM CATEGORIES (DATABASE BACKED)
+  // EXAM CATEGORIES (DATABASE BACKED WITH LOCAL FALLBACK & ORDER PERSISTENCE)
   // --------------------------------------------------------------------------
+  getLocalExamCategoriesWithPersistence(): ExamCategory[] {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = window.localStorage.getItem('practicekoro_exam_categories');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            if (parsed.length === 0) return [];
+            return parsed.map((item: any, index: number) => {
+              if (typeof item === 'string') {
+                const existing = localExamCategories.find(
+                  (c) => c.name.toLowerCase() === item.toLowerCase()
+                );
+                return {
+                  id: existing?.id || 'cat_' + item.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+                  name: item,
+                  orderIndex: index + 1,
+                  isActive: true,
+                };
+              }
+              return {
+                id: item.id || 'cat_' + (item.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+                name: item.name || '',
+                orderIndex: item.orderIndex ?? index + 1,
+                isActive: item.isActive ?? true,
+              };
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading persisted categories fallback:', e);
+    }
+    return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+  },
+
   async getExamCategories(): Promise<ExamCategory[]> {
     if (!isSupabaseConfigured) {
-      return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+      return this.getLocalExamCategoriesWithPersistence();
     }
     try {
       const { data, error } = await supabase
@@ -2202,19 +2238,19 @@ export const adminApi = {
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      if (!data || data.length === 0) {
-        return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+      if (data && data.length > 0) {
+        return data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          orderIndex: Number(d.order_index || 0),
+          isActive: d.is_active ?? true,
+          createdAt: d.created_at,
+        }));
       }
-      return data.map((d: any) => ({
-        id: d.id,
-        name: d.name,
-        orderIndex: Number(d.order_index || 0),
-        isActive: d.is_active ?? true,
-        createdAt: d.created_at,
-      }));
+      return this.getLocalExamCategoriesWithPersistence();
     } catch (err) {
       console.warn('Failed to load categories from Supabase, using local fallback:', err);
-      return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+      return this.getLocalExamCategoriesWithPersistence();
     }
   },
 
@@ -2225,99 +2261,287 @@ export const adminApi = {
     const newCat: ExamCategory = {
       id: slug,
       name: trimmed,
-      orderIndex: orderIndex ?? (localExamCategories.length + 1),
+      orderIndex: orderIndex ?? localExamCategories.length + 1,
       isActive: true,
       createdAt: new Date().toISOString(),
     };
 
-    if (!isSupabaseConfigured) {
+    // Always keep in-memory fallback up-to-date
+    const existingIdx = localExamCategories.findIndex(
+      (c) => c.name.toLowerCase() === trimmed.toLowerCase() || c.id === slug
+    );
+    if (existingIdx !== -1) {
+      localExamCategories[existingIdx] = { ...localExamCategories[existingIdx], ...newCat };
+    } else {
       localExamCategories.push(newCat);
+    }
+
+    // Save to localStorage
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = window.localStorage.getItem('practicekoro_exam_categories');
+        const list: string[] = saved ? JSON.parse(saved) : localExamCategories.map((c) => c.name);
+        if (!list.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+          list.push(trimmed);
+          window.localStorage.setItem('practicekoro_exam_categories', JSON.stringify(list));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to update localStorage on create category:', e);
+    }
+
+    if (!isSupabaseConfigured) {
       return newCat;
     }
 
-    const { data, error } = await supabase
-      .from('exam_categories')
-      .insert({
-        id: slug,
-        name: trimmed,
-        order_index: newCat.orderIndex,
-      })
-      .select('*')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('exam_categories')
+        .insert({
+          id: slug,
+          name: trimmed,
+          order_index: newCat.orderIndex,
+        })
+        .select('*')
+        .single();
 
-    if (error) {
-      throw new Error(error.message || 'Failed to create category');
+      if (error) {
+        console.warn('Failed to insert category into Supabase table (fallback retained):', error);
+        return newCat;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        orderIndex: Number(data.order_index || 0),
+        isActive: data.is_active ?? true,
+        createdAt: data.created_at,
+      };
+    } catch (err) {
+      console.warn('Failed to insert category into Supabase:', err);
+      return newCat;
     }
-
-    return {
-      id: data.id,
-      name: data.name,
-      orderIndex: Number(data.order_index || 0),
-      isActive: data.is_active ?? true,
-      createdAt: data.created_at,
-    };
   },
 
   async updateExamCategory(id: string, name: string, orderIndex?: number): Promise<ExamCategory> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Category name cannot be empty');
 
-    if (!isSupabaseConfigured) {
-      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
-      if (idx !== -1) {
-        localExamCategories[idx] = {
-          ...localExamCategories[idx],
-          name: trimmed,
-          orderIndex: orderIndex ?? localExamCategories[idx].orderIndex,
-        };
-        return localExamCategories[idx];
+    // Update in localExamCategories
+    const idx = localExamCategories.findIndex(
+      (c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase()
+    );
+    let updatedCat: ExamCategory;
+    if (idx !== -1) {
+      localExamCategories[idx] = {
+        ...localExamCategories[idx],
+        name: trimmed,
+        orderIndex: orderIndex ?? localExamCategories[idx].orderIndex,
+      };
+      updatedCat = localExamCategories[idx];
+    } else {
+      updatedCat = {
+        id,
+        name: trimmed,
+        orderIndex: orderIndex || 1,
+        isActive: true,
+      };
+      localExamCategories.push(updatedCat);
+    }
+
+    // Update in localStorage
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = window.localStorage.getItem('practicekoro_exam_categories');
+        if (saved) {
+          const list: string[] = JSON.parse(saved);
+          const mapped = list.map((c) => (c.toLowerCase() === id.toLowerCase() ? trimmed : c));
+          window.localStorage.setItem('practicekoro_exam_categories', JSON.stringify(mapped));
+        }
       }
-      const created: ExamCategory = { id, name: trimmed, orderIndex: orderIndex || 1, isActive: true };
-      localExamCategories.push(created);
-      return created;
+    } catch (e) {
+      console.warn('Failed to update localStorage on update category:', e);
     }
 
-    const updatePayload: Record<string, unknown> = { name: trimmed };
-    if (orderIndex !== undefined) updatePayload.order_index = orderIndex;
-
-    const { data, error } = await supabase
-      .from('exam_categories')
-      .update(updatePayload)
-      .eq('id', id)
-      .select('*')
-      .single();
-
-    if (error) {
-      throw new Error(error.message || 'Failed to update category');
+    if (!isSupabaseConfigured) {
+      return updatedCat;
     }
 
-    return {
-      id: data.id,
-      name: data.name,
-      orderIndex: Number(data.order_index || 0),
-      isActive: data.is_active ?? true,
-      createdAt: data.created_at,
-    };
+    try {
+      const updatePayload: Record<string, unknown> = { name: trimmed };
+      if (orderIndex !== undefined) updatePayload.order_index = orderIndex;
+
+      const { data, error } = await supabase
+        .from('exam_categories')
+        .update(updatePayload)
+        .eq('id', id)
+        .select('*')
+        .single();
+
+      if (error) {
+        // Fallback: update by name if ID was not matched
+        const { data: byNameData, error: byNameErr } = await supabase
+          .from('exam_categories')
+          .update(updatePayload)
+          .ilike('name', id)
+          .select('*')
+          .single();
+
+        if (byNameErr) {
+          console.warn('Supabase category update failed (fallback retained):', byNameErr);
+          return updatedCat;
+        }
+
+        return {
+          id: byNameData.id,
+          name: byNameData.name,
+          orderIndex: Number(byNameData.order_index || 0),
+          isActive: byNameData.is_active ?? true,
+          createdAt: byNameData.created_at,
+        };
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        orderIndex: Number(data.order_index || 0),
+        isActive: data.is_active ?? true,
+        createdAt: data.created_at,
+      };
+    } catch (err) {
+      console.warn('Supabase updateExamCategory failed:', err);
+      return updatedCat;
+    }
   },
 
-  async deleteExamCategory(id: string): Promise<boolean> {
-    if (!isSupabaseConfigured) {
-      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
-      if (idx !== -1) {
-        localExamCategories.splice(idx, 1);
+  async deleteExamCategory(idOrName: string): Promise<boolean> {
+    const trimmed = idOrName.trim();
+    if (!trimmed) return false;
+
+    // 1. Always remove from in-memory fallback list
+    const idx = localExamCategories.findIndex(
+      (c) =>
+        c.id.toLowerCase() === trimmed.toLowerCase() ||
+        c.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (idx !== -1) {
+      localExamCategories.splice(idx, 1);
+    }
+
+    // 2. Always synchronize with localStorage
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = window.localStorage.getItem('practicekoro_exam_categories');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            const filtered = parsed.filter((item: any) => {
+              const name = typeof item === 'string' ? item : item.name;
+              const id = typeof item === 'string' ? '' : item.id;
+              return (
+                name?.toLowerCase() !== trimmed.toLowerCase() &&
+                id?.toLowerCase() !== trimmed.toLowerCase()
+              );
+            });
+            window.localStorage.setItem('practicekoro_exam_categories', JSON.stringify(filtered));
+          }
+        }
       }
+    } catch (e) {
+      console.warn('Failed to update localStorage on category delete:', e);
+    }
+
+    if (!isSupabaseConfigured) {
       return true;
     }
 
-    const { error } = await supabase
-      .from('exam_categories')
-      .delete()
-      .eq('id', id);
+    // 3. Delete in Supabase: match by ID or match by Name (case-insensitive)
+    try {
+      const { data: byId } = await supabase
+        .from('exam_categories')
+        .select('id, name')
+        .eq('id', trimmed)
+        .maybeSingle();
 
-    if (error) {
-      throw new Error(error.message || 'Failed to delete category');
+      const { data: byName } = byId
+        ? { data: null }
+        : await supabase
+            .from('exam_categories')
+            .select('id, name')
+            .ilike('name', trimmed)
+            .maybeSingle();
+
+      const targetId = byId?.id || byName?.id || trimmed;
+
+      const { error: delError } = await supabase
+        .from('exam_categories')
+        .delete()
+        .eq('id', targetId);
+
+      if (delError) {
+        await supabase.from('exam_categories').delete().ilike('name', trimmed);
+      }
+    } catch (err) {
+      console.warn('Supabase category delete failed (using local sync):', err);
     }
+
     return true;
+  },
+
+  async reorderExamCategories(
+    orderedCategories: { id?: string; name: string; orderIndex: number }[]
+  ): Promise<ExamCategory[]> {
+    // 1. Update in-memory localExamCategories
+    orderedCategories.forEach(({ name, orderIndex }) => {
+      const idx = localExamCategories.findIndex((c) => c.name.toLowerCase() === name.toLowerCase());
+      if (idx !== -1) {
+        localExamCategories[idx] = {
+          ...localExamCategories[idx],
+          orderIndex,
+        };
+      }
+    });
+    localExamCategories.sort((a, b) => a.orderIndex - b.orderIndex);
+
+    // 2. Persist order in localStorage
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const names = orderedCategories.map((c) => c.name);
+        window.localStorage.setItem('practicekoro_exam_categories', JSON.stringify(names));
+      }
+    } catch (e) {
+      console.warn('Failed to save reordered categories to localStorage:', e);
+    }
+
+    // 3. If Supabase is configured, update order_index in exam_categories
+    if (isSupabaseConfigured) {
+      try {
+        await Promise.all(
+          orderedCategories.map(async ({ id, name, orderIndex }) => {
+            if (id) {
+              await supabase
+                .from('exam_categories')
+                .update({ order_index: orderIndex })
+                .eq('id', id);
+            } else {
+              await supabase
+                .from('exam_categories')
+                .update({ order_index: orderIndex })
+                .ilike('name', name);
+            }
+          })
+        );
+      } catch (err) {
+        console.warn('Failed to update categories order in Supabase:', err);
+      }
+    }
+
+    return orderedCategories.map((c, idx) => ({
+      id: c.id || 'cat_' + c.name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+      name: c.name,
+      orderIndex: c.orderIndex ?? idx + 1,
+      isActive: true,
+    }));
   },
 
   // --------------------------------------------------------------------------
@@ -3005,7 +3229,7 @@ export const adminApi = {
           const scheduledAt = d.scheduled_at || undefined;
           const isDue = d.status === 'scheduled' && scheduledAt && new Date(scheduledAt) <= now;
           const effectiveStatus = isDue ? 'sent' : d.status;
-          const effectiveSentAt = isDue ? (d.sent_at || scheduledAt) : (d.sent_at || undefined);
+          const effectiveSentAt = isDue ? d.sent_at || scheduledAt : d.sent_at || undefined;
 
           return {
             id: d.id,
@@ -3038,7 +3262,7 @@ export const adminApi = {
         target_audience: notif.targetAudience,
         channel: notif.channel,
         status: notif.status,
-        sent_at: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+        sent_at: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
         scheduled_at: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       });
       if (error) return { success: false, error: error.message };
@@ -3053,7 +3277,7 @@ export const adminApi = {
       targetAudience: notif.targetAudience,
       channel: notif.channel,
       status: notif.status,
-      sentAt: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+      sentAt: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
       scheduledAt: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       createdAt: new Date().toISOString(),
     };
@@ -3153,7 +3377,10 @@ export const adminApi = {
           }));
         }
       } catch (err) {
-        console.warn('Failed to load support tickets from Supabase, falling back to local store:', err);
+        console.warn(
+          'Failed to load support tickets from Supabase, falling back to local store:',
+          err
+        );
       }
     }
 
@@ -3283,7 +3510,10 @@ export const adminApi = {
             }));
           }
         } catch (err) {
-          console.warn('Failed to load student support tickets from Supabase, using local store:', err);
+          console.warn(
+            'Failed to load student support tickets from Supabase, using local store:',
+            err
+          );
         }
       }
     }
@@ -3303,7 +3533,10 @@ export const adminApi = {
       try {
         const { data, error } = await supabase.from('app_settings').select('*');
         if (error) {
-          console.warn('Could not fetch app_settings from Supabase, using local defaults:', error.message);
+          console.warn(
+            'Could not fetch app_settings from Supabase, using local defaults:',
+            error.message
+          );
           return [...localAppSettings];
         }
         if (data && data.length > 0) {
@@ -3347,18 +3580,66 @@ export const adminApi = {
     updates: Array<{ id: string; value: unknown }>
   ): Promise<{ success: boolean; error?: string }> {
     const SETTINGS_META: Record<string, { category: string; key: string; description: string }> = {
-      general_app_name: { category: 'general', key: 'app_name', description: 'Platform name displayed across UI' },
-      general_support_email: { category: 'general', key: 'support_email', description: 'Support contact email' },
-      general_support_phone: { category: 'general', key: 'support_phone', description: 'Support phone helpline' },
-      general_website_url: { category: 'general', key: 'website_url', description: 'Official web application domain' },
-      exam_default_duration: { category: 'exam_defaults', key: 'default_duration_minutes', description: 'Standard default exam duration in minutes' },
-      exam_default_marks: { category: 'exam_defaults', key: 'default_marks_per_q', description: 'Standard default marks per correct question' },
-      exam_default_negative_marks: { category: 'exam_defaults', key: 'default_negative_marks', description: 'Standard default negative marking' },
-      exam_passing_percentage: { category: 'exam_defaults', key: 'default_passing_percentage', description: 'Standard passing score percentage' },
-      sub_currency: { category: 'subscription', key: 'currency', description: 'Platform transaction currency' },
-      sub_expiry_warning_days: { category: 'subscription', key: 'expiry_warning_days', description: 'Days before expiry to display renewal warning' },
-      sys_maintenance_mode: { category: 'system', key: 'maintenance_mode', description: 'Enable platform maintenance splash mode' },
-      sys_app_version: { category: 'system', key: 'app_version', description: 'Platform production release version' },
+      general_app_name: {
+        category: 'general',
+        key: 'app_name',
+        description: 'Platform name displayed across UI',
+      },
+      general_support_email: {
+        category: 'general',
+        key: 'support_email',
+        description: 'Support contact email',
+      },
+      general_support_phone: {
+        category: 'general',
+        key: 'support_phone',
+        description: 'Support phone helpline',
+      },
+      general_website_url: {
+        category: 'general',
+        key: 'website_url',
+        description: 'Official web application domain',
+      },
+      exam_default_duration: {
+        category: 'exam_defaults',
+        key: 'default_duration_minutes',
+        description: 'Standard default exam duration in minutes',
+      },
+      exam_default_marks: {
+        category: 'exam_defaults',
+        key: 'default_marks_per_q',
+        description: 'Standard default marks per correct question',
+      },
+      exam_default_negative_marks: {
+        category: 'exam_defaults',
+        key: 'default_negative_marks',
+        description: 'Standard default negative marking',
+      },
+      exam_passing_percentage: {
+        category: 'exam_defaults',
+        key: 'default_passing_percentage',
+        description: 'Standard passing score percentage',
+      },
+      sub_currency: {
+        category: 'subscription',
+        key: 'currency',
+        description: 'Platform transaction currency',
+      },
+      sub_expiry_warning_days: {
+        category: 'subscription',
+        key: 'expiry_warning_days',
+        description: 'Days before expiry to display renewal warning',
+      },
+      sys_maintenance_mode: {
+        category: 'system',
+        key: 'maintenance_mode',
+        description: 'Enable platform maintenance splash mode',
+      },
+      sys_app_version: {
+        category: 'system',
+        key: 'app_version',
+        description: 'Platform production release version',
+      },
     };
 
     // Always update or insert (upsert) into in-memory localAppSettings
@@ -3406,9 +3687,7 @@ export const adminApi = {
           };
         });
 
-        const { error } = await supabase
-          .from('app_settings')
-          .upsert(rows, { onConflict: 'id' });
+        const { error } = await supabase.from('app_settings').upsert(rows, { onConflict: 'id' });
 
         if (error) {
           console.warn('Supabase app_settings upsert error:', error.message);
@@ -3456,9 +3735,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        const { data: answersData, error } = await supabase
-          .from('attempt_answers')
-          .select(`
+        const { data: answersData, error } = await supabase.from('attempt_answers').select(`
             question_id,
             selected_option,
             is_correct,
@@ -3544,9 +3821,7 @@ export const adminApi = {
             else empiricalDifficulty = 'extreme';
 
             const declaredDiff = (s.qInfo?.difficulty?.toLowerCase() || 'medium') as
-              | 'easy'
-              | 'medium'
-              | 'hard';
+              'easy' | 'medium' | 'hard';
             const isMisclassified =
               (declaredDiff === 'easy' &&
                 (empiricalDifficulty === 'hard' || empiricalDifficulty === 'extreme')) ||
@@ -3555,21 +3830,13 @@ export const adminApi = {
 
             const answeredTotal = s.correct + s.wrong;
             const optA =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.A / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.A / answeredTotal) * 100).toFixed(1)) : 0;
             const optB =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.B / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.B / answeredTotal) * 100).toFixed(1)) : 0;
             const optC =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.C / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.C / answeredTotal) * 100).toFixed(1)) : 0;
             const optD =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.D / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.D / answeredTotal) * 100).toFixed(1)) : 0;
 
             return {
               questionId: qId,
@@ -3661,4 +3928,3 @@ export const adminApi = {
     return result;
   },
 };
-
