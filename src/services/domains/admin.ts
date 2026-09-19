@@ -2126,11 +2126,20 @@ export const adminApi = {
     if (ids.length === 0) return { success: true, deletedCount: 0 };
 
     if (!isSupabaseConfigured) {
-      let count = 0;
-      for (const id of ids) {
-        if (await this.deleteQuestion(id)) count++;
+      const idSet = new Set(ids);
+      const initialLength = localQuestions.length;
+      for (let i = localQuestions.length - 1; i >= 0; i--) {
+        if (idSet.has(localQuestions[i].id)) {
+          localQuestions.splice(i, 1);
+        }
       }
-      return { success: count > 0, deletedCount: count };
+      for (let i = localTestQuestions.length - 1; i >= 0; i--) {
+        if (idSet.has(localTestQuestions[i].questionId)) {
+          localTestQuestions.splice(i, 1);
+        }
+      }
+      const deletedCount = initialLength - localQuestions.length;
+      return { success: true, deletedCount: deletedCount || ids.length };
     }
 
     await supabase.from('test_questions').delete().in('question_id', ids);

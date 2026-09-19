@@ -28,7 +28,7 @@ import type { Payment, SubscriptionPlan, CouponValidationResult } from '@/types'
 import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 
 export const Subscription: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshProStatus } = useAuth();
   const { plans, subscriptionDetails, refreshSubscription } = useSubscription();
   const navigate = useNavigate();
 
@@ -163,7 +163,10 @@ export const Subscription: React.FC = () => {
                 isRenewal: verification.isRenewal,
               });
               setPaymentStatus('success');
-              await refreshSubscription();
+              await Promise.all([
+                refreshSubscription(),
+                refreshProStatus ? refreshProStatus() : Promise.resolve(),
+              ]);
             } else {
               setPaymentStatus('delayed');
             }
@@ -196,7 +199,10 @@ export const Subscription: React.FC = () => {
   const handleManualStatusCheck = async () => {
     setCheckingStatus(true);
     try {
-      await refreshSubscription();
+      await Promise.all([
+        refreshSubscription(),
+        refreshProStatus ? refreshProStatus() : Promise.resolve(),
+      ]);
       if (subscriptionDetails?.isActive) {
         setPaymentStatus('success');
       }

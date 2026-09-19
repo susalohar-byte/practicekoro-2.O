@@ -24,7 +24,7 @@ import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 export const TestRunner: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const [searchParams] = useSearchParams();
-  const attemptId = searchParams.get('attemptId') || '';
+  const [attemptId, setAttemptId] = useState<string>(() => searchParams.get('attemptId') || '');
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -75,15 +75,23 @@ export const TestRunner: React.FC = () => {
           // ignore setting fetch failure
         }
 
+        let activeAttemptId = attemptId;
+        if (!activeAttemptId) {
+          const newAttempt = await api.startTestAttempt(testId);
+          activeAttemptId = newAttempt.attemptId;
+          setAttemptId(activeAttemptId);
+          navigate(`/exams/${testId}/runner?attemptId=${activeAttemptId}`, { replace: true });
+        }
+
         const [testData, qData, attemptData] = await Promise.all([
           api.getTestById(testId),
           api.getStudentTestQuestions(testId),
-          api.getTestAttempt(attemptId),
+          api.getTestAttempt(activeAttemptId),
         ]);
 
         // If attempt is already completed, redirect to results immediately (idempotency)
         if (attemptData?.status === 'completed') {
-          navigate(`/exams/${testId}/results/${attemptId}`, { replace: true });
+          navigate(`/exams/${testId}/results/${activeAttemptId}`, { replace: true });
           return;
         }
 
@@ -91,7 +99,7 @@ export const TestRunner: React.FC = () => {
         setQuestions(qData);
 
         // Load or initialize attempt answers from localStorage
-        const savedCache = localStorage.getItem(`practicekoro_attempt_${attemptId}`);
+        const savedCache = localStorage.getItem(`practicekoro_attempt_${activeAttemptId}`);
         if (savedCache) {
           try {
             const parsed = JSON.parse(savedCache);
@@ -134,7 +142,7 @@ export const TestRunner: React.FC = () => {
       }
     }
     init();
-  }, [testId, attemptId, user, navigate]);
+  }, [testId, attemptId, user, isAdmin, navigate]);
 
   // Submit test handler (Server-authoritative identity via auth.uid())
   const handleSubmitTest = useCallback(async () => {

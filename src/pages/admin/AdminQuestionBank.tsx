@@ -989,11 +989,8 @@ export const AdminQuestionBank: React.FC = () => {
       setIsDeletingQuestion(true);
       setDeleteError('');
       const ids = Array.from(selectedQuestionIds);
-      let count = 0;
-      for (const id of ids) {
-        const ok = await api.deleteQuestion(id);
-        if (ok) count++;
-      }
+      const res = await api.deleteQuestions(ids);
+      const count = res.deletedCount;
 
       await api.logAdminActivity({
         action: 'QUESTION_BULK_DELETE',

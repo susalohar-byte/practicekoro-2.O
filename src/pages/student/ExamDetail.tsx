@@ -77,6 +77,7 @@ export const ExamDetail: React.FC = () => {
   // Locked test modal state
   const [selectedLockedTest, setSelectedLockedTest] = useState<MockTest | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [startingTestId, setStartingTestId] = useState<string | null>(null);
 
   // Load all tests and mapped topics for this exam
   useEffect(() => {
@@ -143,7 +144,7 @@ export const ExamDetail: React.FC = () => {
     navigate(`/exams/${test.id}`);
   };
 
-  const handleStartRunner = (test: MockTest, e: React.MouseEvent) => {
+  const handleStartRunner = async (test: MockTest, e: React.MouseEvent) => {
     e.stopPropagation();
     const isLocked = test.isPremium && !isPro && user?.role !== 'admin';
     if (isLocked) {
@@ -151,7 +152,22 @@ export const ExamDetail: React.FC = () => {
       setShowSubscriptionModal(true);
       return;
     }
-    navigate(`/exams/${test.id}/runner`);
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: `/exams/${test.id}` } } });
+      return;
+    }
+    if (startingTestId) return;
+
+    try {
+      setStartingTestId(test.id);
+      const attemptInfo = await api.startTestAttempt(test.id);
+      navigate(`/exams/${test.id}/runner?attemptId=${attemptInfo.attemptId}`);
+    } catch (err) {
+      console.error('Failed to start test attempt:', err);
+      alert('Failed to initialize test attempt. Please try again.');
+    } finally {
+      setStartingTestId(null);
+    }
   };
 
   if (!currentExam && !loading) {
@@ -398,6 +414,8 @@ export const ExamDetail: React.FC = () => {
                               variant="primary"
                               size="sm"
                               className="w-full sm:w-auto font-bold gap-1 text-xs"
+                              isLoading={startingTestId === test.id}
+                              disabled={Boolean(startingTestId)}
                               onClick={(e) => handleStartRunner(test, e)}
                             >
                               <Play className="w-3.5 h-3.5 fill-current" />
@@ -545,6 +563,8 @@ export const ExamDetail: React.FC = () => {
                               variant="primary"
                               size="sm"
                               className="w-full sm:w-auto font-bold gap-1 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                              isLoading={startingTestId === test.id}
+                              disabled={Boolean(startingTestId)}
                               onClick={(e) => handleStartRunner(test, e)}
                             >
                               <Play className="w-3.5 h-3.5 fill-current" />
@@ -702,6 +722,8 @@ export const ExamDetail: React.FC = () => {
                                   variant="primary"
                                   size="sm"
                                   className="w-full sm:w-auto font-bold gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                                  isLoading={startingTestId === test.id}
+                                  disabled={Boolean(startingTestId)}
                                   onClick={(e) => handleStartRunner(test, e)}
                                 >
                                   <Play className="w-3.5 h-3.5 fill-current" />
@@ -772,6 +794,8 @@ export const ExamDetail: React.FC = () => {
                                     size="sm"
                                     variant="primary"
                                     className="text-xs py-1 px-3 bg-blue-600 hover:bg-blue-700"
+                                    isLoading={startingTestId === topicTest.id}
+                                    disabled={Boolean(startingTestId)}
                                     onClick={(e) => handleStartRunner(topicTest, e)}
                                   >
                                     <Play className="w-3 h-3 fill-current" /> Start Drill

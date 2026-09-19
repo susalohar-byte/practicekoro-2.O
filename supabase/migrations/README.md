@@ -1,27 +1,88 @@
-# Supabase migration order
+# Supabase Migration Catalog & Production Rollout Guide
 
-This directory contains the historical Supabase migration files for PracticeKoro.
+This directory contains the canonical historical Supabase migration files for PracticeKoro 2.0.
 
-## Important safety rule
+---
 
-Do not rename, delete, or renumber a migration after it has been applied to a Supabase project. Supabase records migration history using the full migration filename. Renaming an applied file can make the same SQL look like a new migration and may cause it to run again.
+## 1. Migration History & Production Status
 
-## Historical ordering
+| Migration File                                    | Description                                                         | Production Status |
+| :------------------------------------------------ | :------------------------------------------------------------------ | :---------------: |
+| `001_initial_schema.sql`                          | Core schema (profiles, exams, subjects, chapters, tests, questions) |    **APPLIED**    |
+| `002_rls_policies.sql`                            | Row Level Security policies for core tables                         |    **APPLIED**    |
+| `003_seed_data.sql`                               | Initial subjects, chapters, and seed exams                          |    **APPLIED**    |
+| `004_mock_test_engine_rpc.sql`                    | Mock test submission, scoring, and attempt engine                   |    **APPLIED**    |
+| `005_phase2a_security_hardening.sql`              | Hardened RLS policies for auth and attempts                         |    **APPLIED**    |
+| `006_admin_content_management.sql`                | Admin content curation, question creation, test publishing          |    **APPLIED**    |
+| `007_subscription_razorpay.sql`                   | Pro pass monetization, Razorpay orders, payments, verification      |    **APPLIED**    |
+| `008_security_hardening.sql`                      | User attempt isolation and answer privacy                           |    **APPLIED**    |
+| `009_test_types_and_associations.sql`             | Exam association updates and test types                             |    **APPLIED**    |
+| `010_remove_question_difficulty_constraint.sql`   | Difficulty check relaxation for dynamic tagging                     |    **APPLIED**    |
+| `011_make_subject_exam_id_optional.sql`           | Allows subjects to span multiple exams                              |    **APPLIED**    |
+| `011_role_source_of_truth.sql`                    | `user_roles` table as authoritative role boundary                   |    **APPLIED**    |
+| `013_fix_user_test_access_view.sql`               | Test catalog access control view                                    |    **APPLIED**    |
+| `014_canonical_question_bank_architecture.sql`    | `exam_topics` many-to-many mapping & PYQ metadata                   |    **APPLIED**    |
+| `015_repair_broken_admin_policies.sql`            | Restores admin-only management RLS policies                         |    **APPLIED**    |
+| `015_upgrade_admin_practicekoro_online.sql`       | Admin promotion for `admin@practicekoro.online`                     |    **APPLIED**    |
+| `016_separate_question_sources.sql`               | Performance indexes for source types (Topic, Full Mock, PYQ)        |    **APPLIED**    |
+| `017_allow_topic_mock_tests_without_exam.sql`     | Nullable `tests.exam_id` for standalone topic mock tests            |    **APPLIED**    |
+| `018_admin_v2_architecture.sql`                   | `app_settings`, `notifications`, `support_tickets`, admin stats RPC |    **PENDING**    |
+| `019_admin_v2_polish.sql`                         | Performance indexes on `questions` and `test_questions`             |    **PENDING**    |
+| `020_replace_questions_with_bengali.sql`          | Bengali competitive exam question bank seed                         |    **PENDING**    |
+| `021_upgrade_admin_and_sync_rpc.sql`              | `sync_admin_profile` RPC for instant role sync                      |    **PENDING**    |
+| `022_add_free_plan.sql`                           | `plan_free` Starter tier in `subscription_plans`                    |    **PENDING**    |
+| `024_create_coupons_table.sql`                    | `coupons` table and discount validation RPCs                        |    **PENDING**    |
+| `025_notifications_scheduling_and_audience.sql`   | `notifications.scheduled_at`, cron, and student audience RLS        |    **PENDING**    |
+| `026_remove_admin_practicekoro_com.sql`           | Demotes legacy `admin@practicekoro.com` from admin                  |    **PENDING**    |
+| `027_commerce_student_management.sql`             | Bulk student cohorts (`student_batches`), refund tracking           |    **PENDING**    |
+| `027_question_images_and_exam_categories.sql`     | `exam_categories` table, `questions.image_url` for diagrams         |    **PENDING**    |
+| `028_app_settings_upsert_and_maintenance_rls.sql` | Public read RLS on app settings & maintenance mode                  |    **PENDING**    |
+| `029_admin_roles_and_audit_logs.sql`              | Multi-admin RBAC (`admin_role`) and `admin_audit_logs`              |    **PENDING**    |
 
-The duplicate numeric prefixes are retained intentionally for production safety. When reviewing the historical sequence, use the full filename in lexicographic order:
+---
 
-1. `011_make_subject_exam_id_optional.sql`
-2. `011_role_source_of_truth.sql`
-3. `013_fix_user_test_access_view.sql`
-4. `014_canonical_question_bank_architecture.sql`
-5. `015_repair_broken_admin_policies.sql`
-6. `015_upgrade_admin_practicekoro_online.sql`
-7. `016_separate_question_sources.sql`
+## 2. Safety Rules
 
-The missing `012` and `023` prefixes are historical gaps, not missing files that should be recreated.
+1. **Do not rename or delete historical migration files:** Supabase records migrations by filename. Duplicate numbers (`011`, `015`, `027`) and gaps (`012`, `023`) are preserved intentionally.
+2. **Lexicographical execution order:** Migrations must always run in alphabetical/lexicographical order as listed in `scripts/apply-migrations-prod.sh`.
+3. **Idempotency:** Every migration uses `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `ON CONFLICT DO NOTHING/UPDATE`, and `DROP POLICY IF EXISTS` guards to prevent corruption on re-run.
 
-## New migrations
+---
 
-Use the next unused numeric prefix for new migrations. After `027_commerce_student_management.sql`, new migrations should start at `028_...`.
+## 3. How to Verify Production State
 
-For a clearer business-level sequence, update this README rather than renaming historical files.
+Run the automated verification probe (requires no password, uses `.env` public keys):
+
+```bash
+python3 scripts/verify-prod-migrations.py
+```
+
+Or:
+
+```bash
+bash scripts/apply-migrations-prod.sh --verify
+```
+
+---
+
+## 4. How to Apply Pending Migrations
+
+### Preview pending migrations without making changes:
+
+```bash
+bash scripts/apply-migrations-prod.sh --dry-run
+```
+
+### Apply all pending migrations (018 through 029):
+
+Get the database password from Supabase Dashboard > Project Settings > Database > Database password, then run:
+
+```bash
+SUPABASE_DB_PASSWORD="your-db-password" bash scripts/apply-migrations-prod.sh
+```
+
+### Re-apply / verify all 30 migrations (idempotent-safe):
+
+```bash
+SUPABASE_DB_PASSWORD="your-db-password" bash scripts/apply-migrations-prod.sh --all
+```

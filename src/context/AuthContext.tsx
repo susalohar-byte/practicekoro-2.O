@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import {
   supabaseRuntime as supabase,
   isSupabaseConfigured,
@@ -35,6 +35,7 @@ interface AuthContextType {
     fullName?: string;
     phone?: string;
   }) => Promise<{ error: Error | null; user?: UserProfile }>;
+  refreshProStatus: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,6 +71,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [loading, setLoading] = useState<boolean>(true);
+
+  const refreshProStatus = useCallback(async (): Promise<boolean> => {
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.rpc('has_active_subscription');
+        if (!error && typeof data === 'boolean') {
+          setIsPro(data);
+          localStorage.setItem('practicekoro_is_pro', data ? 'true' : 'false');
+          return data;
+        }
+      } catch (err) {
+        console.warn('Could not verify active subscription from Supabase:', err);
+      }
+    }
+    const local = localStorage.getItem('practicekoro_is_pro') === 'true';
+    setIsPro(local);
+    return local;
+  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured || isDemoModeEnabled) {
@@ -224,9 +243,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userObj = await resolveUserProfile(session.user);
           setUser(userObj);
           localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
+          await refreshProStatus();
         } else {
           // No valid session — clear any stale cached user
           setUser(null);
+          setIsPro(false);
           localStorage.removeItem('practicekoro_user');
           localStorage.removeItem('practicekoro_is_pro');
         }
@@ -246,17 +267,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userObj = await resolveUserProfile(session.user);
         setUser(userObj);
         localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
+        await refreshProStatus();
       } else {
         setUser(null);
+        setIsPro(false);
         localStorage.removeItem('practicekoro_user');
         localStorage.removeItem('practicekoro_is_pro');
       }
     });
 
+    const handleSubUpdated = () => {
+      refreshProStatus();
+    };
+    window.addEventListener('practicekoro:subscription_updated', handleSubUpdated);
+
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener('practicekoro:subscription_updated', handleSubUpdated);
     };
-  }, []);
+  }, [refreshProStatus]);
 
   const login = async (
     email: string,
@@ -504,6 +533,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         updateProfile,
+        refreshProStatus,
       }}
     >
       {children}

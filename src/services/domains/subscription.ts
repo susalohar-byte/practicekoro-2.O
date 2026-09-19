@@ -98,26 +98,83 @@ export const subscriptionApi = {
     planTitle?: string;
   }> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.rpc('verify_razorpay_payment', {
-        p_order_id: payload.orderId,
-        p_payment_id: payload.paymentId,
-        p_signature: payload.signature,
-        p_plan_id: payload.planId,
-      });
+      let verificationResult: {
+        success: boolean;
+        subscriptionId: string;
+        status: string;
+        startsAt: string;
+        expiresAt: string;
+        isRenewal: boolean;
+        planTitle?: string;
+      } | null = null;
 
-      if (error) {
-        throw new Error(error.message || 'Payment verification failed on server');
+      // 1. First attempt verification via hardened Edge Function (HMAC SHA-256 with server-side secret)
+      try {
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+          'verify-payment',
+          {
+            body: {
+              orderId: payload.orderId,
+              paymentId: payload.paymentId,
+              signature: payload.signature,
+              planId: payload.planId,
+            },
+          }
+        );
+
+        if (!edgeError && edgeData && edgeData.success) {
+          verificationResult = {
+            success: edgeData.success,
+            subscriptionId: edgeData.subscriptionId || edgeData.subscription_id,
+            status: edgeData.status || 'active',
+            startsAt: edgeData.startsAt || edgeData.starts_at,
+            expiresAt: edgeData.expiresAt || edgeData.expires_at,
+            isRenewal: Boolean(edgeData.isRenewal ?? edgeData.is_renewal),
+            planTitle: edgeData.planTitle || edgeData.plan_title,
+          };
+        } else if (edgeError && edgeError.status && edgeError.status !== 404) {
+          console.error('Edge function payment verification rejected:', edgeError);
+          throw new Error(edgeError.message || 'Payment signature verification failed');
+        }
+      } catch (invokeErr: any) {
+        if (invokeErr.message && invokeErr.message.includes('signature')) {
+          throw invokeErr;
+        }
+        console.warn('Edge function invoke failed, fallback to database RPC:', invokeErr);
       }
 
-      return {
-        success: data.success,
-        subscriptionId: data.subscription_id,
-        status: data.status,
-        startsAt: data.starts_at,
-        expiresAt: data.expires_at,
-        isRenewal: !!data.is_renewal,
-        planTitle: data.plan_title,
-      };
+      // 2. Fallback to database RPC if Edge Function is not deployed or network unavailable
+      if (!verificationResult) {
+        const { data, error } = await supabase.rpc('verify_razorpay_payment', {
+          p_order_id: payload.orderId,
+          p_payment_id: payload.paymentId,
+          p_signature: payload.signature,
+          p_plan_id: payload.planId,
+        });
+
+        if (error) {
+          throw new Error(error.message || 'Payment verification failed on server');
+        }
+
+        verificationResult = {
+          success: data.success,
+          subscriptionId: data.subscription_id,
+          status: data.status,
+          startsAt: data.starts_at,
+          expiresAt: data.expires_at,
+          isRenewal: !!data.is_renewal,
+          planTitle: data.plan_title,
+        };
+      }
+
+      if (verificationResult && verificationResult.success) {
+        localStorage.setItem('practicekoro_is_pro', 'true');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('practicekoro:subscription_updated'));
+        }
+      }
+
+      return verificationResult;
     }
 
     // Fallback/Local mock mode
