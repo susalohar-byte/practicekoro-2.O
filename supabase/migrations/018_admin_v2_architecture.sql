@@ -169,6 +169,7 @@ ON CONFLICT (id) DO UPDATE SET
 
 
 -- 5. ADMIN RPC: get_admin_dashboard_v2_stats
+DROP FUNCTION IF EXISTS public.get_admin_dashboard_v2_stats();
 CREATE OR REPLACE FUNCTION public.get_admin_dashboard_v2_stats()
 RETURNS JSONB AS $$
 DECLARE
@@ -338,6 +339,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 
 -- 6. ADMIN RPC: get_admin_students
+DROP FUNCTION IF EXISTS public.get_admin_students(TEXT, TEXT, TEXT, INT, INT);
+DROP FUNCTION IF EXISTS public.get_admin_students(TEXT, TEXT, TEXT, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS public.get_admin_students();
 CREATE OR REPLACE FUNCTION public.get_admin_students(
     p_search TEXT DEFAULT NULL,
     p_plan TEXT DEFAULT NULL,

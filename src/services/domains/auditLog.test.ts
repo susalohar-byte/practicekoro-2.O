@@ -13,6 +13,7 @@ import {
   getStaffMembers,
   updateStaffRole,
   assignStaffByEmail,
+  removeStaffMember,
 } from './auditLog';
 import { localAuditLogs } from './localStore';
 
@@ -201,5 +202,21 @@ describe('Staff User Management & Sub-Role Assignment', () => {
     const found = staff.find((s) => s.email.toLowerCase() === testEmail.toLowerCase());
     expect(found).toBeDefined();
     expect(found?.adminRole).toBe('content_writer');
+
+    // Demote staff member back to regular student
+    if (found) {
+      const removeRes = await removeStaffMember(found.id, {
+        id: 'super_admin_id',
+        email: 'owner@practicekoro.online',
+        fullName: 'Super Admin',
+        role: 'admin',
+        adminRole: 'super_admin',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      });
+      expect(removeRes.success).toBe(true);
+
+      const updatedStaff = await getStaffMembers();
+      expect(updatedStaff.find((s) => s.id === found.id)).toBeUndefined();
+    }
   });
 });

@@ -44,7 +44,10 @@ def probe_rest(endpoint: str, check_has_data: bool = False):
     """Probes a REST endpoint to verify table/column existence."""
     req = urllib.request.Request(
         f"{rest_base}/{endpoint}",
-        headers={"apikey": anon_key}
+        headers={
+            "apikey": anon_key,
+            "Authorization": f"Bearer {anon_key}",
+        }
     )
     try:
         with urllib.request.urlopen(req) as response:
@@ -144,6 +147,12 @@ MIGRATION_CHECKS = [
         "id": "029",
         "title": "Admin Audit Trail (admin_audit_logs)",
         "check": lambda: probe_rest("admin_audit_logs?limit=1"),
+        "critical": True,
+    },
+    {
+        "id": "031",
+        "title": "Payment Gateway Configuration (payment_gateways & RPCs)",
+        "check": lambda: (True, "HTTP 401 (Secured from anon)") if "401" in probe_rest("payment_gateways?limit=1")[1] or "403" in probe_rest("payment_gateways?limit=1")[1] else probe_rest("payment_gateways?limit=1"),
         "critical": True,
     },
 ]

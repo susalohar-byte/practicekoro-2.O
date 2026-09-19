@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Mail,
   UserCheck,
+  UserMinus,
   RefreshCw,
   X,
 } from 'lucide-react';
@@ -36,6 +37,10 @@ export const AdminStaff: React.FC = () => {
     type: 'error' | 'success';
     text: string;
   } | null>(null);
+
+  // Demote confirmation modal state
+  const [demoteConfirmMember, setDemoteConfirmMember] = useState<AdminStaffMember | null>(null);
+  const [isDemoting, setIsDemoting] = useState(false);
 
   const loadStaff = useCallback(async () => {
     try {
@@ -126,6 +131,25 @@ export const AdminStaff: React.FC = () => {
       setModalFeedback({ type: 'error', text: getErrorMessage(err, 'Failed to save staff role') });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDemoteStaff = async () => {
+    if (!demoteConfirmMember) return;
+    try {
+      setIsDemoting(true);
+      const res = await api.removeStaffMember(demoteConfirmMember.id, currentAdmin);
+      if (!res.success) {
+        alert(res.error || 'Failed to remove staff member');
+        return;
+      }
+      setDemoteConfirmMember(null);
+      await loadStaff();
+    } catch (err) {
+      console.error('Demote staff error:', err);
+      alert('An unexpected error occurred while demoting staff member.');
+    } finally {
+      setIsDemoting(false);
     }
   };
 
@@ -367,13 +391,25 @@ export const AdminStaff: React.FC = () => {
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => handleOpenEdit(member)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>Edit Role</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEdit(member)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Edit Role</span>
+                        </button>
+                        {member.email.toLowerCase() !== 'admin@practicekoro.online' && (
+                          <button
+                            onClick={() => setDemoteConfirmMember(member)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                            title="Remove staff role and revert to Student"
+                          >
+                            <UserMinus className="w-3.5 h-3.5" />
+                            <span>Demote to Student</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -547,6 +583,43 @@ export const AdminStaff: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Demote to Student Confirmation Modal */}
+      {demoteConfirmMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-rose-200 dark:border-rose-900/40 shadow-2xl p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <UserMinus className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Revert Staff to Regular Student?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Are you sure you want to demote <span className="font-semibold text-slate-800 dark:text-slate-200">{demoteConfirmMember.fullName}</span> ({demoteConfirmMember.email})?
+                They will lose all administrative rights and become a regular student.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                disabled={isDemoting}
+                onClick={() => setDemoteConfirmMember(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDemoting}
+                onClick={handleDemoteStaff}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-md shadow-rose-600/25 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isDemoting ? 'Demoting...' : 'Yes, Demote to Student'}
+              </button>
+            </div>
           </div>
         </div>
       )}

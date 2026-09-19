@@ -36,11 +36,15 @@ SET name = EXCLUDED.name, order_index = EXCLUDED.order_index;
 -- Populate any existing categories from public.exams table
 INSERT INTO public.exam_categories (id, name, order_index)
 SELECT 
-    'cat_' || LOWER(REGEXP_REPLACE(category, '[^a-zA-Z0-9]+', '_', 'g')),
-    category,
+    'cat_' || LOWER(REGEXP_REPLACE(e.category, '[^a-zA-Z0-9]+', '_', 'g')),
+    e.category,
     10
 FROM (SELECT DISTINCT category FROM public.exams WHERE category IS NOT NULL AND TRIM(category) <> '') e
-ON CONFLICT (id) DO NOTHING;
+WHERE NOT EXISTS (
+    SELECT 1 FROM public.exam_categories ec 
+    WHERE ec.name = e.category 
+       OR ec.id = ('cat_' || LOWER(REGEXP_REPLACE(e.category, '[^a-zA-Z0-9]+', '_', 'g')))
+);
 
 -- Enable RLS
 ALTER TABLE public.exam_categories ENABLE ROW LEVEL SECURITY;

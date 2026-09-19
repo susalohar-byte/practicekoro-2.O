@@ -34,6 +34,7 @@ interface AuthContextType {
   updateProfile: (updates: {
     fullName?: string;
     phone?: string;
+    avatarUrl?: string;
   }) => Promise<{ error: Error | null; user?: UserProfile }>;
   refreshProStatus: () => Promise<boolean>;
 }
@@ -452,12 +453,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: {
     fullName?: string;
     phone?: string;
+    avatarUrl?: string;
   }): Promise<{ error: Error | null; user?: UserProfile }> => {
     if (!user) return { error: new Error('User is not logged in') };
 
     const updatedFullName =
       updates.fullName !== undefined ? updates.fullName.trim() : user.fullName;
     const updatedPhone = updates.phone !== undefined ? updates.phone.trim() : user.phone;
+    const updatedAvatarUrl =
+      updates.avatarUrl !== undefined ? updates.avatarUrl.trim() : user.avatarUrl;
 
     if (!updatedFullName) {
       return { error: new Error('Full Name cannot be empty') };
@@ -472,6 +476,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .update({
             full_name: updatedFullName,
             phone: updatedPhone || null,
+            avatar_url: updatedAvatarUrl || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id);
@@ -482,7 +487,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         try {
           await supabase.auth.updateUser({
-            data: { full_name: updatedFullName },
+            data: {
+              full_name: updatedFullName,
+              avatar_url: updatedAvatarUrl || null,
+            },
           });
         } catch (authErr) {
           console.warn('Could not sync user_metadata in auth:', authErr);
@@ -493,6 +501,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...user,
         fullName: updatedFullName,
         phone: updatedPhone,
+        avatarUrl: updatedAvatarUrl,
       };
 
       setUser(updatedUser);

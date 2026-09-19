@@ -167,6 +167,91 @@ describe('AdminSettings & Maintenance Mode System', () => {
       expect(config.hasSecret).toBe(true);
       expect(config.secretPreview).toBe('••••••••_xyz');
     });
+
+    it('updates and persists official contact channels including WhatsApp, email, and hours', async () => {
+      render(
+        <MemoryRouter>
+          <MaintenanceProvider>
+            <AdminSettings />
+          </MaintenanceProvider>
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Global Platform Settings')).toBeInTheDocument();
+      });
+
+      // Update Contact details
+      const emailInput = screen.getByPlaceholderText('support@practicekoro.online');
+      fireEvent.change(emailInput, { target: { value: 'help@practicekoro.online' } });
+
+      const whatsappInput = screen.getByPlaceholderText('+91 98765 43210 (WhatsApp)');
+      fireEvent.change(whatsappInput, { target: { value: '+91 91234 56789' } });
+
+      const hoursInput = screen.getByPlaceholderText('Mon - Sat: 10:00 AM - 7:00 PM (IST)');
+      fireEvent.change(hoursInput, { target: { value: '24/7 Priority Support' } });
+
+      // Submit form
+      const saveBtn = screen.getByRole('button', { name: /save all settings/i });
+      fireEvent.click(saveBtn);
+      fireEvent.submit(saveBtn.closest('form')!);
+
+      await waitFor(() => {
+        expect(screen.getByText(/settings updated and saved successfully/i)).toBeInTheDocument();
+      });
+
+      // Verify contact details updated in service
+      const allSettings = await adminApi.getAppSettings();
+      const emailSetting = allSettings.find((s) => s.id === 'general_support_email');
+      expect(emailSetting?.value).toBe('help@practicekoro.online');
+
+      const whatsappSetting = allSettings.find((s) => s.id === 'general_support_whatsapp');
+      expect(whatsappSetting?.value).toBe('+91 91234 56789');
+
+      const hoursSetting = allSettings.find((s) => s.id === 'general_support_hours');
+      expect(hoursSetting?.value).toBe('24/7 Priority Support');
+    });
+
+    it('renders admin profile section and allows selecting preset avatar', async () => {
+      const mockUpdateProfile = vi.fn().mockResolvedValue({ error: null });
+      mockUseAuth.mockReturnValue({
+        user: {
+          id: 'usr-admin-1',
+          fullName: 'Super Admin',
+          email: 'admin@practicekoro.online',
+          role: 'admin',
+          avatarUrl: '',
+        },
+        isAdmin: true,
+        isStudent: false,
+        loading: false,
+        updateProfile: mockUpdateProfile,
+      });
+
+      render(
+        <MemoryRouter>
+          <MaintenanceProvider>
+            <AdminSettings />
+          </MaintenanceProvider>
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/Admin Profile & Avatar/i)).toBeInTheDocument();
+      });
+
+      // Click on a preset avatar button
+      const presetBtn = screen.getByTitle('Select preset 1');
+      fireEvent.click(presetBtn);
+
+      await waitFor(() => {
+        expect(mockUpdateProfile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            avatarUrl: expect.stringContaining('dicebear.com'),
+          })
+        );
+      });
+    });
   });
 
   describe('Service Layer: Payment Gateway Credentials Management', () => {

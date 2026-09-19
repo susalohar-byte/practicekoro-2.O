@@ -316,9 +316,17 @@ export const AdminLayout: React.FC = () => {
           <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0e1935] border border-[#1d2d54] shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pk-primary to-pk-primary-bright text-white font-black flex items-center justify-center text-xs shadow-sm shadow-pk-primary/30">
-                  {user?.fullName?.charAt(0) || 'A'}
-                </div>
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.fullName || 'Admin'}
+                    className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pk-primary to-pk-primary-bright text-white font-black flex items-center justify-center text-xs shadow-sm shadow-pk-primary/30">
+                    {user?.fullName?.charAt(0) || 'A'}
+                  </div>
+                )}
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0a1226]" />
               </div>
               <div className="min-w-0">
@@ -384,9 +392,17 @@ export const AdminLayout: React.FC = () => {
                   Super Administrator
                 </p>
               </div>
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500/15 to-purple-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-300 font-bold flex items-center justify-center text-xs shadow-inner">
-                {user?.fullName?.charAt(0) || 'A'}
-              </div>
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.fullName || 'Admin'}
+                  className="w-8 h-8 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-700 shadow-sm"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500/15 to-purple-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-300 font-bold flex items-center justify-center text-xs shadow-inner">
+                  {user?.fullName?.charAt(0) || 'A'}
+                </div>
+              )}
             </div>
           </div>
         </header>

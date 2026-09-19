@@ -62,11 +62,42 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // 4. Resolve webhook secret - strictly FAIL CLOSED
-  const webhookSecret = Deno.env.get('RAZORPAY_WEBHOOK_SECRET');
-  if (!webhookSecret) {
-    console.error('Server misconfiguration: RAZORPAY_WEBHOOK_SECRET is not set');
+  // 4. Resolve webhook secret - checks environment variable first, then dynamically from payment_gateways table
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Supabase environment configuration missing in Edge Function');
     return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  let webhookSecret = Deno.env.get('RAZORPAY_WEBHOOK_SECRET');
+  if (!webhookSecret) {
+    try {
+      const { data: gwData } = await supabase
+        .from('payment_gateways')
+        .select('webhook_secret')
+        .eq('gateway', 'razorpay')
+        .eq('is_active', true)
+        .maybeSingle();
+      if (gwData?.webhook_secret) {
+        webhookSecret = gwData.webhook_secret;
+      }
+    } catch (err) {
+      console.warn('Could not read webhook secret from database:', err);
+    }
+  }
+
+  if (!webhookSecret) {
+    console.error(
+      'Server misconfiguration: RAZORPAY_WEBHOOK_SECRET is not configured in env or database'
+    );
+    return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -134,18 +165,6 @@ Deno.serve(async (req: Request) => {
   const amountInr = paiseToRupees(amountPaise);
 
   // 8. Reconcile with authoritative PostgreSQL database
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Supabase environment configuration missing in Edge Function');
-    return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Stable event identifier: uses payment ID and account/event identity rather than Date.now()
   const stableEventId = data.account_id

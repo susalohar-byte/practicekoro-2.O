@@ -64,9 +64,11 @@ ALL_MIGRATIONS=(
   "supabase/migrations/029_admin_roles_and_audit_logs.sql"
   "supabase/migrations/030_sync_test_question_counts_trigger.sql"
   "supabase/migrations/031_admin_payment_gateway_management.sql"
+  "supabase/migrations/032_app_settings_grants_and_admin_rpc.sql"
+  "supabase/migrations/033_strictly_reset_student_roles_and_fix_admin.sql"
 )
 
-# Unapplied migrations verified missing from production via schema audit (018 to 031)
+# Unapplied migrations verified missing from production via schema audit (018 to 033)
 PENDING_MIGRATIONS=(
   "supabase/migrations/018_admin_v2_architecture.sql"
   "supabase/migrations/019_admin_v2_polish.sql"
@@ -82,6 +84,8 @@ PENDING_MIGRATIONS=(
   "supabase/migrations/029_admin_roles_and_audit_logs.sql"
   "supabase/migrations/030_sync_test_question_counts_trigger.sql"
   "supabase/migrations/031_admin_payment_gateway_management.sql"
+  "supabase/migrations/032_app_settings_grants_and_admin_rpc.sql"
+  "supabase/migrations/033_strictly_reset_student_roles_and_fix_admin.sql"
 )
 
 # ----------------------------------------------------------------------------
@@ -215,9 +219,17 @@ if [ -z "${DATABASE_URL:-}" ]; then
     echo "============================================================================"
     exit 1
   fi
-  CONN="postgresql://postgres.${SUPABASE_PROJECT_REF}:${SUPABASE_DB_PASSWORD}@aws-0-${REGION}.pooler.supabase.com:6543/postgres"
+  # Clean leading and trailing whitespace from password
+  CLEAN_PASSWORD=$(echo "$SUPABASE_DB_PASSWORD" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  export PGPASSWORD="$CLEAN_PASSWORD"
+  PSQL_CONN_ARGS=(
+    -h "aws-0-${REGION}.pooler.supabase.com"
+    -p "6543"
+    -U "postgres.${SUPABASE_PROJECT_REF}"
+    -d "postgres"
+  )
 else
-  CONN="$DATABASE_URL"
+  PSQL_CONN_ARGS=("$DATABASE_URL")
 fi
 
 # ----------------------------------------------------------------------------
@@ -244,7 +256,7 @@ for f in "${FILES[@]}"; do
 
   echo "==> Applying: $f"
   step_start=$(date +%s)
-  "$PSQL" "$CONN" -v ON_ERROR_STOP=1 -q -f "$full_path"
+  "$PSQL" "${PSQL_CONN_ARGS[@]}" -v ON_ERROR_STOP=1 -q -f "$full_path"
   step_end=$(date +%s)
   duration=$((step_end - step_start))
   echo "    ✓ Successfully applied in ${duration}s"

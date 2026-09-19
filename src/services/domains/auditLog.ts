@@ -225,21 +225,38 @@ export async function getStaffMembers(): Promise<AdminStaffMember[]> {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, full_name, avatar_url, phone, role, admin_role, created_at, updated_at')
-        .or('role.eq.admin,admin_role.not.is.null')
+        .eq('role', 'admin')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        return data.map((row: any) => ({
-          id: row.id,
-          email: row.email || '',
-          fullName: row.full_name || 'Staff Member',
-          avatarUrl: row.avatar_url || undefined,
-          phone: row.phone || undefined,
-          role: row.role || 'admin',
-          adminRole: (row.admin_role as AdminRole) || 'super_admin',
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-        }));
+      if (!error && data) {
+        return data
+          .filter((row: any) => {
+            const email = (row.email || '').trim().toLowerCase();
+            const isPrimary = email === 'admin@practicekoro.online';
+            const hasValidAdminRole = ['super_admin', 'content_writer', 'support_agent'].includes(
+              row.admin_role
+            );
+            // Only admin@practicekoro.online can be default admin; others must have explicit staff role
+            return isPrimary || hasValidAdminRole;
+          })
+          .map((row: any) => {
+            const email = (row.email || '').trim().toLowerCase();
+            const isPrimary = email === 'admin@practicekoro.online';
+            return {
+              id: row.id,
+              email: row.email || '',
+              fullName: row.full_name || (isPrimary ? 'Susanta Lohar' : 'Staff Member'),
+              avatarUrl: row.avatar_url || undefined,
+              phone: row.phone || undefined,
+              role: 'admin',
+              // ONLY admin@practicekoro.online is super_admin by default
+              adminRole: isPrimary
+                ? 'super_admin'
+                : ((row.admin_role as AdminRole) || 'content_writer'),
+              createdAt: row.created_at,
+              updatedAt: row.updated_at,
+            };
+          });
       }
     } catch (err) {
       console.warn('[Staff] Supabase fetch error, fallback to local store:', err);
@@ -247,6 +264,70 @@ export async function getStaffMembers(): Promise<AdminStaffMember[]> {
   }
 
   return [...localStaffUsers];
+}
+
+/**
+ * Remove / demote a staff member back to regular student
+ */
+export async function removeStaffMember(
+  userId: string,
+  adminUser?: UserProfile | null
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (isSupabaseConfigured) {
+      // 1. Try secure RPC
+      const { error: rpcError } = await supabase.rpc('remove_admin_staff_member', {
+        p_user_id: userId,
+      });
+
+      if (rpcError) {
+        // Fallback to direct table update if RPC is not yet applied
+        const { error: profileErr } = await supabase
+          .from('profiles')
+          .update({
+            role: 'student',
+            admin_role: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId);
+
+        if (profileErr) {
+          return { success: false, error: profileErr.message };
+        }
+
+        await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId)
+          .eq('role', 'admin');
+
+        await supabase
+          .from('user_roles')
+          .upsert({ user_id: userId, role: 'student' }, { onConflict: 'user_id,role' });
+      }
+    }
+
+    // Update in local fallback store
+    const idx = localStaffUsers.findIndex((s) => s.id === userId);
+    if (idx !== -1) {
+      localStaffUsers.splice(idx, 1);
+    }
+
+    await logAdminActivity({
+      action: 'STAFF_ROLE_REVOKE',
+      entityType: 'staff',
+      entityId: userId,
+      details: { demotedTo: 'student' },
+      adminUser,
+    });
+
+    return { success: true };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to remove staff member',
+    };
+  }
 }
 
 /**

@@ -57,6 +57,9 @@ const Register = React.lazy(() =>
 const ForgotPassword = React.lazy(() =>
   import('@/pages/auth/ForgotPassword').then((module) => ({ default: module.ForgotPassword }))
 );
+const ResetPassword = React.lazy(() =>
+  import('@/pages/auth/ResetPassword').then((module) => ({ default: module.ResetPassword }))
+);
 const TermsAndConditions = React.lazy(() =>
   import('@/pages/legal/TermsAndConditions').then((module) => ({
     default: module.TermsAndConditions,
@@ -293,6 +296,7 @@ export const App: React.FC = () => {
           }
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Public Legal & Compliance Routes (Razorpay & Statutory Policies) */}
         <Route path="/terms" element={<TermsAndConditions />} />

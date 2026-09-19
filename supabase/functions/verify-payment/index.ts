@@ -77,11 +77,31 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // 3. Resolve key secret - strictly FAIL CLOSED
-  const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+  const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+
+  // 3. Resolve key secret - checks environment variable first, then dynamically from payment_gateways table
+  let keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
   if (!keySecret) {
-    console.error('Server misconfiguration: RAZORPAY_KEY_SECRET is not set');
-    return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+    try {
+      const { data: gwData } = await serviceClient
+        .from('payment_gateways')
+        .select('key_secret')
+        .eq('gateway', 'razorpay')
+        .eq('is_active', true)
+        .maybeSingle();
+      if (gwData?.key_secret) {
+        keySecret = gwData.key_secret;
+      }
+    } catch (dbErr) {
+      console.warn('Could not read gateway secret from database:', dbErr);
+    }
+  }
+
+  if (!keySecret) {
+    console.error(
+      'Server misconfiguration: RAZORPAY_KEY_SECRET is not configured in env or database'
+    );
+    return new Response(JSON.stringify({ error: 'Payment gateway secret not configured' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -121,7 +141,6 @@ Deno.serve(async (req: Request) => {
   }
 
   // 6. Invoke server RPC to activate subscription
-  const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
   const { data: rpcResult, error: rpcError } = await serviceClient.rpc('verify_razorpay_payment', {
     p_order_id: orderId,
     p_payment_id: paymentId,

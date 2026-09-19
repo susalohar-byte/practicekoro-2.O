@@ -1115,64 +1115,72 @@ export const AdminQuestionBank: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
-              <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-              Question Bank
-            </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/90 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs sm:text-sm shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-              {totalUploadedCount} Total Uploaded Questions
-            </span>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white dark:bg-slate-900/80 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Central repository of exam and practice questions. Real question records loaded
-            directly.
-          </p>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Question Bank
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                {totalUploadedCount} Total Uploaded Questions
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Central repository of exam and practice questions. Real question records loaded directly.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link to="/admin/item-analysis">
+        {/* Action Buttons in a Single Line */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 shrink-0">
+          <Link to="/admin/item-analysis" className="shrink-0">
             <Button
               variant="outline"
-              className="text-xs font-bold border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 flex items-center gap-1.5 shadow-2xs"
+              className="text-xs font-bold border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 flex items-center gap-1.5 shadow-2xs whitespace-nowrap h-9 px-3 rounded-xl cursor-pointer"
             >
               <Activity className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              Item Analysis
+              <span>Item Analysis</span>
             </Button>
           </Link>
 
           <Button
             onClick={() => setIsFormatGuideOpen(true)}
             variant="outline"
-            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
+            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0 h-9 px-3 rounded-xl cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" /> TXT Format
+            <FileText className="w-3.5 h-3.5 text-slate-500" />
+            <span>TXT Format</span>
           </Button>
 
           <Button
             onClick={handleExportQuestionsCSV}
             disabled={questions.length === 0}
             variant="outline"
-            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 disabled:opacity-50"
+            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 disabled:opacity-50 whitespace-nowrap shrink-0 h-9 px-3 rounded-xl cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" /> Export CSV
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span>Export CSV</span>
           </Button>
 
           <Button
             onClick={handleOpenBulkModal}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs shadow-indigo-600/20 whitespace-nowrap shrink-0 h-9 px-3.5 rounded-xl cursor-pointer"
           >
-            <Upload className="w-3.5 h-3.5" /> + Bulk Add Questions
+            <Upload className="w-3.5 h-3.5" />
+            <span>Bulk Add Questions</span>
           </Button>
 
           <Button
             onClick={handleOpenAddSingle}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs shadow-emerald-600/20 whitespace-nowrap shrink-0 h-9 px-3.5 rounded-xl cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" /> + Add Question
+            <Plus className="w-4 h-4" />
+            <span>Add Question</span>
           </Button>
         </div>
       </div>

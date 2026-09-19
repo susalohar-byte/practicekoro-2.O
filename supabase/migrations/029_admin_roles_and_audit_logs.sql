@@ -15,7 +15,7 @@ BEGIN
           AND column_name = 'admin_role'
     ) THEN
         ALTER TABLE public.profiles 
-        ADD COLUMN admin_role TEXT DEFAULT 'super_admin' 
+        ADD COLUMN admin_role TEXT DEFAULT NULL 
         CHECK (admin_role IN ('super_admin', 'content_writer', 'support_agent'));
     END IF;
 END $$;
