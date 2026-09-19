@@ -3618,21 +3618,17 @@ export const adminApi = {
             updatedAt: d.updated_at,
           }));
 
-          // Sync into localAppSettings cache without overwriting newer local modifications
+          // Sync into localAppSettings cache
           fetched.forEach((f) => {
             const idx = localAppSettings.findIndex((l) => l.id === f.id || l.key === f.key);
             if (idx >= 0) {
-              const localTime = new Date(localAppSettings[idx].updatedAt || 0).getTime();
-              const remoteTime = new Date(f.updatedAt || 0).getTime();
-              if (remoteTime >= localTime) {
-                localAppSettings[idx] = f;
-              }
+              localAppSettings[idx] = f;
             } else {
               localAppSettings.push(f);
             }
           });
 
-          return [...localAppSettings];
+          return fetched;
         }
       } catch (err) {
         console.warn('Failed to query app_settings, falling back to local defaults:', err);

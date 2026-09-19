@@ -81,8 +81,8 @@ export const AdminSettings: React.FC = () => {
   const [appName, setAppName] = useState('PracticeKoro');
   const [websiteUrl, setWebsiteUrl] = useState('https://practicekoro.online');
   const [supportEmail, setSupportEmail] = useState('support@practicekoro.online');
-  const [supportPhone, setSupportPhone] = useState('+91 98765 43210');
-  const [supportWhatsapp, setSupportWhatsapp] = useState('+91 98765 43210');
+  const [supportPhone, setSupportPhone] = useState('+91 9547771118');
+  const [supportWhatsapp, setSupportWhatsapp] = useState('+91 9547771118');
   const [supportHours, setSupportHours] = useState('Mon - Sat: 10:00 AM - 7:00 PM (IST)');
   const [supportAddress, setSupportAddress] = useState('West Bengal, India');
 
