@@ -24,6 +24,7 @@ import {
   LayoutGrid,
   List,
   Check,
+  Minus,
   Layers,
   Tag,
   Filter,

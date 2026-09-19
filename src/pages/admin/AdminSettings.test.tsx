@@ -116,6 +116,7 @@ describe('AdminSettings & Maintenance Mode System', () => {
       // Submit form
       const saveBtn = screen.getByRole('button', { name: /save all settings/i });
       fireEvent.click(saveBtn);
+      fireEvent.submit(saveBtn.closest('form')!);
 
       await waitFor(() => {
         expect(screen.getByText(/settings updated and saved successfully/i)).toBeInTheDocument();
