@@ -14,6 +14,14 @@ vi.mock('@/context/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }));
 
+// Keep this component test isolated from the configured Supabase project.
+// The settings service has a local fallback, so these tests should not depend
+// on the remote app_settings table or its PostgREST schema cache.
+vi.mock('@/lib/supabase', () => ({
+  isSupabaseConfigured: false,
+  supabaseRuntime: {},
+}));
+
 // Mock ExamContext & Layout components for AppLayout test
 vi.mock('@/context/ExamContext', () => ({
   useExam: () => ({
