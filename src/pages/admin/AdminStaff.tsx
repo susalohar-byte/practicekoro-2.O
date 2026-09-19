@@ -135,7 +135,7 @@ export const AdminStaff: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
             <Shield className="w-3.5 h-3.5" />
-            Super Admin (সুপার অ্যাডমিন)
+            Super Admin
           </span>
         );
       case 'content_writer':
@@ -470,7 +470,7 @@ export const AdminStaff: React.FC = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-slate-900 dark:text-white">
-                        Super Admin (সুপার অ্যাডমিন)
+                        Super Admin
                       </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                         Full platform control: subscriptions, coupons, platform settings, test

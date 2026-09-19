@@ -330,7 +330,7 @@ export const AdminLayout: React.FC = () => {
                     ? 'Content Writer (কনটেন্ট রাইটার)'
                     : adminRole === 'support_agent'
                       ? 'Support Team (সাপোর্ট টিম)'
-                      : 'Super Admin (সুপার অ্যাডমিন)'}
+                      : 'Super Admin'}
                 </p>
               </div>
             </div>
