@@ -514,6 +514,20 @@ export interface AdminPaymentRow {
   transactionId?: string;
   razorpayPaymentId?: string;
   status: PaymentStatus;
+  refundId?: string;
+  refundAmount?: number;
+  refundReason?: string;
+  refundedAt?: string;
+  createdAt: string;
+  created_at?: string;
+}
+
+export interface AdminBatch {
+  id: string;
+  name: string;
+  description?: string;
+  memberCount: number;
+  isActive: boolean;
   createdAt: string;
   created_at?: string;
 }

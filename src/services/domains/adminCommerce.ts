@@ -7,6 +7,7 @@ import type {
   AdminDashboardV2Stats,
   AdminStudentRow,
   AdminStudentDetails,
+  AdminBatch,
   SubscriptionPlan,
   TestAttempt,
   CouponItem,
@@ -164,6 +165,10 @@ export const adminCommerceApi = {
             transactionId: d.transaction_id || undefined,
             razorpayPaymentId: d.razorpay_payment_id || undefined,
             status: d.status,
+            refundId: d.refund_id || undefined,
+            refundAmount: d.refund_amount == null ? undefined : Number(d.refund_amount),
+            refundReason: d.refund_reason || undefined,
+            refundedAt: d.refunded_at || undefined,
             createdAt: d.created_at,
           }));
         }
@@ -188,6 +193,10 @@ export const adminCommerceApi = {
             transaction_id,
             razorpay_payment_id,
             status,
+            refund_id,
+            refund_amount,
+            refund_reason,
+            refunded_at,
             created_at,
             profiles:user_id(full_name, email),
             subscription_plans:plan_id(title)
@@ -226,6 +235,10 @@ export const adminCommerceApi = {
               transactionId: d.transaction_id || undefined,
               razorpayPaymentId: d.razorpay_payment_id || undefined,
               status: d.status,
+              refundId: d.refund_id || undefined,
+              refundAmount: d.refund_amount == null ? undefined : Number(d.refund_amount),
+              refundReason: d.refund_reason || undefined,
+              refundedAt: d.refunded_at || undefined,
               createdAt: d.created_at,
             }));
         }
@@ -601,7 +614,7 @@ export const adminCommerceApi = {
                 }
               }
             } catch {
-              // Subscriptions lookup is optional — students still show without it
+              // Subscriptions lookup is optional - students still show without it
             }
           }
 
@@ -707,6 +720,10 @@ export const adminCommerceApi = {
             orderId: p.order_id,
             transactionId: p.transaction_id,
             status: p.status,
+            refundId: p.refund_id || undefined,
+            refundAmount: p.refund_amount == null ? undefined : Number(p.refund_amount),
+            refundReason: p.refund_reason || undefined,
+            refundedAt: p.refunded_at || undefined,
             createdAt: p.created_at,
           }));
         }
@@ -867,6 +884,108 @@ export const adminCommerceApi = {
       }
     }
     return { success: true };
+  },
+
+  async bulkGrantStudentSubscription(
+    userIds: string[],
+    planId: string,
+    durationDays: number
+  ): Promise<{ success: boolean; count?: number; error?: string }> {
+    if (userIds.length === 0) return { success: true, count: 0 };
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.rpc('bulk_grant_student_subscription', {
+          p_user_ids: userIds,
+          p_plan_id: planId,
+          p_duration_days: durationDays,
+        });
+        if (error) return { success: false, error: error.message };
+        return { success: true, count: Number(data || userIds.length) };
+      } catch (err) {
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Bulk subscription assignment failed',
+        };
+      }
+    }
+    return { success: true, count: userIds.length };
+  },
+
+  async getAdminBatches(): Promise<AdminBatch[]> {
+    if (!isSupabaseConfigured) return [];
+    const { data, error } = await supabase
+      .from('student_batches')
+      .select('id, name, description, is_active, created_at, student_batch_members(count)')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data || []).map((batch: any) => ({
+      id: batch.id,
+      name: batch.name,
+      description: batch.description || undefined,
+      memberCount: Number(batch.student_batch_members?.[0]?.count || 0),
+      isActive: Boolean(batch.is_active),
+      createdAt: batch.created_at,
+    }));
+  },
+
+  async createAdminBatch(
+    name: string,
+    description?: string
+  ): Promise<{ success: boolean; batchId?: string; error?: string }> {
+    if (!isSupabaseConfigured) return { success: true, batchId: `local-${Date.now()}` };
+    const { data, error } = await supabase
+      .from('student_batches')
+      .insert({ name: name.trim(), description: description?.trim() || null })
+      .select('id')
+      .single();
+    if (error) return { success: false, error: error.message };
+    return { success: true, batchId: data?.id };
+  },
+
+  async bulkAssignStudentsToBatch(
+    batchId: string,
+    userIds: string[]
+  ): Promise<{ success: boolean; count?: number; error?: string }> {
+    if (userIds.length === 0) return { success: true, count: 0 };
+    if (!isSupabaseConfigured) return { success: true, count: userIds.length };
+    try {
+      const { data, error } = await supabase.rpc('bulk_assign_students_to_batch', {
+        p_batch_id: batchId,
+        p_user_ids: userIds,
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true, count: Number(data || userIds.length) };
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Bulk batch assignment failed',
+      };
+    }
+  },
+
+  async markPaymentRefunded(
+    paymentId: string,
+    refundAmount: number,
+    refundId?: string,
+    refundReason?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!isSupabaseConfigured) return { success: true };
+    try {
+      const { error } = await supabase.rpc('mark_payment_refunded', {
+        p_payment_id: paymentId,
+        p_refund_amount: refundAmount,
+        p_refund_id: refundId || null,
+        p_refund_reason: refundReason?.trim() || null,
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Refund tracking update failed',
+      };
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -1112,7 +1231,7 @@ export const adminCommerceApi = {
         valid: false,
         discountAmount: 0,
         finalPrice: amount,
-        message: `Minimum order value of ₹${matched.minOrderAmount} required for this coupon.`,
+        message: `Minimum order value of Rs. ${matched.minOrderAmount} required for this coupon.`,
       };
     }
 

@@ -3285,6 +3285,34 @@ export const adminApi = {
     return { success: true };
   },
 
+  async createTargetedNotification(
+    notif: Pick<NotificationItem, 'title' | 'message' | 'channel'> & { userIds: string[] }
+  ): Promise<{ success: boolean; error?: string }> {
+    if (notif.userIds.length === 0) return { success: true };
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.rpc('create_targeted_notification', {
+        p_title: notif.title,
+        p_message: notif.message,
+        p_channel: notif.channel,
+        p_user_ids: notif.userIds,
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    }
+
+    localNotifications.unshift({
+      id: `notif-${Date.now()}`,
+      title: notif.title,
+      message: notif.message,
+      targetAudience: 'selected',
+      channel: notif.channel,
+      status: 'sent',
+      sentAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    });
+    return { success: true };
+  },
+
   async sendNotificationNow(id: string): Promise<boolean> {
     if (isSupabaseConfigured) {
       const { error } = await supabase
