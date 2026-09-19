@@ -134,13 +134,7 @@ describe('StudentSupportModal', () => {
       },
     ]);
 
-    render(
-      <StudentSupportModal
-        isOpen={true}
-        onClose={vi.fn()}
-        initialTab="history"
-      />
-    );
+    render(<StudentSupportModal isOpen={true} onClose={vi.fn()} initialTab="history" />);
 
     await waitFor(() => {
       expect(screen.getByText('UPI transaction delayed')).toBeInTheDocument();
@@ -152,12 +146,7 @@ describe('StudentSupportModal', () => {
     vi.mocked(api.getStudentSupportTickets).mockResolvedValue([]);
 
     render(
-      <StudentSupportModal
-        isOpen={true}
-        onClose={vi.fn()}
-        defaultSubject=""
-        defaultIssue=""
-      />
+      <StudentSupportModal isOpen={true} onClose={vi.fn()} defaultSubject="" defaultIssue="" />
     );
 
     const submitBtn = screen.getByRole('button', { name: /Submit Ticket/i });

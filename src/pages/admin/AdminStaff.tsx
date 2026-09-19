@@ -32,7 +32,10 @@ export const AdminStaff: React.FC = () => {
   const [emailInput, setEmailInput] = useState('');
   const [selectedRole, setSelectedRole] = useState<AdminRole>('content_writer');
   const [isSaving, setIsSaving] = useState(false);
-  const [modalFeedback, setModalFeedback] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [modalFeedback, setModalFeedback] = useState<{
+    type: 'error' | 'success';
+    text: string;
+  } | null>(null);
 
   const loadStaff = useCallback(async () => {
     try {
@@ -55,9 +58,7 @@ export const AdminStaff: React.FC = () => {
       const matchesRole = roleFilter === 'all' || s.adminRole === roleFilter;
       const q = searchQuery.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        s.fullName.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q);
+        !q || s.fullName.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
       return matchesRole && matchesSearch;
     });
   }, [staff, roleFilter, searchQuery]);
@@ -181,7 +182,8 @@ export const AdminStaff: React.FC = () => {
                 Team & Staff RBAC (টিম ও পারমিশন)
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Manage granular role-based access control across Super Admins, Content Writers, and Support Agents.
+                Manage granular role-based access control across Super Admins, Content Writers, and
+                Support Agents.
               </p>
             </div>
           </div>
@@ -225,7 +227,9 @@ export const AdminStaff: React.FC = () => {
             </span>
             <Shield className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{counts.super_admin}</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+            {counts.super_admin}
+          </p>
           <p className="text-[11px] text-slate-400 mt-1">Full platform authority</p>
         </div>
 
@@ -236,7 +240,9 @@ export const AdminStaff: React.FC = () => {
             </span>
             <Edit2 className="w-4 h-4 text-sky-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{counts.content_writer}</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+            {counts.content_writer}
+          </p>
           <p className="text-[11px] text-slate-400 mt-1">Question Bank & Tests</p>
         </div>
 
@@ -247,7 +253,9 @@ export const AdminStaff: React.FC = () => {
             </span>
             <UserCheck className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{counts.support_agent}</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+            {counts.support_agent}
+          </p>
           <p className="text-[11px] text-slate-400 mt-1">Student tickets & resolution</p>
         </div>
       </div>
@@ -281,10 +289,10 @@ export const AdminStaff: React.FC = () => {
               {r === 'all'
                 ? `All (${counts.total})`
                 : r === 'super_admin'
-                ? `Super Admin (${counts.super_admin})`
-                : r === 'content_writer'
-                ? `Content Writer (${counts.content_writer})`
-                : `Support (${counts.support_agent})`}
+                  ? `Super Admin (${counts.super_admin})`
+                  : r === 'content_writer'
+                    ? `Content Writer (${counts.content_writer})`
+                    : `Support (${counts.support_agent})`}
             </button>
           ))}
         </div>
@@ -300,8 +308,12 @@ export const AdminStaff: React.FC = () => {
         ) : filteredStaff.length === 0 ? (
           <div className="p-12 text-center">
             <Users className="w-10 h-10 text-slate-400 mx-auto mb-3 opacity-40" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No staff members found</p>
-            <p className="text-xs text-slate-500 mt-1">Try changing search or add a new team member.</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              No staff members found
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Try changing search or add a new team member.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -384,7 +396,9 @@ export const AdminStaff: React.FC = () => {
                   <h3 className="font-bold text-slate-900 dark:text-white text-base">
                     {modalMode === 'add' ? 'Add / Assign Staff Member' : 'Edit Staff Role'}
                   </h3>
-                  <p className="text-xs text-slate-500">Configure admin sub-role and system authorization</p>
+                  <p className="text-xs text-slate-500">
+                    Configure admin sub-role and system authorization
+                  </p>
                 </div>
               </div>
               <button
@@ -459,7 +473,8 @@ export const AdminStaff: React.FC = () => {
                         Super Admin (সুপার অ্যাডমিন)
                       </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                        Full platform control: subscriptions, coupons, platform settings, test deletion, team RBAC, and live audit trails.
+                        Full platform control: subscriptions, coupons, platform settings, test
+                        deletion, team RBAC, and live audit trails.
                       </p>
                     </div>
                   </div>
@@ -482,7 +497,8 @@ export const AdminStaff: React.FC = () => {
                         Content Writer (কনটেন্ট রাইটার)
                       </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                        Create and edit Question Bank, Mock Tests, Subjects, and Exams. Cannot view or edit subscriptions, settings, or delete live tests.
+                        Create and edit Question Bank, Mock Tests, Subjects, and Exams. Cannot view
+                        or edit subscriptions, settings, or delete live tests.
                       </p>
                     </div>
                   </div>
@@ -505,7 +521,8 @@ export const AdminStaff: React.FC = () => {
                         Support Agent (সাপোর্ট টিম)
                       </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                        Manage and resolve student support tickets and inquiries. Strictly restricted from modifying tests or platform settings.
+                        Manage and resolve student support tickets and inquiries. Strictly
+                        restricted from modifying tests or platform settings.
                       </p>
                     </div>
                   </div>

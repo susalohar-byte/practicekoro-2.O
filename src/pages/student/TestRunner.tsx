@@ -396,8 +396,7 @@ export const TestRunner: React.FC = () => {
             Sections:
           </span>
           {testSections.map((sec) => {
-            const isCurrentSection =
-              (currentQ.subjectId || 'general') === sec.id;
+            const isCurrentSection = (currentQ.subjectId || 'general') === sec.id;
             return (
               <button
                 key={sec.id}

@@ -1413,7 +1413,9 @@ export const adminApi = {
     }
     const { data, error } = await supabase
       .from('test_attempts')
-      .select('id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)')
+      .select(
+        'id, user_id, score, total_marks, accuracy, correct_count, wrong_count, skipped_count, time_spent_seconds, status, created_at, profiles(full_name, email)'
+      )
       .eq('test_id', testId)
       .order('score', { ascending: false });
 
@@ -2170,12 +2172,10 @@ export const adminApi = {
     const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
     const filePath = `questions/${fileName}`;
 
-    const { data, error } = await supabase.storage
-      .from('question-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+    const { data, error } = await supabase.storage.from('question-images').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
 
     if (error) {
       throw new Error(`Failed to upload image: ${error.message}`);
@@ -2225,7 +2225,7 @@ export const adminApi = {
     const newCat: ExamCategory = {
       id: slug,
       name: trimmed,
-      orderIndex: orderIndex ?? (localExamCategories.length + 1),
+      orderIndex: orderIndex ?? localExamCategories.length + 1,
       isActive: true,
       createdAt: new Date().toISOString(),
     };
@@ -2263,7 +2263,9 @@ export const adminApi = {
     if (!trimmed) throw new Error('Category name cannot be empty');
 
     if (!isSupabaseConfigured) {
-      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
+      const idx = localExamCategories.findIndex(
+        (c) => c.id === id || c.name.toLowerCase() === id.toLowerCase()
+      );
       if (idx !== -1) {
         localExamCategories[idx] = {
           ...localExamCategories[idx],
@@ -2272,7 +2274,12 @@ export const adminApi = {
         };
         return localExamCategories[idx];
       }
-      const created: ExamCategory = { id, name: trimmed, orderIndex: orderIndex || 1, isActive: true };
+      const created: ExamCategory = {
+        id,
+        name: trimmed,
+        orderIndex: orderIndex || 1,
+        isActive: true,
+      };
       localExamCategories.push(created);
       return created;
     }
@@ -2302,17 +2309,16 @@ export const adminApi = {
 
   async deleteExamCategory(id: string): Promise<boolean> {
     if (!isSupabaseConfigured) {
-      const idx = localExamCategories.findIndex((c) => c.id === id || c.name.toLowerCase() === id.toLowerCase());
+      const idx = localExamCategories.findIndex(
+        (c) => c.id === id || c.name.toLowerCase() === id.toLowerCase()
+      );
       if (idx !== -1) {
         localExamCategories.splice(idx, 1);
       }
       return true;
     }
 
-    const { error } = await supabase
-      .from('exam_categories')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('exam_categories').delete().eq('id', id);
 
     if (error) {
       throw new Error(error.message || 'Failed to delete category');
@@ -3005,7 +3011,7 @@ export const adminApi = {
           const scheduledAt = d.scheduled_at || undefined;
           const isDue = d.status === 'scheduled' && scheduledAt && new Date(scheduledAt) <= now;
           const effectiveStatus = isDue ? 'sent' : d.status;
-          const effectiveSentAt = isDue ? (d.sent_at || scheduledAt) : (d.sent_at || undefined);
+          const effectiveSentAt = isDue ? d.sent_at || scheduledAt : d.sent_at || undefined;
 
           return {
             id: d.id,
@@ -3038,7 +3044,7 @@ export const adminApi = {
         target_audience: notif.targetAudience,
         channel: notif.channel,
         status: notif.status,
-        sent_at: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+        sent_at: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
         scheduled_at: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       });
       if (error) return { success: false, error: error.message };
@@ -3053,7 +3059,7 @@ export const adminApi = {
       targetAudience: notif.targetAudience,
       channel: notif.channel,
       status: notif.status,
-      sentAt: notif.status === 'sent' ? (notif.sentAt || new Date().toISOString()) : undefined,
+      sentAt: notif.status === 'sent' ? notif.sentAt || new Date().toISOString() : undefined,
       scheduledAt: notif.status === 'scheduled' ? notif.scheduledAt : undefined,
       createdAt: new Date().toISOString(),
     };
@@ -3125,7 +3131,10 @@ export const adminApi = {
           }));
         }
       } catch (err) {
-        console.warn('Failed to load support tickets from Supabase, falling back to local store:', err);
+        console.warn(
+          'Failed to load support tickets from Supabase, falling back to local store:',
+          err
+        );
       }
     }
 
@@ -3255,7 +3264,10 @@ export const adminApi = {
             }));
           }
         } catch (err) {
-          console.warn('Failed to load student support tickets from Supabase, using local store:', err);
+          console.warn(
+            'Failed to load student support tickets from Supabase, using local store:',
+            err
+          );
         }
       }
     }
@@ -3275,7 +3287,10 @@ export const adminApi = {
       try {
         const { data, error } = await supabase.from('app_settings').select('*');
         if (error) {
-          console.warn('Could not fetch app_settings from Supabase, using local defaults:', error.message);
+          console.warn(
+            'Could not fetch app_settings from Supabase, using local defaults:',
+            error.message
+          );
           return [...localAppSettings];
         }
         if (data && data.length > 0) {
@@ -3319,18 +3334,66 @@ export const adminApi = {
     updates: Array<{ id: string; value: unknown }>
   ): Promise<{ success: boolean; error?: string }> {
     const SETTINGS_META: Record<string, { category: string; key: string; description: string }> = {
-      general_app_name: { category: 'general', key: 'app_name', description: 'Platform name displayed across UI' },
-      general_support_email: { category: 'general', key: 'support_email', description: 'Support contact email' },
-      general_support_phone: { category: 'general', key: 'support_phone', description: 'Support phone helpline' },
-      general_website_url: { category: 'general', key: 'website_url', description: 'Official web application domain' },
-      exam_default_duration: { category: 'exam_defaults', key: 'default_duration_minutes', description: 'Standard default exam duration in minutes' },
-      exam_default_marks: { category: 'exam_defaults', key: 'default_marks_per_q', description: 'Standard default marks per correct question' },
-      exam_default_negative_marks: { category: 'exam_defaults', key: 'default_negative_marks', description: 'Standard default negative marking' },
-      exam_passing_percentage: { category: 'exam_defaults', key: 'default_passing_percentage', description: 'Standard passing score percentage' },
-      sub_currency: { category: 'subscription', key: 'currency', description: 'Platform transaction currency' },
-      sub_expiry_warning_days: { category: 'subscription', key: 'expiry_warning_days', description: 'Days before expiry to display renewal warning' },
-      sys_maintenance_mode: { category: 'system', key: 'maintenance_mode', description: 'Enable platform maintenance splash mode' },
-      sys_app_version: { category: 'system', key: 'app_version', description: 'Platform production release version' },
+      general_app_name: {
+        category: 'general',
+        key: 'app_name',
+        description: 'Platform name displayed across UI',
+      },
+      general_support_email: {
+        category: 'general',
+        key: 'support_email',
+        description: 'Support contact email',
+      },
+      general_support_phone: {
+        category: 'general',
+        key: 'support_phone',
+        description: 'Support phone helpline',
+      },
+      general_website_url: {
+        category: 'general',
+        key: 'website_url',
+        description: 'Official web application domain',
+      },
+      exam_default_duration: {
+        category: 'exam_defaults',
+        key: 'default_duration_minutes',
+        description: 'Standard default exam duration in minutes',
+      },
+      exam_default_marks: {
+        category: 'exam_defaults',
+        key: 'default_marks_per_q',
+        description: 'Standard default marks per correct question',
+      },
+      exam_default_negative_marks: {
+        category: 'exam_defaults',
+        key: 'default_negative_marks',
+        description: 'Standard default negative marking',
+      },
+      exam_passing_percentage: {
+        category: 'exam_defaults',
+        key: 'default_passing_percentage',
+        description: 'Standard passing score percentage',
+      },
+      sub_currency: {
+        category: 'subscription',
+        key: 'currency',
+        description: 'Platform transaction currency',
+      },
+      sub_expiry_warning_days: {
+        category: 'subscription',
+        key: 'expiry_warning_days',
+        description: 'Days before expiry to display renewal warning',
+      },
+      sys_maintenance_mode: {
+        category: 'system',
+        key: 'maintenance_mode',
+        description: 'Enable platform maintenance splash mode',
+      },
+      sys_app_version: {
+        category: 'system',
+        key: 'app_version',
+        description: 'Platform production release version',
+      },
     };
 
     // Always update or insert (upsert) into in-memory localAppSettings
@@ -3378,9 +3441,7 @@ export const adminApi = {
           };
         });
 
-        const { error } = await supabase
-          .from('app_settings')
-          .upsert(rows, { onConflict: 'id' });
+        const { error } = await supabase.from('app_settings').upsert(rows, { onConflict: 'id' });
 
         if (error) {
           console.warn('Supabase app_settings upsert error:', error.message);
@@ -3428,9 +3489,7 @@ export const adminApi = {
 
     if (isSupabaseConfigured) {
       try {
-        const { data: answersData, error } = await supabase
-          .from('attempt_answers')
-          .select(`
+        const { data: answersData, error } = await supabase.from('attempt_answers').select(`
             question_id,
             selected_option,
             is_correct,
@@ -3516,9 +3575,7 @@ export const adminApi = {
             else empiricalDifficulty = 'extreme';
 
             const declaredDiff = (s.qInfo?.difficulty?.toLowerCase() || 'medium') as
-              | 'easy'
-              | 'medium'
-              | 'hard';
+              'easy' | 'medium' | 'hard';
             const isMisclassified =
               (declaredDiff === 'easy' &&
                 (empiricalDifficulty === 'hard' || empiricalDifficulty === 'extreme')) ||
@@ -3527,21 +3584,13 @@ export const adminApi = {
 
             const answeredTotal = s.correct + s.wrong;
             const optA =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.A / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.A / answeredTotal) * 100).toFixed(1)) : 0;
             const optB =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.B / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.B / answeredTotal) * 100).toFixed(1)) : 0;
             const optC =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.C / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.C / answeredTotal) * 100).toFixed(1)) : 0;
             const optD =
-              answeredTotal > 0
-                ? Number(((s.optionsCount.D / answeredTotal) * 100).toFixed(1))
-                : 0;
+              answeredTotal > 0 ? Number(((s.optionsCount.D / answeredTotal) * 100).toFixed(1)) : 0;
 
             return {
               questionId: qId,
@@ -3633,4 +3682,3 @@ export const adminApi = {
     return result;
   },
 };
-

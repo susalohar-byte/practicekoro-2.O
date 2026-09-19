@@ -329,8 +329,8 @@ export const AdminLayout: React.FC = () => {
                   {adminRole === 'content_writer'
                     ? 'Content Writer (কনটেন্ট রাইটার)'
                     : adminRole === 'support_agent'
-                    ? 'Support Team (সাপোর্ট টিম)'
-                    : 'Super Admin (সুপার অ্যাডমিন)'}
+                      ? 'Support Team (সাপোর্ট টিম)'
+                      : 'Super Admin (সুপার অ্যাডমিন)'}
                 </p>
               </div>
             </div>
@@ -398,7 +398,8 @@ export const AdminLayout: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
               <span className="truncate sm:whitespace-normal">
-                <strong>মেইনটেন্যান্স মোড সক্রিয়:</strong> স্টুডেন্ট পোর্টাল ও মক টেস্ট সাময়িকভাবে স্থগিত রয়েছে। শুধুমাত্র অ্যাডমিনরা অ্যাক্সেস করতে পারছেন।
+                <strong>মেইনটেন্যান্স মোড সক্রিয়:</strong> স্টুডেন্ট পোর্টাল ও মক টেস্ট সাময়িকভাবে
+                স্থগিত রয়েছে। শুধুমাত্র অ্যাডমিনরা অ্যাক্সেস করতে পারছেন।
               </span>
             </div>
             <Link

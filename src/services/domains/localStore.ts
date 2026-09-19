@@ -304,7 +304,8 @@ export const localSupportTickets: SupportTicketItem[] = [
     studentName: 'Sourav Ganguly',
     studentEmail: 'sourav.aspirant@example.com',
     subject: 'Question 14 Answer Key in WBCS Prelims Mock #2',
-    issue: 'In question 14, option B was marked correct, but according to latest syllabus Option C is verified by standard texts.',
+    issue:
+      'In question 14, option B was marked correct, but according to latest syllabus Option C is verified by standard texts.',
     category: 'Test Issue',
     priority: 'medium',
     status: 'open',
@@ -317,11 +318,13 @@ export const localSupportTickets: SupportTicketItem[] = [
     studentName: 'Ananya Roy',
     studentEmail: 'ananya.wb@example.com',
     subject: 'UPI Payment debited but Pro Pass delayed',
-    issue: 'I paid ₹499 via Google Pay for 1-Year Pro Pass. UTR 428198271891. Please verify and activate.',
+    issue:
+      'I paid ₹499 via Google Pay for 1-Year Pro Pass. UTR 428198271891. Please verify and activate.',
     category: 'Payment Issue',
     priority: 'high',
     status: 'resolved',
-    resolutionNotes: 'Verified with gateway logs. Transaction was captured. Pro Pass manually renewed for 365 days.',
+    resolutionNotes:
+      'Verified with gateway logs. Transaction was captured. Pro Pass manually renewed for 365 days.',
     createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
     updatedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
   },
@@ -733,8 +736,10 @@ export const localStudents: AdminStudentRow[] = [
 export const localItemAnalysisStore: QuestionItemAnalysis[] = [
   {
     questionId: 'q-lit-04',
-    questionText: 'কোন কাব্যগ্রন্থটির জন্য মাইকেল মধুসূদন দত্ত অমিত্রাক্ষর ছন্দের প্রথম সার্থক প্রয়োগ ঘটান?',
-    questionBengali: 'কোন কাব্যগ্রন্থটির জন্য মাইকেল মধুসূদন দত্ত অমিত্রাক্ষর ছন্দের প্রথম সার্থক প্রয়োগ ঘটান?',
+    questionText:
+      'কোন কাব্যগ্রন্থটির জন্য মাইকেল মধুসূদন দত্ত অমিত্রাক্ষর ছন্দের প্রথম সার্থক প্রয়োগ ঘটান?',
+    questionBengali:
+      'কোন কাব্যগ্রন্থটির জন্য মাইকেল মধুসূদন দত্ত অমিত্রাক্ষর ছন্দের প্রথম সার্থক প্রয়োগ ঘটান?',
     subjectId: 'sub_bengali',
     subjectName: 'বাংলা সাহিত্য ও ব্যাকরণ',
     chapterId: 'chap_bengali_modern',
@@ -773,8 +778,10 @@ export const localItemAnalysisStore: QuestionItemAnalysis[] = [
   },
   {
     questionId: 'q-math-02',
-    questionText: 'একটি নির্বাচনে দুইজন প্রার্থীর মধ্যে বিজয়ী প্রার্থী মোট প্রদত্ত ভোটের ৫৮% পেয়ে ৪,৮০০ ভোটে জয়লাভ করলেন। যদি ২০% ভোট অবৈধ ঘোষিত হয়ে থাকে, তবে ভোটার তালিকায় মোট ভোটারের সংখ্যা কত ছিল?',
-    questionBengali: 'একটি নির্বাচনে দুইজন প্রার্থীর মধ্যে বিজয়ী প্রার্থী মোট প্রদত্ত ভোটের ৫৮% পেয়ে ৪,৮০০ ভোটে জয়লাভ করলেন। যদি ২০% ভোট অবৈধ ঘোষিত হয়ে থাকে, তবে ভোটার তালিকায় মোট ভোটারের সংখ্যা কত ছিল?',
+    questionText:
+      'একটি নির্বাচনে দুইজন প্রার্থীর মধ্যে বিজয়ী প্রার্থী মোট প্রদত্ত ভোটের ৫৮% পেয়ে ৪,৮০০ ভোটে জয়লাভ করলেন। যদি ২০% ভোট অবৈধ ঘোষিত হয়ে থাকে, তবে ভোটার তালিকায় মোট ভোটারের সংখ্যা কত ছিল?',
+    questionBengali:
+      'একটি নির্বাচনে দুইজন প্রার্থীর মধ্যে বিজয়ী প্রার্থী মোট প্রদত্ত ভোটের ৫৮% পেয়ে ৪,৮০০ ভোটে জয়লাভ করলেন। যদি ২০% ভোট অবৈধ ঘোষিত হয়ে থাকে, তবে ভোটার তালিকায় মোট ভোটারের সংখ্যা কত ছিল?',
     subjectId: 'sub_math',
     subjectName: 'পাটিগণিত ও সংখ্যাতত্ত্ব',
     chapterId: 'chap_math_percentage',
@@ -813,8 +820,10 @@ export const localItemAnalysisStore: QuestionItemAnalysis[] = [
   },
   {
     questionId: 'q-hist-03',
-    questionText: '১৮৫৭ সালের মহাবিদ্রোহ চলাকালে অযোধ্যায় (লখনউ) ব্রিটিশ সৈন্যবাহিনীর বিরুদ্ধে সিপাহীদের কার্যকর নেতৃত্ব কে প্রদান করেছিলেন?',
-    questionBengali: '১৮৫৭ সালের মহাবিদ্রোহ চলাকালে অযোধ্যায় (লখনউ) ব্রিটিশ সৈন্যবাহিনীর বিরুদ্ধে সিপাহীদের কার্যকর নেতৃত্ব কে প্রদান করেছিলেন?',
+    questionText:
+      '১৮৫৭ সালের মহাবিদ্রোহ চলাকালে অযোধ্যায় (লখনউ) ব্রিটিশ সৈন্যবাহিনীর বিরুদ্ধে সিপাহীদের কার্যকর নেতৃত্ব কে প্রদান করেছিলেন?',
+    questionBengali:
+      '১৮৫৭ সালের মহাবিদ্রোহ চলাকালে অযোধ্যায় (লখনউ) ব্রিটিশ সৈন্যবাহিনীর বিরুদ্ধে সিপাহীদের কার্যকর নেতৃত্ব কে প্রদান করেছিলেন?',
     subjectId: 'sub_history',
     subjectName: 'ভারতের আধুনিক ইতিহাস ও জাতীয় আন্দোলন',
     chapterId: 'chap_hist_1857',
@@ -853,8 +862,10 @@ export const localItemAnalysisStore: QuestionItemAnalysis[] = [
   },
   {
     questionId: 'q-reas-03',
-    questionText: 'আটজন ব্যক্তি A, B, C, D, E, F, G, H একটি বৃত্তাকার টেবিলের চারিদিকে কেন্দ্রের দিকে মুখ করে বসে আছেন। B বসেছে D-এর ডানদিকে তৃতীয় স্থানে এবং F-এর বামদিকে দ্বিতীয় স্থানে। H-এর অবস্থান নির্ণয় করো।',
-    questionBengali: 'আটজন ব্যক্তি A, B, C, D, E, F, G, H একটি বৃত্তাকার টেবিলের চারিদিকে কেন্দ্রের দিকে মুখ করে বসে আছেন। B বসেছে D-এর ডানদিকে তৃতীয় স্থানে এবং F-এর বামদিকে দ্বিতীয় স্থানে। H-এর অবস্থান নির্ণয় করো।',
+    questionText:
+      'আটজন ব্যক্তি A, B, C, D, E, F, G, H একটি বৃত্তাকার টেবিলের চারিদিকে কেন্দ্রের দিকে মুখ করে বসে আছেন। B বসেছে D-এর ডানদিকে তৃতীয় স্থানে এবং F-এর বামদিকে দ্বিতীয় স্থানে। H-এর অবস্থান নির্ণয় করো।',
+    questionBengali:
+      'আটজন ব্যক্তি A, B, C, D, E, F, G, H একটি বৃত্তাকার টেবিলের চারিদিকে কেন্দ্রের দিকে মুখ করে বসে আছেন। B বসেছে D-এর ডানদিকে তৃতীয় স্থানে এবং F-এর বামদিকে দ্বিতীয় স্থানে। H-এর অবস্থান নির্ণয় করো।',
     subjectId: 'sub_reasoning',
     subjectName: 'যৌক্তিক বিশ্লেষণ ও রিজনিং',
     chapterId: 'chap_reas_seating',
@@ -893,8 +904,10 @@ export const localItemAnalysisStore: QuestionItemAnalysis[] = [
   },
   {
     questionId: 'q-sci-05',
-    questionText: 'বায়ুমণ্ডলে ওজন স্তরের ঘনত্ব পরিমাপের জন্য নিচের কোন বৈজ্ঞানিক এককটি ব্যবহার করা হয়?',
-    questionBengali: 'বায়ুমণ্ডলে ওজন স্তরের ঘনত্ব পরিমাপের জন্য নিচের কোন বৈজ্ঞানিক এককটি ব্যবহার করা হয়?',
+    questionText:
+      'বায়ুমণ্ডলে ওজন স্তরের ঘনত্ব পরিমাপের জন্য নিচের কোন বৈজ্ঞানিক এককটি ব্যবহার করা হয়?',
+    questionBengali:
+      'বায়ুমণ্ডলে ওজন স্তরের ঘনত্ব পরিমাপের জন্য নিচের কোন বৈজ্ঞানিক এককটি ব্যবহার করা হয়?',
     subjectId: 'sub_science',
     subjectName: 'সাধারণ বিজ্ঞান ও পরিবেশ বিদ্যা',
     chapterId: 'chap_sci_atmosphere',
@@ -933,8 +946,10 @@ export const localItemAnalysisStore: QuestionItemAnalysis[] = [
   },
   {
     questionId: 'q-geo-02',
-    questionText: 'পশ্চিমবঙ্গের সুন্দরবন অঞ্চলের প্রধান ম্যানগ্রোভ বনভূমির জীববৈচিত্র্য সংরক্ষণের ক্ষেত্রে ইউনেস্কো কোন সালে এটিকে ওয়ার্ল্ড হেরিটেজ সাইট হিসেবে ঘোষণা করে?',
-    questionBengali: 'পশ্চিমবঙ্গের সুন্দরবন অঞ্চলের প্রধান ম্যানগ্রোভ বনভূমির জীববৈচিত্র্য সংরক্ষণের ক্ষেত্রে ইউনেস্কো কোন সালে এটিকে ওয়ার্ল্ড হেরিটেজ সাইট হিসেবে ঘোষণা করে?',
+    questionText:
+      'পশ্চিমবঙ্গের সুন্দরবন অঞ্চলের প্রধান ম্যানগ্রোভ বনভূমির জীববৈচিত্র্য সংরক্ষণের ক্ষেত্রে ইউনেস্কো কোন সালে এটিকে ওয়ার্ল্ড হেরিটেজ সাইট হিসেবে ঘোষণা করে?',
+    questionBengali:
+      'পশ্চিমবঙ্গের সুন্দরবন অঞ্চলের প্রধান ম্যানগ্রোভ বনভূমির জীববৈচিত্র্য সংরক্ষণের ক্ষেত্রে ইউনেস্কো কোন সালে এটিকে ওয়ার্ল্ড হেরিটেজ সাইট হিসেবে ঘোষণা করে?',
     subjectId: 'sub_geography',
     subjectName: 'পশ্চিমবঙ্গ ও ভারতের ভূগোল',
     chapterId: 'chap_geo_wb',

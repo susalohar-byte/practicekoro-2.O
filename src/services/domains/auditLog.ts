@@ -108,7 +108,9 @@ export async function getAdminAuditLogs(
       }
       if (search && search.trim()) {
         const s = search.trim();
-        query = query.or(`entity_name.ilike.%${s}%,admin_email.ilike.%${s}%,admin_name.ilike.%${s}%`);
+        query = query.or(
+          `entity_name.ilike.%${s}%,admin_email.ilike.%${s}%,admin_name.ilike.%${s}%`
+        );
       }
 
       query = query.range(offset, offset + limit - 1);
@@ -197,7 +199,10 @@ export function exportAuditLogsToCsv(logs: AdminAuditLog[]): void {
     JSON.stringify(log.details || {}),
   ]);
 
-  const csvRows = [headers.map(escapeCell).join(','), ...rows.map((r) => r.map(escapeCell).join(','))];
+  const csvRows = [
+    headers.map(escapeCell).join(','),
+    ...rows.map((r) => r.map(escapeCell).join(',')),
+  ];
   const csvContent = '\uFEFF' + csvRows.join('\r\n');
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

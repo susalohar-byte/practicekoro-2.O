@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (
           parsed?.id?.startsWith('usr-') ||
           parsed?.email === 'student@practicekoro.com' ||
-          (parsed?.id === 'usr-admin-001')
+          parsed?.id === 'usr-admin-001'
         ) {
           localStorage.removeItem('practicekoro_user');
           localStorage.removeItem('practicekoro_is_pro');

@@ -216,8 +216,7 @@ export const AdminExams: React.FC = () => {
     if (
       categories.some(
         (c) =>
-          c.toLowerCase() === trimmedNew.toLowerCase() &&
-          c.toLowerCase() !== oldName.toLowerCase()
+          c.toLowerCase() === trimmedNew.toLowerCase() && c.toLowerCase() !== oldName.toLowerCase()
       )
     ) {
       setCategoryModalError(`Category "${trimmedNew}" already exists.`);
@@ -233,9 +232,7 @@ export const AdminExams: React.FC = () => {
         (e) => (e.category || '').toLowerCase() === oldName.toLowerCase()
       );
       if (linkedExams.length > 0) {
-        await Promise.all(
-          linkedExams.map((e) => api.updateExam(e.id, { category: trimmedNew }))
-        );
+        await Promise.all(linkedExams.map((e) => api.updateExam(e.id, { category: trimmedNew })));
         setExams((prev) =>
           prev.map((e) =>
             (e.category || '').toLowerCase() === oldName.toLowerCase()
@@ -296,9 +293,7 @@ export const AdminExams: React.FC = () => {
       // If exams are linked, reassign them to the chosen target
       if (linkedExams.length > 0) {
         const target = reassignTo && reassignTo.trim() ? reassignTo.trim() : 'General';
-        await Promise.all(
-          linkedExams.map((e) => api.updateExam(e.id, { category: target }))
-        );
+        await Promise.all(linkedExams.map((e) => api.updateExam(e.id, { category: target })));
         setExams((prev) =>
           prev.map((e) =>
             (e.category || '').toLowerCase() === catName.toLowerCase()
@@ -1332,8 +1327,8 @@ export const AdminExams: React.FC = () => {
                 <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span>
-                    No syllabus mapping required. Standard topic tests and subjects are automatically
-                    enabled for this exam.
+                    No syllabus mapping required. Standard topic tests and subjects are
+                    automatically enabled for this exam.
                   </span>
                 </div>
               )}
@@ -1698,8 +1693,9 @@ export const AdminExams: React.FC = () => {
                       Delete &ldquo;{categoryToDelete.name}&rdquo;?
                     </h4>
                     <p className="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5 leading-relaxed">
-                      This category is currently linked to <strong>{categoryToDelete.examCount}</strong> exam(s).
-                      Choose a category to reassign them to:
+                      This category is currently linked to{' '}
+                      <strong>{categoryToDelete.examCount}</strong> exam(s). Choose a category to
+                      reassign them to:
                     </p>
                   </div>
                 </div>
@@ -1854,9 +1850,8 @@ export const AdminExams: React.FC = () => {
                               if (examCount > 0) {
                                 setCategoryToDelete({ name: cat, examCount });
                                 const other =
-                                  categories.find(
-                                    (c) => c.toLowerCase() !== cat.toLowerCase()
-                                  ) || 'General';
+                                  categories.find((c) => c.toLowerCase() !== cat.toLowerCase()) ||
+                                  'General';
                                 setReassignCategoryTarget(other);
                               } else {
                                 handleDeleteCategory(cat);

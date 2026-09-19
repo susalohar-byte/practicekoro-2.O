@@ -93,9 +93,7 @@ export const AdminDashboard: React.FC = () => {
 
       const highFailure = items.filter((q) => q.isHighFailure);
       const timeTraps = items.filter((q) => q.isTimeTrap);
-      const tricky = [...items]
-        .sort((a, b) => b.failureRate - a.failureRate)
-        .slice(0, 4);
+      const tricky = [...items].sort((a, b) => b.failureRate - a.failureRate).slice(0, 4);
 
       setItemAnalysisSummary({
         highFailureCount: highFailure.length,
@@ -550,7 +548,8 @@ export const AdminDashboard: React.FC = () => {
               </Link>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Filter by date presets or specify custom date ranges (e.g. 1st Jan to 15th Jan) to inspect revenue, orders, and student signups.
+              Filter by date presets or specify custom date ranges (e.g. 1st Jan to 15th Jan) to
+              inspect revenue, orders, and student signups.
             </p>
           </div>
 
@@ -595,7 +594,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">From:</label>
+              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                From:
+              </label>
               <input
                 type="date"
                 value={customStartDate}
@@ -605,7 +606,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">To:</label>
+              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                To:
+              </label>
               <input
                 type="date"
                 value={customEndDate}
@@ -633,10 +636,15 @@ export const AdminDashboard: React.FC = () => {
               Period Revenue
             </span>
             <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block tracking-tight">
-              {isLoadingRange ? '...' : `₹${(rangeStats?.totalRevenue ?? 0).toLocaleString('en-IN')}`}
+              {isLoadingRange
+                ? '...'
+                : `₹${(rangeStats?.totalRevenue ?? 0).toLocaleString('en-IN')}`}
             </span>
             <span className="text-[10px] text-slate-500 block mt-0.5">
-              {rangeStats?.label || (rangeStats?.preset ? rangeStats.preset.replace('_', ' ').toUpperCase() : 'Selected period')}
+              {rangeStats?.label ||
+                (rangeStats?.preset
+                  ? rangeStats.preset.replace('_', ' ').toUpperCase()
+                  : 'Selected period')}
             </span>
           </div>
 
@@ -645,9 +653,13 @@ export const AdminDashboard: React.FC = () => {
               Completed Orders
             </span>
             <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
-              {isLoadingRange ? '...' : (rangeStats?.totalTransactions ?? rangeStats?.transactionCount ?? 0)}
+              {isLoadingRange
+                ? '...'
+                : (rangeStats?.totalTransactions ?? rangeStats?.transactionCount ?? 0)}
             </span>
-            <span className="text-[10px] text-slate-500 block mt-0.5">Paid subscription passes</span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">
+              Paid subscription passes
+            </span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800">
@@ -655,7 +667,9 @@ export const AdminDashboard: React.FC = () => {
               Average Order Value
             </span>
             <span className="text-xl font-black text-cyan-600 dark:text-cyan-400 mt-1 block tracking-tight">
-              {isLoadingRange ? '...' : `₹${(rangeStats?.avgOrderValue ?? rangeStats?.averageOrderValue ?? 0).toLocaleString('en-IN')}`}
+              {isLoadingRange
+                ? '...'
+                : `₹${(rangeStats?.avgOrderValue ?? rangeStats?.averageOrderValue ?? 0).toLocaleString('en-IN')}`}
             </span>
             <span className="text-[10px] text-slate-500 block mt-0.5">AOV per transaction</span>
           </div>
@@ -665,7 +679,9 @@ export const AdminDashboard: React.FC = () => {
               New Student Signups
             </span>
             <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1 block tracking-tight">
-              {isLoadingRange ? '...' : `+${rangeStats?.newStudentSignups ?? rangeStats?.newSignupsCount ?? 0}`}
+              {isLoadingRange
+                ? '...'
+                : `+${rangeStats?.newStudentSignups ?? rangeStats?.newSignupsCount ?? 0}`}
             </span>
             <span className="text-[10px] text-slate-500 block mt-0.5">Registered in period</span>
           </div>
@@ -725,16 +741,28 @@ export const AdminDashboard: React.FC = () => {
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-4 flex-wrap">
             <span>
-              Lifetime Gross: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.totalRevenue ?? 0).toLocaleString('en-IN')}</strong>
+              Lifetime Gross:{' '}
+              <strong className="text-slate-800 dark:text-slate-200">
+                ₹{(stats?.totalRevenue ?? 0).toLocaleString('en-IN')}
+              </strong>
             </span>
             <span>
-              Today: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.todayRevenue ?? 0).toLocaleString('en-IN')}</strong>
+              Today:{' '}
+              <strong className="text-slate-800 dark:text-slate-200">
+                ₹{(stats?.todayRevenue ?? 0).toLocaleString('en-IN')}
+              </strong>
             </span>
             <span>
-              This Month: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.monthRevenue ?? 0).toLocaleString('en-IN')}</strong>
+              This Month:{' '}
+              <strong className="text-slate-800 dark:text-slate-200">
+                ₹{(stats?.monthRevenue ?? 0).toLocaleString('en-IN')}
+              </strong>
             </span>
             <span>
-              This Year: <strong className="text-slate-800 dark:text-slate-200">₹{(stats?.yearRevenue ?? 0).toLocaleString('en-IN')}</strong>
+              This Year:{' '}
+              <strong className="text-slate-800 dark:text-slate-200">
+                ₹{(stats?.yearRevenue ?? 0).toLocaleString('en-IN')}
+              </strong>
             </span>
           </div>
 
@@ -966,7 +994,8 @@ export const AdminDashboard: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Detects questions with critical failure rate (≥80% wrong answers), excessive solution time (&gt;90s time traps), and distractor anomalies.
+                Detects questions with critical failure rate (≥80% wrong answers), excessive
+                solution time (&gt;90s time traps), and distractor anomalies.
               </p>
             </div>
           </div>
@@ -1052,9 +1081,7 @@ export const AdminDashboard: React.FC = () => {
                       <span className="px-2 py-0.5 rounded-md font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                         {q.subjectName || 'General'}
                       </span>
-                      {q.chapterName && (
-                        <span className="text-slate-400">/ {q.chapterName}</span>
-                      )}
+                      {q.chapterName && <span className="text-slate-400">/ {q.chapterName}</span>}
                       {q.isHighFailure && (
                         <span className="px-2 py-0.5 rounded-md font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
                           ≥80% Wrong ({q.failureRate.toFixed(1)}%)

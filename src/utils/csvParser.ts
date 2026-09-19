@@ -180,7 +180,14 @@ export function parseQuestionsCsv(
   const colNegativeMarks = getCol(['negative_marks', 'default_negative_marks', 'negativemarking']);
   const colSubjectId = getCol(['subject_id', 'subjectid']);
   const colChapterId = getCol(['chapter_id', 'chapterid']);
-  const colImageUrl = getCol(['image_url', 'image', 'diagram_url', 'diagram', 'imageurl', 'diagramurl']);
+  const colImageUrl = getCol([
+    'image_url',
+    'image',
+    'diagram_url',
+    'diagram',
+    'imageurl',
+    'diagramurl',
+  ]);
 
   const errors: string[] = [];
 

@@ -71,14 +71,49 @@ describe('AdminExamTopics Integration & Navigation', () => {
   ];
 
   const mockSubjects = [
-    { id: 'sub_math', name: 'Mathematics', slug: 'math', iconName: 'Calculator', orderIndex: 1, isActive: true },
-    { id: 'sub_history', name: 'Indian History', slug: 'history', iconName: 'Book', orderIndex: 2, isActive: true },
+    {
+      id: 'sub_math',
+      name: 'Mathematics',
+      slug: 'math',
+      iconName: 'Calculator',
+      orderIndex: 1,
+      isActive: true,
+    },
+    {
+      id: 'sub_history',
+      name: 'Indian History',
+      slug: 'history',
+      iconName: 'Book',
+      orderIndex: 2,
+      isActive: true,
+    },
   ];
 
   const mockChapters = [
-    { id: 'chap_profit_loss', subjectId: 'sub_math', name: 'Profit and Loss', slug: 'profit-loss', orderIndex: 1, isActive: true },
-    { id: 'chap_percentage', subjectId: 'sub_math', name: 'Percentage', slug: 'percentage', orderIndex: 2, isActive: true },
-    { id: 'chap_mughals', subjectId: 'sub_history', name: 'Mughal Empire', slug: 'mughals', orderIndex: 1, isActive: true },
+    {
+      id: 'chap_profit_loss',
+      subjectId: 'sub_math',
+      name: 'Profit and Loss',
+      slug: 'profit-loss',
+      orderIndex: 1,
+      isActive: true,
+    },
+    {
+      id: 'chap_percentage',
+      subjectId: 'sub_math',
+      name: 'Percentage',
+      slug: 'percentage',
+      orderIndex: 2,
+      isActive: true,
+    },
+    {
+      id: 'chap_mughals',
+      subjectId: 'sub_history',
+      name: 'Mughal Empire',
+      slug: 'mughals',
+      orderIndex: 1,
+      isActive: true,
+    },
   ];
 
   beforeEach(() => {
@@ -122,7 +157,10 @@ describe('AdminExamTopics Integration & Navigation', () => {
     await waitFor(() => {
       const topicScopeLinks = screen.getAllByRole('link', { name: /Topic Scope/i });
       expect(topicScopeLinks.length).toBeGreaterThan(0);
-      expect(topicScopeLinks[0]).toHaveAttribute('href', '/admin/exam-topics?examId=exam_wb_police');
+      expect(topicScopeLinks[0]).toHaveAttribute(
+        'href',
+        '/admin/exam-topics?examId=exam_wb_police'
+      );
     });
   });
 

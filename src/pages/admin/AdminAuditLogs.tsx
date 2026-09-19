@@ -62,9 +62,13 @@ export const AdminAuditLogs: React.FC = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const deletions = logs.filter((l) => l.action.includes('DELETE') || l.action.includes('REVOKE')).length;
+    const deletions = logs.filter(
+      (l) => l.action.includes('DELETE') || l.action.includes('REVOKE')
+    ).length;
     const subscriptions = logs.filter((l) => l.entityType === 'subscription').length;
-    const contentEdits = logs.filter((l) => l.entityType === 'question' || l.entityType === 'test').length;
+    const contentEdits = logs.filter(
+      (l) => l.entityType === 'question' || l.entityType === 'test'
+    ).length;
     return {
       total: totalCount || logs.length,
       deletions,
@@ -84,8 +88,10 @@ export const AdminAuditLogs: React.FC = () => {
   };
 
   const getActionBadge = (action: string) => {
-    const isDelete = action.includes('DELETE') || action.includes('REVOKE') || action.includes('CANCEL');
-    const isCreate = action.includes('CREATE') || action.includes('IMPORT') || action.includes('ASSIGN');
+    const isDelete =
+      action.includes('DELETE') || action.includes('REVOKE') || action.includes('CANCEL');
+    const isCreate =
+      action.includes('CREATE') || action.includes('IMPORT') || action.includes('ASSIGN');
     const isUpdate = action.includes('UPDATE') || action.includes('EDIT');
     const isGrant = action.includes('GRANT');
 
@@ -192,7 +198,8 @@ export const AdminAuditLogs: React.FC = () => {
                 Admin Audit Trail (অ্যাক্টিভিটি হিস্ট্রি)
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Tamper-evident audit log tracking all test deletions, question updates, manual grants, and settings.
+                Tamper-evident audit log tracking all test deletions, question updates, manual
+                grants, and settings.
               </p>
             </div>
           </div>
@@ -236,7 +243,9 @@ export const AdminAuditLogs: React.FC = () => {
             </span>
             <Trash2 className="w-4 h-4 text-rose-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stats.deletions}</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+            {stats.deletions}
+          </p>
           <p className="text-[11px] text-slate-400 mt-1">Deletions & cancellations</p>
         </div>
 
@@ -247,7 +256,9 @@ export const AdminAuditLogs: React.FC = () => {
             </span>
             <CreditCard className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stats.subscriptions}</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+            {stats.subscriptions}
+          </p>
           <p className="text-[11px] text-slate-400 mt-1">Manual Pro grants & extensions</p>
         </div>
 
@@ -258,7 +269,9 @@ export const AdminAuditLogs: React.FC = () => {
             </span>
             <Edit3 className="w-4 h-4 text-sky-500" />
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stats.contentEdits}</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+            {stats.contentEdits}
+          </p>
           <p className="text-[11px] text-slate-400 mt-1">Question & test modifications</p>
         </div>
       </div>
@@ -293,7 +306,9 @@ export const AdminAuditLogs: React.FC = () => {
               <option value="QUESTION_UPDATE">QUESTION_UPDATE (প্রশ্ন এডিট)</option>
               <option value="QUESTION_DELETE">QUESTION_DELETE (প্রশ্ন মোছা)</option>
               <option value="QUESTION_BULK_IMPORT">QUESTION_BULK_IMPORT (বাল্ক আপলোড)</option>
-              <option value="SUBSCRIPTION_MANUAL_GRANT">SUBSCRIPTION_MANUAL_GRANT (ম্যানুয়াল প্রো)</option>
+              <option value="SUBSCRIPTION_MANUAL_GRANT">
+                SUBSCRIPTION_MANUAL_GRANT (ম্যানুয়াল প্রো)
+              </option>
               <option value="SUBSCRIPTION_CANCEL">SUBSCRIPTION_CANCEL (সাবস্ক্রিপশন বাতিল)</option>
               <option value="COUPON_CREATE">COUPON_CREATE (কুপন তৈরি)</option>
               <option value="COUPON_DELETE">COUPON_DELETE (কুপন মোছা)</option>
@@ -345,8 +360,12 @@ export const AdminAuditLogs: React.FC = () => {
         ) : logs.length === 0 ? (
           <div className="p-12 text-center">
             <History className="w-10 h-10 text-slate-400 mx-auto mb-3 opacity-40" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No audit records found</p>
-            <p className="text-xs text-slate-500 mt-1">Try resetting search filters or performing an admin action.</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              No audit records found
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Try resetting search filters or performing an admin action.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -395,21 +414,24 @@ export const AdminAuditLogs: React.FC = () => {
                             </span>
                             {getRoleBadge(log.adminRole)}
                           </div>
-                          <p className="text-[11px] text-slate-400 font-mono truncate">{log.adminEmail}</p>
+                          <p className="text-[11px] text-slate-400 font-mono truncate">
+                            {log.adminEmail}
+                          </p>
                         </div>
                       </div>
                     </td>
 
                     {/* Action Badge */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {getActionBadge(log.action)}
-                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">{getActionBadge(log.action)}</td>
 
                     {/* Target Entity */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-1.5">
                         {getEntityIcon(log.entityType)}
-                        <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[200px]" title={log.entityName || log.entityId}>
+                        <span
+                          className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[200px]"
+                          title={log.entityName || log.entityId}
+                        >
                           {log.entityName || log.entityId || log.entityType}
                         </span>
                       </div>
@@ -423,7 +445,9 @@ export const AdminAuditLogs: React.FC = () => {
                       {log.details && Object.keys(log.details).length > 0
                         ? Object.entries(log.details)
                             .slice(0, 2)
-                            .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+                            .map(
+                              ([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`
+                            )
                             .join('; ')
                         : '—'}
                     </td>
@@ -479,7 +503,9 @@ export const AdminAuditLogs: React.FC = () => {
                   <span className="font-semibold text-slate-900 dark:text-white">
                     {selectedLog.adminName} ({selectedLog.adminRole})
                   </span>
-                  <span className="block text-[11px] text-slate-500 font-mono">{selectedLog.adminEmail}</span>
+                  <span className="block text-[11px] text-slate-500 font-mono">
+                    {selectedLog.adminEmail}
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-400 block mb-0.5">Action Executed</span>
@@ -497,7 +523,9 @@ export const AdminAuditLogs: React.FC = () => {
                 <div>
                   <span className="text-slate-400 block mb-0.5">Timestamp (IST)</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300">
-                    {new Date(selectedLog.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                    {new Date(selectedLog.createdAt).toLocaleString('en-IN', {
+                      timeZone: 'Asia/Kolkata',
+                    })}
                   </span>
                 </div>
               </div>
@@ -512,7 +540,11 @@ export const AdminAuditLogs: React.FC = () => {
                     onClick={() => handleCopyDetails(selectedLog.details)}
                     className="flex items-center gap-1 text-[11px] text-pk-primary hover:underline font-semibold cursor-pointer"
                   >
-                    {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    {copied ? (
+                      <Check className="w-3 h-3 text-emerald-500" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                     <span>{copied ? 'Copied!' : 'Copy JSON'}</span>
                   </button>
                 </div>

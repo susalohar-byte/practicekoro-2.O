@@ -39,7 +39,12 @@ describe('AdminSettings & Maintenance Mode System', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({
-      user: { id: 'usr-admin-1', fullName: 'Super Admin', email: 'admin@practicekoro.online', role: 'admin' },
+      user: {
+        id: 'usr-admin-1',
+        fullName: 'Super Admin',
+        email: 'admin@practicekoro.online',
+        role: 'admin',
+      },
       isAdmin: true,
       isStudent: false,
       loading: false,
@@ -147,7 +152,12 @@ describe('AdminSettings & Maintenance Mode System', () => {
     it('blocks student candidate and shows MaintenanceScreen when maintenance mode is active', async () => {
       // Configure non-admin student
       mockUseAuth.mockReturnValue({
-        user: { id: 'usr-student-1', fullName: 'Candidate Student', email: 'student@test.com', role: 'student' },
+        user: {
+          id: 'usr-student-1',
+          fullName: 'Candidate Student',
+          email: 'student@test.com',
+          role: 'student',
+        },
         isAdmin: false,
         isStudent: true,
         loading: false,
@@ -174,7 +184,12 @@ describe('AdminSettings & Maintenance Mode System', () => {
     it('allows admin to bypass maintenance screen and access layout', async () => {
       // Configure admin user
       mockUseAuth.mockReturnValue({
-        user: { id: 'usr-admin-1', fullName: 'Super Admin', email: 'admin@practicekoro.online', role: 'admin' },
+        user: {
+          id: 'usr-admin-1',
+          fullName: 'Super Admin',
+          email: 'admin@practicekoro.online',
+          role: 'admin',
+        },
         isAdmin: true,
         isStudent: false,
         loading: false,

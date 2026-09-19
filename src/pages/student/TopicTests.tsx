@@ -222,9 +222,7 @@ export const TopicTests: React.FC = () => {
                         Topic {index + 1}
                       </span>
                     </div>
-                    <h4 className="mt-3 text-sm font-bold leading-5 text-pk-navy">
-                      {topic.name}
-                    </h4>
+                    <h4 className="mt-3 text-sm font-bold leading-5 text-pk-navy">{topic.name}</h4>
                     {topic.description && (
                       <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
                         {topic.description}

@@ -41,10 +41,7 @@ import {
   SAMPLE_TXT_CONTENT,
   downloadSampleTxt,
 } from '@/utils/txtQuestionParser';
-import {
-  downloadSampleCsvFile,
-  parseQuestionsCsv,
-} from '@/utils/csvParser';
+import { downloadSampleCsvFile, parseQuestionsCsv } from '@/utils/csvParser';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 import { getErrorMessage } from '@/lib/errors';
@@ -348,7 +345,6 @@ export const AdminQuestionBank: React.FC = () => {
     };
   }, [allBankQuestions]);
 
-
   // Reset page on filter changes
   useEffect(() => {
     setCurrentPage(1);
@@ -530,7 +526,9 @@ export const AdminQuestionBank: React.FC = () => {
     );
     const defaultExamTest = filterExamTestId || effectiveTests[0]?.id || '';
 
-    setSingleSource(selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic');
+    setSingleSource(
+      selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic'
+    );
     setSingleSubjectId(defaultSub);
     setSingleTopicId(defaultTopic);
     setSingleTopicTestId(defaultTopicTest);
@@ -710,7 +708,9 @@ export const AdminQuestionBank: React.FC = () => {
     );
     const defaultExamTest = filterExamTestId || effectiveTests[0]?.id || '';
 
-    setBulkSource(selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic');
+    setBulkSource(
+      selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic'
+    );
     setBulkSubjectId(defaultSub);
     setBulkTopicId(defaultTopic);
     setBulkTopicTestId(defaultTopicTest);
@@ -1087,7 +1087,10 @@ export const AdminQuestionBank: React.FC = () => {
       q.defaultMarks,
       q.defaultNegativeMarks,
       q.subjectName || subjects.find((s) => s.id === q.subjectId)?.name || '',
-      q.topicName || q.chapterName || chapters.find((c) => c.id === (q.topicId || q.chapterId))?.name || '',
+      q.topicName ||
+        q.chapterName ||
+        chapters.find((c) => c.id === (q.topicId || q.chapterId))?.name ||
+        '',
       q.sourceType || 'topic',
     ]);
 
@@ -1199,9 +1202,7 @@ export const AdminQuestionBank: React.FC = () => {
             <span className="text-xs font-semibold text-slate-400">questions</span>
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">
-              Whole repository
-            </span>
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Whole repository</span>
             {selectedCategory === 'all' && (
               <span className="text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">
                 Active
@@ -1392,14 +1393,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <BookOpen className="w-4 h-4 text-pk-primary shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">All Questions</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Whole bank</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Whole bank
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'all'
-                  ? 'bg-pk-primary text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'all'
+                    ? 'bg-pk-primary text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.total}
               </span>
             </button>
@@ -1417,14 +1422,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">Topic Tests</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Subject & Chapter</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Subject & Chapter
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'topic'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'topic'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.topic}
               </span>
             </button>
@@ -1442,14 +1451,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">Full Mock Tests</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Full syllabus mocks</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Full syllabus mocks
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'full_mock'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'full_mock'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.fullMock}
               </span>
             </button>
@@ -1467,14 +1480,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">PYQ Papers</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Previous year papers</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Previous year papers
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'pyq'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'pyq'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.pyq}
               </span>
             </button>
@@ -1787,13 +1804,15 @@ export const AdminQuestionBank: React.FC = () => {
             )}
 
             {selectedCategory !== 'all' && (
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium text-[11px] border ${
-                selectedCategory === 'topic'
-                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60'
-                  : selectedCategory === 'full_mock'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                    : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
-              }`}>
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium text-[11px] border ${
+                  selectedCategory === 'topic'
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60'
+                    : selectedCategory === 'full_mock'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
+                }`}
+              >
                 <span>
                   Category:{' '}
                   {selectedCategory === 'topic'
@@ -2842,7 +2861,9 @@ export const AdminQuestionBank: React.FC = () => {
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     Question Diagram / Image (Optional)
                   </label>
-                  <span className="text-[10px] text-slate-400">For Reasoning Venn, Geometry, Maps</span>
+                  <span className="text-[10px] text-slate-400">
+                    For Reasoning Venn, Geometry, Maps
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -2882,7 +2903,9 @@ export const AdminQuestionBank: React.FC = () => {
                       className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
                     />
                     <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
-                      <span className="font-bold text-slate-900 dark:text-white block">Diagram Attached</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Diagram Attached
+                      </span>
                       <span className="truncate block text-slate-400">{singleImageUrl}</span>
                     </div>
                   </div>
@@ -3296,7 +3319,9 @@ export const AdminQuestionBank: React.FC = () => {
                 {/* Upload & Sample buttons */}
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {bulkFormat === 'csv' ? 'Upload Excel/CSV File (UTF-8)' : 'Upload TXT File (UTF-8)'}
+                    {bulkFormat === 'csv'
+                      ? 'Upload Excel/CSV File (UTF-8)'
+                      : 'Upload TXT File (UTF-8)'}
                   </span>
                   <div className="flex items-center gap-2">
                     {bulkFormat === 'txt' ? (
@@ -3353,7 +3378,11 @@ export const AdminQuestionBank: React.FC = () => {
                     </span>
                     <input
                       type="file"
-                      accept={bulkFormat === 'csv' ? '.csv,text/csv,application/vnd.ms-excel' : '.txt,text/plain'}
+                      accept={
+                        bulkFormat === 'csv'
+                          ? '.csv,text/csv,application/vnd.ms-excel'
+                          : '.txt,text/plain'
+                      }
                       onChange={handleTxtFileUpload}
                       className="hidden"
                     />
@@ -3363,7 +3392,9 @@ export const AdminQuestionBank: React.FC = () => {
                 {/* Paste Area */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {bulkFormat === 'csv' ? 'Or Paste CSV Content Directly:' : 'Or Paste TXT Content Directly:'}
+                    {bulkFormat === 'csv'
+                      ? 'Or Paste CSV Content Directly:'
+                      : 'Or Paste TXT Content Directly:'}
                   </label>
                   <textarea
                     rows={6}
@@ -3393,7 +3424,9 @@ export const AdminQuestionBank: React.FC = () => {
                     onClick={handleParseTxt}
                     className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
                   >
-                    {bulkFormat === 'csv' ? 'Parse CSV & Preview Questions' : 'Parse TXT & Preview Questions'}
+                    {bulkFormat === 'csv'
+                      ? 'Parse CSV & Preview Questions'
+                      : 'Parse TXT & Preview Questions'}
                   </Button>
                 </div>
               </div>
@@ -3767,7 +3800,9 @@ export const AdminQuestionBank: React.FC = () => {
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     Question Diagram / Image (Optional)
                   </label>
-                  <span className="text-[10px] text-slate-400">For Reasoning Venn, Geometry, Maps</span>
+                  <span className="text-[10px] text-slate-400">
+                    For Reasoning Venn, Geometry, Maps
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -3807,7 +3842,9 @@ export const AdminQuestionBank: React.FC = () => {
                       className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
                     />
                     <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
-                      <span className="font-bold text-slate-900 dark:text-white block">Diagram Attached</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Diagram Attached
+                      </span>
                       <span className="truncate block text-slate-400">{editQImageUrl}</span>
                     </div>
                   </div>

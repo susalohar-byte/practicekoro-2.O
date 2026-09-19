@@ -46,17 +46,24 @@ export const AdminSettings: React.FC = () => {
       data.forEach((s) => {
         const val = typeof s.value === 'string' ? s.value.replace(/^"|"$/g, '') : s.value;
         if (s.key === 'app_name' || s.id === 'general_app_name') setAppName(String(val));
-        if (s.key === 'support_email' || s.id === 'general_support_email') setSupportEmail(String(val));
-        if (s.key === 'support_phone' || s.id === 'general_support_phone') setSupportPhone(String(val));
+        if (s.key === 'support_email' || s.id === 'general_support_email')
+          setSupportEmail(String(val));
+        if (s.key === 'support_phone' || s.id === 'general_support_phone')
+          setSupportPhone(String(val));
         if (s.key === 'website_url' || s.id === 'general_website_url') setWebsiteUrl(String(val));
 
-        if (s.key === 'default_duration_minutes' || s.id === 'exam_default_duration') setDefaultDuration(Number(val));
-        if (s.key === 'default_marks_per_q' || s.id === 'exam_default_marks') setDefaultMarks(Number(val));
-        if (s.key === 'default_negative_marks' || s.id === 'exam_default_negative_marks') setDefaultNegativeMarks(Number(val));
-        if (s.key === 'default_passing_percentage' || s.id === 'exam_passing_percentage') setDefaultPassingPercent(Number(val));
+        if (s.key === 'default_duration_minutes' || s.id === 'exam_default_duration')
+          setDefaultDuration(Number(val));
+        if (s.key === 'default_marks_per_q' || s.id === 'exam_default_marks')
+          setDefaultMarks(Number(val));
+        if (s.key === 'default_negative_marks' || s.id === 'exam_default_negative_marks')
+          setDefaultNegativeMarks(Number(val));
+        if (s.key === 'default_passing_percentage' || s.id === 'exam_passing_percentage')
+          setDefaultPassingPercent(Number(val));
 
         if (s.key === 'currency' || s.id === 'sub_currency') setCurrency(String(val));
-        if (s.key === 'expiry_warning_days' || s.id === 'sub_expiry_warning_days') setExpiryWarningDays(Number(val));
+        if (s.key === 'expiry_warning_days' || s.id === 'sub_expiry_warning_days')
+          setExpiryWarningDays(Number(val));
         if (s.key === 'maintenance_mode' || s.id === 'sys_maintenance_mode') {
           setMaintenanceMode(val === true || val === 'true');
         }
@@ -356,7 +363,9 @@ export const AdminSettings: React.FC = () => {
           >
             <div className="mb-3 sm:mb-0">
               <div className="flex items-center gap-2">
-                <p className="text-xs font-bold text-white">Maintenance Mode (প্ল্যাটফর্ম রক্ষণাবেক্ষণ)</p>
+                <p className="text-xs font-bold text-white">
+                  Maintenance Mode (প্ল্যাটফর্ম রক্ষণাবেক্ষণ)
+                </p>
                 {maintenanceMode ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />

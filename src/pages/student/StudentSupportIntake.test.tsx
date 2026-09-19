@@ -77,15 +77,11 @@ describe('Student Support Intake Integration', () => {
     );
 
     // Verify presence of Help & Support Desk actions
-    expect(
-      screen.getByText('Support & Help Desk')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Support & Help Desk')).toBeInTheDocument();
     expect(
       screen.getByText('সাহায্য ও সাপোর্ট: Raise tickets & report issues')
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/সাপোর্ট ও অভিযোগ ডেস্ক/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/সাপোর্ট ও অভিযোগ ডেস্ক/i)).toBeInTheDocument();
 
     // Click "টিকেট তৈরি করুন"
     const createBtn = screen.getByRole('button', { name: /টিকেট তৈরি করুন/i });

@@ -21,7 +21,8 @@ import type { QuestionItemAnalysis, ItemAnalysisFilterOptions, Subject, Chapter 
 
 export const AdminItemAnalysis: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialFilterType = (searchParams.get('filter') as ItemAnalysisFilterOptions['filterType']) || 'all';
+  const initialFilterType =
+    (searchParams.get('filter') as ItemAnalysisFilterOptions['filterType']) || 'all';
 
   const [items, setItems] = useState<QuestionItemAnalysis[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -30,9 +31,14 @@ export const AdminItemAnalysis: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Filter States
-  const [filterType, setFilterType] = useState<ItemAnalysisFilterOptions['filterType']>(initialFilterType);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>(searchParams.get('subjectId') || '');
-  const [selectedChapterId, setSelectedChapterId] = useState<string>(searchParams.get('chapterId') || '');
+  const [filterType, setFilterType] =
+    useState<ItemAnalysisFilterOptions['filterType']>(initialFilterType);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>(
+    searchParams.get('subjectId') || ''
+  );
+  const [selectedChapterId, setSelectedChapterId] = useState<string>(
+    searchParams.get('chapterId') || ''
+  );
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
@@ -201,7 +207,8 @@ export const AdminItemAnalysis: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            প্রশ্নভিত্তিক অ্যাকুরেসি, ভুল উত্তরের অনুপাত (≥৮০% failure rate), এবং সমাধানের অস্বাভাবিক সময় (Time Traps) বিশ্লেষণ।
+            প্রশ্নভিত্তিক অ্যাকুরেসি, ভুল উত্তরের অনুপাত (≥৮০% failure rate), এবং সমাধানের
+            অস্বাভাবিক সময় (Time Traps) বিশ্লেষণ।
           </p>
         </div>
 
@@ -212,7 +219,9 @@ export const AdminItemAnalysis: React.FC = () => {
             disabled={isRefreshing}
             className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`} />
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`}
+            />
             Refresh
           </button>
           <button
@@ -316,7 +325,9 @@ export const AdminItemAnalysis: React.FC = () => {
           <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-2 tracking-tight">
             {avgPlatformAccuracy}%
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Average correctness across question attempts</p>
+          <p className="text-[11px] text-slate-400 mt-1">
+            Average correctness across question attempts
+          </p>
         </div>
       </div>
 
@@ -462,7 +473,8 @@ export const AdminItemAnalysis: React.FC = () => {
             No questions matched the current filter
           </h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Try resetting the filter preset or clearing your search criteria to view all analyzed questions.
+            Try resetting the filter preset or clearing your search criteria to view all analyzed
+            questions.
           </p>
           <button
             type="button"
@@ -489,8 +501,8 @@ export const AdminItemAnalysis: React.FC = () => {
                   item.isHighFailure
                     ? 'border-rose-200 dark:border-rose-900/60 hover:border-rose-300 dark:hover:border-rose-700'
                     : item.isTimeTrap
-                    ? 'border-amber-200 dark:border-amber-900/60 hover:border-amber-300 dark:hover:border-amber-700'
-                    : 'border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                      ? 'border-amber-200 dark:border-amber-900/60 hover:border-amber-300 dark:hover:border-amber-700'
+                      : 'border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
@@ -518,8 +530,8 @@ export const AdminItemAnalysis: React.FC = () => {
                       )}
                       {item.isTimeTrap && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          ⏳ {item.avgTimeSpentSeconds}s Avg (Time Trap)
+                          <Clock className="w-3 h-3" />⏳ {item.avgTimeSpentSeconds}s Avg (Time
+                          Trap)
                         </span>
                       )}
                       {item.isMisclassified && (
@@ -549,7 +561,12 @@ export const AdminItemAnalysis: React.FC = () => {
                     <div className="pt-2">
                       <div className="flex items-center justify-between text-[11px] mb-1.5 font-semibold text-slate-500 dark:text-slate-400">
                         <span>Candidate Choice Distribution:</span>
-                        <span>Correct Option: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{item.correctOption}</strong></span>
+                        <span>
+                          Correct Option:{' '}
+                          <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                            {item.correctOption}
+                          </strong>
+                        </span>
                       </div>
                       <div className="h-3 rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                         <div
@@ -582,16 +599,24 @@ export const AdminItemAnalysis: React.FC = () => {
                         />
                       </div>
                       <div className="grid grid-cols-4 gap-1 pt-1.5 text-[10px] text-slate-500 font-medium">
-                        <span className={item.correctOption === 'A' ? 'text-emerald-600 font-bold' : ''}>
+                        <span
+                          className={item.correctOption === 'A' ? 'text-emerald-600 font-bold' : ''}
+                        >
                           A: {item.optionDistribution.A}% {item.correctOption === 'A' ? '✓' : ''}
                         </span>
-                        <span className={item.correctOption === 'B' ? 'text-emerald-600 font-bold' : ''}>
+                        <span
+                          className={item.correctOption === 'B' ? 'text-emerald-600 font-bold' : ''}
+                        >
                           B: {item.optionDistribution.B}% {item.correctOption === 'B' ? '✓' : ''}
                         </span>
-                        <span className={item.correctOption === 'C' ? 'text-emerald-600 font-bold' : ''}>
+                        <span
+                          className={item.correctOption === 'C' ? 'text-emerald-600 font-bold' : ''}
+                        >
                           C: {item.optionDistribution.C}% {item.correctOption === 'C' ? '✓' : ''}
                         </span>
-                        <span className={item.correctOption === 'D' ? 'text-emerald-600 font-bold' : ''}>
+                        <span
+                          className={item.correctOption === 'D' ? 'text-emerald-600 font-bold' : ''}
+                        >
                           D: {item.optionDistribution.D}% {item.correctOption === 'D' ? '✓' : ''}
                         </span>
                       </div>
@@ -611,8 +636,8 @@ export const AdminItemAnalysis: React.FC = () => {
                             item.accuracyRate < 20
                               ? 'text-rose-600 dark:text-rose-400'
                               : item.accuracyRate < 50
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-emerald-600 dark:text-emerald-400'
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : 'text-emerald-600 dark:text-emerald-400'
                           }`}
                         >
                           {item.accuracyRate}%
@@ -644,13 +669,15 @@ export const AdminItemAnalysis: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() =>
-                          setExpandedQuestionId(isExpanded ? null : item.questionId)
-                        }
+                        onClick={() => setExpandedQuestionId(isExpanded ? null : item.questionId)}
                         className="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
                       >
                         <span>{isExpanded ? 'Hide' : 'Inspect'}</span>
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        {isExpanded ? (
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
                       </button>
 
                       <Link
@@ -677,7 +704,9 @@ export const AdminItemAnalysis: React.FC = () => {
                         }`}
                       >
                         <span className="font-bold mr-1.5">A.</span> {item.options.A}{' '}
-                        {item.correctOption === 'A' && <span className="ml-1 text-emerald-600">✓ (Correct)</span>}
+                        {item.correctOption === 'A' && (
+                          <span className="ml-1 text-emerald-600">✓ (Correct)</span>
+                        )}
                       </div>
 
                       <div
@@ -688,7 +717,9 @@ export const AdminItemAnalysis: React.FC = () => {
                         }`}
                       >
                         <span className="font-bold mr-1.5">B.</span> {item.options.B}{' '}
-                        {item.correctOption === 'B' && <span className="ml-1 text-emerald-600">✓ (Correct)</span>}
+                        {item.correctOption === 'B' && (
+                          <span className="ml-1 text-emerald-600">✓ (Correct)</span>
+                        )}
                       </div>
 
                       <div
@@ -699,7 +730,9 @@ export const AdminItemAnalysis: React.FC = () => {
                         }`}
                       >
                         <span className="font-bold mr-1.5">C.</span> {item.options.C}{' '}
-                        {item.correctOption === 'C' && <span className="ml-1 text-emerald-600">✓ (Correct)</span>}
+                        {item.correctOption === 'C' && (
+                          <span className="ml-1 text-emerald-600">✓ (Correct)</span>
+                        )}
                       </div>
 
                       <div
@@ -710,13 +743,17 @@ export const AdminItemAnalysis: React.FC = () => {
                         }`}
                       >
                         <span className="font-bold mr-1.5">D.</span> {item.options.D}{' '}
-                        {item.correctOption === 'D' && <span className="ml-1 text-emerald-600">✓ (Correct)</span>}
+                        {item.correctOption === 'D' && (
+                          <span className="ml-1 text-emerald-600">✓ (Correct)</span>
+                        )}
                       </div>
                     </div>
 
                     {item.explanation && (
                       <div className="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-xs text-indigo-950 dark:text-indigo-200">
-                        <span className="font-bold block mb-1">ব্যাখ্যা ও সমাধান বিশ্লেষণ (Psychometric Note):</span>
+                        <span className="font-bold block mb-1">
+                          ব্যাখ্যা ও সমাধান বিশ্লেষণ (Psychometric Note):
+                        </span>
                         <p className="leading-relaxed whitespace-pre-line">{item.explanation}</p>
                       </div>
                     )}

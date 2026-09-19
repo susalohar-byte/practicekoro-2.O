@@ -511,9 +511,7 @@ export const AdminTestQuestions: React.FC = () => {
     assignedQuestions.forEach((q) => {
       const sId = q.subjectId || 'general';
       const sName =
-        q.subjectName ||
-        subjects.find((s) => s.id === q.subjectId)?.name ||
-        'General Section';
+        q.subjectName || subjects.find((s) => s.id === q.subjectId)?.name || 'General Section';
       if (!map.has(sId)) {
         map.set(sId, { id: sId, name: sName, count: 1 });
       } else {
@@ -1188,7 +1186,8 @@ export const AdminTestQuestions: React.FC = () => {
             </button>
           </div>
           <p className="text-[11px] text-slate-600 dark:text-slate-400">
-            Select a subject/section to assign customized positive and negative marks to all its questions at once.
+            Select a subject/section to assign customized positive and negative marks to all its
+            questions at once.
           </p>
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div>

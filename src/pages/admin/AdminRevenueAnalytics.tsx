@@ -13,11 +13,7 @@ import {
   AlertCircle,
   ArrowUpRight,
 } from 'lucide-react';
-import type {
-  DateRangePreset,
-  DateRangeRevenueStats,
-  AdminPaymentRow,
-} from '@/types';
+import type { DateRangePreset, DateRangeRevenueStats, AdminPaymentRow } from '@/types';
 import { cn } from '@/lib/utils';
 
 export const AdminRevenueAnalytics: React.FC = () => {
@@ -36,7 +32,9 @@ export const AdminRevenueAnalytics: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [transactionSearch, setTransactionSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>(
+    'all'
+  );
 
   const loadAnalytics = useCallback(
     async (selectedPreset: DateRangePreset, start?: string, end?: string) => {
@@ -64,7 +62,9 @@ export const AdminRevenueAnalytics: React.FC = () => {
   );
 
   useEffect(() => {
-    loadAnalytics(preset, customStartDate, customEndDate);
+    if (preset !== 'custom') {
+      loadAnalytics(preset);
+    }
   }, [loadAnalytics, preset]);
 
   const handleApplyCustomRange = (e: React.FormEvent) => {
@@ -144,7 +144,10 @@ export const AdminRevenueAnalytics: React.FC = () => {
       }),
     ]);
 
-    const csvRows = [headers.map(escapeCell).join(','), ...rows.map((r) => r.map(escapeCell).join(','))];
+    const csvRows = [
+      headers.map(escapeCell).join(','),
+      ...rows.map((r) => r.map(escapeCell).join(',')),
+    ];
     const csvContent = '\uFEFF' + csvRows.join('\r\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -188,7 +191,8 @@ export const AdminRevenueAnalytics: React.FC = () => {
                 </span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                আর্থিক ও রাজস্ব বিশ্লেষণ — Subscription earnings, transactions volume, and student acquisition trends.
+                আর্থিক ও রাজস্ব বিশ্লেষণ — Subscription earnings, transactions volume, and student
+                acquisition trends.
               </p>
             </div>
           </div>
@@ -223,7 +227,9 @@ export const AdminRevenueAnalytics: React.FC = () => {
           </div>
           {rangeStats && (
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Active Window: <strong className="text-slate-800 dark:text-slate-200">{rangeStats.startDate}</strong> to{' '}
+              Active Window:{' '}
+              <strong className="text-slate-800 dark:text-slate-200">{rangeStats.startDate}</strong>{' '}
+              to{' '}
               <strong className="text-slate-800 dark:text-slate-200">{rangeStats.endDate}</strong>
             </span>
           )}
@@ -303,7 +309,9 @@ export const AdminRevenueAnalytics: React.FC = () => {
           </p>
           <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-500 dark:text-slate-400">
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-              {rangeStats?.preset ? rangeStats.preset.replace('_', ' ').toUpperCase() : 'SELECTED PERIOD'}
+              {rangeStats?.preset
+                ? rangeStats.preset.replace('_', ' ').toUpperCase()
+                : 'SELECTED PERIOD'}
             </span>
             <span>earnings</span>
           </div>
@@ -320,10 +328,15 @@ export const AdminRevenueAnalytics: React.FC = () => {
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2 tracking-tight">
-            {isLoading ? '...' : (rangeStats?.totalTransactions ?? rangeStats?.transactionCount ?? 0)}
+            {isLoading
+              ? '...'
+              : (rangeStats?.totalTransactions ?? rangeStats?.transactionCount ?? 0)}
           </p>
           <p className="text-[11px] text-slate-400 mt-2">
-            Average order value: <strong className="text-slate-700 dark:text-slate-300">₹{(rangeStats?.avgOrderValue ?? 0).toLocaleString('en-IN')}</strong>
+            Average order value:{' '}
+            <strong className="text-slate-700 dark:text-slate-300">
+              ₹{(rangeStats?.avgOrderValue ?? 0).toLocaleString('en-IN')}
+            </strong>
           </p>
         </div>
 
@@ -340,9 +353,7 @@ export const AdminRevenueAnalytics: React.FC = () => {
           <p className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 mt-2 tracking-tight">
             {isLoading ? '...' : `₹${(rangeStats?.avgOrderValue ?? 0).toLocaleString('en-IN')}`}
           </p>
-          <p className="text-[11px] text-slate-400 mt-2">
-            Per paying aspirant in this timeframe
-          </p>
+          <p className="text-[11px] text-slate-400 mt-2">Per paying aspirant in this timeframe</p>
         </div>
 
         {/* Card 4: New Registrations in Period */}
@@ -356,11 +367,11 @@ export const AdminRevenueAnalytics: React.FC = () => {
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-2 tracking-tight">
-            {isLoading ? '...' : `+${rangeStats?.newStudentSignups ?? rangeStats?.newSignupsCount ?? 0}`}
+            {isLoading
+              ? '...'
+              : `+${rangeStats?.newStudentSignups ?? rangeStats?.newSignupsCount ?? 0}`}
           </p>
-          <p className="text-[11px] text-slate-400 mt-2">
-            Aspirants registered in this window
-          </p>
+          <p className="text-[11px] text-slate-400 mt-2">Aspirants registered in this window</p>
         </div>
       </div>
 
@@ -429,7 +440,8 @@ export const AdminRevenueAnalytics: React.FC = () => {
               <span>Transactions in Selected Period ({filteredPayments.length})</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Verified order payments processed within {rangeStats?.startDate} to {rangeStats?.endDate}.
+              Verified order payments processed within {rangeStats?.startDate} to{' '}
+              {rangeStats?.endDate}.
             </p>
           </div>
 
@@ -476,7 +488,10 @@ export const AdminRevenueAnalytics: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {filteredPayments.length > 0 ? (
                 filteredPayments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
+                  <tr
+                    key={payment.id}
+                    className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
+                  >
                     <td className="px-5 py-3.5">
                       <div className="font-bold text-slate-900 dark:text-white">
                         {payment.studentName || 'Student'}
@@ -510,8 +525,8 @@ export const AdminRevenueAnalytics: React.FC = () => {
                           payment.status === 'completed'
                             ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                             : payment.status === 'failed'
-                            ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
-                            : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                              ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                              : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                         )}
                       >
                         {payment.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
@@ -520,7 +535,9 @@ export const AdminRevenueAnalytics: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-right font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                      {new Date(payment.createdAt || payment.created_at || Date.now()).toLocaleString('en-IN', {
+                      {new Date(
+                        payment.createdAt || payment.created_at || Date.now()
+                      ).toLocaleString('en-IN', {
                         timeZone: 'Asia/Kolkata',
                         month: 'short',
                         day: 'numeric',

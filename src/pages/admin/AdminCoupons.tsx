@@ -28,7 +28,9 @@ export const AdminCoupons: React.FC = () => {
   const [coupons, setCoupons] = useState<CouponItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>(
+    'all'
+  );
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Modal State (Create / Edit)
@@ -836,9 +838,7 @@ export const AdminCoupons: React.FC = () => {
               {/* Target Plan & Expiry Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    Target Plan
-                  </label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Target Plan</label>
                   <select
                     value={applicablePlanId}
                     onChange={(e) => setApplicablePlanId(e.target.value)}
@@ -850,9 +850,7 @@ export const AdminCoupons: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    Expiry Date
-                  </label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Expiry Date</label>
                   <input
                     type="date"
                     value={validUntil}

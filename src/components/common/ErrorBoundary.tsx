@@ -17,8 +17,7 @@ const CHUNK_ERROR_PATTERNS = [
 ];
 
 export const isChunkLoadError = (error: unknown): boolean => {
-  const message =
-    error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
   if (!message) return false;
   return CHUNK_ERROR_PATTERNS.some((pattern) => pattern.test(message));
 };

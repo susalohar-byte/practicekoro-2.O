@@ -314,7 +314,9 @@ export const AdminSubscriptions: React.FC = () => {
   };
 
   const handleRevokePro = async (student: AdminStudentRow) => {
-    if (!window.confirm(`Are you sure you want to revoke Pro subscription for ${student.fullName}?`)) {
+    if (
+      !window.confirm(`Are you sure you want to revoke Pro subscription for ${student.fullName}?`)
+    ) {
       return;
     }
     try {

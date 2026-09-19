@@ -226,9 +226,12 @@ export const Settings: React.FC = () => {
               <HelpCircle className="w-5 h-5" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Helpdesk & Support</h2>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                Helpdesk & Support
+              </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Experiencing technical bugs, question discrepancies, or payment issues? Submit a support ticket directly to our administration.
+                Experiencing technical bugs, question discrepancies, or payment issues? Submit a
+                support ticket directly to our administration.
               </p>
             </div>
           </div>

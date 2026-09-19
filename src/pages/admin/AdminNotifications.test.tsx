@@ -47,9 +47,7 @@ describe('AdminNotifications Page', () => {
     },
   ];
 
-  const mockExams = [
-    { id: 'wbp-constable', title: 'WBP Constable 2026', slug: 'wbp-constable' },
-  ];
+  const mockExams = [{ id: 'wbp-constable', title: 'WBP Constable 2026', slug: 'wbp-constable' }];
 
   beforeEach(() => {
     vi.clearAllMocks();
