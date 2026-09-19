@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useMaintenance } from '@/context/MaintenanceContext';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -25,6 +26,7 @@ import type { SupportCategory } from '@/components/student/StudentSupportModal';
 
 export const Support: React.FC = () => {
   const { user, isPro } = useAuth();
+  const { supportEmail, supportPhone, supportWhatsapp } = useMaintenance();
 
   const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
 
@@ -159,10 +161,10 @@ export const Support: React.FC = () => {
           <div className="min-w-0">
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Email Helpline</p>
             <a
-              href="mailto:support@practicekoro.online"
+              href={`mailto:${supportEmail || 'support@practicekoro.online'}`}
               className="text-xs sm:text-sm font-black text-slate-900 dark:text-white hover:text-blue-600 truncate block"
             >
-              support@practicekoro.online
+              {supportEmail || 'support@practicekoro.online'}
             </a>
             <p className="text-[10px] text-slate-400">Response within 24 hours</p>
           </div>
@@ -177,7 +179,7 @@ export const Support: React.FC = () => {
               Direct Helpline / WhatsApp
             </p>
             <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-              +91 98765 43210
+              {supportWhatsapp || supportPhone || '+91 9547771118'}
             </p>
             <p className="text-[10px] text-slate-400">Mon - Sat: 10 AM - 7 PM</p>
           </div>

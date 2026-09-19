@@ -9,6 +9,7 @@ interface MaintenanceContextType {
   appSettings: AppSettingItem[];
   supportEmail: string;
   supportPhone: string;
+  supportWhatsapp: string;
   appName: string;
 }
 
@@ -19,7 +20,8 @@ export const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState<boolean>(true);
   const [appSettings, setAppSettings] = useState<AppSettingItem[]>([]);
   const [supportEmail, setSupportEmail] = useState<string>('support@practicekoro.online');
-  const [supportPhone, setSupportPhone] = useState<string>('+91 98765 43210');
+  const [supportPhone, setSupportPhone] = useState<string>('+91 9547771118');
+  const [supportWhatsapp, setSupportWhatsapp] = useState<string>('+91 9547771118');
   const [appName, setAppName] = useState<string>('PracticeKoro');
 
   const checkMaintenanceMode = useCallback(async (): Promise<boolean> => {
@@ -42,6 +44,11 @@ export const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         (s) => s.id === 'general_support_phone' || s.key === 'support_phone'
       );
       if (phoneSetting?.value) setSupportPhone(String(phoneSetting.value));
+
+      const whatsappSetting = settings.find(
+        (s) => s.id === 'general_support_whatsapp' || s.key === 'support_whatsapp'
+      );
+      if (whatsappSetting?.value) setSupportWhatsapp(String(whatsappSetting.value));
 
       const nameSetting = settings.find((s) => s.id === 'general_app_name' || s.key === 'app_name');
       if (nameSetting?.value) setAppName(String(nameSetting.value));
@@ -84,6 +91,7 @@ export const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         appSettings,
         supportEmail,
         supportPhone,
+        supportWhatsapp,
         appName,
       }}
     >

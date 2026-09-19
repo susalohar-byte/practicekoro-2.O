@@ -360,6 +360,13 @@ export const AdminSettings: React.FC = () => {
           webhookSecret: rzpWebhookSecret,
           isActive: rzpIsActive,
         }),
+        currentAdmin
+          ? updateProfile({
+              fullName: adminFullName,
+              phone: adminPhone,
+              avatarUrl: adminAvatarUrl,
+            })
+          : Promise.resolve({ error: null }),
       ]);
 
       if (!res.success) {

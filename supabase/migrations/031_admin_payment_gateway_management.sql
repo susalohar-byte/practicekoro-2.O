@@ -161,7 +161,10 @@ BEGIN
         WHERE table_schema = 'public' AND table_name = 'admin_audit_logs'
     ) THEN
         INSERT INTO public.admin_audit_logs (
-            admin_user_id,
+            admin_id,
+            admin_email,
+            admin_name,
+            admin_role,
             action,
             entity_type,
             entity_id,
@@ -170,6 +173,9 @@ BEGIN
         )
         VALUES (
             auth.uid(),
+            'admin@practicekoro.online',
+            'Administrator',
+            'admin',
             'SETTINGS_UPDATE',
             'payment_gateway',
             v_target,
