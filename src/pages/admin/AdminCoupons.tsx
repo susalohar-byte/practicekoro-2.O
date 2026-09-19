@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import {
   Tag,
   Search,
@@ -23,10 +24,13 @@ import { Button } from '@/components/common/Button';
 import type { CouponItem } from '@/types';
 
 export const AdminCoupons: React.FC = () => {
+  const { user: currentAdmin } = useAuth();
   const [coupons, setCoupons] = useState<CouponItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>(
+    'all'
+  );
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Modal State (Create / Edit)
@@ -158,6 +162,15 @@ export const AdminCoupons: React.FC = () => {
           isActive,
         });
         if (!res.success) throw new Error(res.error || 'Failed to update coupon');
+
+        await api.logAdminActivity({
+          action: 'COUPON_UPDATE',
+          entityType: 'coupon',
+          entityId: editingCoupon.id,
+          entityName: cleanCode,
+          details: { discountType, discountValue, minOrderAmount },
+          adminUser: currentAdmin,
+        });
       } else {
         const res = await api.createAdminCoupon({
           code: cleanCode,
@@ -174,6 +187,14 @@ export const AdminCoupons: React.FC = () => {
           isActive,
         });
         if (!res.success) throw new Error(res.error || 'Failed to create coupon');
+
+        await api.logAdminActivity({
+          action: 'COUPON_CREATE',
+          entityType: 'coupon',
+          entityName: cleanCode,
+          details: { discountType, discountValue, minOrderAmount },
+          adminUser: currentAdmin,
+        });
       }
 
       setIsModalOpen(false);
@@ -205,6 +226,14 @@ export const AdminCoupons: React.FC = () => {
     try {
       const res = await api.deleteAdminCoupon(id);
       if (res.success) {
+        await api.logAdminActivity({
+          action: 'COUPON_DELETE',
+          entityType: 'coupon',
+          entityId: id,
+          entityName: couponCode,
+          adminUser: currentAdmin,
+        });
+
         setCoupons((prev) => prev.filter((c) => c.id !== id));
       }
     } catch (err) {
@@ -809,9 +838,7 @@ export const AdminCoupons: React.FC = () => {
               {/* Target Plan & Expiry Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    Target Plan
-                  </label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Target Plan</label>
                   <select
                     value={applicablePlanId}
                     onChange={(e) => setApplicablePlanId(e.target.value)}
@@ -823,9 +850,7 @@ export const AdminCoupons: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    Expiry Date
-                  </label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Expiry Date</label>
                   <input
                     type="date"
                     value={validUntil}

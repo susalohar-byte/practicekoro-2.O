@@ -214,7 +214,8 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
                   Ticket Submitted Successfully!
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-                  Your ticket has been sent to the Admin Support Desk. You can track progress and view admin replies in the "My Tickets" tab.
+                  Your ticket has been sent to the Admin Support Desk. You can track progress and
+                  view admin replies in the "My Tickets" tab.
                 </p>
                 <div className="pt-2">
                   <Button
@@ -315,7 +316,10 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
                 {/* Modal Actions */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="text-[11px] text-slate-400 hidden sm:block">
-                    Typical response time: <span className="font-bold text-slate-600 dark:text-slate-300">Within 24 hours</span>
+                    Typical response time:{' '}
+                    <span className="font-bold text-slate-600 dark:text-slate-300">
+                      Within 24 hours
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                     <Button
@@ -368,7 +372,8 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
                     No tickets submitted yet
                   </p>
                   <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
-                    If you encounter any issues during mock tests or account management, raise a ticket here.
+                    If you encounter any issues during mock tests or account management, raise a
+                    ticket here.
                   </p>
                   <Button
                     type="button"

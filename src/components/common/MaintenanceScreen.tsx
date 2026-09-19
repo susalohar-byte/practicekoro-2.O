@@ -41,7 +41,9 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
           window.location.reload();
         }, 800);
       } else {
-        setCheckStatusMessage('সিস্টেম এখনো রক্ষণাবেক্ষণে রয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।');
+        setCheckStatusMessage(
+          'সিস্টেম এখনো রক্ষণাবেক্ষণে রয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
+        );
         setTimeout(() => setCheckStatusMessage(null), 4000);
       }
     } catch {
@@ -61,13 +63,10 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
       {/* Top Brand Bar */}
       <header className="relative z-10 w-full max-w-5xl mx-auto px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img
-            src="/logo-icon-transparent.png"
-            alt={appName}
-            className="w-8 h-8 object-contain"
-          />
+          <img src="/logo-icon-transparent.png" alt={appName} className="w-8 h-8 object-contain" />
           <span className="text-base font-black tracking-tight text-white">
-            {appName || 'Practice'}<span className="text-amber-400">Koro</span>
+            {appName || 'Practice'}
+            <span className="text-amber-400">Koro</span>
           </span>
         </div>
 
@@ -104,7 +103,9 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
               'আমাদের সার্ভার অপ্টিমাইজেশন, দ্রুত পেজ লোডিং এবং মক টেস্ট মূল্যায়নের সর্বোচ্চ নির্ভুলতা নিশ্চিত করতে একটি প্রয়োজনীয় সিস্টেম আপগ্রেড চলছে।'}
           </p>
           <p className="text-slate-400 text-xs">
-            এই সময়ে টেস্ট গ্রহণ, প্রশ্নপত্র সমাধান এবং ফলাফল প্রকাশ সাময়িকভাবে স্থগিত রাখা হয়েছে। আপগ্রেড শেষ হওয়া মাত্রই সম্পূর্ণ পোর্টাল স্বয়ংক্রিয়ভাবে সক্রিয় হবে। সাময়িক অসুবিধার জন্য আমরা আন্তরিকভাবে দুঃখিত।
+            এই সময়ে টেস্ট গ্রহণ, প্রশ্নপত্র সমাধান এবং ফলাফল প্রকাশ সাময়িকভাবে স্থগিত রাখা হয়েছে।
+            আপগ্রেড শেষ হওয়া মাত্রই সম্পূর্ণ পোর্টাল স্বয়ংক্রিয়ভাবে সক্রিয় হবে। সাময়িক অসুবিধার জন্য
+            আমরা আন্তরিকভাবে দুঃখিত।
           </p>
         </div>
 
@@ -172,7 +173,9 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
 
       {/* Footer / Subtle Admin link */}
       <footer className="relative z-10 w-full max-w-5xl mx-auto px-6 py-4 text-center border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
-        <p>© {new Date().getFullYear()} {appName || 'PracticeKoro'}. সর্বস্বত্ব সংরক্ষিত।</p>
+        <p>
+          © {new Date().getFullYear()} {appName || 'PracticeKoro'}. সর্বস্বত্ব সংরক্ষিত।
+        </p>
         <div className="flex items-center gap-4">
           {!user && (
             <a
@@ -183,9 +186,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
             </a>
           )}
           {user && !isAdmin && (
-            <span className="text-slate-500">
-              Student ID: {user.id.slice(0, 8)}...
-            </span>
+            <span className="text-slate-500">Student ID: {user.id.slice(0, 8)}...</span>
           )}
         </div>
       </footer>

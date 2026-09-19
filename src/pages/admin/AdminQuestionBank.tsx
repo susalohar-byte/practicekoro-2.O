@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { api } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import {
   BookOpen,
@@ -23,12 +24,14 @@ import {
   LayoutGrid,
   List,
   Check,
+  Minus,
   Layers,
   Tag,
   Filter,
   Image as ImageIcon,
   FileSpreadsheet,
   FileText,
+  Activity,
 } from 'lucide-react';
 import type { Question, Exam, Subject, Chapter, MockTest } from '@/types';
 import {
@@ -39,18 +42,16 @@ import {
   SAMPLE_TXT_CONTENT,
   downloadSampleTxt,
 } from '@/utils/txtQuestionParser';
-import {
-  downloadSampleCsvFile,
-  parseQuestionsCsv,
-} from '@/utils/csvParser';
+import { downloadSampleCsvFile, parseQuestionsCsv } from '@/utils/csvParser';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 import { getErrorMessage } from '@/lib/errors';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 export type QuestionCategory = 'all' | 'topic' | 'full_mock' | 'pyq';
 
 export const AdminQuestionBank: React.FC = () => {
+  const { user: currentAdmin } = useAuth();
   const [searchParams] = useSearchParams();
   const querySource = searchParams.get('source');
   const querySubjectId = searchParams.get('subjectId');
@@ -345,7 +346,6 @@ export const AdminQuestionBank: React.FC = () => {
     };
   }, [allBankQuestions]);
 
-
   // Reset page on filter changes
   useEffect(() => {
     setCurrentPage(1);
@@ -527,7 +527,9 @@ export const AdminQuestionBank: React.FC = () => {
     );
     const defaultExamTest = filterExamTestId || effectiveTests[0]?.id || '';
 
-    setSingleSource(selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic');
+    setSingleSource(
+      selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic'
+    );
     setSingleSubjectId(defaultSub);
     setSingleTopicId(defaultTopic);
     setSingleTopicTestId(defaultTopicTest);
@@ -707,7 +709,9 @@ export const AdminQuestionBank: React.FC = () => {
     );
     const defaultExamTest = filterExamTestId || effectiveTests[0]?.id || '';
 
-    setBulkSource(selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic');
+    setBulkSource(
+      selectedCategory === 'full_mock' || selectedCategory === 'pyq' ? 'exam' : 'topic'
+    );
     setBulkSubjectId(defaultSub);
     setBulkTopicId(defaultTopic);
     setBulkTopicTestId(defaultTopicTest);
@@ -842,6 +846,20 @@ export const AdminQuestionBank: React.FC = () => {
         testId: bulkSource === 'topic' ? bulkTopicTestId || undefined : bulkExamTestId,
       });
 
+      await api.logAdminActivity({
+        action: 'QUESTION_BULK_IMPORT',
+        entityType: 'question',
+        entityName: `${res.successCount} questions imported (${bulkFormat === 'csv' ? 'Excel/CSV' : 'Standard TXT'})`,
+        details: {
+          format: bulkFormat,
+          successCount: res.successCount,
+          sourceType: bulkSource,
+          examId: bulkExamId,
+          subjectId: bulkSubjectId,
+        },
+        adminUser: currentAdmin,
+      });
+
       setBulkActionSuccess(
         `Successfully imported ${res.successCount} questions into Question Bank!`
       );
@@ -866,8 +884,8 @@ export const AdminQuestionBank: React.FC = () => {
     setEditQOptB(q.optionB);
     setEditQOptC(q.optionC);
     setEditQOptD(q.optionD);
-    setEditQCorrect((q.correctOption as any) || 'A');
-    setEditQExplanation(q.explanationBengali || q.explanation || '');
+    setEditQCorrect(q.correctOption);
+    setEditQExplanation(q.explanation || q.explanationBengali || '');
     setEditQError('');
     setIsEditModalOpen(true);
   };
@@ -889,6 +907,19 @@ export const AdminQuestionBank: React.FC = () => {
         explanation: editQExplanation.trim() || undefined,
         explanationBengali: editQExplanation.trim() || undefined,
       });
+
+      await api.logAdminActivity({
+        action: 'QUESTION_UPDATE',
+        entityType: 'question',
+        entityId: editingQuestion.id,
+        entityName: editQText.trim().slice(0, 60),
+        details: {
+          hasDiagram: Boolean(editQImageUrl.trim()),
+          correctOption: editQCorrect,
+        },
+        adminUser: currentAdmin,
+      });
+
       setIsEditModalOpen(false);
       await Promise.all([loadQuestions(), loadBankSummary()]);
     } catch (err) {
@@ -920,6 +951,18 @@ export const AdminQuestionBank: React.FC = () => {
       setDeleteError('');
       const success = await api.deleteQuestion(questionToDelete.id);
       if (success) {
+        await api.logAdminActivity({
+          action: 'QUESTION_DELETE',
+          entityType: 'question',
+          entityId: questionToDelete.id,
+          entityName: questionToDelete.questionText.slice(0, 60),
+          details: {
+            questionText: questionToDelete.questionText,
+            difficulty: questionToDelete.difficulty,
+          },
+          adminUser: currentAdmin,
+        });
+
         setQuestions((prev) => prev.filter((q) => q.id !== questionToDelete.id));
         setAllBankQuestions((prev) => prev.filter((q) => q.id !== questionToDelete.id));
         setTotalUploadedCount((prev) => Math.max(0, prev - 1));
@@ -951,6 +994,15 @@ export const AdminQuestionBank: React.FC = () => {
         const ok = await api.deleteQuestion(id);
         if (ok) count++;
       }
+
+      await api.logAdminActivity({
+        action: 'QUESTION_BULK_DELETE',
+        entityType: 'question',
+        entityName: `${count} questions deleted in bulk`,
+        details: { count, deletedIds: ids },
+        adminUser: currentAdmin,
+      });
+
       setQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
       setAllBankQuestions((prev) => prev.filter((q) => !selectedQuestionIds.has(q.id)));
       setTotalUploadedCount((prev) => Math.max(0, prev - count));
@@ -976,23 +1028,6 @@ export const AdminQuestionBank: React.FC = () => {
     });
   };
 
-  const toggleSelectAllVisible = () => {
-    if (paginatedQuestions.length === 0) return;
-    if (paginatedQuestions.every((q) => selectedQuestionIds.has(q.id))) {
-      setSelectedQuestionIds((prev) => {
-        const next = new Set(prev);
-        paginatedQuestions.forEach((q) => next.delete(q.id));
-        return next;
-      });
-    } else {
-      setSelectedQuestionIds((prev) => {
-        const next = new Set(prev);
-        paginatedQuestions.forEach((q) => next.add(q.id));
-        return next;
-      });
-    }
-  };
-
   // Pagination calculation
   const totalCount = questions.length;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
@@ -1000,6 +1035,27 @@ export const AdminQuestionBank: React.FC = () => {
     const start = (currentPage - 1) * pageSize;
     return questions.slice(start, start + pageSize);
   }, [questions, currentPage, pageSize]);
+
+  const isAllSelected =
+    questions.length > 0 && questions.every((q) => selectedQuestionIds.has(q.id));
+  const isIndeterminate = !isAllSelected && questions.some((q) => selectedQuestionIds.has(q.id));
+
+  const toggleSelectAll = () => {
+    if (questions.length === 0) return;
+    if (isAllSelected) {
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        questions.forEach((q) => next.delete(q.id));
+        return next;
+      });
+    } else {
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        questions.forEach((q) => next.add(q.id));
+        return next;
+      });
+    }
+  };
 
   const handleExportQuestionsCSV = () => {
     const headers = [
@@ -1036,7 +1092,10 @@ export const AdminQuestionBank: React.FC = () => {
       q.defaultMarks,
       q.defaultNegativeMarks,
       q.subjectName || subjects.find((s) => s.id === q.subjectId)?.name || '',
-      q.topicName || q.chapterName || chapters.find((c) => c.id === (q.topicId || q.chapterId))?.name || '',
+      q.topicName ||
+        q.chapterName ||
+        chapters.find((c) => c.id === (q.topicId || q.chapterId))?.name ||
+        '',
       q.sourceType || 'topic',
     ]);
 
@@ -1077,7 +1136,17 @@ export const AdminQuestionBank: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link to="/admin/item-analysis">
+            <Button
+              variant="outline"
+              className="text-xs font-bold border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 flex items-center gap-1.5 shadow-2xs"
+            >
+              <Activity className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              Item Analysis
+            </Button>
+          </Link>
+
           <Button
             onClick={() => setIsFormatGuideOpen(true)}
             variant="outline"
@@ -1138,9 +1207,7 @@ export const AdminQuestionBank: React.FC = () => {
             <span className="text-xs font-semibold text-slate-400">questions</span>
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">
-              Whole repository
-            </span>
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Whole repository</span>
             {selectedCategory === 'all' && (
               <span className="text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">
                 Active
@@ -1331,14 +1398,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <BookOpen className="w-4 h-4 text-pk-primary shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">All Questions</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Whole bank</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Whole bank
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'all'
-                  ? 'bg-pk-primary text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'all'
+                    ? 'bg-pk-primary text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.total}
               </span>
             </button>
@@ -1356,14 +1427,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">Topic Tests</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Subject & Chapter</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Subject & Chapter
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'topic'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'topic'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.topic}
               </span>
             </button>
@@ -1381,14 +1456,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">Full Mock Tests</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Full syllabus mocks</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Full syllabus mocks
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'full_mock'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'full_mock'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.fullMock}
               </span>
             </button>
@@ -1406,14 +1485,18 @@ export const AdminQuestionBank: React.FC = () => {
                 <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <div className="truncate">
                   <div className="font-bold truncate">PYQ Papers</div>
-                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">Previous year papers</div>
+                  <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
+                    Previous year papers
+                  </div>
                 </div>
               </div>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
-                selectedCategory === 'pyq'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
+              <span
+                className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                  selectedCategory === 'pyq'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {bankStats.pyq}
               </span>
             </button>
@@ -1726,13 +1809,15 @@ export const AdminQuestionBank: React.FC = () => {
             )}
 
             {selectedCategory !== 'all' && (
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium text-[11px] border ${
-                selectedCategory === 'topic'
-                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60'
-                  : selectedCategory === 'full_mock'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                    : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
-              }`}>
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium text-[11px] border ${
+                  selectedCategory === 'topic'
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60'
+                    : selectedCategory === 'full_mock'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
+                }`}
+              >
                 <span>
                   Category:{' '}
                   {selectedCategory === 'topic'
@@ -1858,6 +1943,86 @@ export const AdminQuestionBank: React.FC = () => {
         )}
       </div>
 
+      {/* SELECTION TOOLBAR (Outside Question List Container) */}
+      {!isLoading && questions.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-50/80 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+            >
+              <div
+                className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                  isAllSelected || isIndeterminate
+                    ? 'bg-sky-500 border-sky-500 text-white'
+                    : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950'
+                }`}
+              >
+                {isAllSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                {isIndeterminate && <Minus className="w-3 h-3 stroke-[3]" />}
+              </div>
+              <span>
+                Select All ({questions.length} {questions.length === 1 ? 'Question' : 'Questions'})
+              </span>
+            </button>
+
+            {selectedQuestionIds.size > 0 && (
+              <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800">
+                <span className="font-semibold text-sky-600 dark:text-sky-400">
+                  {selectedQuestionIds.size} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsBulkDeleteModalOpen(true)}
+                  className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete Selected ({selectedQuestionIds.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedQuestionIds(new Set())}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline text-[11px] cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setViewMode('card')}
+              title="Card View (as requested)"
+              className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'card'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Card View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              title="Table View"
+              className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'table'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Table View</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* REAL QUESTION LIST TABLE (Section 5, 9, 16) */}
       <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
         {isLoading ? (
@@ -1900,85 +2065,6 @@ export const AdminQuestionBank: React.FC = () => {
           </div>
         ) : (
           <div>
-            {/* Top List Controls Bar: Selection, Bulk Actions & View Mode Toggle */}
-            <div className="p-4 bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={toggleSelectAllVisible}
-                  className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition-colors"
-                >
-                  <div
-                    className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
-                      paginatedQuestions.length > 0 &&
-                      paginatedQuestions.every((q) => selectedQuestionIds.has(q.id))
-                        ? 'bg-sky-500 border-sky-500 text-white'
-                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950'
-                    }`}
-                  >
-                    {paginatedQuestions.length > 0 &&
-                      paginatedQuestions.every((q) => selectedQuestionIds.has(q.id)) && (
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      )}
-                  </div>
-                  <span>Select All Visible</span>
-                </button>
-
-                {selectedQuestionIds.size > 0 && (
-                  <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800">
-                    <span className="font-semibold text-sky-600 dark:text-sky-400">
-                      {selectedQuestionIds.size} selected
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setIsBulkDeleteModalOpen(true)}
-                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold flex items-center gap-1 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Delete Selected ({selectedQuestionIds.size})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedQuestionIds(new Set())}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline text-[11px]"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('card')}
-                  title="Card View (as requested)"
-                  className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                    viewMode === 'card'
-                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Card View</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('table')}
-                  title="Table View"
-                  className={`p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                    viewMode === 'table'
-                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <List className="w-3.5 h-3.5" />
-                  <span>Table View</span>
-                </button>
-              </div>
-            </div>
-
             {/* CARD VIEW (Matching user reference layout exactly) */}
             {viewMode === 'card' ? (
               <div className="p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-900/30">
@@ -2781,7 +2867,9 @@ export const AdminQuestionBank: React.FC = () => {
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     Question Diagram / Image (Optional)
                   </label>
-                  <span className="text-[10px] text-slate-400">For Reasoning Venn, Geometry, Maps</span>
+                  <span className="text-[10px] text-slate-400">
+                    For Reasoning Venn, Geometry, Maps
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -2821,7 +2909,9 @@ export const AdminQuestionBank: React.FC = () => {
                       className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
                     />
                     <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
-                      <span className="font-bold text-slate-900 dark:text-white block">Diagram Attached</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Diagram Attached
+                      </span>
                       <span className="truncate block text-slate-400">{singleImageUrl}</span>
                     </div>
                   </div>
@@ -3235,7 +3325,9 @@ export const AdminQuestionBank: React.FC = () => {
                 {/* Upload & Sample buttons */}
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {bulkFormat === 'csv' ? 'Upload Excel/CSV File (UTF-8)' : 'Upload TXT File (UTF-8)'}
+                    {bulkFormat === 'csv'
+                      ? 'Upload Excel/CSV File (UTF-8)'
+                      : 'Upload TXT File (UTF-8)'}
                   </span>
                   <div className="flex items-center gap-2">
                     {bulkFormat === 'txt' ? (
@@ -3292,7 +3384,11 @@ export const AdminQuestionBank: React.FC = () => {
                     </span>
                     <input
                       type="file"
-                      accept={bulkFormat === 'csv' ? '.csv,text/csv,application/vnd.ms-excel' : '.txt,text/plain'}
+                      accept={
+                        bulkFormat === 'csv'
+                          ? '.csv,text/csv,application/vnd.ms-excel'
+                          : '.txt,text/plain'
+                      }
                       onChange={handleTxtFileUpload}
                       className="hidden"
                     />
@@ -3302,7 +3398,9 @@ export const AdminQuestionBank: React.FC = () => {
                 {/* Paste Area */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {bulkFormat === 'csv' ? 'Or Paste CSV Content Directly:' : 'Or Paste TXT Content Directly:'}
+                    {bulkFormat === 'csv'
+                      ? 'Or Paste CSV Content Directly:'
+                      : 'Or Paste TXT Content Directly:'}
                   </label>
                   <textarea
                     rows={6}
@@ -3332,7 +3430,9 @@ export const AdminQuestionBank: React.FC = () => {
                     onClick={handleParseTxt}
                     className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
                   >
-                    {bulkFormat === 'csv' ? 'Parse CSV & Preview Questions' : 'Parse TXT & Preview Questions'}
+                    {bulkFormat === 'csv'
+                      ? 'Parse CSV & Preview Questions'
+                      : 'Parse TXT & Preview Questions'}
                   </Button>
                 </div>
               </div>
@@ -3706,7 +3806,9 @@ export const AdminQuestionBank: React.FC = () => {
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     Question Diagram / Image (Optional)
                   </label>
-                  <span className="text-[10px] text-slate-400">For Reasoning Venn, Geometry, Maps</span>
+                  <span className="text-[10px] text-slate-400">
+                    For Reasoning Venn, Geometry, Maps
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -3746,7 +3848,9 @@ export const AdminQuestionBank: React.FC = () => {
                       className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
                     />
                     <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
-                      <span className="font-bold text-slate-900 dark:text-white block">Diagram Attached</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Diagram Attached
+                      </span>
                       <span className="truncate block text-slate-400">{editQImageUrl}</span>
                     </div>
                   </div>

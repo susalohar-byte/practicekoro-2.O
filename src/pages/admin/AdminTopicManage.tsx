@@ -26,14 +26,46 @@ import { getErrorMessage } from '@/lib/errors';
 /* ─── Color palette for subject badges ────────────────────── */
 const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }> = {};
 const PALETTE = [
-  { bg: 'bg-indigo-50 dark:bg-indigo-950/50', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-800' },
-  { bg: 'bg-blue-50 dark:bg-blue-950/50', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
-  { bg: 'bg-emerald-50 dark:bg-emerald-950/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
-  { bg: 'bg-amber-50 dark:bg-amber-950/50', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
-  { bg: 'bg-rose-50 dark:bg-rose-950/50', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-800' },
-  { bg: 'bg-violet-50 dark:bg-violet-950/50', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
-  { bg: 'bg-cyan-50 dark:bg-cyan-950/50', text: 'text-cyan-700 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-800' },
-  { bg: 'bg-pink-50 dark:bg-pink-950/50', text: 'text-pink-700 dark:text-pink-300', border: 'border-pink-200 dark:border-pink-800' },
+  {
+    bg: 'bg-indigo-50 dark:bg-indigo-950/50',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    border: 'border-indigo-200 dark:border-indigo-800',
+  },
+  {
+    bg: 'bg-blue-50 dark:bg-blue-950/50',
+    text: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800',
+  },
+  {
+    bg: 'bg-emerald-50 dark:bg-emerald-950/50',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-800',
+  },
+  {
+    bg: 'bg-amber-50 dark:bg-amber-950/50',
+    text: 'text-amber-700 dark:text-amber-300',
+    border: 'border-amber-200 dark:border-amber-800',
+  },
+  {
+    bg: 'bg-rose-50 dark:bg-rose-950/50',
+    text: 'text-rose-700 dark:text-rose-300',
+    border: 'border-rose-200 dark:border-rose-800',
+  },
+  {
+    bg: 'bg-violet-50 dark:bg-violet-950/50',
+    text: 'text-violet-700 dark:text-violet-300',
+    border: 'border-violet-200 dark:border-violet-800',
+  },
+  {
+    bg: 'bg-cyan-50 dark:bg-cyan-950/50',
+    text: 'text-cyan-700 dark:text-cyan-300',
+    border: 'border-cyan-200 dark:border-cyan-800',
+  },
+  {
+    bg: 'bg-pink-50 dark:bg-pink-950/50',
+    text: 'text-pink-700 dark:text-pink-300',
+    border: 'border-pink-200 dark:border-pink-800',
+  },
 ];
 
 function getBadgeColor(subjectId: string, index: number) {
@@ -46,7 +78,11 @@ function getBadgeColor(subjectId: string, index: number) {
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '—';
   try {
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(dateStr));
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }).format(new Date(dateStr));
   } catch {
     return '—';
   }
@@ -158,13 +194,17 @@ export const AdminTopicManage: React.FC = () => {
   /* ── Maps for fast lookup ─────────────────────────── */
   const subjectMap = useMemo(() => {
     const map: Record<string, Subject> = {};
-    subjects.forEach((s) => { map[s.id] = s; });
+    subjects.forEach((s) => {
+      map[s.id] = s;
+    });
     return map;
   }, [subjects]);
 
   const subjectOrderMap = useMemo(() => {
     const map: Record<string, number> = {};
-    subjects.forEach((s, idx) => { map[s.id] = idx; });
+    subjects.forEach((s, idx) => {
+      map[s.id] = idx;
+    });
     return map;
   }, [subjects]);
 
@@ -207,12 +247,15 @@ export const AdminTopicManage: React.FC = () => {
   }, [search, filterSubjectId, filterStatus]);
 
   /* ── Stats ────────────────────────────────────────── */
-  const stats = useMemo(() => ({
-    totalSubjects: subjects.length,
-    totalTopics: chapters.length,
-    totalQuestions: questions.length,
-    activeTopics: chapters.filter((c) => c.isActive).length,
-  }), [subjects, chapters, questions]);
+  const stats = useMemo(
+    () => ({
+      totalSubjects: subjects.length,
+      totalTopics: chapters.length,
+      totalQuestions: questions.length,
+      activeTopics: chapters.filter((c) => c.isActive).length,
+    }),
+    [subjects, chapters, questions]
+  );
 
   /* ── Subject CRUD ─────────────────────────────────── */
   const openCreateSubjectModal = () => {
@@ -303,7 +346,8 @@ export const AdminTopicManage: React.FC = () => {
   /* ── Topic CRUD ──────────────────────────────────── */
   const openCreateTopicModal = (parentSubjectId?: string) => {
     setEditingTopic(null);
-    const sid = parentSubjectId || (filterSubjectId !== 'all' ? filterSubjectId : subjects[0]?.id || '');
+    const sid =
+      parentSubjectId || (filterSubjectId !== 'all' ? filterSubjectId : subjects[0]?.id || '');
     setTopicSubjectId(sid);
     setTopicName('');
     setTopicSlug('');
@@ -445,7 +489,9 @@ export const AdminTopicManage: React.FC = () => {
               className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
             >
               <Plus className="w-4 h-4" /> Add Topic
-              <ChevronDown className={`w-3 h-3 transition-transform ${isAddTopicDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-3 h-3 transition-transform ${isAddTopicDropdownOpen ? 'rotate-180' : ''}`}
+              />
             </Button>
             {isAddTopicDropdownOpen && subjects.length > 0 && (
               <div className="absolute right-0 top-full mt-1 w-56 rounded-xl bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-slate-800 shadow-lg z-30 py-1 max-h-60 overflow-y-auto">
@@ -574,19 +620,29 @@ export const AdminTopicManage: React.FC = () => {
         <div ref={subjectDropdownRef} className="relative min-w-[180px]">
           <button
             type="button"
-            onClick={() => { setIsSubjectDropdownOpen((v) => !v); setIsStatusDropdownOpen(false); }}
+            onClick={() => {
+              setIsSubjectDropdownOpen((v) => !v);
+              setIsStatusDropdownOpen(false);
+            }}
             className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-indigo-400 transition-colors cursor-pointer"
           >
             <span className="truncate">
-              {filterSubjectId === 'all' ? 'All Subjects' : subjectMap[filterSubjectId]?.name || 'All Subjects'}
+              {filterSubjectId === 'all'
+                ? 'All Subjects'
+                : subjectMap[filterSubjectId]?.name || 'All Subjects'}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 shrink-0 ml-2 transition-transform ${isSubjectDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-3.5 h-3.5 shrink-0 ml-2 transition-transform ${isSubjectDropdownOpen ? 'rotate-180' : ''}`}
+            />
           </button>
           {isSubjectDropdownOpen && (
             <div className="absolute left-0 top-full mt-1 w-full rounded-xl bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-slate-800 shadow-lg z-30 py-1 max-h-60 overflow-y-auto">
               <button
                 type="button"
-                onClick={() => { setFilterSubjectId('all'); setIsSubjectDropdownOpen(false); }}
+                onClick={() => {
+                  setFilterSubjectId('all');
+                  setIsSubjectDropdownOpen(false);
+                }}
                 className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors cursor-pointer ${
                   filterSubjectId === 'all'
                     ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold'
@@ -606,7 +662,10 @@ export const AdminTopicManage: React.FC = () => {
                 >
                   <button
                     type="button"
-                    onClick={() => { setFilterSubjectId(s.id); setIsSubjectDropdownOpen(false); }}
+                    onClick={() => {
+                      setFilterSubjectId(s.id);
+                      setIsSubjectDropdownOpen(false);
+                    }}
                     className="flex-1 text-left text-xs font-medium truncate cursor-pointer"
                   >
                     {s.name} ({chapters.filter((c) => c.subjectId === s.id).length})
@@ -615,7 +674,11 @@ export const AdminTopicManage: React.FC = () => {
                     <button
                       type="button"
                       title={`Edit ${s.name}`}
-                      onClick={(e) => { e.stopPropagation(); setIsSubjectDropdownOpen(false); openEditSubjectModal(s); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSubjectDropdownOpen(false);
+                        openEditSubjectModal(s);
+                      }}
                       className="p-1 rounded text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <Edit2 className="w-3 h-3" />
@@ -623,7 +686,11 @@ export const AdminTopicManage: React.FC = () => {
                     <button
                       type="button"
                       title={`Delete ${s.name}`}
-                      onClick={(e) => { e.stopPropagation(); setIsSubjectDropdownOpen(false); handleDeleteSubject(s); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSubjectDropdownOpen(false);
+                        handleDeleteSubject(s);
+                      }}
                       className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -639,11 +706,18 @@ export const AdminTopicManage: React.FC = () => {
         <div ref={statusDropdownRef} className="relative min-w-[130px]">
           <button
             type="button"
-            onClick={() => { setIsStatusDropdownOpen((v) => !v); setIsSubjectDropdownOpen(false); }}
+            onClick={() => {
+              setIsStatusDropdownOpen((v) => !v);
+              setIsSubjectDropdownOpen(false);
+            }}
             className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-indigo-400 transition-colors cursor-pointer"
           >
-            <span className="capitalize">{filterStatus === 'all' ? 'All Status' : filterStatus}</span>
-            <ChevronDown className={`w-3.5 h-3.5 shrink-0 ml-2 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+            <span className="capitalize">
+              {filterStatus === 'all' ? 'All Status' : filterStatus}
+            </span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 shrink-0 ml-2 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
+            />
           </button>
           {isStatusDropdownOpen && (
             <div className="absolute left-0 top-full mt-1 w-full rounded-xl bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-slate-800 shadow-lg z-30 py-1">
@@ -651,7 +725,10 @@ export const AdminTopicManage: React.FC = () => {
                 <button
                   key={st}
                   type="button"
-                  onClick={() => { setFilterStatus(st); setIsStatusDropdownOpen(false); }}
+                  onClick={() => {
+                    setFilterStatus(st);
+                    setIsStatusDropdownOpen(false);
+                  }}
                   className={`w-full text-left px-3 py-2 text-xs font-medium capitalize transition-colors cursor-pointer ${
                     filterStatus === st
                       ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold'
@@ -669,7 +746,11 @@ export const AdminTopicManage: React.FC = () => {
         <div className="flex items-center gap-2 ml-auto">
           {(search || filterSubjectId !== 'all' || filterStatus !== 'all') && (
             <Button
-              onClick={() => { setSearch(''); setFilterSubjectId('all'); setFilterStatus('all'); }}
+              onClick={() => {
+                setSearch('');
+                setFilterSubjectId('all');
+                setFilterStatus('all');
+              }}
               variant="outline"
               className="text-xs text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center gap-1.5"
             >
@@ -679,7 +760,14 @@ export const AdminTopicManage: React.FC = () => {
 
           <Button
             onClick={() => {
-              const headers = ['ID', 'Topic Name', 'Subject', 'Questions Count', 'Status', 'Updated At'];
+              const headers = [
+                'ID',
+                'Topic Name',
+                'Subject',
+                'Questions Count',
+                'Status',
+                'Updated At',
+              ];
               const rows = filteredTopics.map((t, idx) => [
                 idx + 1,
                 `"${t.name.replace(/"/g, '""')}"`,
@@ -726,7 +814,9 @@ export const AdminTopicManage: React.FC = () => {
                   <td colSpan={7} className="text-center py-16">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <div className="w-7 h-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Loading topics…</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Loading topics…
+                      </p>
                     </div>
                   </td>
                 </tr>
@@ -735,7 +825,9 @@ export const AdminTopicManage: React.FC = () => {
                   <td colSpan={7} className="text-center py-16">
                     <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
                       <FolderTree className="w-10 h-10 text-slate-300 dark:text-slate-700 stroke-[1.5]" />
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No topics found</p>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        No topics found
+                      </p>
                       <p className="text-xs text-slate-400 text-center">
                         {search || filterSubjectId !== 'all' || filterStatus !== 'all'
                           ? 'Try adjusting your search or filters to find what you are looking for.'
@@ -862,7 +954,9 @@ export const AdminTopicManage: React.FC = () => {
                 {Math.min(safePage * ITEMS_PER_PAGE, filteredTopics.length)}
               </span>{' '}
               of{' '}
-              <span className="font-bold text-slate-800 dark:text-slate-200">{filteredTopics.length}</span>{' '}
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {filteredTopics.length}
+              </span>{' '}
               topics
             </div>
 
@@ -935,16 +1029,22 @@ export const AdminTopicManage: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div>
                 <span className="text-slate-400 uppercase font-bold text-[10px]">Topic Name</span>
-                <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{viewingTopic.name}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                  {viewingTopic.name}
+                </p>
               </div>
 
               <div>
                 <span className="text-slate-400 uppercase font-bold text-[10px]">Slug</span>
-                <p className="font-mono text-slate-700 dark:text-slate-300 mt-0.5">{viewingTopic.slug}</p>
+                <p className="font-mono text-slate-700 dark:text-slate-300 mt-0.5">
+                  {viewingTopic.slug}
+                </p>
               </div>
 
               <div>
-                <span className="text-slate-400 uppercase font-bold text-[10px]">Parent Subject</span>
+                <span className="text-slate-400 uppercase font-bold text-[10px]">
+                  Parent Subject
+                </span>
                 <p className="font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
                   {subjectMap[viewingTopic.subjectId]?.name || 'Unknown'}
                 </p>
@@ -952,8 +1052,12 @@ export const AdminTopicManage: React.FC = () => {
 
               {viewingTopic.description && (
                 <div>
-                  <span className="text-slate-400 uppercase font-bold text-[10px]">Description</span>
-                  <p className="text-slate-600 dark:text-slate-400 mt-0.5">{viewingTopic.description}</p>
+                  <span className="text-slate-400 uppercase font-bold text-[10px]">
+                    Description
+                  </span>
+                  <p className="text-slate-600 dark:text-slate-400 mt-0.5">
+                    {viewingTopic.description}
+                  </p>
                 </div>
               )}
 
@@ -974,7 +1078,9 @@ export const AdminTopicManage: React.FC = () => {
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${viewingTopic.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${viewingTopic.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                      />
                       {viewingTopic.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </p>
@@ -983,11 +1089,7 @@ export const AdminTopicManage: React.FC = () => {
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-850">
-              <Button
-                variant="outline"
-                onClick={() => setViewingTopic(null)}
-                className="text-xs"
-              >
+              <Button variant="outline" onClick={() => setViewingTopic(null)} className="text-xs">
                 Close
               </Button>
               <Button
@@ -1256,7 +1358,11 @@ export const AdminTopicManage: React.FC = () => {
                   disabled={isSavingSubject}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
                 >
-                  {isSavingSubject ? 'Saving…' : editingSubject ? 'Update Subject' : 'Create Subject'}
+                  {isSavingSubject
+                    ? 'Saving…'
+                    : editingSubject
+                      ? 'Update Subject'
+                      : 'Create Subject'}
                 </Button>
               </div>
             </form>
@@ -1304,11 +1410,21 @@ export const AdminTopicManage: React.FC = () => {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800 sticky top-0 z-10">
                   <tr>
-                    <th className="py-2.5 px-4 font-bold text-slate-600 dark:text-slate-300">Subject Name</th>
-                    <th className="py-2.5 px-4 font-bold text-slate-600 dark:text-slate-300">Slug</th>
-                    <th className="py-2.5 px-3 font-bold text-slate-600 dark:text-slate-300 text-center">Topics</th>
-                    <th className="py-2.5 px-3 font-bold text-slate-600 dark:text-slate-300 text-center">Status</th>
-                    <th className="py-2.5 px-4 font-bold text-slate-600 dark:text-slate-300 text-right">Actions</th>
+                    <th className="py-2.5 px-4 font-bold text-slate-600 dark:text-slate-300">
+                      Subject Name
+                    </th>
+                    <th className="py-2.5 px-4 font-bold text-slate-600 dark:text-slate-300">
+                      Slug
+                    </th>
+                    <th className="py-2.5 px-3 font-bold text-slate-600 dark:text-slate-300 text-center">
+                      Topics
+                    </th>
+                    <th className="py-2.5 px-3 font-bold text-slate-600 dark:text-slate-300 text-center">
+                      Status
+                    </th>
+                    <th className="py-2.5 px-4 font-bold text-slate-600 dark:text-slate-300 text-right">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1322,14 +1438,19 @@ export const AdminTopicManage: React.FC = () => {
                     subjects.map((sub) => {
                       const topicCount = chapters.filter((c) => c.subjectId === sub.id).length;
                       return (
-                        <tr key={sub.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40">
+                        <tr
+                          key={sub.id}
+                          className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40"
+                        >
                           <td className="py-3 px-4">
                             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                               <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                               <span>{sub.name}</span>
                             </div>
                             {sub.description && (
-                              <p className="text-[11px] text-slate-400 truncate max-w-xs mt-0.5">{sub.description}</p>
+                              <p className="text-[11px] text-slate-400 truncate max-w-xs mt-0.5">
+                                {sub.description}
+                              </p>
                             )}
                           </td>
                           <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400 text-[11px]">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import {
   CreditCard,
   Search,
@@ -210,6 +211,7 @@ const SearchBar: React.FC<{
 
 // --- Main Component ---------------------------------------------
 export const AdminSubscriptions: React.FC = () => {
+  const { user: currentAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'aspirants' | 'payments' | 'plans'>('aspirants');
 
   // Aspirants (merged students + subscription info) state
@@ -448,6 +450,18 @@ export const AdminSubscriptions: React.FC = () => {
         Number(grantDurationDays)
       );
       if (res.success) {
+        await api.logAdminActivity({
+          action: 'SUBSCRIPTION_MANUAL_GRANT',
+          entityType: 'subscription',
+          entityId: grantModalStudent.id,
+          entityName: `${grantModalStudent.fullName} (${grantModalStudent.email})`,
+          details: {
+            planId: grantPlanId,
+            durationDays: Number(grantDurationDays),
+          },
+          adminUser: currentAdmin,
+        });
+
         setGrantModalStudent(null);
         await fetchStudents();
       } else {
@@ -470,6 +484,17 @@ export const AdminSubscriptions: React.FC = () => {
       setStudentLoading(true);
       const res = await api.revokeStudentSubscription(student.id);
       if (res.success) {
+        await api.logAdminActivity({
+          action: 'SUBSCRIPTION_REVOKE',
+          entityType: 'subscription',
+          entityId: student.id,
+          entityName: `${student.fullName} (${student.email})`,
+          details: {
+            previousStatus: student.isPro ? 'pro' : 'free',
+          },
+          adminUser: currentAdmin,
+        });
+
         await fetchStudents();
       } else {
         alert(res.error || 'Failed to revoke subscription');

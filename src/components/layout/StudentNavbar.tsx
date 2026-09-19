@@ -63,9 +63,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
         // 1. Status check: sent OR scheduled whose scheduled time has arrived
         const isSent = n.status === 'sent';
         const isScheduledDue =
-          n.status === 'scheduled' &&
-          n.scheduledAt &&
-          new Date(n.scheduledAt) <= now;
+          n.status === 'scheduled' && n.scheduledAt && new Date(n.scheduledAt) <= now;
 
         if (!isSent && !isScheduledDue) return false;
 
@@ -265,7 +263,9 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
                               </h4>
                               <span className="text-[10px] text-slate-400 shrink-0 flex items-center gap-0.5">
                                 <Clock className="w-2.5 h-2.5" />
-                                {new Date(n.sentAt || n.scheduledAt || n.createdAt).toLocaleDateString()}
+                                {new Date(
+                                  n.sentAt || n.scheduledAt || n.createdAt
+                                ).toLocaleDateString()}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">

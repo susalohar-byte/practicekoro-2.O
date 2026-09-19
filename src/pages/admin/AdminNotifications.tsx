@@ -241,7 +241,8 @@ export const AdminNotifications: React.FC = () => {
                         <>
                           <Crown className="w-3 h-3 text-amber-400" /> Pro Members
                         </>
-                      ) : notif.targetAudience === 'free' || notif.targetAudience === 'free_users' ? (
+                      ) : notif.targetAudience === 'free' ||
+                        notif.targetAudience === 'free_users' ? (
                         <>
                           <Sparkles className="w-3 h-3 text-indigo-400" /> Free Tier
                         </>
@@ -252,7 +253,8 @@ export const AdminNotifications: React.FC = () => {
                       ) : notif.targetAudience.startsWith('exam:') ? (
                         <>
                           <Layers className="w-3 h-3 text-cyan-400" />
-                          {exams.find((e) => `exam:${e.id}` === notif.targetAudience)?.title || 'Target Exam'}
+                          {exams.find((e) => `exam:${e.id}` === notif.targetAudience)?.title ||
+                            'Target Exam'}
                         </>
                       ) : (
                         <>
@@ -462,7 +464,8 @@ export const AdminNotifications: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-500/40 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
                   />
                   <p className="text-[11px] text-amber-200/80 leading-relaxed">
-                    ⏰ At this specified time, the notification will automatically transition to "SENT" and be delivered to candidate notification bells.
+                    ⏰ At this specified time, the notification will automatically transition to
+                    "SENT" and be delivered to candidate notification bells.
                   </p>
                 </div>
               )}

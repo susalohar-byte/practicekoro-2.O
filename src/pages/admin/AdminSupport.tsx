@@ -14,8 +14,10 @@ import {
   X,
 } from 'lucide-react';
 import type { SupportTicketItem } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export const AdminSupport: React.FC = () => {
+  const { user: currentAdmin } = useAuth();
   const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'pending' | 'resolved'>('all');
@@ -82,6 +84,22 @@ export const AdminSupport: React.FC = () => {
         return;
       }
 
+      await api.logAdminActivity({
+        action: 'SUPPORT_TICKET_UPDATE',
+        entityType: 'support_ticket',
+        entityId: selectedTicket.id,
+        entityName: `Ticket #${selectedTicket.id.slice(0, 8)} - ${selectedTicket.subject}`,
+        details: {
+          previousStatus: selectedTicket.status,
+          newStatus: editStatus,
+          previousPriority: selectedTicket.priority,
+          newPriority: editPriority,
+          studentEmail: selectedTicket.studentEmail,
+          resolutionNotes: resolutionNotes.trim() || null,
+        },
+        adminUser: currentAdmin,
+      });
+
       setSelectedTicket(null);
       await loadTickets();
     } catch (err: unknown) {
@@ -115,6 +133,20 @@ export const AdminSupport: React.FC = () => {
         setCreateError(res.error || 'Failed to create ticket');
         return;
       }
+
+      await api.logAdminActivity({
+        action: 'SUPPORT_TICKET_CREATE',
+        entityType: 'support_ticket',
+        entityId: res.ticketId || 'new-ticket',
+        entityName: `Ticket - ${newSubject.trim()}`,
+        details: {
+          studentName: newStudentName.trim(),
+          studentEmail: newStudentEmail.trim() || 'student@practicekoro.online',
+          category: newCategory,
+          priority: newPriority,
+        },
+        adminUser: currentAdmin,
+      });
 
       setIsCreateModalOpen(false);
       await loadTickets();

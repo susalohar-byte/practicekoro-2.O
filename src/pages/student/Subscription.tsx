@@ -504,7 +504,9 @@ export const Subscription: React.FC = () => {
                     <Tag className="w-4 h-4 text-emerald-600" />
                     <div>
                       <span className="font-mono font-black">{appliedCoupon.code}</span> applied:
-                      <span className="font-bold ml-1 text-emerald-700">₹{appliedCoupon.discountAmount} Off</span>
+                      <span className="font-bold ml-1 text-emerald-700">
+                        ₹{appliedCoupon.discountAmount} Off
+                      </span>
                     </div>
                   </div>
                   <button
@@ -754,7 +756,8 @@ export const Subscription: React.FC = () => {
                 পেমেন্ট বা সাবস্ক্রিপশন সংক্রান্ত সহায়তা দরকার? (Need Billing Assistance?)
               </h3>
               <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
-                টাকা কেটে নেওয়া কিন্তু প্রো পাস চালু না হওয়া, ইউপিআই বিলম্ব বা কুপন সংক্রান্ত যেকোনো বিষয়ে আমাদের অ্যাডমিন ডেস্কে সরাসরি টিকেট তৈরি করুন।
+                টাকা কেটে নেওয়া কিন্তু প্রো পাস চালু না হওয়া, ইউপিআই বিলম্ব বা কুপন সংক্রান্ত যেকোনো
+                বিষয়ে আমাদের অ্যাডমিন ডেস্কে সরাসরি টিকেট তৈরি করুন।
               </p>
             </div>
           </div>

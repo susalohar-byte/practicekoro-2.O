@@ -12,6 +12,9 @@ import type {
   TestAttempt,
   CouponItem,
   CouponValidationResult,
+  DateRangePreset,
+  DateRangeRevenueStats,
+  DateRangeDailyPoint,
 } from '@/types';
 import {
   localExams,
@@ -21,6 +24,8 @@ import {
   localTests,
   localQuestions,
   localCoupons,
+  localPayments,
+  localStudents,
 } from '@/services/domains/localStore';
 
 /**
@@ -1252,6 +1257,199 @@ export const adminCommerceApi = {
       discountAmount: Math.round(discount * 100) / 100,
       finalPrice: Math.round(finalPrice * 100) / 100,
       message: 'Coupon code applied successfully!',
+    };
+  },
+
+  /**
+   * Retrieves dynamically filtered revenue analytics, transactions, order value, student signups,
+   * and day-by-day trends for any preset or custom date range (e.g. 1st Jan to 15th Jan).
+   */
+  async getDateRangeRevenueStats(
+    startDateStr?: string,
+    endDateStr?: string,
+    preset: DateRangePreset = 'this_month'
+  ): Promise<DateRangeRevenueStats> {
+    const now = new Date();
+
+    // Determine effective start and end dates
+    let start: Date;
+    let end: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const formatLocalDate = (d: Date): string => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    if (preset === 'today') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    } else if (preset === 'yesterday') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
+    } else if (preset === '7d' || (preset as string) === 'last_7_days') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+    } else if (preset === 'this_month') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    } else if (preset === '30d' || (preset as string) === 'last_30_days') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
+    } else if (preset === 'this_year') {
+      start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    } else if (preset === 'custom' && startDateStr) {
+      const [sy, sm, sd] = startDateStr.split('-').map(Number);
+      start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+      if (endDateStr) {
+        const [ey, em, ed] = endDateStr.split('-').map(Number);
+        end = new Date(ey, em - 1, ed, 23, 59, 59, 999);
+      }
+    } else {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    }
+
+    const startTime = start.getTime();
+    const endTime = end.getTime();
+    const startIso = start.toISOString();
+    const endIso = end.toISOString();
+
+    let payments: { amount: number; created_at: string; status: string }[] = [];
+    let studentSignupsCount = 0;
+    const studentSignupsByDate: Record<string, number> = {};
+
+    if (isSupabaseConfigured) {
+      try {
+        const [payRes, profRes] = await Promise.all([
+          supabase
+            .from('payments')
+            .select('amount, created_at, status')
+            .eq('status', 'completed')
+            .gte('created_at', startIso)
+            .lte('created_at', endIso),
+          supabase
+            .from('profiles')
+            .select('id, created_at')
+            .gte('created_at', startIso)
+            .lte('created_at', endIso),
+        ]);
+
+        if (payRes.data && Array.isArray(payRes.data)) {
+          payments = payRes.data;
+        }
+
+        if (profRes.data && Array.isArray(profRes.data)) {
+          studentSignupsCount = profRes.data.length;
+          profRes.data.forEach((p: any) => {
+            const d = p.created_at ? formatLocalDate(new Date(p.created_at)) : '';
+            if (d) {
+              studentSignupsByDate[d] = (studentSignupsByDate[d] || 0) + 1;
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Failed querying date-range revenue from Supabase, using local store:', err);
+      }
+    }
+
+    // Local Fallback if Supabase not configured or returns empty
+    if (payments.length === 0) {
+      payments = (localPayments as any[])
+        .filter((p) => {
+          const dateVal = p.created_at || p.createdAt;
+          if (!dateVal) return false;
+          const t = new Date(dateVal).getTime();
+          return t >= startTime && t <= endTime && p.status === 'completed';
+        })
+        .map((p) => ({
+          amount: p.amount,
+          created_at: p.created_at || p.createdAt,
+          status: p.status,
+        }));
+
+      const filteredStudents = localStudents.filter((s: any) => {
+        const dateVal = s.created_at || s.createdAt;
+        if (!dateVal) return false;
+        const t = new Date(dateVal).getTime();
+        return t >= startTime && t <= endTime;
+      });
+
+      studentSignupsCount = filteredStudents.length;
+      filteredStudents.forEach((s: any) => {
+        const dateVal = s.created_at || s.createdAt;
+        const d = formatLocalDate(new Date(dateVal));
+        studentSignupsByDate[d] = (studentSignupsByDate[d] || 0) + 1;
+      });
+    }
+
+    // Calculate aggregated metrics
+    const totalRevenue = payments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
+    const totalTransactions = payments.length;
+    const avgOrderValue = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0;
+
+    // Build Daily Trend
+    const dailyMap = new Map<string, { amount: number; transactions: number; signups: number }>();
+    const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 12, 0, 0);
+    const endMid = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 12, 0, 0);
+
+    while (cur <= endMid) {
+      const key = formatLocalDate(cur);
+      if (!dailyMap.has(key)) {
+        dailyMap.set(key, {
+          amount: 0,
+          transactions: 0,
+          signups: studentSignupsByDate[key] || 0,
+        });
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    payments.forEach((p) => {
+      if (p.created_at) {
+        const key = formatLocalDate(new Date(p.created_at));
+        if (dailyMap.has(key)) {
+          const entry = dailyMap.get(key)!;
+          entry.amount += Number(p.amount || 0);
+          entry.transactions += 1;
+        }
+      }
+    });
+
+    const dailyTrend: DateRangeDailyPoint[] = Array.from(dailyMap.entries()).map(
+      ([dateStr, val]) => {
+        const d = new Date(dateStr + 'T12:00:00');
+        const label = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        return {
+          date: dateStr,
+          label,
+          amount: val.amount,
+          transactions: val.transactions,
+          signups: val.signups,
+        };
+      }
+    );
+
+    const presetLabels: Record<string, string> = {
+      today: 'Today',
+      yesterday: 'Yesterday',
+      '7d': 'Last 7 Days',
+      last_7_days: 'Last 7 Days',
+      this_month: 'This Month',
+      '30d': 'Last 30 Days',
+      last_30_days: 'Last 30 Days',
+      this_year: 'This Year',
+      custom: `${formatLocalDate(start)} to ${formatLocalDate(end)}`,
+    };
+
+    return {
+      startDate: formatLocalDate(start),
+      endDate: formatLocalDate(end),
+      preset,
+      label: presetLabels[preset] || 'Selected Range',
+      totalRevenue,
+      totalTransactions,
+      transactionCount: totalTransactions,
+      avgOrderValue,
+      averageOrderValue: avgOrderValue,
+      newStudentSignups: studentSignupsCount,
+      newSignupsCount: studentSignupsCount,
+      dailyTrend,
     };
   },
 };

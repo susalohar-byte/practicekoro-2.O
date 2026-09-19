@@ -29,6 +29,7 @@ import {
   ChevronRight,
   Upload,
   Network,
+  GripVertical,
 } from 'lucide-react';
 import type { Exam, MockTest } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
@@ -92,6 +93,12 @@ export const AdminExams: React.FC = () => {
   const [editingCategoryValue, setEditingCategoryValue] = useState('');
   const [isRenamingCategory, setIsRenamingCategory] = useState(false);
 
+  // Drag & Drop Category Reordering States
+  const [draggedCategoryIndex, setDraggedCategoryIndex] = useState<number | null>(null);
+  const [dragOverCategoryIndex, setDragOverCategoryIndex] = useState<number | null>(null);
+  const [modalDraggedIndex, setModalDraggedIndex] = useState<number | null>(null);
+  const [modalDragOverIndex, setModalDragOverIndex] = useState<number | null>(null);
+
   // Deleting Category States (when linked to exams)
   const [categoryToDelete, setCategoryToDelete] = useState<{
     name: string;
@@ -130,7 +137,12 @@ export const AdminExams: React.FC = () => {
       setTests(allTests);
       if (dbCats && dbCats.length > 0) {
         const catNames = dbCats.map((c) => c.name);
-        setCategories((prev) => Array.from(new Set([...catNames, ...prev])).sort());
+        setCategories(catNames);
+        try {
+          localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(catNames));
+        } catch (e) {
+          console.error('Error saving categories:', e);
+        }
       }
     } catch (err) {
       console.error('Error loading exams data:', err);
@@ -146,7 +158,7 @@ export const AdminExams: React.FC = () => {
   // Compute test counts per exam
   const examTestCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    tests.forEach((t) => {
+    (tests || []).forEach((t) => {
       if (t.examId) {
         counts[t.examId] = (counts[t.examId] || 0) + 1;
       }
@@ -159,15 +171,15 @@ export const AdminExams: React.FC = () => {
     if (exams.length > 0) {
       setCategories((prev) => {
         const set = new Set<string>(prev);
-        let hasNew = false;
+        const newCats: string[] = [];
         exams.forEach((e) => {
           if (e.category && e.category.trim() && !set.has(e.category.trim())) {
             set.add(e.category.trim());
-            hasNew = true;
+            newCats.push(e.category.trim());
           }
         });
-        if (hasNew) {
-          const updated = Array.from(set).sort();
+        if (newCats.length > 0) {
+          const updated = [...prev, ...newCats];
           try {
             localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
           } catch (err) {
@@ -187,19 +199,43 @@ export const AdminExams: React.FC = () => {
     if (categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
       return false;
     }
-    try {
-      await api.createExamCategory(trimmed);
-    } catch (e) {
-      console.warn('Failed to save category to DB, using local fallback:', e);
-    }
-    const updated = [...categories, trimmed].sort();
+    const updated = [...categories, trimmed];
     setCategories(updated);
     try {
       localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
     } catch (e) {
       console.error('Error saving custom category:', e);
     }
+    try {
+      await api.createExamCategory(trimmed, updated.length);
+    } catch (e) {
+      console.warn('Failed to save category to DB, using local fallback:', e);
+    }
     return true;
+  };
+
+  const handleReorderCategories = async (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    const reordered = [...categories];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+
+    setCategories(reordered);
+    try {
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(reordered));
+    } catch (e) {
+      console.error('Error saving reordered categories:', e);
+    }
+
+    try {
+      const payload = reordered.map((cat, idx) => ({
+        name: cat,
+        orderIndex: idx + 1,
+      }));
+      await api.reorderExamCategories(payload);
+    } catch (err) {
+      console.warn('Failed to sync reordered categories with backend:', err);
+    }
   };
 
   const handleRenameCategory = async (oldName: string, newName: string) => {
@@ -216,8 +252,7 @@ export const AdminExams: React.FC = () => {
     if (
       categories.some(
         (c) =>
-          c.toLowerCase() === trimmedNew.toLowerCase() &&
-          c.toLowerCase() !== oldName.toLowerCase()
+          c.toLowerCase() === trimmedNew.toLowerCase() && c.toLowerCase() !== oldName.toLowerCase()
       )
     ) {
       setCategoryModalError(`Category "${trimmedNew}" already exists.`);
@@ -233,9 +268,7 @@ export const AdminExams: React.FC = () => {
         (e) => (e.category || '').toLowerCase() === oldName.toLowerCase()
       );
       if (linkedExams.length > 0) {
-        await Promise.all(
-          linkedExams.map((e) => api.updateExam(e.id, { category: trimmedNew }))
-        );
+        await Promise.all(linkedExams.map((e) => api.updateExam(e.id, { category: trimmedNew })));
         setExams((prev) =>
           prev.map((e) =>
             (e.category || '').toLowerCase() === oldName.toLowerCase()
@@ -247,14 +280,15 @@ export const AdminExams: React.FC = () => {
 
       // 2. Update category in database
       try {
-        const catSlug = 'cat_' + oldName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-        await api.updateExamCategory(catSlug, trimmedNew);
+        await api.updateExamCategory(oldName, trimmedNew);
       } catch (err) {
         console.warn('Failed to update category in DB:', err);
       }
 
-      // 3. Update category list in state & localStorage
-      const updated = categories.map((c) => (c === oldName ? trimmedNew : c)).sort();
+      // 3. Update category list in state & localStorage (preserving current order)
+      const updated = categories.map((c) =>
+        c.toLowerCase() === oldName.toLowerCase() ? trimmedNew : c
+      );
       setCategories(updated);
       try {
         localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
@@ -296,9 +330,7 @@ export const AdminExams: React.FC = () => {
       // If exams are linked, reassign them to the chosen target
       if (linkedExams.length > 0) {
         const target = reassignTo && reassignTo.trim() ? reassignTo.trim() : 'General';
-        await Promise.all(
-          linkedExams.map((e) => api.updateExam(e.id, { category: target }))
-        );
+        await Promise.all(linkedExams.map((e) => api.updateExam(e.id, { category: target })));
         setExams((prev) =>
           prev.map((e) =>
             (e.category || '').toLowerCase() === catName.toLowerCase()
@@ -308,20 +340,14 @@ export const AdminExams: React.FC = () => {
         );
       }
 
-      // Delete category in database
-      try {
-        const catSlug = 'cat_' + catName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-        await api.deleteExamCategory(catSlug);
-      } catch (err) {
-        console.warn('Failed to delete category in DB:', err);
-      }
+      // Delete category in database & API
+      await api.deleteExamCategory(catName);
 
-      // Remove from categories list
-      let updated = categories.filter((c) => c.toLowerCase() !== catName.toLowerCase());
+      // Remove from categories list (preserving order)
+      const updated = categories.filter((c) => c.toLowerCase() !== catName.toLowerCase());
       if (reassignTo && !updated.some((c) => c.toLowerCase() === reassignTo.toLowerCase())) {
         updated.push(reassignTo);
       }
-      updated = updated.sort();
 
       setCategories(updated);
       try {
@@ -339,6 +365,10 @@ export const AdminExams: React.FC = () => {
 
       setCategoryToDelete(null);
       setReassignCategoryTarget('');
+
+      // Refresh data from API/database to confirm removal and refresh UI
+      await loadData();
+
       setActionSuccessMessage(
         linkedExams.length > 0
           ? `Category "${catName}" deleted and ${linkedExams.length} exam(s) reassigned to "${reassignTo || 'General'}".`
@@ -709,7 +739,7 @@ export const AdminExams: React.FC = () => {
             leftIcon={<Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
             onClick={() => setIsCategoryModalOpen(true)}
           >
-            Manage Categories
+            Exam Categories
           </Button>
 
           <Button
@@ -778,13 +808,13 @@ export const AdminExams: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search exams by title, slug, category..."
+              placeholder="Search exams by title, category, or slug..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
             />
             {searchTerm && (
               <button
@@ -797,21 +827,28 @@ export const AdminExams: React.FC = () => {
             )}
           </div>
 
-          {/* Right Controls: Status & View Toggle */}
-          <div className="flex items-center gap-2.5 self-end md:self-auto">
-            {/* Status Select */}
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as 'all' | 'active' | 'inactive')}
-              className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500"
-            >
-              <option value="all">All Statuses</option>
-              <option value="active">Active Only</option>
-              <option value="inactive">Inactive Only</option>
-            </select>
+          {/* Right Toolbar Controls: Status Filter & View Mode */}
+          <div className="flex items-center gap-2 self-end md:self-auto">
+            {/* Status Filter */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs">
+              {(['all', 'active', 'inactive'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setSelectedStatus(st)}
+                  className={`px-2.5 py-1 rounded-lg font-semibold capitalize transition-all ${
+                    selectedStatus === st
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
 
-            {/* View Mode Switcher */}
-            <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
@@ -857,19 +894,58 @@ export const AdminExams: React.FC = () => {
           >
             All Categories ({exams.length})
           </button>
-          {categories.map((cat) => {
+          {categories.map((cat, idx) => {
             const count = exams.filter((e) => e.category === cat).length;
             const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase();
+            const isDragged = draggedCategoryIndex === idx;
+            const isDragOver = dragOverCategoryIndex === idx;
             return (
               <button
                 key={cat}
                 type="button"
+                draggable={true}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', idx.toString());
+                  e.dataTransfer.effectAllowed = 'move';
+                  setDraggedCategoryIndex(idx);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                }}
+                onDragEnter={() => {
+                  if (draggedCategoryIndex !== null && draggedCategoryIndex !== idx) {
+                    setDragOverCategoryIndex(idx);
+                  }
+                }}
+                onDragLeave={() => {
+                  if (dragOverCategoryIndex === idx) {
+                    setDragOverCategoryIndex(null);
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedCategoryIndex !== null && draggedCategoryIndex !== idx) {
+                    handleReorderCategories(draggedCategoryIndex, idx);
+                  }
+                  setDraggedCategoryIndex(null);
+                  setDragOverCategoryIndex(null);
+                }}
+                onDragEnd={() => {
+                  setDraggedCategoryIndex(null);
+                  setDragOverCategoryIndex(null);
+                }}
                 onClick={() => setSelectedCategory(isSelected ? 'all' : cat)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-grab active:cursor-grabbing ${
                   isSelected
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : 'bg-slate-50 dark:bg-slate-800/70 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80'
+                } ${isDragged ? 'opacity-40 scale-95' : ''} ${
+                  isDragOver
+                    ? 'ring-2 ring-indigo-500 ring-offset-1 border-indigo-500 scale-105'
+                    : ''
                 }`}
+                title={`Drag to reorder "${cat}" or click to filter`}
               >
                 {cat} ({count})
               </button>
@@ -1332,8 +1408,8 @@ export const AdminExams: React.FC = () => {
                 <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span>
-                    No syllabus mapping required. Standard topic tests and subjects are automatically
-                    enabled for this exam.
+                    No syllabus mapping required. Standard topic tests and subjects are
+                    automatically enabled for this exam.
                   </span>
                 </div>
               )}
@@ -1698,8 +1774,9 @@ export const AdminExams: React.FC = () => {
                       Delete &ldquo;{categoryToDelete.name}&rdquo;?
                     </h4>
                     <p className="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5 leading-relaxed">
-                      This category is currently linked to <strong>{categoryToDelete.examCount}</strong> exam(s).
-                      Choose a category to reassign them to:
+                      This category is currently linked to{' '}
+                      <strong>{categoryToDelete.examCount}</strong> exam(s). Choose a category to
+                      reassign them to:
                     </p>
                   </div>
                 </div>
@@ -1765,7 +1842,7 @@ export const AdminExams: React.FC = () => {
                     No categories created yet. Type above and click Create!
                   </div>
                 ) : (
-                  categories.map((cat) => {
+                  categories.map((cat, idx) => {
                     const examCount = exams.filter(
                       (e) => (e.category || '').toLowerCase() === cat.toLowerCase()
                     ).length;
@@ -1819,12 +1896,56 @@ export const AdminExams: React.FC = () => {
                       );
                     }
 
+                    const isModalDragged = modalDraggedIndex === idx;
+                    const isModalDragOver = modalDragOverIndex === idx;
+
                     return (
                       <div
                         key={cat}
-                        className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+                        draggable={true}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', idx.toString());
+                          e.dataTransfer.effectAllowed = 'move';
+                          setModalDraggedIndex(idx);
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                        }}
+                        onDragEnter={() => {
+                          if (modalDraggedIndex !== null && modalDraggedIndex !== idx) {
+                            setModalDragOverIndex(idx);
+                          }
+                        }}
+                        onDragLeave={() => {
+                          if (modalDragOverIndex === idx) {
+                            setModalDragOverIndex(null);
+                          }
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (modalDraggedIndex !== null && modalDraggedIndex !== idx) {
+                            handleReorderCategories(modalDraggedIndex, idx);
+                          }
+                          setModalDraggedIndex(null);
+                          setModalDragOverIndex(null);
+                        }}
+                        onDragEnd={() => {
+                          setModalDraggedIndex(null);
+                          setModalDragOverIndex(null);
+                        }}
+                        className={`flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs transition-all ${
+                          isModalDragged ? 'opacity-40 scale-98' : ''
+                        } ${
+                          isModalDragOver
+                            ? 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30'
+                            : 'hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
+                          <span title="Drag to reorder">
+                            <GripVertical className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing shrink-0" />
+                          </span>
                           <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                           <span className="font-bold text-slate-900 dark:text-white truncate">
                             {cat}
@@ -1854,9 +1975,8 @@ export const AdminExams: React.FC = () => {
                               if (examCount > 0) {
                                 setCategoryToDelete({ name: cat, examCount });
                                 const other =
-                                  categories.find(
-                                    (c) => c.toLowerCase() !== cat.toLowerCase()
-                                  ) || 'General';
+                                  categories.find((c) => c.toLowerCase() !== cat.toLowerCase()) ||
+                                  'General';
                                 setReassignCategoryTarget(other);
                               } else {
                                 handleDeleteCategory(cat);

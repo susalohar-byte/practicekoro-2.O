@@ -529,6 +529,7 @@ export interface AdminBatch {
   memberCount: number;
   isActive: boolean;
   createdAt: string;
+  created_at?: string;
 }
 
 export interface RevenueTrendPoint {

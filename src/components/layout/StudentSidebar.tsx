@@ -326,7 +326,9 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         <Icon
                           className={cn(
                             'w-4 h-4 shrink-0 transition-colors',
-                            isActive ? 'text-pk-primary' : 'text-slate-400 group-hover:text-pk-primary'
+                            isActive
+                              ? 'text-pk-primary'
+                              : 'text-slate-400 group-hover:text-pk-primary'
                           )}
                         />
                         <span className={cn('truncate', isCollapsed && 'lg:hidden')}>

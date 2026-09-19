@@ -406,7 +406,8 @@ export const Practice: React.FC = () => {
                     stateStyles = 'border-slate-200 opacity-60 bg-slate-50';
                   }
                 } else if (isSelected) {
-                  stateStyles = 'border-pk-primary bg-pk-blue-light text-pk-dark ring-1 ring-pk-primary';
+                  stateStyles =
+                    'border-pk-primary bg-pk-blue-light text-pk-dark ring-1 ring-pk-primary';
                 }
 
                 return (
@@ -420,7 +421,7 @@ export const Practice: React.FC = () => {
                     <span
                       className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border ${
                         isAnswerSubmitted && isCorrectOption
-                           ? 'bg-emerald-600 text-white border-emerald-600'
+                          ? 'bg-emerald-600 text-white border-emerald-600'
                           : isAnswerSubmitted && isSelected && !isCorrectOption
                             ? 'bg-rose-600 text-white border-rose-600'
                             : isSelected

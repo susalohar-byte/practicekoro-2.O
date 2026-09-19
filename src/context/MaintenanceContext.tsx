@@ -43,9 +43,7 @@ export const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       );
       if (phoneSetting?.value) setSupportPhone(String(phoneSetting.value));
 
-      const nameSetting = settings.find(
-        (s) => s.id === 'general_app_name' || s.key === 'app_name'
-      );
+      const nameSetting = settings.find((s) => s.id === 'general_app_name' || s.key === 'app_name');
       if (nameSetting?.value) setAppName(String(nameSetting.value));
 
       return isMaint;

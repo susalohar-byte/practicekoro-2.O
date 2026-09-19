@@ -21,9 +21,14 @@ import {
   Tag,
   AlertTriangle,
   Network,
+  Users,
+  History,
+  Activity,
+  TrendingUp,
 } from 'lucide-react';
 import { useMaintenance } from '@/context/MaintenanceContext';
 import { cn } from '@/lib/utils';
+import type { AdminPermissions } from '@/types';
 
 interface AdminNavItem {
   label: string;
@@ -32,6 +37,7 @@ interface AdminNavItem {
   end?: boolean;
   altPaths?: string[];
   badge?: string;
+  permission?: keyof AdminPermissions;
 }
 
 interface AdminNavSection {
@@ -40,13 +46,13 @@ interface AdminNavSection {
 }
 
 export const AdminLayout: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, adminRole, hasPermission } = useAuth();
   const { isMaintenanceMode } = useMaintenance();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navSections: AdminNavSection[] = [
+  const rawNavSections: AdminNavSection[] = [
     {
       title: 'Overview',
       items: [
@@ -66,32 +72,56 @@ export const AdminLayout: React.FC = () => {
           path: '/admin/questions',
           altPaths: ['/admin/question-bank'],
           icon: BookOpen,
+          permission: 'canManageQuestions',
         },
         {
           label: 'Manage Exams',
           path: '/admin/exams',
           icon: Shield,
+          permission: 'canManageExams',
         },
         {
           label: 'Exam-Topic Mapping',
           path: '/admin/exam-topics',
           icon: Network,
+          permission: 'canManageExams',
         },
         {
           label: 'Mock Test Management',
           path: '/admin/tests',
           icon: FileText,
+          permission: 'canManageTests',
         },
         {
           label: 'Test Series',
           path: '/admin/test-series',
           icon: ListOrdered,
+          permission: 'canManageTests',
         },
         {
           label: 'Topic & Subjects',
           path: '/admin/topic-manage',
           altPaths: ['/admin/subjects', '/admin/topics', '/admin/chapters'],
           icon: FolderTree,
+          permission: 'canManageExams',
+        },
+      ],
+    },
+    {
+      title: 'Analytics & Reports',
+      items: [
+        {
+          label: 'Financial & Revenue',
+          path: '/admin/revenue-analytics',
+          altPaths: ['/admin/revenue', '/admin/financials'],
+          icon: TrendingUp,
+          permission: 'canManageSubscriptions',
+        },
+        {
+          label: 'Question Item Analysis',
+          path: '/admin/item-analysis',
+          icon: Activity,
+          permission: 'canManageQuestions',
         },
       ],
     },
@@ -103,31 +133,58 @@ export const AdminLayout: React.FC = () => {
           path: '/admin/subscriptions',
           altPaths: ['/admin/students', '/admin/pro-users'],
           icon: CreditCard,
+          permission: 'canManageSubscriptions',
         },
         {
           label: 'Coupons & Discounts',
           path: '/admin/coupons',
           altPaths: ['/admin/discounts'],
           icon: Tag,
+          permission: 'canManageCoupons',
+        },
+        {
+          label: 'Team & Staff',
+          path: '/admin/staff',
+          icon: Users,
+          permission: 'canManageStaff',
+          badge: 'RBAC',
+        },
+        {
+          label: 'Audit Trail Logs',
+          path: '/admin/audit-logs',
+          icon: History,
+          permission: 'canViewAuditLogs',
+          badge: 'Live',
         },
         {
           label: 'Notifications',
           path: '/admin/notifications',
           icon: Bell,
+          permission: 'canManageNotifications',
         },
         {
           label: 'Support & Help',
           path: '/admin/support',
           icon: HelpCircle,
+          permission: 'canManageSupport',
         },
         {
           label: 'Settings',
           path: '/admin/settings',
           icon: Settings,
+          permission: 'canManageSettings',
         },
       ],
     },
   ];
+
+  // Dynamically filter sections and items according to current admin's role permissions
+  const navSections: AdminNavSection[] = rawNavSections
+    .map((sec) => ({
+      ...sec,
+      items: sec.items.filter((item) => !item.permission || hasPermission(item.permission)),
+    }))
+    .filter((sec) => sec.items.length > 0);
 
   return (
     <div className="admin-scope min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
@@ -268,7 +325,13 @@ export const AdminLayout: React.FC = () => {
                 <p className="text-xs font-bold !text-white truncate leading-tight">
                   {user?.fullName || 'Administrator'}
                 </p>
-                <p className="text-[10px] font-semibold !text-sky-300 truncate">Super Admin</p>
+                <p className="text-[10px] font-semibold truncate text-sky-300">
+                  {adminRole === 'content_writer'
+                    ? 'Content Writer (কনটেন্ট রাইটার)'
+                    : adminRole === 'support_agent'
+                      ? 'Support Team (সাপোর্ট টিম)'
+                      : 'Super Admin (সুপার অ্যাডমিন)'}
+                </p>
               </div>
             </div>
 
@@ -335,7 +398,8 @@ export const AdminLayout: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
               <span className="truncate sm:whitespace-normal">
-                <strong>মেইনটেন্যান্স মোড সক্রিয়:</strong> স্টুডেন্ট পোর্টাল ও মক টেস্ট সাময়িকভাবে স্থগিত রয়েছে। শুধুমাত্র অ্যাডমিনরা অ্যাক্সেস করতে পারছেন।
+                <strong>মেইনটেন্যান্স মোড সক্রিয়:</strong> স্টুডেন্ট পোর্টাল ও মক টেস্ট সাময়িকভাবে
+                স্থগিত রয়েছে। শুধুমাত্র অ্যাডমিনরা অ্যাক্সেস করতে পারছেন।
               </span>
             </div>
             <Link

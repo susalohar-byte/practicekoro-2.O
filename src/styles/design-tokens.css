@@ -12,28 +12,28 @@
   /* ==========================================================================
      PRIMARY BRAND BLUES
      ========================================================================== */
-  --pk-primary: #0158fc;               /* Main Brand Blue - CTAs, active nav, primary links */
-  --pk-primary-bright: #0198fd;        /* Bright Blue - Gradients, highlights, illustrations */
-  --pk-primary-interactive: #0062fd;   /* Interactive Blue - Hover, active click states */
-  --pk-primary-accent: #1d8cf6;        /* Accent Blue - Decorative elements, secondary icons */
+  --pk-primary: #0158fc; /* Main Brand Blue - CTAs, active nav, primary links */
+  --pk-primary-bright: #0198fd; /* Bright Blue - Gradients, highlights, illustrations */
+  --pk-primary-interactive: #0062fd; /* Interactive Blue - Hover, active click states */
+  --pk-primary-accent: #1d8cf6; /* Accent Blue - Decorative elements, secondary icons */
 
   /* ==========================================================================
      BRAND DARK COLORS (Typography & Strong Emphasis)
      ========================================================================== */
-  --pk-navy: #063585;                  /* Primary Navy - Headings, logo text, strong emphasis */
-  --pk-dark: #0b1f44;                  /* Secondary Dark - Body headings, test questions, content */
+  --pk-navy: #063585; /* Primary Navy - Headings, logo text, strong emphasis */
+  --pk-dark: #0b1f44; /* Secondary Dark - Body headings, test questions, content */
 
   /* ==========================================================================
      LIGHT BRAND SURFACES & CONTAINERS
      ========================================================================== */
-  --pk-blue-soft: #d9e7fd;             /* Soft Blue - Selected backgrounds, soft cards, borders */
-  --pk-blue-light: #eff5fb;            /* Very Light Blue - Secondary surfaces, section bg, inputs */
+  --pk-blue-soft: #d9e7fd; /* Soft Blue - Selected backgrounds, soft cards, borders */
+  --pk-blue-light: #eff5fb; /* Very Light Blue - Secondary surfaces, section bg, inputs */
 
   /* ==========================================================================
      CANVAS & SURFACES
      ========================================================================== */
-  --pk-background: #f8fafc;            /* Page canvas background */
-  --pk-surface: #ffffff;               /* Primary card & panel surface */
+  --pk-background: #f8fafc; /* Page canvas background */
+  --pk-surface: #ffffff; /* Primary card & panel surface */
 
   /* ==========================================================================
      BRAND GRADIENTS (Use selectively: hero cards, primary badges, main CTAs)
@@ -57,8 +57,8 @@
   --pk-blue-soft: rgba(1, 88, 252, 0.24);
 
   /* Typography adapts for dark canvas readability */
-  --pk-navy: #93c5fd;                  /* High contrast readable light blue for headings */
-  --pk-dark: #f8fafc;                  /* Crisp white for dark content headings */
+  --pk-navy: #93c5fd; /* High contrast readable light blue for headings */
+  --pk-dark: #f8fafc; /* Crisp white for dark content headings */
 
   /* Gradients adapt to deep blue luminescence */
   --pk-gradient-subtle: linear-gradient(180deg, rgba(1, 88, 252, 0.12) 0%, #0f172a 100%);

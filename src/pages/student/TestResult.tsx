@@ -263,9 +263,7 @@ export const TestResult: React.FC = () => {
                     sec.attempted > 0 ? Math.round((sec.correct / sec.attempted) * 100) : 0;
                   return (
                     <tr key={sec.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-3.5 py-2.5 font-bold text-slate-900">
-                        {sec.name}
-                      </td>
+                      <td className="px-3.5 py-2.5 font-bold text-slate-900">{sec.name}</td>
                       <td className="px-3.5 py-2.5 text-center text-slate-600">{sec.totalQs}</td>
                       <td className="px-3.5 py-2.5 text-center text-slate-600">{sec.attempted}</td>
                       <td className="px-3.5 py-2.5 text-center font-bold text-emerald-600">
