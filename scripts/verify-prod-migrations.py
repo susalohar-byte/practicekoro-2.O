@@ -178,7 +178,7 @@ def main():
 
     if pending_count > 0:
         print("\nACTION REQUIRED BEFORE PRODUCTION LAUNCH:")
-        print("The production database is missing pending migrations (018 through 030).")
+        print("The production database is missing pending migrations (018 through 031).")
         print("To apply all pending migrations:")
         print(f"    SUPABASE_DB_PASSWORD=*** bash scripts/apply-migrations-prod.sh\n")
         return 1

@@ -5,7 +5,7 @@
 # Applies database migrations to production Supabase via psql (session pooler, IPv4).
 #
 # Usage:
-#   # 1. Apply only pending migrations (018 through 030 - Recommended):
+#   # 1. Apply only pending migrations (018 through 031 - Recommended):
 #   SUPABASE_DB_PASSWORD=*** bash scripts/apply-migrations-prod.sh
 #
 #   # 2. Dry-run (preview which files will run without modifying anything):
@@ -14,7 +14,7 @@
 #   # 3. Verify current live schema state:
 #   bash scripts/apply-migrations-prod.sh --verify
 #
-#   # 4. Apply all migrations from 001 through 030 (idempotent-safe):
+#   # 4. Apply all migrations from 001 through 031 (idempotent-safe):
 #   SUPABASE_DB_PASSWORD=*** bash scripts/apply-migrations-prod.sh --all
 #
 #   # 5. Apply a single migration:
@@ -63,9 +63,10 @@ ALL_MIGRATIONS=(
   "supabase/migrations/028_app_settings_upsert_and_maintenance_rls.sql"
   "supabase/migrations/029_admin_roles_and_audit_logs.sql"
   "supabase/migrations/030_sync_test_question_counts_trigger.sql"
+  "supabase/migrations/031_admin_payment_gateway_management.sql"
 )
 
-# Unapplied migrations verified missing from production via schema audit (018 to 030)
+# Unapplied migrations verified missing from production via schema audit (018 to 031)
 PENDING_MIGRATIONS=(
   "supabase/migrations/018_admin_v2_architecture.sql"
   "supabase/migrations/019_admin_v2_polish.sql"
@@ -80,6 +81,7 @@ PENDING_MIGRATIONS=(
   "supabase/migrations/028_app_settings_upsert_and_maintenance_rls.sql"
   "supabase/migrations/029_admin_roles_and_audit_logs.sql"
   "supabase/migrations/030_sync_test_question_counts_trigger.sql"
+  "supabase/migrations/031_admin_payment_gateway_management.sql"
 )
 
 # ----------------------------------------------------------------------------

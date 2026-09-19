@@ -9,11 +9,11 @@ import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
-  { label: 'Exams', href: '#exams' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'Features', href: '#features' },
-  { label: 'Pricing', href: '#pricing' },
-  { label: 'FAQ', href: '#faq' },
+  { label: 'Exams', href: '/#exams' },
+  { label: 'How it works', href: '/#how-it-works' },
+  { label: 'Features', href: '/#features' },
+  { label: 'Pricing', href: '/#pricing' },
+  { label: 'FAQ', href: '/#faq' },
 ];
 
 export const Navbar: React.FC = () => {
@@ -36,8 +36,8 @@ export const Navbar: React.FC = () => {
         className={cn(
           'w-full max-w-6xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border rounded-2xl sm:rounded-full px-4 sm:px-6 flex items-center justify-between pointer-events-auto transition-all duration-300',
           scrolled
-            ? 'border-slate-200 shadow-[0_12px_40px_-8px_rgba(37,99,235,0.18)] h-[4.25rem]'
-            : 'border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-16 sm:h-18'
+            ? 'border-slate-200 dark:border-slate-800 shadow-[0_12px_40px_-8px_rgba(37,99,235,0.18)] h-[4.25rem]'
+            : 'border-slate-200/80 dark:border-slate-800/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-16 sm:h-18'
         )}
       >
         {/* Logo */}
@@ -53,13 +53,13 @@ export const Navbar: React.FC = () => {
               className="w-6 h-6 object-contain"
             />
           </span>
-          <span className="font-black text-xl sm:text-2xl text-pk-navy tracking-tight flex items-center">
+          <span className="font-black text-xl sm:text-2xl text-pk-navy dark:text-white tracking-tight flex items-center">
             Practice<span className="text-pk-primary">Koro</span>
           </span>
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
+        <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600 dark:text-slate-300">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
@@ -109,7 +109,7 @@ export const Navbar: React.FC = () => {
               onClick={() => setMenuOpen((v) => !v)}
               aria-expanded={menuOpen}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="sm:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+              className="sm:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -120,18 +120,18 @@ export const Navbar: React.FC = () => {
       {/* Mobile dropdown panel */}
       {!user && menuOpen && (
         <div className="sm:hidden absolute top-full mt-2 w-full max-w-6xl pointer-events-auto">
-          <div className="mx-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 shadow-xl p-3 space-y-1">
+          <div className="mx-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl p-3 space-y-1">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-pk-blue-light hover:text-pk-primary transition-colors"
+                className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-pk-blue-light dark:hover:bg-slate-800 hover:text-pk-primary transition-colors"
               >
                 {link.label}
               </a>
             ))}
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <Button
                 variant="outline"
                 onClick={() => {

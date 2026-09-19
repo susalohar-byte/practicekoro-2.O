@@ -795,3 +795,23 @@ export interface DateRangeRevenueStats {
   label?: string;
   dailyTrend: DateRangeDailyPoint[];
 }
+
+// ─── Payment Gateway Admin Configuration ─────────────────────────────
+export interface PaymentGatewayConfig {
+  gateway: string;
+  keyId: string;
+  isActive: boolean;
+  hasSecret: boolean;
+  secretPreview?: string | null;
+  hasWebhookSecret: boolean;
+  webhookPreview?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface PaymentGatewayUpdatePayload {
+  gateway?: string;
+  keyId: string;
+  keySecret?: string;
+  webhookSecret?: string;
+  isActive?: boolean;
+}

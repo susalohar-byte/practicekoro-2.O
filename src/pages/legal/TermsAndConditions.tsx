@@ -1,203 +1,287 @@
 import React from 'react';
-import { LegalLayout } from './LegalLayout';
 import { Link } from 'react-router-dom';
-import { Shield, BookOpen, AlertTriangle, Scale, CreditCard, Mail } from 'lucide-react';
+import {
+  Scale,
+  Shield,
+  BookOpen,
+  CreditCard,
+  Lock,
+  AlertTriangle,
+  FileCheck,
+  Mail,
+  Gavel,
+} from 'lucide-react';
+import { Navbar } from '@/pages/landing/sections/Navbar';
+import { Footer } from '@/pages/landing/sections/Footer';
 
 export const TermsAndConditions: React.FC = () => {
   return (
-    <LegalLayout
-      title="Terms and Conditions"
-      bengaliTitle="ব্যবহারের সাধারণ নিয়ম ও শর্তাবলি"
-      subtitle="Please read these terms carefully before accessing or using the PracticeKoro examination preparation platform."
-      lastUpdated="September 19, 2026"
-      badge="User Agreement & Platform Terms"
-    >
-      {/* Introduction */}
-      <section className="space-y-3">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-pk-primary" />
-          <span>1. Introduction & Acceptance of Terms</span>
-        </h2>
-        <p>
-          Welcome to <strong>PracticeKoro</strong> (&quot;PracticeKoro&quot;, &quot;we&quot;,
-          &quot;us&quot;, or &quot;our&quot;), operating via{' '}
-          <a
-            href="https://practicekoro.online"
-            className="text-pk-primary hover:underline font-semibold"
-          >
-            https://practicekoro.online
-          </a>{' '}
-          and related digital services. By creating an account, browsing our website, or subscribing
-          to our Pro Pass, you agree to be bound by these Terms and Conditions (&quot;Terms&quot;)
-          and our{' '}
-          <Link to="/privacy" className="text-pk-primary hover:underline font-medium">
-            Privacy Policy
-          </Link>
-          .
-        </p>
-        <p>
-          If you do not agree to these Terms, please immediately discontinue using our services.
-          PracticeKoro is dedicated to providing high-yield mock tests, previous year questions
-          (PYQs), topic-wise practice, and performance analytics for competitive examinations
-          conducted across West Bengal and India (including WBP Constable, KP SI, WBCS, WBPSC
-          Clerkship, Miscellaneous, and Central SSC/Railway exams).
-        </p>
-      </section>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-pk-primary selection:text-white">
+      {/* Global Navbar */}
+      <Navbar />
 
-      {/* User Eligibility & Accounts */}
-      <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Shield className="w-5 h-5 text-pk-primary" />
-          <span>2. Account Registration & Security</span>
-        </h2>
-        <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-300">
-          <li>
-            <strong>Eligibility:</strong> You must be at least 16 years of age or preparing for
-            eligible competitive examinations to register an account.
-          </li>
-          <li>
-            <strong>Accurate Information:</strong> You agree to provide true, accurate, and complete
-            information during registration and keep your profile credentials updated.
-          </li>
-          <li>
-            <strong>Account Confidentiality:</strong> You are solely responsible for maintaining the
-            confidentiality of your account credentials (email and password or Google OAuth
-            session). Any activity that occurs under your account is your responsibility.
-          </li>
-          <li>
-            <strong>Single User License:</strong> Each user account and subscription is personal and
-            non-transferable. Simultaneous logins from multiple distant locations or sharing account
-            credentials with study groups or third parties is strictly prohibited and may result in
-            immediate suspension without refund.
-          </li>
-        </ul>
-      </section>
+      {/* Hero Header */}
+      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-16 overflow-hidden bg-gradient-to-b from-blue-50/70 via-white to-slate-50 dark:from-slate-900/80 dark:via-slate-900 dark:to-slate-950 border-b border-slate-200/80 dark:border-slate-800">
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-pk-primary/10 rounded-full blur-3xl pointer-events-none"
+        />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100/80 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-pk-primary dark:text-blue-300 text-xs font-semibold">
+            <Scale className="w-3.5 h-3.5" />
+            <span>Official User Agreement</span>
+          </div>
 
-      {/* Pro Pass Subscriptions & Payments */}
-      <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <CreditCard className="w-5 h-5 text-pk-primary" />
-          <span>3. Subscriptions, Payments & Access Rights</span>
-        </h2>
-        <p>
-          PracticeKoro operates on a freemium model. Free mock tests are accessible to all
-          registered students. Advanced mock exams, detailed Bengali solutions, rank percentiles,
-          and mistake notebooks require an active <strong>Pro Pass</strong>.
-        </p>
-        <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-300">
-          <li>
-            <strong>Universal Access:</strong> An active Pro Pass grants universal access to all
-            premium tests during the specified validity period (e.g., 365 days for the 1-Year
-            All-Access Pro Pass).
-          </li>
-          <li>
-            <strong>Payment Aggregation:</strong> All monetary transactions on PracticeKoro are
-            securely processed via <strong>Razorpay</strong>, an RBI-authorized payment aggregator.
-            We do not store your complete credit/debit card details, net banking credentials, or UPI
-            MPIN on our servers.
-          </li>
-          <li>
-            <strong>Taxes:</strong> All fees are stated in Indian Rupees (INR) and are inclusive of
-            applicable goods and service taxes unless explicitly stated otherwise.
-          </li>
-          <li>
-            <strong>Refunds:</strong> All purchases are subject to our comprehensive{' '}
-            <Link to="/refund-policy" className="text-pk-primary hover:underline font-semibold">
-              Refund &amp; Cancellation Policy
-            </Link>
-            .
-          </li>
-        </ul>
-      </section>
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+            Terms and Conditions
+          </h1>
 
-      {/* Intellectual Property */}
-      <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Scale className="w-5 h-5 text-pk-primary" />
-          <span>4. Intellectual Property Rights</span>
-        </h2>
-        <p>
-          All mock test questions, question curation, Bengali translations, explanations, software
-          code, test algorithms, UI designs, graphics, and trademarks are the exclusive proprietary
-          property of PracticeKoro.
-        </p>
-        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-900 dark:text-amber-200 text-xs sm:text-sm">
-          <strong>Strict Prohibition:</strong> You may not scrape, copy, reproduce, distribute,
-          publish, commercially exploit, reverse-engineer, or transmit any test papers or solutions
-          to Telegram channels, websites, or coaching institutes without express written
-          authorization.
+          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400 font-bengali">
+            ব্যবহারের সাধারণ নিয়ম ও শর্তাবলি
+          </p>
+
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Please read these terms carefully before accessing or using the PracticeKoro examination
+            preparation platform and test engine.
+          </p>
+
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <span>
+              Last Updated:{' '}
+              <strong className="font-semibold text-slate-700 dark:text-slate-300">
+                September 19, 2026
+              </strong>
+            </span>
+            <span>•</span>
+            <span>
+              Governing Jurisdiction:{' '}
+              <strong className="font-semibold text-slate-700 dark:text-slate-300">
+                West Bengal, India
+              </strong>
+            </span>
+            <span>•</span>
+            <span>
+              Platform:{' '}
+              <strong className="font-semibold text-slate-700 dark:text-slate-300">
+                practicekoro.online
+              </strong>
+            </span>
+          </div>
         </div>
       </section>
 
-      {/* Non-Affiliation Disclaimer */}
-      <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-amber-600" />
-          <span>5. Non-Affiliation Disclaimer (Educational Tool Only)</span>
-        </h2>
-        <p className="text-slate-600 dark:text-slate-300">
-          <strong>PracticeKoro is an independent private educational platform.</strong> We are NOT
-          affiliated with, sponsored by, endorsed by, or in any way associated with the West Bengal
-          Police Recruitment Board (WBPRB), West Bengal Public Service Commission (WBPSC), Staff
-          Selection Commission (SSC), Railway Recruitment Board (RRB), or any other government
-          recruitment body.
-        </p>
-        <p className="text-slate-600 dark:text-slate-300">
-          Our practice tests, past paper archives, and simulated rankings are strictly intended for
-          academic practice and preparation purposes. Enrolling in PracticeKoro or attempting our
-          tests does not guarantee appointment, selection, or qualification in any competitive exam.
-        </p>
-      </section>
+      {/* Main Content */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-8">
+        {/* Important Statutory Disclaimer Banner */}
+        <div className="p-5 bg-amber-50/70 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-900/60 flex items-start gap-4">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1 text-xs sm:text-sm">
+            <h3 className="font-bold text-amber-900 dark:text-amber-200">
+              Important Educational Notice
+            </h3>
+            <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
+              PracticeKoro is an independent, non-governmental EdTech platform providing mock tests,
+              previous year questions, and performance analysis. We are not associated with or
+              endorsed by WBPRB, WBPSC, SSC, RRB, or any state/central government authority.
+            </p>
+          </div>
+        </div>
 
-      {/* Limitation of Liability */}
-      <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-          6. Limitation of Liability &amp; Platform Availability
-        </h2>
-        <p>
-          While we strive for 99.9% uptime and rigorous academic accuracy across all question banks,
-          PracticeKoro provides the service on an &quot;as is&quot; and &quot;as available&quot;
-          basis. We are not liable for incidental service interruptions resulting from scheduled
-          server maintenance, telecommunication network outages, or internet connectivity issues on
-          the student&apos;s device.
-        </p>
-      </section>
+        {/* Detailed Article Body */}
+        <article className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-10 shadow-xs space-y-8 text-sm sm:text-base leading-relaxed text-slate-700 dark:text-slate-300">
+          {/* Section 1 */}
+          <section className="space-y-3">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-pk-primary" />
+              <span>1. Introduction & Acceptance of Terms</span>
+            </h2>
+            <p>
+              Welcome to <strong>PracticeKoro</strong> (&quot;PracticeKoro&quot;, &quot;we&quot;,
+              &quot;us&quot;, or &quot;our&quot;), operating via{' '}
+              <a
+                href="https://practicekoro.online"
+                className="text-pk-primary hover:underline font-semibold"
+              >
+                https://practicekoro.online
+              </a>{' '}
+              and associated web applications. By creating an account, browsing our website, or
+              purchasing a Pro Pass, you agree to be bound by these Terms and Conditions
+              (&quot;Terms&quot;) and our{' '}
+              <Link to="/privacy" className="text-pk-primary hover:underline font-medium">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+            <p>
+              If you do not agree to these Terms, please immediately discontinue using our services.
+              PracticeKoro provides structured test simulations and analytics for competitive
+              examinations including WBP Constable, Kolkata Police SI, WBCS, WBPSC Clerkship,
+              Railways, and Central SSC.
+            </p>
+          </section>
 
-      {/* Governing Law & Dispute Resolution */}
-      <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-          7. Governing Law &amp; Jurisdiction
-        </h2>
-        <p>
-          These Terms shall be governed by and interpreted in accordance with the laws of the
-          Republic of India. In the event of any legal dispute or claim arising out of or related to
-          these Terms or your use of PracticeKoro, the competent courts situated in{' '}
-          <strong>Kolkata / West Bengal, India</strong> shall have exclusive jurisdiction.
-        </p>
-      </section>
+          {/* Section 2 */}
+          <section className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Shield className="w-5 h-5 text-pk-primary" />
+              <span>2. Account Registration & Security</span>
+            </h2>
+            <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-300">
+              <li>
+                <strong>Eligibility:</strong> You must be at least 16 years of age or preparing for
+                eligible competitive recruitment examinations.
+              </li>
+              <li>
+                <strong>Single-User License:</strong> Each account is granted on a strictly
+                personal, non-exclusive, non-transferable basis. Account sharing, credential
+                pooling, or multiple concurrent sessions by distinct individuals are strictly
+                prohibited.
+              </li>
+              <li>
+                <strong>Credential Confidentiality:</strong> You are solely responsible for
+                safeguarding your password and account credentials.
+              </li>
+            </ul>
+          </section>
 
-      {/* Contact Section */}
-      <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-5 rounded-xl">
-        <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Mail className="w-4 h-4 text-pk-primary" />
-          <span>Questions regarding these Terms?</span>
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-          For legal inquiries, terms clarification, or institutional inquiries, please contact our
-          legal and support team at{' '}
-          <a
-            href="mailto:support@practicekoro.online"
-            className="text-pk-primary font-semibold hover:underline"
-          >
-            support@practicekoro.online
-          </a>{' '}
-          or reach out via our{' '}
-          <Link to="/contact-us" className="text-pk-primary font-semibold hover:underline">
-            Contact Us
-          </Link>{' '}
-          page.
-        </p>
-      </section>
-    </LegalLayout>
+          {/* Section 3: Subscriptions & Razorpay */}
+          <section className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-pk-primary" />
+              <span>3. Subscriptions, Payments & Access Rights</span>
+            </h2>
+            <p>
+              While PracticeKoro provides select free diagnostic tests, full mock series and
+              in-depth question analytics require a paid subscription (&quot;Pro Pass&quot;).
+            </p>
+            <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 space-y-2">
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                All monetary transactions on PracticeKoro are securely processed via{' '}
+                <strong>Razorpay</strong>, an authorized payment aggregator compliant with Reserve
+                Bank of India (RBI) regulations. By purchasing a Pro Pass, you authorize Razorpay to
+                process your chosen payment method (UPI, Debit Card, Credit Card, Net Banking).
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                All listed fees are denominated in Indian Rupees (INR) and are inclusive of
+                applicable taxes unless stated otherwise.
+              </p>
+            </div>
+            <p>
+              Subscription cancellations and refunds are strictly governed by our published{' '}
+              <Link to="/refund-policy" className="text-pk-primary hover:underline font-semibold">
+                Refund &amp; Cancellation Policy
+              </Link>
+              .
+            </p>
+          </section>
+
+          {/* Section 4: IP Rights */}
+          <section className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Lock className="w-5 h-5 text-pk-primary" />
+              <span>4. Intellectual Property Rights</span>
+            </h2>
+            <p>
+              All software architecture, question curation, bilingual translations, answer
+              explanations, short notes, score algorithms, and design tokens are the exclusive
+              intellectual property of PracticeKoro.
+            </p>
+            <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300">
+              <li>
+                You may not download, scrape, reverse engineer, or compile test questions via
+                automated bots or crawlers.
+              </li>
+              <li>
+                Redistributing, publishing, or selling our questions, PDFs, or solution keys on
+                Telegram channels, WhatsApp groups, or third-party websites without written consent
+                will result in immediate termination of access and civil/criminal legal action under
+                the Indian Copyright Act, 1957.
+              </li>
+            </ul>
+          </section>
+
+          {/* Section 5: Non-Affiliation Disclaimer */}
+          <section className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-pk-primary" />
+              <span>5. Non-Affiliation Disclaimer</span>
+            </h2>
+            <p>
+              PracticeKoro is an independent edtech learning tool. We are NOT associated with,
+              affiliated with, or endorsed by the West Bengal Police Recruitment Board (WBPRB), West
+              Bengal Public Service Commission (WBPSC), Staff Selection Commission (SSC), Railway
+              Recruitment Boards (RRB), or any other recruitment agency.
+            </p>
+            <p>
+              Exam names, official logos (if referenced), and syllabi are used strictly for
+              nominative identification and educational context under fair use.
+            </p>
+          </section>
+
+          {/* Section 6 */}
+          <section className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-pk-primary" />
+              <span>6. Code of Conduct & Fair Use</span>
+            </h2>
+            <p>When using PracticeKoro, you agree not to:</p>
+            <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300">
+              <li>Attempt to manipulate timer mechanisms or bypass test submission rules.</li>
+              <li>Post abusive, defamatory, or objectionable comments in student support desks.</li>
+              <li>Circumvent security protections or inspect unauthorized backend endpoints.</li>
+            </ul>
+          </section>
+
+          {/* Section 7: Governing Law */}
+          <section className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Gavel className="w-5 h-5 text-pk-primary" />
+              <span>7. Governing Law & Jurisdiction</span>
+            </h2>
+            <p>
+              These Terms shall be governed by, interpreted, and construed in accordance with the
+              laws of the Republic of India.
+            </p>
+            <p>
+              Any legal dispute, suit, or proceeding arising out of or related to these Terms or
+              services provided by PracticeKoro shall be subject to the exclusive jurisdiction of
+              the competent courts located in <strong>West Bengal, India</strong> (specifically the
+              District Courts of Paschim Medinipur / High Court at Calcutta).
+            </p>
+          </section>
+
+          {/* Section 8: Contact */}
+          <section className="pt-6 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-pk-primary" />
+                  <span>Questions regarding our Terms?</span>
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Direct your inquiries to{' '}
+                  <a
+                    href="mailto:support@practicekoro.online"
+                    className="text-pk-primary font-semibold hover:underline"
+                  >
+                    support@practicekoro.online
+                  </a>{' '}
+                  or visit our Contact desk.
+                </p>
+              </div>
+              <Link
+                to="/contact-us"
+                className="px-4 py-2 bg-pk-primary hover:bg-pk-primary-interactive text-white rounded-xl text-xs font-semibold shadow-xs shrink-0"
+              >
+                Contact Support Desk
+              </Link>
+            </div>
+          </section>
+        </article>
+      </main>
+
+      {/* Global Footer */}
+      <Footer />
+    </div>
   );
 };

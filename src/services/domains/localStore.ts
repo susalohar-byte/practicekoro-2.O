@@ -297,6 +297,26 @@ export const localAppSettings: AppSettingItem[] = [
   },
 ];
 
+export interface LocalPaymentGatewayRecord {
+  gateway: string;
+  key_id: string;
+  key_secret?: string;
+  webhook_secret?: string;
+  is_active: boolean;
+  updated_at?: string;
+}
+
+export const localPaymentGateways: Record<string, LocalPaymentGatewayRecord> = {
+  razorpay: {
+    gateway: 'razorpay',
+    key_id: '',
+    key_secret: '',
+    webhook_secret: '',
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  },
+};
+
 export const localSupportTickets: SupportTicketItem[] = [
   {
     id: 'tkt_101',

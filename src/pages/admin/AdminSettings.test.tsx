@@ -110,7 +110,10 @@ describe('AdminSettings & Maintenance Mode System', () => {
       fireEvent.change(appNameInput, { target: { value: 'PracticeKoro Super' } });
 
       // Toggle maintenance switch
-      const toggle = screen.getByRole('checkbox', { hidden: true });
+      const toggle = screen.getByRole('checkbox', {
+        name: /toggle maintenance mode/i,
+        hidden: true,
+      });
       fireEvent.click(toggle);
 
       // Submit form
@@ -126,6 +129,75 @@ describe('AdminSettings & Maintenance Mode System', () => {
       const allSettings = await adminApi.getAppSettings();
       const updatedName = allSettings.find((s) => s.id === 'general_app_name');
       expect(updatedName?.value).toBe('PracticeKoro Super');
+    });
+
+    it('loads and updates Razorpay payment gateway credentials securely', async () => {
+      render(
+        <MemoryRouter>
+          <MaintenanceProvider>
+            <AdminSettings />
+          </MaintenanceProvider>
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Razorpay Payment Gateway')).toBeInTheDocument();
+      });
+
+      // Change Razorpay Key ID to a test key
+      const keyIdInput = screen.getByPlaceholderText(/rzp_test_/i);
+      fireEvent.change(keyIdInput, { target: { value: 'rzp_test_1234567890' } });
+
+      // Change Key Secret
+      const secretInput = screen.getByPlaceholderText(/Razorpay Key Secret/i);
+      fireEvent.change(secretInput, { target: { value: 'secret_live_test_xyz' } });
+
+      // Submit form
+      const saveBtn = screen.getByRole('button', { name: /save all settings/i });
+      fireEvent.click(saveBtn);
+      fireEvent.submit(saveBtn.closest('form')!);
+
+      await waitFor(() => {
+        expect(screen.getByText(/settings updated and saved successfully/i)).toBeInTheDocument();
+      });
+
+      // Verify payment gateway updated in service
+      const config = await adminApi.getPaymentGatewayConfig('razorpay');
+      expect(config.keyId).toBe('rzp_test_1234567890');
+      expect(config.hasSecret).toBe(true);
+      expect(config.secretPreview).toBe('••••••••_xyz');
+    });
+  });
+
+  describe('Service Layer: Payment Gateway Credentials Management', () => {
+    it('manages payment gateway config and preserves secrets when empty', async () => {
+      // 1. Initial update with secret
+      const res1 = await adminApi.updatePaymentGatewayConfig({
+        gateway: 'razorpay',
+        keyId: 'rzp_test_sample',
+        keySecret: 'initial_secret_1234',
+        isActive: true,
+      });
+      expect(res1.success).toBe(true);
+
+      const cfg1 = await adminApi.getPaymentGatewayConfig('razorpay');
+      expect(cfg1.keyId).toBe('rzp_test_sample');
+      expect(cfg1.hasSecret).toBe(true);
+      expect(cfg1.secretPreview).toBe('••••••••1234');
+
+      // 2. Update without secret (leaving empty)
+      const res2 = await adminApi.updatePaymentGatewayConfig({
+        gateway: 'razorpay',
+        keyId: 'rzp_live_new_key',
+        keySecret: '', // empty -> should preserve
+        isActive: true,
+      });
+      expect(res2.success).toBe(true);
+
+      const cfg2 = await adminApi.getPaymentGatewayConfig('razorpay');
+      expect(cfg2.keyId).toBe('rzp_live_new_key');
+      expect(cfg2.hasSecret).toBe(true);
+      expect(cfg2.secretPreview).toBe('••••••••1234'); // preserved!
     });
   });
 
