@@ -27,7 +27,7 @@ export interface RazorpayCheckoutOptions {
   currency: string;
   name: string;
   description: string;
-  order_id: string;
+  order_id?: string;
   prefill?: {
     name?: string;
     email?: string;
@@ -38,8 +38,8 @@ export interface RazorpayCheckoutOptions {
   };
   handler: (response: {
     razorpay_payment_id: string;
-    razorpay_order_id: string;
-    razorpay_signature: string;
+    razorpay_order_id?: string;
+    razorpay_signature?: string;
   }) => void;
   modal?: {
     ondismiss?: () => void;

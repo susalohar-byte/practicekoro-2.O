@@ -127,19 +127,26 @@ export const Subscription: React.FC = () => {
       // 1. Create order on server (authoritative database pricing enforced)
       const order = await api.createRazorpayOrder(plan.id);
 
+      if (!order || !order.keyId || !order.keyId.trim()) {
+        throw new Error(
+          'Payment Gateway (Razorpay) Key is not configured. Please configure your Live Razorpay Key in Admin Settings.'
+        );
+      }
+
       setPaymentStatus('processing');
 
-      // 2. Launch Razorpay Checkout Modal
-      const checkoutResult = await openRazorpayCheckout({
-        key: order.keyId,
-        amount: order.amount * 100, // in paise
-        currency: order.currency,
+      // 2. Build Razorpay checkout options
+      // Note: Only attach order_id if this is a verified real order created through Razorpay Orders API.
+      // Providing a dummy or non-existent order_id will crash Razorpay checkout SDK with BAD_REQUEST_ERROR.
+      const checkoutOptions: Parameters<typeof openRazorpayCheckout>[0] = {
+        key: order.keyId.trim(),
+        amount: Math.round(order.amount * 100), // in paise
+        currency: order.currency || 'INR',
         name: 'PracticeKoro',
         description: `${plan.title} (All-Access Pro Pass)`,
-        order_id: order.orderId,
         prefill: {
-          name: user.fullName,
-          email: user.email,
+          name: user.fullName || '',
+          email: user.email || '',
           contact: user.phone || '',
         },
         theme: {
@@ -150,9 +157,9 @@ export const Subscription: React.FC = () => {
           setPaymentStatus('processing');
           try {
             const verification = await api.verifyRazorpayPayment({
-              orderId: response.razorpay_order_id,
+              orderId: response.razorpay_order_id || order.orderId,
               paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature,
+              signature: response.razorpay_signature || '',
               planId: plan.id,
             });
 
@@ -183,7 +190,15 @@ export const Subscription: React.FC = () => {
             );
           },
         },
-      });
+      };
+
+      // Only attach order_id if verified real Razorpay order (created via Razorpay Orders API)
+      if (order.isRealRazorpayOrder && order.orderId && !order.orderId.startsWith('pk_local_')) {
+        checkoutOptions.order_id = order.orderId;
+      }
+
+      // Launch Razorpay Checkout Modal
+      const checkoutResult = await openRazorpayCheckout(checkoutOptions);
 
       if (checkoutResult.error) {
         setErrorMessage(checkoutResult.error);

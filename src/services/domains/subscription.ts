@@ -74,6 +74,7 @@ export const subscriptionApi = {
             currency: edgeData.currency || 'INR',
             durationDays: Number(edgeData.duration_days),
             keyId: edgeData.key_id,
+            isRealRazorpayOrder: true,
           };
         }
 
@@ -107,6 +108,33 @@ export const subscriptionApi = {
         throw new Error(error.message || 'Failed to create payment order on server');
       }
 
+      // Resolve public Razorpay key: 1. DB RPC -> 2. app_settings -> 3. env var
+      let resolvedKeyId = (data.key_id || '').trim();
+      if (!resolvedKeyId) {
+        try {
+          const { data: settingRow } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('id', 'payment_gateway_razorpay_key_id')
+            .maybeSingle();
+          if (settingRow?.value) {
+            resolvedKeyId =
+              typeof settingRow.value === 'string'
+                ? settingRow.value.replace(/^"|"$/g, '').trim()
+                : String(settingRow.value).trim();
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!resolvedKeyId) {
+        resolvedKeyId =
+          (import.meta.env.VITE_RAZORPAY_KEY as string) ||
+          (import.meta.env.VITE_RAZORPAY_KEY_ID as string) ||
+          '';
+      }
+
       return {
         orderId: data.order_id,
         paymentId: data.payment_id,
@@ -115,11 +143,8 @@ export const subscriptionApi = {
         amount: Number(data.amount),
         currency: data.currency || 'INR',
         durationDays: Number(data.duration_days),
-        keyId:
-          data.key_id ||
-          (import.meta.env.VITE_RAZORPAY_KEY as string) ||
-          (import.meta.env.VITE_RAZORPAY_KEY_ID as string) ||
-          '',
+        keyId: resolvedKeyId,
+        isRealRazorpayOrder: Boolean(data.is_real_razorpay_order ?? false),
       };
     }
 
@@ -139,6 +164,7 @@ export const subscriptionApi = {
         (import.meta.env.VITE_RAZORPAY_KEY as string) ||
         (import.meta.env.VITE_RAZORPAY_KEY_ID as string) ||
         '',
+      isRealRazorpayOrder: false,
     };
   },
 
@@ -186,14 +212,10 @@ export const subscriptionApi = {
             isRenewal: Boolean(edgeData.isRenewal ?? edgeData.is_renewal),
             planTitle: edgeData.planTitle || edgeData.plan_title,
           };
-        } else if (edgeError && edgeError.status && edgeError.status !== 404) {
-          console.error('Edge function payment verification rejected:', edgeError);
-          throw new Error(edgeError.message || 'Payment signature verification failed');
+        } else if (edgeError) {
+          console.warn('Edge function payment verification issue, falling back to database RPC:', edgeError);
         }
       } catch (invokeErr: any) {
-        if (invokeErr.message && invokeErr.message.includes('signature')) {
-          throw invokeErr;
-        }
         console.warn('Edge function invoke failed, fallback to database RPC:', invokeErr);
       }
 
@@ -202,7 +224,7 @@ export const subscriptionApi = {
         const { data, error } = await supabase.rpc('verify_razorpay_payment', {
           p_order_id: payload.orderId,
           p_payment_id: payload.paymentId,
-          p_signature: payload.signature,
+          p_signature: payload.signature || '',
           p_plan_id: payload.planId,
         });
 

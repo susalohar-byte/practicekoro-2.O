@@ -462,6 +462,7 @@ export interface RazorpayOrderResponse {
   currency: string;
   durationDays: number;
   keyId: string;
+  isRealRazorpayOrder?: boolean;
 }
 
 export interface RazorpayVerificationPayload {

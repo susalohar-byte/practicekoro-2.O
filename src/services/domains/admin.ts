@@ -3728,6 +3728,16 @@ export const adminApi = {
         key: 'app_version',
         description: 'Platform production release version',
       },
+      payment_gateway_razorpay_key_id: {
+        category: 'monetization',
+        key: 'razorpay_key_id',
+        description: 'Public Razorpay Key ID for client checkout',
+      },
+      payment_gateway_razorpay_active: {
+        category: 'monetization',
+        key: 'razorpay_active',
+        description: 'Razorpay payment gateway active status',
+      },
     };
 
     // Always update or insert (upsert) into in-memory localAppSettings
@@ -3850,15 +3860,31 @@ export const adminApi = {
           p_gateway: targetGateway,
         });
 
-        if (error) {
-          console.warn(
-            'Could not fetch payment gateway config via RPC, checking fallback:',
-            error.message
-          );
-        } else if (data) {
+        let keyIdFromDb = data?.key_id || '';
+
+        // Check app_settings fallback if key_id is empty
+        if (!keyIdFromDb) {
+          try {
+            const { data: settingRow } = await supabase
+              .from('app_settings')
+              .select('value')
+              .eq('id', 'payment_gateway_razorpay_key_id')
+              .maybeSingle();
+            if (settingRow?.value) {
+              keyIdFromDb =
+                typeof settingRow.value === 'string'
+                  ? settingRow.value.replace(/^"|"$/g, '').trim()
+                  : String(settingRow.value).trim();
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        if (data) {
           return {
             gateway: data.gateway || targetGateway,
-            keyId: data.key_id || '',
+            keyId: keyIdFromDb,
             isActive: Boolean(data.is_active),
             hasSecret: Boolean(data.has_secret),
             secretPreview: data.secret_preview || null,
@@ -3866,6 +3892,13 @@ export const adminApi = {
             webhookPreview: data.webhook_preview || null,
             updatedAt: data.updated_at || null,
           };
+        }
+
+        if (error) {
+          console.warn(
+            'Could not fetch payment gateway config via RPC, checking fallback:',
+            error.message
+          );
         }
       } catch (err) {
         console.warn('Failed to call admin_get_payment_gateway RPC:', err);
@@ -3945,6 +3978,23 @@ export const adminApi = {
     };
 
     if (isSupabaseConfigured) {
+      // 1. Synchronize public key to app_settings (universally readable by students)
+      try {
+        await this.updateAppSettings([
+          {
+            id: 'payment_gateway_razorpay_key_id',
+            value: cleanKeyId,
+          },
+          {
+            id: 'payment_gateway_razorpay_active',
+            value: isActive,
+          },
+        ]);
+      } catch (appErr) {
+        console.warn('Could not sync payment key to app_settings:', appErr);
+      }
+
+      // 2. Authoritative payment_gateways RPC
       try {
         const { data, error } = await supabase.rpc('admin_update_payment_gateway', {
           p_gateway: targetGateway,
@@ -3969,7 +4019,7 @@ export const adminApi = {
             error.message.includes('fetch') ||
             error.message.includes('Failed to fetch')
           ) {
-            // Unauthenticated test or unmigrated RPC; local store updated
+            // Unauthenticated test or unmigrated RPC; local store and app_settings updated
             return { success: true };
           }
           return { success: false, error: error.message };
