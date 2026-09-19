@@ -55,6 +55,50 @@ export const subscriptionApi = {
 
   async createRazorpayOrder(planId: string): Promise<RazorpayOrderResponse> {
     if (isSupabaseConfigured) {
+      // 1. Primary path: authoritative order creation via Razorpay Orders API Edge Function
+      try {
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+          'create-razorpay-order',
+          {
+            body: { planId },
+          }
+        );
+
+        if (!edgeError && edgeData && edgeData.order_id) {
+          return {
+            orderId: edgeData.order_id,
+            paymentId: edgeData.payment_id,
+            planId: edgeData.plan_id,
+            planTitle: edgeData.plan_title,
+            amount: Number(edgeData.amount),
+            currency: edgeData.currency || 'INR',
+            durationDays: Number(edgeData.duration_days),
+            keyId: edgeData.key_id,
+          };
+        }
+
+        if (edgeError) {
+          const detail = (edgeError as any)?.context?.json?.error || edgeError.message;
+          if (detail && (detail.includes('Razorpay') || detail.includes('gateway'))) {
+            throw new Error(detail);
+          }
+        }
+      } catch (err: any) {
+        if (
+          err.message &&
+          (err.message.includes('Razorpay') ||
+            err.message.includes('gateway') ||
+            err.message.includes('credentials'))
+        ) {
+          throw err;
+        }
+        console.warn(
+          'create-razorpay-order Edge Function failed, falling back to database RPC:',
+          err
+        );
+      }
+
+      // 2. Fallback: database stored procedure
       const { data, error } = await supabase.rpc('create_razorpay_order', {
         p_plan_id: planId,
       });

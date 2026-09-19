@@ -21,6 +21,7 @@ describe('Subscription Plans Management & Deletion System', () => {
         price: 99,
         durationDays: 14,
         features: ['Mock test access'],
+        currency: 'INR',
         isActive: true,
         orderIndex: 99,
       });
@@ -41,6 +42,7 @@ describe('Subscription Plans Management & Deletion System', () => {
       price: 149,
       durationDays: 30,
       features: ['Archived access'],
+      currency: 'INR',
       isActive: false,
       orderIndex: 100,
     };
@@ -66,6 +68,7 @@ describe('Subscription Plans Management & Deletion System', () => {
       price: 249,
       durationDays: 45,
       features: ['Testing delete'],
+      currency: 'INR',
       isActive: true,
       orderIndex: 50,
     };

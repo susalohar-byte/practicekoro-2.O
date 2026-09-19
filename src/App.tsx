@@ -475,7 +475,7 @@ export const App: React.FC = () => {
           {/* Backward compatibility & Consolidation Redirects */}
           <Route path="students" element={<Navigate to="/admin/subscriptions" replace />} />
           <Route path="pro-users" element={<Navigate to="/admin/subscriptions" replace />} />
-          <Route path="analytics" element={<Navigate to="/admin" replace />} />
+          <Route path="analytics" element={<Navigate to="/admin/revenue-analytics" replace />} />
           <Route path="overview" element={<Navigate to="/admin" replace />} />
           <Route path="questions" element={<Navigate to="/admin/question-bank" replace />} />
           <Route

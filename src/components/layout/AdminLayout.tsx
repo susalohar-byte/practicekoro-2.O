@@ -24,7 +24,7 @@ import {
   Users,
   History,
   Activity,
-  TrendingUp,
+  BarChart3,
 } from 'lucide-react';
 import { useMaintenance } from '@/context/MaintenanceContext';
 import { cn } from '@/lib/utils';
@@ -111,10 +111,10 @@ export const AdminLayout: React.FC = () => {
       title: 'Analytics & Reports',
       items: [
         {
-          label: 'Financial & Revenue',
+          label: 'Analytics & Reports',
           path: '/admin/revenue-analytics',
-          altPaths: ['/admin/revenue', '/admin/financials'],
-          icon: TrendingUp,
+          altPaths: ['/admin/analytics', '/admin/revenue', '/admin/financials'],
+          icon: BarChart3,
           permission: 'canManageSubscriptions',
         },
         {

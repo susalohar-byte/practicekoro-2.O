@@ -815,3 +815,80 @@ export interface PaymentGatewayUpdatePayload {
   webhookSecret?: string;
   isActive?: boolean;
 }
+
+// ─── Platform Analytics & Reports Overview ───────────────────────────
+export interface StudentRankRow {
+  rank: number;
+  userId: string;
+  name: string;
+  email: string;
+  totalTests: number;
+  questionsAttempted: number;
+  correctCount: number;
+  accuracy: number; // e.g. 82.5
+  totalScore: number;
+  isPro?: boolean;
+  lastActive?: string;
+}
+
+export interface QuestionInsightRow {
+  questionId: string;
+  questionText: string;
+  questionBengaliText?: string;
+  subjectName: string;
+  chapterName: string;
+  difficulty?: string;
+  totalAttempts: number;
+  wrongCount: number;
+  failureRate: number; // percentage, e.g. 75.0
+  accuracyRate: number; // percentage, e.g. 25.0
+}
+
+export interface TopicInsightRow {
+  chapterId: string;
+  chapterName: string;
+  subjectName: string;
+  totalQuestionsAttempted: number;
+  accuracyRate: number; // percentage, e.g. 42.1
+}
+
+export interface SubjectInsightRow {
+  subjectId: string;
+  subjectName: string;
+  totalQuestionsAttempted: number;
+  accuracyRate: number; // percentage, e.g. 54.3
+}
+
+export interface PerformanceTrendPoint {
+  date: string; // YYYY-MM-DD
+  label: string; // e.g. "15 Sep"
+  attemptsCount: number;
+  averageAccuracy: number;
+  averageScore: number;
+}
+
+export interface PlatformAnalyticsData {
+  studentPerformance: {
+    totalStudents: number;
+    activeStudents: number;
+    testsAttempted: number;
+    questionsAnswered: number;
+    overallAccuracy: number;
+    topStudent?: StudentRankRow;
+    performanceTrend: PerformanceTrendPoint[];
+  };
+  studentRankings: StudentRankRow[];
+  questionInsights: {
+    mostWrongQuestions: QuestionInsightRow[];
+    weakestTopics: TopicInsightRow[];
+    weakestSubjects: SubjectInsightRow[];
+  };
+  revenue: {
+    totalRevenue: number;
+    monthlyRevenue: number;
+    paidStudents: number;
+    activeSubscriptions: number;
+    revenueTrend: DateRangeDailyPoint[];
+  };
+}
+
