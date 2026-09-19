@@ -13,7 +13,10 @@ const supabaseAnonKey =
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() ||
   DEFAULT_SUPABASE_ANON_KEY;
 
+export const isDemoModeEnabled = import.meta.env.VITE_ENABLE_DEMO_MODE === 'true';
+
 export const isSupabaseConfigured = Boolean(
+  !isDemoModeEnabled &&
   supabaseUrl &&
   supabaseAnonKey &&
   supabaseUrl.startsWith('http') &&

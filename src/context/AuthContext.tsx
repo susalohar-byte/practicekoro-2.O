@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
+import {
+  supabaseRuntime as supabase,
+  isSupabaseConfigured,
+  isDemoModeEnabled,
+} from '@/lib/supabase';
 import { isAdminEmail } from '@/lib/authPolicy';
 import type { Database } from '@/types/database';
 import type { UserProfile, UserRole, AdminRole, AdminPermissions } from '@/types';
@@ -42,11 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Discard legacy mock/demo users (e.g. usr-student-001, usr-admin-001)
+        // Discard legacy mock/demo users in production when NOT in demo mode
         if (
-          parsed?.id?.startsWith('usr-') ||
-          parsed?.email === 'student@practicekoro.com' ||
-          parsed?.id === 'usr-admin-001'
+          !isDemoModeEnabled &&
+          (parsed?.id?.startsWith('usr-') ||
+            parsed?.email === 'student@practicekoro.com' ||
+            parsed?.id === 'usr-admin-001')
         ) {
           localStorage.removeItem('practicekoro_user');
           localStorage.removeItem('practicekoro_is_pro');
@@ -67,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || isDemoModeEnabled) {
       setLoading(false);
       return;
     }
