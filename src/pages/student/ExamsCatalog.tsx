@@ -41,7 +41,7 @@ export const ExamsCatalog: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 pk-student-page">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Banner */}
         <div className="relative overflow-hidden bg-gradient-to-r from-brand-900 via-brand-800 to-indigo-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl">
