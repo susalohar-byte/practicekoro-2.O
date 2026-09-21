@@ -116,6 +116,7 @@ export const AdminSettings: React.FC = () => {
   const [showSecret, setShowSecret] = useState(false);
   const [showWebhook, setShowWebhook] = useState(false);
   const [showSetupGuide, setShowSetupGuide] = useState(false);
+  const [isSavingGateway, setIsSavingGateway] = useState(false);
 
   // --------------------------------------------------------------------------
   // Load Settings
@@ -162,10 +163,23 @@ export const AdminSettings: React.FC = () => {
           setMaintenanceMode(val === true || val === 'true');
         }
         if (s.key === 'app_version' || s.id === 'sys_app_version') setAppVersion(String(val));
+
+        if (s.id === 'payment_gateway_razorpay_key_id' || s.key === 'razorpay_key_id') {
+          if (val) {
+            setRzpKeyId((prev) => prev || String(val));
+          }
+        }
+        if (s.id === 'payment_gateway_razorpay_active' || s.key === 'razorpay_active') {
+          if (!gatewayConfig) {
+            setRzpIsActive(val === true || val === 'true');
+          }
+        }
       });
 
       if (gatewayConfig) {
-        setRzpKeyId(gatewayConfig.keyId || '');
+        if (gatewayConfig.keyId) {
+          setRzpKeyId(gatewayConfig.keyId);
+        }
         setRzpIsActive(gatewayConfig.isActive);
         setRzpHasSecret(gatewayConfig.hasSecret);
         setRzpSecretPreview(gatewayConfig.secretPreview || null);
@@ -322,6 +336,64 @@ export const AdminSettings: React.FC = () => {
   };
 
   // --------------------------------------------------------------------------
+  // Dedicated Save for Razorpay Payment Gateway
+  // --------------------------------------------------------------------------
+  const handleSaveRazorpayGateway = async () => {
+    const cleanKey = rzpKeyId.trim();
+    if (!cleanKey) {
+      setErrorMessage('Please enter a valid Razorpay Key ID (e.g. rzp_live_... or rzp_test_...)');
+      return;
+    }
+
+    try {
+      setIsSavingGateway(true);
+      setErrorMessage('');
+
+      // 1. Direct sync to app_settings (ensures client apps immediately receive the key)
+      const appSettingsRes = await api.updateAppSettings([
+        { id: 'payment_gateway_razorpay_key_id', value: cleanKey },
+        { id: 'payment_gateway_razorpay_active', value: rzpIsActive },
+        { id: 'sub_currency', value: currency },
+        { id: 'sub_expiry_warning_days', value: expiryWarningDays },
+      ]);
+
+      // 2. Authoritative database RPC
+      const gwRes = await api.updatePaymentGatewayConfig({
+        gateway: 'razorpay',
+        keyId: cleanKey,
+        keySecret: rzpKeySecret,
+        webhookSecret: rzpWebhookSecret,
+        isActive: rzpIsActive,
+      });
+
+      if (!gwRes.success && !appSettingsRes.success) {
+        throw new Error(gwRes.error || appSettingsRes.error || 'Failed to update payment gateway');
+      }
+
+      if (rzpKeySecret.trim()) {
+        setRzpHasSecret(true);
+        const trimmed = rzpKeySecret.trim();
+        setRzpSecretPreview(trimmed.length >= 4 ? `••••••••${trimmed.slice(-4)}` : '••••••••');
+        setRzpKeySecret('');
+      }
+      if (rzpWebhookSecret.trim()) {
+        setRzpHasWebhook(true);
+        const trimmed = rzpWebhookSecret.trim();
+        setRzpWebhookPreview(trimmed.length >= 4 ? `••••••••${trimmed.slice(-4)}` : '••••••••');
+        setRzpWebhookSecret('');
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 4000);
+    } catch (err: unknown) {
+      console.error('Failed to save payment gateway:', err);
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to save Razorpay configuration');
+    } finally {
+      setIsSavingGateway(false);
+    }
+  };
+
+  // --------------------------------------------------------------------------
   // Save All Settings
   // --------------------------------------------------------------------------
   const handleSaveAll = async (e: React.FormEvent) => {
@@ -349,6 +421,9 @@ export const AdminSettings: React.FC = () => {
         { id: 'sub_expiry_warning_days', value: expiryWarningDays },
         { id: 'sys_maintenance_mode', value: maintenanceMode },
         { id: 'sys_app_version', value: appVersion },
+
+        { id: 'payment_gateway_razorpay_key_id', value: rzpKeyId.trim() },
+        { id: 'payment_gateway_razorpay_active', value: rzpIsActive },
       ];
 
       const [res, gwRes] = await Promise.all([
@@ -1221,6 +1296,36 @@ export const AdminSettings: React.FC = () => {
                 onChange={(e) => setExpiryWarningDays(Number(e.target.value))}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pk-primary/20 focus:border-pk-primary text-xs sm:text-sm font-medium transition-all"
               />
+            </div>
+
+            {/* Dedicated Action for Gateway */}
+            <div className="md:col-span-2 pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>
+                  {rzpKeyId.trim().startsWith('rzp_live_')
+                    ? 'লাইভ মোড কনফিগারেশন অবিলম্বে সমস্ত স্টুডেন্ট ডিভাইসে সক্রিয় হবে।'
+                    : 'সেভ করার পর স্টুডেন্ট প্যানেলে অনলাইন পেমেন্ট সক্রিয় হবে।'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveRazorpayGateway}
+                disabled={isSavingGateway}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer w-full sm:w-auto"
+              >
+                {isSavingGateway ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving Razorpay...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Save Razorpay Configuration</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

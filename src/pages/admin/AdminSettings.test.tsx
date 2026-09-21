@@ -8,6 +8,12 @@ import { adminApi } from '@/services/domains/admin';
 import { localAppSettings } from '@/services/domains/localStore';
 import { MaintenanceProvider } from '@/context/MaintenanceContext';
 
+vi.mock('@/lib/supabase', () => ({
+  isSupabaseConfigured: false,
+  supabase: {},
+  supabaseRuntime: {},
+}));
+
 // Mock AuthContext
 const mockUseAuth = vi.fn();
 vi.mock('@/context/AuthContext', () => ({
@@ -50,6 +56,7 @@ describe('AdminSettings & Maintenance Mode System', () => {
       loading: false,
       adminRole: 'super_admin',
       hasPermission: () => true,
+      updateProfile: vi.fn().mockResolvedValue({ error: null }),
     });
   });
 

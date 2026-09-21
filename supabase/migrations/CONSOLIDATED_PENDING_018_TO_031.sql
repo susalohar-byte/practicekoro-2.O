@@ -2833,6 +2833,112 @@ GRANT EXECUTE ON FUNCTION public.remove_admin_staff_member(UUID) TO authenticate
 -- PRACTICEKORO: MIGRATION 034 - FIX PAYMENT GATEWAY PERMISSIONS & ORDER CREATION
 -- ============================================================================
 
+CREATE TABLE IF NOT EXISTS public.payment_gateways (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    gateway TEXT UNIQUE NOT NULL,
+    key_id TEXT,
+    key_secret TEXT,
+    webhook_secret TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.payment_gateways ADD COLUMN IF NOT EXISTS webhook_secret TEXT;
+ALTER TABLE public.payment_gateways ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+INSERT INTO public.payment_gateways (gateway, key_id, is_active)
+VALUES ('razorpay', NULL, TRUE)
+ON CONFLICT (gateway) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION public.has_role(p_user_id UUID, p_role TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_email TEXT;
+BEGIN
+    IF p_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM public.user_roles
+        WHERE user_id = p_user_id AND role = p_role
+    ) THEN
+        RETURN TRUE;
+    END IF;
+
+    IF p_role = 'admin' AND EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = p_user_id AND (role = 'admin' OR admin_role IS NOT NULL)
+    ) THEN
+        RETURN TRUE;
+    END IF;
+
+    SELECT email INTO v_email FROM auth.users WHERE id = p_user_id;
+    IF p_role = 'admin' AND v_email = 'admin@practicekoro.online' THEN
+        RETURN TRUE;
+    END IF;
+
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+INSERT INTO public.user_roles (user_id, role)
+SELECT id, 'admin'
+FROM auth.users
+WHERE email = 'admin@practicekoro.online'
+ON CONFLICT DO NOTHING;
+
+UPDATE public.profiles
+SET role = 'admin', admin_role = 'super_admin'
+WHERE email = 'admin@practicekoro.online';
+
+GRANT ALL ON public.payment_gateways TO authenticated, service_role;
+GRANT ALL ON public.app_settings TO authenticated, service_role;
+GRANT SELECT ON public.app_settings TO anon;
+
+ALTER TABLE public.payment_gateways ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admin view gateway config" ON public.payment_gateways;
+CREATE POLICY "Admin view gateway config" ON public.payment_gateways FOR SELECT
+    USING (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    );
+
+DROP POLICY IF EXISTS "Admin manage gateway config" ON public.payment_gateways;
+CREATE POLICY "Admin manage gateway config" ON public.payment_gateways FOR ALL
+    USING (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    )
+    WITH CHECK (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    );
+
+DROP POLICY IF EXISTS "Admins can manage all settings" ON public.app_settings;
+CREATE POLICY "Admins can manage all settings"
+    ON public.app_settings
+    FOR ALL
+    TO authenticated
+    USING (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    )
+    WITH CHECK (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    );
+
+DROP POLICY IF EXISTS "Anyone can read general settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Anyone can read public app settings" ON public.app_settings;
+CREATE POLICY "Anyone can read public app settings"
+    ON public.app_settings
+    FOR SELECT
+    USING (true);
+
 CREATE OR REPLACE FUNCTION public.admin_get_payment_gateway(
     p_gateway TEXT DEFAULT 'razorpay'
 )
@@ -2878,7 +2984,7 @@ BEGIN
         WHERE id = 'payment_gateway_razorpay_key_id';
     END IF;
 
-    IF NOT FOUND AND (v_app_key_id IS NULL OR v_app_key_id = '') THEN
+    IF v_gw IS NULL AND (v_app_key_id IS NULL OR v_app_key_id = '') THEN
         RETURN jsonb_build_object(
             'gateway', v_target,
             'key_id', '',
@@ -3253,9 +3359,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+GRANT EXECUTE ON FUNCTION public.has_role(UUID, TEXT) TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.admin_get_payment_gateway(TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.admin_update_payment_gateway(TEXT, TEXT, TEXT, TEXT, BOOLEAN) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.create_razorpay_order(TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.verify_razorpay_payment(TEXT, TEXT, TEXT, TEXT) TO authenticated, service_role;
+
 
 

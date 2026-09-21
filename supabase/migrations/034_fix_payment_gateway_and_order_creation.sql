@@ -2,19 +2,146 @@
 -- PRACTICEKORO: MIGRATION 034 - FIX PAYMENT GATEWAY PERMISSIONS & ORDER CREATION
 -- ============================================================================
 -- Description:
---   1. Upgrades admin authorization checks in admin_get_payment_gateway and
---      admin_update_payment_gateway to support all admin authentication vectors:
---      has_role(), user_roles table, profiles.role = 'admin', and primary admin email.
---   2. Synchronizes public key_id and is_active to public.app_settings
---      ('payment_gateway_razorpay_key_id') so all students can reliably load
---      the public Razorpay key even if client RLS policies restrict payment_gateways.
---   3. Updates create_razorpay_order and verify_razorpay_payment to handle both
---      Orders API orders and direct client checkout orders safely without
---      triggering Razorpay's BAD_REQUEST_ERROR "id provided does not exist".
+--   1. Ensures payment_gateways table has all required columns (webhook_secret, updated_at).
+--   2. Upgrades has_role() function to authoritatively recognize admin@practicekoro.online
+--      and profiles.role = 'admin' across all database security definer functions.
+--   3. Automatically inserts admin@practicekoro.online into public.user_roles.
+--   4. Grants table CRUD permissions and RLS policies on payment_gateways & app_settings.
+--   5. Upgrades admin authorization checks in admin_get_payment_gateway and
+--      admin_update_payment_gateway.
+--   6. Synchronizes public key_id and is_active to public.app_settings
+--      ('payment_gateway_razorpay_key_id') for universal student checkout availability.
+--   7. Updates create_razorpay_order and verify_razorpay_payment to handle direct
+--      and order-based checkouts seamlessly without BAD_REQUEST_ERROR crashes.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- 1. SECURE RPC: admin_get_payment_gateway (Hardened & Multi-Vector Auth)
+-- 0. SCHEMA PREREQUISITES: Ensure payment_gateways table & columns exist
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.payment_gateways (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    gateway TEXT UNIQUE NOT NULL,
+    key_id TEXT,
+    key_secret TEXT,
+    webhook_secret TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.payment_gateways ADD COLUMN IF NOT EXISTS webhook_secret TEXT;
+ALTER TABLE public.payment_gateways ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+-- Ensure default razorpay row exists
+INSERT INTO public.payment_gateways (gateway, key_id, is_active)
+VALUES ('razorpay', NULL, TRUE)
+ON CONFLICT (gateway) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
+-- 1. FIX AUTH & ROLE RESOLUTION: has_role() + auto-seed admin@practicekoro.online
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.has_role(p_user_id UUID, p_role TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_email TEXT;
+BEGIN
+    IF p_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- 1. Check user_roles table
+    IF EXISTS (
+        SELECT 1 FROM public.user_roles
+        WHERE user_id = p_user_id AND role = p_role
+    ) THEN
+        RETURN TRUE;
+    END IF;
+
+    -- 2. Check profiles table
+    IF p_role = 'admin' AND EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = p_user_id AND (role = 'admin' OR admin_role IS NOT NULL)
+    ) THEN
+        RETURN TRUE;
+    END IF;
+
+    -- 3. Check primary super admin email
+    SELECT email INTO v_email FROM auth.users WHERE id = p_user_id;
+    IF p_role = 'admin' AND v_email = 'admin@practicekoro.online' THEN
+        RETURN TRUE;
+    END IF;
+
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+-- Automatically grant admin role in user_roles table for primary admin
+INSERT INTO public.user_roles (user_id, role)
+SELECT id, 'admin'
+FROM auth.users
+WHERE email = 'admin@practicekoro.online'
+ON CONFLICT DO NOTHING;
+
+-- Update profile role for primary admin
+UPDATE public.profiles
+SET role = 'admin', admin_role = 'super_admin'
+WHERE email = 'admin@practicekoro.online';
+
+-- ----------------------------------------------------------------------------
+-- 2. TABLE GRANTS & RLS POLICIES FOR PAYMENT GATEWAYS & APP SETTINGS
+-- ----------------------------------------------------------------------------
+GRANT ALL ON public.payment_gateways TO authenticated, service_role;
+GRANT ALL ON public.app_settings TO authenticated, service_role;
+GRANT SELECT ON public.app_settings TO anon;
+
+ALTER TABLE public.payment_gateways ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+
+-- Admins can read payment_gateways
+DROP POLICY IF EXISTS "Admin view gateway config" ON public.payment_gateways;
+CREATE POLICY "Admin view gateway config" ON public.payment_gateways FOR SELECT
+    USING (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    );
+
+-- Admins can manage payment_gateways
+DROP POLICY IF EXISTS "Admin manage gateway config" ON public.payment_gateways;
+CREATE POLICY "Admin manage gateway config" ON public.payment_gateways FOR ALL
+    USING (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    )
+    WITH CHECK (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    );
+
+-- Admins can manage app_settings
+DROP POLICY IF EXISTS "Admins can manage all settings" ON public.app_settings;
+CREATE POLICY "Admins can manage all settings"
+    ON public.app_settings
+    FOR ALL
+    TO authenticated
+    USING (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    )
+    WITH CHECK (
+        public.has_role(auth.uid(), 'admin')
+        OR (auth.jwt() ->> 'email') = 'admin@practicekoro.online'
+    );
+
+-- Public can read all app_settings
+DROP POLICY IF EXISTS "Anyone can read general settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Anyone can read public app settings" ON public.app_settings;
+CREATE POLICY "Anyone can read public app settings"
+    ON public.app_settings
+    FOR SELECT
+    USING (true);
+
+-- ----------------------------------------------------------------------------
+-- 3. SECURE RPC: admin_get_payment_gateway (Hardened & Multi-Vector Auth)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.admin_get_payment_gateway(
     p_gateway TEXT DEFAULT 'razorpay'
@@ -63,7 +190,7 @@ BEGIN
         WHERE id = 'payment_gateway_razorpay_key_id';
     END IF;
 
-    IF NOT FOUND AND (v_app_key_id IS NULL OR v_app_key_id = '') THEN
+    IF v_gw IS NULL AND (v_app_key_id IS NULL OR v_app_key_id = '') THEN
         RETURN jsonb_build_object(
             'gateway', v_target,
             'key_id', '',
@@ -102,7 +229,7 @@ END;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 2. SECURE RPC: admin_update_payment_gateway (Hardened & Syncs to app_settings)
+-- 4. SECURE RPC: admin_update_payment_gateway (Hardened & Syncs to app_settings)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.admin_update_payment_gateway(
     p_gateway TEXT,
@@ -215,7 +342,7 @@ END;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 3. SECURE RPC: create_razorpay_order (Resilient Public Key Fallback)
+-- 5. SECURE RPC: create_razorpay_order (Resilient Public Key Fallback)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.create_razorpay_order(
     p_plan_id TEXT
@@ -294,7 +421,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ----------------------------------------------------------------------------
--- 4. SECURE RPC: verify_razorpay_payment (Signature & Direct Fallback Resilient)
+-- 6. SECURE RPC: verify_razorpay_payment (Signature & Direct Fallback Resilient)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.verify_razorpay_payment(
     p_order_id TEXT,
@@ -468,7 +595,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grants
+-- ----------------------------------------------------------------------------
+-- 7. GRANTS
+-- ----------------------------------------------------------------------------
+GRANT EXECUTE ON FUNCTION public.has_role(UUID, TEXT) TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.admin_get_payment_gateway(TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.admin_update_payment_gateway(TEXT, TEXT, TEXT, TEXT, BOOLEAN) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.create_razorpay_order(TEXT) TO authenticated, service_role;
