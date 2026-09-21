@@ -438,6 +438,18 @@ export const AdminSubscriptions: React.FC = () => {
             : payment
         )
       );
+      setStudents((current) =>
+        current.map((st) =>
+          st.id === refundPayment.userId || st.email === refundPayment.studentEmail
+            ? {
+                ...st,
+                isPro: false,
+                subscriptionStatus: 'cancelled',
+                planTitle: 'Free Plan',
+              }
+            : st
+        )
+      );
       setRefundPayment(null);
     } catch (err) {
       setRefundFeedback(err instanceof Error ? err.message : 'Refund tracking update failed.');
@@ -1608,6 +1620,14 @@ export const AdminSubscriptions: React.FC = () => {
                   Original payment: Rs. {refundPayment.amount.toLocaleString('en-IN')}
                 </div>
               </div>
+
+              <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div>
+                  <span className="font-bold">স্বয়ংক্রিয় ফ্রি প্ল্যান রূপান্তর (Auto Revoke):</span> রিফান্ড সম্পন্ন হওয়া মাত্রই সংশ্লিষ্ট স্টুডেন্টের সক্রিয় প্রো সাবস্ক্রিপশন বাতিল হয়ে যাবে এবং স্টুডেন্ট সরাসরি <strong>Free Plan</strong>-এ ফিরে যাবে।
+                </div>
+              </div>
+
               {refundFeedback && (
                 <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
                   {refundFeedback}

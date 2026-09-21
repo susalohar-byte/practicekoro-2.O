@@ -31,6 +31,16 @@ interface RazorpayWebhookPayload {
         receipt?: string;
       };
     };
+    refund?: {
+      entity: {
+        id: string;
+        payment_id?: string;
+        amount?: number; // in paise
+        currency?: string;
+        status?: string;
+        notes?: Record<string, any>;
+      };
+    };
   };
   created_at?: number;
 }
@@ -127,12 +137,65 @@ Deno.serve(async (req: Request) => {
   const event = data.event;
   console.log(`Processing valid Razorpay webhook event: ${event}`);
 
-  // 7. Filter relevant payment events: payment.captured or order.paid
-  if (event !== 'payment.captured' && event !== 'order.paid') {
+  // 7. Filter relevant payment events (capture) vs refund events
+  const isPaymentCapture = event === 'payment.captured' || event === 'order.paid';
+  const isRefundEvent =
+    event === 'payment.refunded' ||
+    event === 'refund.processed' ||
+    event === 'refund.created' ||
+    event === 'refund.speed_changed';
+
+  if (!isPaymentCapture && !isRefundEvent) {
     return new Response(
       JSON.stringify({
         status: 'ignored',
         message: `Event ${event} does not require reconciliation`,
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // 7b. Handle Refund Webhook Events -> Automatically revoke Pro subscription
+  if (isRefundEvent) {
+    const refundEntity = data.payload?.refund?.entity;
+    const paymentEntity = data.payload?.payment?.entity;
+    const paymentId = refundEntity?.payment_id || paymentEntity?.id;
+    const refundId = refundEntity?.id || `rfnd_${Date.now()}`;
+    const refundAmountPaise = refundEntity?.amount || (paymentEntity as any)?.amount_refunded || 0;
+    const refundAmountInr = refundAmountPaise > 0 ? paiseToRupees(refundAmountPaise) : null;
+
+    if (!paymentId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing payment_id in refund webhook payload' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Processing refund for payment ${paymentId}, refund amount: ${refundAmountInr}`);
+
+    const { data: refundResult, error: refundError } = await supabase.rpc(
+      'reconcile_razorpay_refund',
+      {
+        p_payment_id: paymentId,
+        p_refund_id: refundId,
+        p_refund_amount: refundAmountInr,
+        p_refund_reason: `Razorpay webhook event: ${event}`,
+      }
+    );
+
+    if (refundError) {
+      console.error('Refund reconciliation RPC failed:', refundError);
+      return new Response(JSON.stringify({ error: refundError.message }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        status: 'success',
+        event,
+        reconciliation: refundResult,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
