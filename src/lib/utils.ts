@@ -48,6 +48,14 @@ export function isStudentNavActive(pathname: string, label: string): boolean {
     return p.startsWith('/practice');
   }
 
+  if (label === 'Saved Questions') {
+    return p.startsWith('/saved-questions');
+  }
+
+  if (label === 'Rank') {
+    return p.startsWith('/rank');
+  }
+
   if (label === 'Profile') {
     return p.startsWith('/profile') || p.startsWith('/settings');
   }
