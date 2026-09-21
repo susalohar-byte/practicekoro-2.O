@@ -127,9 +127,15 @@ export const Subscription: React.FC = () => {
       // 1. Create order on server (authoritative database pricing enforced)
       const order = await api.createRazorpayOrder(plan.id);
 
-      if (!order || !order.keyId || !order.keyId.trim()) {
+      if (
+        !order ||
+        !order.keyId ||
+        !order.keyId.trim() ||
+        order.keyId === 'rzp_test_testkey123' ||
+        order.keyId === 'rzp_test_practicekoro_key'
+      ) {
         throw new Error(
-          'Payment Gateway (Razorpay) Key is not configured. Please configure your Live Razorpay Key in Admin Settings.'
+          'Payment Gateway (Razorpay) Key is not configured with your real account. Please configure your Live Razorpay Key in Admin Settings.'
         );
       }
 

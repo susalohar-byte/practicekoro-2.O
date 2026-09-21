@@ -88,10 +88,10 @@ export const subscriptionApi = {
           } catch {
             // ignore
           }
-          throw new Error(detail);
+          console.warn('Edge function order creation returned error, falling back to database RPC:', detail);
         }
       } catch (err: any) {
-        throw err;
+        console.warn('Edge function order creation failed, falling back to database RPC:', err);
       }
 
       // 2. Fallback: database stored procedure
