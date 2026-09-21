@@ -48,6 +48,12 @@ const Subscription = React.lazy(() =>
 const Support = React.lazy(() =>
   import('@/pages/student/Support').then((module) => ({ default: module.Support }))
 );
+const SavedQuestions = React.lazy(() =>
+  import('@/pages/student/SavedQuestions').then((module) => ({ default: module.SavedQuestions }))
+);
+const Rank = React.lazy(() =>
+  import('@/pages/student/Rank').then((module) => ({ default: module.Rank }))
+);
 const Login = React.lazy(() =>
   import('@/pages/auth/Login').then((module) => ({ default: module.Login }))
 );
@@ -246,6 +252,22 @@ export const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="saved-questions"
+            element={
+              <ProtectedRoute>
+                <SavedQuestions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="rank"
+            element={
+              <ProtectedRoute>
+                <Rank />
               </ProtectedRoute>
             }
           />
