@@ -12,6 +12,7 @@ import {
   User,
   AlertTriangle,
   Bookmark,
+  Award,
   Crown,
   Settings,
   LogOut,
@@ -70,6 +71,8 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     { label: 'Exams', path: '/exams', icon: Compass },
     { label: 'Practice', path: '/practice', icon: Zap },
     { label: 'Results', path: '/results', icon: BarChart3 },
+    { label: 'Saved Questions', path: '/saved-questions', icon: Bookmark },
+    { label: 'Rank', path: '/rank', icon: Award },
     { label: 'Help & Support', path: '/support', icon: LifeBuoy },
     { label: 'Profile', path: '/profile', icon: User },
   ];
@@ -83,15 +86,6 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
       icon: AlertTriangle,
       count: mistakesCount,
       countColor: 'bg-rose-50 text-rose-600 border-rose-200/60',
-    },
-    {
-      label: 'Saved Questions',
-      path: '/practice',
-      search: '?tab=bookmarks',
-      tab: 'bookmarks',
-      icon: Bookmark,
-      count: bookmarksCount,
-      countColor: 'bg-blue-50 text-blue-600 border-blue-200/60',
     },
   ];
 
