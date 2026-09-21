@@ -111,7 +111,7 @@ export const TopicTests: React.FC = () => {
   const selectedTopic = topics.find((topic) => topic.id === selectedTopicId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pk-student-page">
       <div className="rounded-2xl border border-pk-blue-soft bg-gradient-to-r from-pk-blue-light to-pk-blue-soft/30 p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <div className="rounded-xl bg-pk-primary p-2.5 text-white shadow-sm">
