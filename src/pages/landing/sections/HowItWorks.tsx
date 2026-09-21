@@ -8,7 +8,7 @@ const STEPS = [
     number: '01',
     icon: MousePointerClick,
     title: 'Choose Your Exam',
-    bengali: 'পরীক্ষা বেছে নিন',
+    bengali: 'Target Selection',
     description: "Select the exam you're preparing for — WBP, SSC, Railway & more.",
     graphic: (
       <div className="grid grid-cols-2 gap-2.5">
@@ -32,8 +32,8 @@ const STEPS = [
     number: '02',
     icon: PenLine,
     title: 'Practice & Test',
-    bengali: 'প্র্যাকটিস ও টেস্ট দিন',
-    description: 'Take full mock tests, PYQs and topic-wise tests in বাংলা ও English.',
+    bengali: 'Timed Practice',
+    description: 'Take full mock tests, PYQs and topic-wise tests in English.',
     graphic: (
       <div className="w-full space-y-2 text-left">
         <div className="h-2 bg-slate-200 rounded-full w-full" />
@@ -64,7 +64,7 @@ const STEPS = [
     number: '03',
     icon: LineChart,
     title: 'Check Your Results',
-    bengali: 'ফলাফল দেখুন ও শুধরান',
+    bengali: 'Scorecard & Analytics',
     description: 'Get detailed analysis, fix mistakes in your notebook and improve.',
     graphic: (
       <div className="flex flex-col items-center">

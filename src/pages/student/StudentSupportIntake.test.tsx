@@ -79,12 +79,12 @@ describe('Student Support Intake Integration', () => {
     // Verify presence of Help & Support Desk actions
     expect(screen.getByText('Support & Help Desk')).toBeInTheDocument();
     expect(
-      screen.getByText('সাহায্য ও সাপোর্ট: Raise tickets & report issues')
+      screen.getByText('Raise tickets & report issues to administration')
     ).toBeInTheDocument();
-    expect(screen.getByText(/সাপোর্ট ও অভিযোগ ডেস্ক/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Direct Support Desk').length).toBeGreaterThan(0);
 
-    // Click "টিকেট তৈরি করুন"
-    const createBtn = screen.getByRole('button', { name: /টিকেট তৈরি করুন/i });
+    // Click "Create Ticket"
+    const createBtn = screen.getAllByRole('button', { name: /Create Ticket/i })[0];
     fireEvent.click(createBtn);
 
     // Verify modal appears
@@ -94,14 +94,14 @@ describe('Student Support Intake Integration', () => {
     });
   });
 
-  it('opens ticket history tab directly when clicking "টিকেট হিস্ট্রি" in Profile', async () => {
+  it('opens ticket history tab directly when clicking "Ticket History" in Profile', async () => {
     render(
       <MemoryRouter>
         <Profile />
       </MemoryRouter>
     );
 
-    const historyBtn = screen.getByRole('button', { name: /টিকেট হিস্ট্রি/i });
+    const historyBtn = screen.getAllByRole('button', { name: /Ticket History/i })[0];
     fireEvent.click(historyBtn);
 
     await waitFor(() => {

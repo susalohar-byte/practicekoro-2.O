@@ -105,6 +105,12 @@ export const AdminLayout: React.FC = () => {
           icon: FolderTree,
           permission: 'canManageExams',
         },
+        {
+          label: 'Hero Banners',
+          path: '/admin/banners',
+          icon: Sparkles,
+          permission: 'canManageExams',
+        },
       ],
     },
     {
@@ -335,9 +341,9 @@ export const AdminLayout: React.FC = () => {
                 </p>
                 <p className="text-[10px] font-semibold truncate text-sky-300">
                   {adminRole === 'content_writer'
-                    ? 'Content Writer (কনটেন্ট রাইটার)'
+                    ? 'Content Writer'
                     : adminRole === 'support_agent'
-                      ? 'Support Team (সাপোর্ট টিম)'
+                      ? 'Support Team'
                       : 'Super Admin'}
                 </p>
               </div>
@@ -414,8 +420,8 @@ export const AdminLayout: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
               <span className="truncate sm:whitespace-normal">
-                <strong>মেইনটেন্যান্স মোড সক্রিয়:</strong> স্টুডেন্ট পোর্টাল ও মক টেস্ট সাময়িকভাবে
-                স্থগিত রয়েছে। শুধুমাত্র অ্যাডমিনরা অ্যাক্সেস করতে পারছেন।
+                <strong>Maintenance Mode Active:</strong> Student portal and mock tests are temporarily
+                paused. Only administrators have access.
               </span>
             </div>
             <Link
@@ -423,7 +429,7 @@ export const AdminLayout: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors shrink-0 shadow-xs"
             >
               <Settings className="w-3.5 h-3.5" />
-              <span>সেটিংস পরিচালনা করুন</span>
+              <span>Manage Settings</span>
             </Link>
           </div>
         )}

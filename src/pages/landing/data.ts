@@ -83,42 +83,42 @@ export const toolsFeatures = [
   {
     icon: FileText,
     title: 'Mock Tests',
-    bengaliTag: 'রিয়েল পরীক্ষার সিমুলেটর',
+    bengaliTag: 'Real Exam Simulator',
     description: 'Select the exam with real exam pattern.',
     color: 'text-blue-600 bg-blue-50 border-blue-100',
   },
   {
     icon: CheckCircle2,
     title: 'Previous Year Questions',
-    bengaliTag: 'PYQ প্রশ্নব্যাংক',
+    bengaliTag: 'PYQ Question Bank',
     description: 'Practice PYQs to understand the exam trend.',
     color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
   },
   {
     icon: Target,
     title: 'Topic-wise Practice',
-    bengaliTag: 'অধ্যায়ভিত্তিক প্রস্তুতি',
+    bengaliTag: 'Topic-wise Preparation',
     description: 'Focus on your weak topics and build strong concepts.',
     color: 'text-rose-600 bg-rose-50 border-rose-100',
   },
   {
     icon: BarChart3,
     title: 'Performance Analysis',
-    bengaliTag: 'নির্ভুল অ্যানালিসিস ও র‍্যাঙ্ক',
+    bengaliTag: 'Accuracy & Analytics',
     description: 'Detailed analysis to track your progress.',
     color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
   },
   {
     icon: Bookmark,
     title: 'Bookmarks & Notes',
-    bengaliTag: 'গুরুত্বপূর্ণ নোটস',
+    bengaliTag: 'High-Yield Notes',
     description: 'Save important questions for quick revision.',
     color: 'text-amber-600 bg-amber-50 border-amber-100',
   },
   {
     icon: Clock,
     title: 'Practice History',
-    bengaliTag: 'ভুল সংশোধন খাতা',
+    bengaliTag: 'Mistakes Notebook',
     description: 'Keep track of all your tests and improve consistently.',
     color: 'text-sky-600 bg-sky-50 border-sky-100',
   },
@@ -153,19 +153,19 @@ export const testimonials = [
 
 export const faqs = [
   {
-    q: 'ভুল সংশোধন খাতা (Mistakes Notebook) কীভাবে কাজ করে?',
-    a: 'টেস্ট সাবমিট করার পর আপনার ভুল হওয়া প্রশ্নগুলো স্বয়ংক্রিয়ভাবে আপনার Mistakes Notebook-এ জমা হয়ে যায়। সেখানে প্রতিটি ভুলের সঠিক ব্যাখ্যা দেখে আপনি ভুল শুধরে নেওয়ার প্র্যাকটিস করতে পারবেন।',
+    q: 'How does the Mistakes Notebook work?',
+    a: 'After submitting any test, questions you answered incorrectly are automatically organized into your Mistakes Notebook with detailed explanations for targeted review.',
   },
   {
-    q: 'PracticeKoro-র মক টেস্টগুলো কি সম্পূর্ণ বাংলায়?',
-    a: 'হ্যাঁ! প্রতিটি মক টেস্ট বাংলা এবং ইংরেজি উভয় ভাষাতেই উপলব্ধ। টেস্ট চলাকালীন যেকোনো সময় এক ক্লিকে প্রশ্নের ভাষা পরিবর্তন করা যায়।',
+    q: 'Are PracticeKoro mock tests fully available in English?',
+    a: 'Yes! PracticeKoro is fully optimized for English with authentic exam patterns, timer simulation, and step-by-step answer explanations.',
   },
   {
-    q: 'প্রো পাস নিলে কি সব পরীক্ষার মক টেস্ট পাবো?',
-    a: 'হ্যাঁ। একটি মাত্র All-Access Pro Pass (₹২৯৯ / ৩৬৫ দিন) নিলে WBP, KP, WBCS, WBPSC, Railway সহ সমস্ত পরীক্ষার সমস্ত প্রিমিয়াম টেস্ট আনলক হয়ে যায়।',
+    q: 'Does the Pro Pass unlock all competitive exams?',
+    a: 'Yes. A single All-Access Pro Pass (₹299 / 365 Days) unlocks all premium mock test series across State and Central exams including WBP, KP, WBCS, WBPSC, SSC, and Railway.',
   },
   {
-    q: 'আমি কি বিনামূল্যে কোনো টেস্ট দিতে পারবো?',
-    a: 'অবশ্যই! PracticeKoro-তে ফ্রি মক টেস্ট সবসময় উপলব্ধ (ফ্রি টায়ার ₹০)। আপনি অ্যাকাউন্ট খুলেই টেস্ট দিয়ে পরখ করতে পারেন।',
+    q: 'Can I attempt mock tests for free?',
+    a: 'Absolutely! PracticeKoro offers free full mock tests and daily practice sets so you can experience the test runner immediately with no payment details required.',
   },
 ];

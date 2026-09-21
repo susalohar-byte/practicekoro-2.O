@@ -43,10 +43,10 @@ describe('ErrorBoundary', () => {
         <Boom />
       </ErrorBoundary>
     );
-    expect(screen.getByText('কিছু একটা ভুল হয়েছে')).toBeTruthy();
+    expect(screen.getByText('Something went wrong')).toBeTruthy();
     expect(screen.getByText(/kaboom/)).toBeTruthy();
     // Recovery affordances must always be offered
-    expect(screen.getByRole('button', { name: /আবার চেষ্টা করুন/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Try Again/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Reload/ })).toBeTruthy();
   });
 
@@ -63,10 +63,10 @@ describe('ErrorBoundary', () => {
         <Flaky />
       </ErrorBoundary>
     );
-    expect(screen.getByText('কিছু একটা ভুল হয়েছে')).toBeTruthy();
+    expect(screen.getByText('Something went wrong')).toBeTruthy();
 
     shouldThrow = false;
-    fireEvent.click(screen.getByRole('button', { name: /আবার চেষ্টা করুন/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Try Again/ }));
     expect(screen.getByText('recovered')).toBeTruthy();
   });
 

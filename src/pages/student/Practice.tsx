@@ -10,7 +10,6 @@ import { isMathematicsQuestion } from '@/utils/shortNotes';
 import { TopicTests } from '@/pages/student/TopicTests';
 import {
   AlertTriangle,
-  BookOpen,
   Bookmark,
   RotateCcw,
   CheckCircle2,
@@ -139,7 +138,7 @@ export const Practice: React.FC = () => {
 
   // Derived metrics (strictly real data)
   const pendingMistakes = mistakes.filter((m) => !m.isResolved);
-  const resolvedMistakes = mistakes.filter((m) => m.isResolved);
+  // const resolvedMistakes = mistakes.filter((m) => m.isResolved);
 
   // Available subjects for filtering
   const availableSubjects = useMemo(() => {
@@ -580,137 +579,27 @@ export const Practice: React.FC = () => {
           ========================================================================= */}
       {!isPracticing && (
         <>
-          {/* Header */}
+          {/* Header & Subtitle */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-pk-navy tracking-tight">
-                Practice & Revision
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                Turn mistakes into marks. Targeted question drills for maximum exam retention.
-              </p>
-            </div>
-          </div>
-
-          {/* ERROR BANNER */}
-          {error && (
-            <div className="rounded-xl bg-rose-50 border border-rose-200 p-4 flex items-center justify-between gap-3 text-rose-800">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
-                <p className="text-sm font-medium">{error}</p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={loadData}
-                leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-                className="text-rose-700 border-rose-300 hover:bg-rose-100 font-bold"
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-
-          {/* Overview Metrics Cards (Part B2) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            {/* Metric 1: Pending Mistakes */}
-            <Card className="p-4 sm:p-5 border-amber-200/80 bg-gradient-to-br from-white to-amber-50/20">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Pending Mistakes
-                </span>
-                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
-                  <AlertTriangle className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-amber-600 mt-2">{pendingMistakes.length}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                {pendingMistakes.length > 0
-                  ? 'Questions needing revision'
-                  : 'Clean notebook • No errors'}
-              </p>
-            </Card>
-
-            {/* Metric 2: Bookmarked Questions */}
-            <Card className="p-4 sm:p-5 border-blue-200/80 bg-gradient-to-br from-white to-blue-50/20">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Bookmarked
-                </span>
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                  <Bookmark className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-blue-700 mt-2">{bookmarks.length}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                {bookmarks.length > 0 ? 'Saved for quick review' : 'No bookmarks saved yet'}
-              </p>
-            </Card>
-
-            {/* Metric 3: Resolved Questions */}
-            <Card className="p-4 sm:p-5 border-slate-200">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Resolved Mistakes
-                </span>
-                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-emerald-600 mt-2">{resolvedMistakes.length}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                Mistakes mastered & resolved
-              </p>
-            </Card>
-          </div>
-
-          {/* Primary Navigation Tabs */}
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-1">
-            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => handleTabChange('topics')}
-                className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
-                  activeTab === 'topics'
-                    ? 'border-pk-primary text-pk-primary font-bold'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
-                }`}
+                className="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                aria-label="Back"
               >
-                <BookOpen className="w-4 h-4 text-pk-primary" />
-                <span>Topic Tests</span>
+                <ArrowRight className="w-4 h-4 transform rotate-180" />
               </button>
-
-              <button
-                type="button"
-                onClick={() => handleTabChange('mistakes')}
-                className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
-                  activeTab === 'mistakes'
-                    ? 'border-pk-primary text-pk-primary font-bold'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <span>Mistakes Notebook (ভুল সংশোধন খাতা)</span>
-                <span className="ml-1 text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
-                  {pendingMistakes.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleTabChange('bookmarks')}
-                className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors ${
-                  activeTab === 'bookmarks'
-                    ? 'border-pk-primary text-pk-primary font-bold'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Bookmark className="w-4 h-4 text-blue-500" />
-                <span>Saved Bookmarks (সংরক্ষিত প্রশ্ন)</span>
-                <span className="ml-1 text-[11px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
-                  {bookmarks.length}
-                </span>
-              </button>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {activeTab === 'topics' ? 'Practice' : 'Saved Questions'}
+                </h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {activeTab === 'topics'
+                    ? 'Choose a subject to start practicing'
+                    : 'Review saved questions, bookmarks and mistake revisions'}
+                </p>
+              </div>
             </div>
 
             {/* Quick Practice Trigger Button */}
@@ -718,7 +607,7 @@ export const Practice: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() => startPracticeSession('mistakes')}
-                className="font-bold text-xs shadow-xs hidden sm:inline-flex"
+                className="font-bold text-xs shadow-xs hidden sm:inline-flex rounded-full bg-blue-600 text-white"
                 leftIcon={<Play className="w-3.5 h-3.5 fill-white" />}
               >
                 Practice Mistakes ({pendingMistakes.length})
@@ -729,12 +618,70 @@ export const Practice: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() => startPracticeSession('bookmarks')}
-                className="font-bold text-xs shadow-xs hidden sm:inline-flex"
+                className="font-bold text-xs shadow-xs hidden sm:inline-flex rounded-full bg-blue-600 text-white"
                 leftIcon={<Play className="w-3.5 h-3.5 fill-white" />}
               >
                 Practice Bookmarks ({bookmarks.length})
               </Button>
             )}
+          </div>
+
+          {/* ERROR BANNER */}
+          {error && (
+            <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4 flex items-center justify-between gap-3 text-rose-800">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={loadData}
+                leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                className="text-rose-700 border-rose-300 hover:bg-rose-100 font-bold text-xs"
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+
+          {/* Screen 14 Filter Pills: [All] | [Bookmarks] | [Incorrect] | [Subjects] */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <button
+              type="button"
+              onClick={() => handleTabChange('topics')}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                activeTab === 'topics'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              All Subjects
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange('bookmarks')}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                activeTab === 'bookmarks'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              Bookmarks ({bookmarks.length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange('mistakes')}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                activeTab === 'mistakes'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              Incorrect ({pendingMistakes.length})
+            </button>
           </div>
 
           {/* Subject Filter Chips (Part B6) */}

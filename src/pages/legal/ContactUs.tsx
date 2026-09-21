@@ -61,8 +61,8 @@ export const ContactUs: React.FC = () => {
             Contact Us & Support
           </h1>
 
-          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400 font-bengali">
-            যোগাযোগ ও সহায়তা কেন্দ্র
+          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400">
+            Contact &amp; Help Center
           </p>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">

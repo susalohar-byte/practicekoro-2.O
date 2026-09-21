@@ -36,8 +36,8 @@ export const RefundPolicy: React.FC = () => {
             Refund & Cancellation Policy
           </h1>
 
-          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400 font-bengali">
-            রিফান্ড ও সাবস্ক্রিপশন ক্যান্সেলেশন নীতি
+          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400">
+            Refund &amp; Subscription Cancellation Policy
           </p>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">

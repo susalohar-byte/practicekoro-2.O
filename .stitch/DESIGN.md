@@ -1,89 +1,75 @@
 # Design System: PracticeKoro 2.0 (Student Dashboard & Platform)
 **Project Title:** PracticeKoro 2.0  
-**Target:** West Bengal Competitive Exams Platform (WBP, Kolkata Police, WBCS, WBPSC, Railway)  
-**Form Factors:** Desktop (1440px+), Laptop (1024px-1366px), Tablet/Mobile (375px-768px), Mobile App (PWA)
+**Target:** West Bengal Competitive Exams Platform (WBP, Kolkata Police, WBCS, WBPSC, Railway, SSC)  
+**Form Factors:** Mobile App Experience (375px-430px PWA), Tablet (768px-1024px), Desktop (1280px-1440px+)
 
 ---
 
 ## 1. Visual Theme & Atmosphere
-- **Philosophy:** High-focus, distraction-free, commercial-grade EdTech SaaS. Eliminates childish gamification slop (coins, avatars, cartoon ranks) in favor of rigorous, clean, authoritative preparation.
-- **Mood:** Trustworthy, modern, fast, and empowering.
-- **Surface Elevation:** Whisper-soft diffused shadows (`shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]`) on white cards, deep slate-950 contrast cards with electric blue borders for active/in-progress test states.
+- **Philosophy:** High-focus, distraction-free, modern commercial EdTech platform. Clear visual hierarchy, cohesive pastel subject color-coding, elegant micro-animations, and immediate feedback.
+- **Atmosphere:** Clean, energetic, motivating, and authoritative.
+- **Surfaces & Cards:** Crisp white cards (`#ffffff`) with subtle rounded borders (`border-slate-100` / `border-slate-200`) and soft elevation shadows (`shadow-sm`, `shadow-md`).
+- **Accent Elements:** Gradient hero banners (electric blue `#0158fc` to `#0198fd`, deep navy `#063585`, and gold/amber `#f59e0b` for Pro Pass).
 
 ---
 
 ## 2. Color Palette & Functional Roles
-- **Primary Brand (Electric Blue):** `#2563eb` (`blue-600`) — Primary actions, active navigation tabs, progress highlights, and main badges.
-- **Primary Hover (Deep Electric Blue):** `#1d4ed8` (`blue-700`) — Hover states for primary buttons.
-- **Secondary Accent (Sky Blue):** `#0284c7` (`sky-600`) / `#e0f2fe` (`sky-100`) — Tagline eyebrows, secondary indicators, topic badges.
-- **Background Base:** `#ffffff` (White) / `#f8fafc` (`slate-50`) — Page backdrop and card surfaces.
-- **Card Borders:** `#f1f5f9` (`slate-100`) to `#e2e8f0` (`slate-200`) — Crisp, subtle separation.
-- **Pro Pass Gold / Amber:** `#f59e0b` (`amber-500`) to `#d97706` (`amber-600`) — All-Access Pass badges, crown icons, and premium subscription callouts.
-- **Success / Accuracy (Emerald):** `#10b981` (`emerald-600`) / `#ecfdf5` (`emerald-50`) — High accuracy indicators, passed cutoffs, answered questions.
-- **Warning / Mistakes (Amber/Orange):** `#f97316` (`orange-500`) / `#fff7ed` (`orange-50`) — Mistakes Notebook revisions and error flags.
-- **Danger / Negative Marks (Rose):** `#e11d48` (`rose-600`) / `#ffe4e6` (`rose-100`) — Negative marking penalties and critical alerts.
-- **Typography Colors:**
-  - Headings: `#0f172a` (`slate-900`) — Font weight 800/900.
-  - Body Text: `#334155` (`slate-700`) / `#475569` (`slate-600`).
-  - Muted / Metadata: `#94a3b8` (`slate-400`) / `#64748b` (`slate-500`).
+- **Primary Brand (Electric Blue):** `#0158fc` (`blue-600`) — Primary actions, active navigation tabs, selected options, progress rings.
+- **Primary Hover (Deep Electric Blue):** `#0062fd` / `#1d4ed8` — Active/hover states.
+- **Primary Subtle / Wash:** `#eff5fb` (`sky-50` / `blue-50`) — Active pill backgrounds, icon badges.
+- **Brand Navy:** `#063585` / `#0b1f44` — Student profile header, bold typography, authoritative cards.
+- **Pro Pass Gold / Amber:** `#f59e0b` to `#d97706` — Crown badge, premium subscription highlights, trophies.
+- **Success / Correct (Emerald):** `#10b981` / `#059669` / `#ecfdf5` — Correct answers, high accuracy badges.
+- **Danger / Incorrect (Rose/Red):** `#ef4444` / `#dc2626` / `#fef2f2` — Wrong answers, mistakes revision, negative marking.
+- **Skipped / Neutral (Slate):** `#64748b` / `#94a3b8` / `#f1f5f9` — Skipped questions, unattempted tags.
+
+### Subject Specific Color Tokens
+- **Mathematics:** Royal Blue (`text-blue-600 bg-blue-50 border-blue-100`)
+- **Reasoning:** Vibrant Pink/Rose (`text-pink-600 bg-pink-50 border-pink-100`)
+- **General Knowledge:** Emerald Green (`text-emerald-600 bg-emerald-50 border-emerald-100`)
+- **English:** Indigo / Purple (`text-purple-600 bg-purple-50 border-purple-100`)
+- **Bengali:** Warm Amber / Orange (`text-amber-600 bg-amber-50 border-amber-100`)
+- **Computer:** Cyan / Sky (`text-sky-600 bg-sky-50 border-sky-100`)
 
 ---
 
-## 3. Typography Rules
-- **Primary Font Family:** Inter, system-ui, -apple-system, sans-serif.
-- **Bilingual Bengali Support:** Noto Sans Bengali / Hind Siliguri fallback for authentic Bengali characters.
-- **Scale:**
-  - H1 Page Title: `text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight`.
-  - Section Headings: `text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight`.
-  - Card Titles: `text-sm sm:text-base font-bold text-slate-900`.
-  - Metric Numbers: `text-2xl sm:text-3xl font-black font-mono`.
-  - Captions / Tags: `text-[10px] sm:text-xs font-semibold tracking-wider`.
+## 3. Typography & Badges
+- **Font Family:** Inter, system-ui, -apple-system, sans-serif with Noto Sans Bengali fallback.
+- **Pill Badges:** Fully rounded (`rounded-full px-4 py-1.5 text-xs font-bold`).
+  - Active: `bg-blue-600 text-white shadow-sm`
+  - Inactive: `bg-slate-100 text-slate-600 hover:bg-slate-200`
+- **Cards:** `rounded-2xl` or `rounded-3xl` with `border border-slate-100` and soft elevation.
 
 ---
 
-## 4. Multi-Device Layout Architecture
+## 4. 17-Screen Architecture Specification
 
-### A. Desktop (1440px+)
-- **Container:** `max-w-7xl mx-auto px-6 lg:px-8`.
-- **Layout Structure:**
-  - Sticky primary header with full horizontal navigation.
-  - Hero Header with dynamic time-based greeting, active exam badge, and quick target-exam switcher dropdown.
-  - 4-column Performance Metric grid (`grid-cols-4`).
-  - 3-column Quick Practice entry cards (`grid-cols-3`).
-  - 2-column Curated Test Series & Mock Test cards (`grid-cols-2`).
-  - Side-by-side Recommended Action & Pro Pass Status banners.
-
-### B. Laptop (1024px - 1366px)
-- **Container:** `max-w-6xl mx-auto px-4 sm:px-6`.
-- **Layout Structure:**
-  - Compact vertical padding (`py-6 space-y-6`).
-  - 4-column metrics row with slightly condensed font sizing.
-  - 3-column Quick Practice cards.
-  - High-density mock test list items for maximum information visibility without endless scrolling.
-
-### C. Tablet & Mobile (375px - 768px)
-- **Container:** `w-full px-4 space-y-5 pb-24`.
-- **Layout Structure:**
-  - Compact header with stacked or modal exam selector.
-  - 2x2 Performance Metric grid (`grid-cols-2 gap-3`).
-  - 1-column full-width cards with generous touch targets (min 44px tap area).
-  - Horizontal scrolling subject pill chips with snap scrolling.
-  - Bottom navigation bar padding (`pb-24`) ensuring no elements are obscured by the mobile bottom bar.
-
-### D. Mobile App Experience (PWA Shell)
-- **Navigation:** Fixed bottom navigation bar with 5 primary touch destinations:
-  - 🏠 Home (`/dashboard`)
-  - 📝 Exams (`/exams`)
-  - 📚 Practice (`/practice`)
-  - 📊 Results (`/results`)
-  - 👤 Profile (`/profile`)
-- **App Bar:** Minimalist top app bar with Target Exam badge, quick switcher, and student avatar with Pro Pass crown badge.
-- **Haptic/Micro-interactions:** Smooth active press states (`active:scale-[0.98]`), instant feedback, and zero layout shift.
+| # | Screen | Key Elements & Layout |
+|---|---|---|
+| **1** | Splash Screen | Electric blue gradient, brand logo, tagline "Small Steps Big Results", progress bar |
+| **2** | Onboarding 1 | "Your Dream Starts with Practice", 3D student illustration, pagination dots, Next button |
+| **3** | Onboarding 2 | "Learn Smarter Not Harder", feature cards stack (Mock Tests, Topic Practice, PYQ, Performance) |
+| **4** | Onboarding 3 | "Be Exam Ready With PracticeKoro", trophy "DISCIPLINE TODAY SUCCESS TOMORROW", 3 stat pills |
+| **5** | Exam Selection | "Choose Your Exam", search bar, category pills [West Bengal, SSC, Railway, All], exam list |
+| **6** | Primary Exam Selection | "Set Your Primary Exam", radio selection cards with "Selected" badge, full-width Continue CTA |
+| **7** | Home Screen | "Hi, Student 👋", Daily Goal card (circular ring 60%), 4 Quick Actions (Practice, Mock Tests, PYQ, Notes), Popular Exams, Continue Practice |
+| **8** | Practice Screen | Header with back + info, pills [Subjects \| Topics], 2-col pastel subject grid, Quick Practice cards (Daily Practice, Weak Topics) |
+| **9** | Topic Screen | Subject title + count, "Change" button, filters [All Topics \| Weak \| Attempted], topic cards with counts |
+| **10** | Test Series Screen | Header with search, filter chips [All Exams, WBSSC, WBP, SSC], test series cards with question counts |
+| **11** | Live Test Screen | Header with Exam Name, status bar (Timer, Question progress, Grid icon), section pill, question card, option selector cards, Previous/Next/Mark/Clear footer |
+| **12** | Result Screen | Trophy with stars, "Great Job!", Score badge "72 / 100", metric cards (Correct, Incorrect, Skipped), View Detailed Analysis, Review Answers, Re-attempt, Back to Home |
+| **13** | Detailed Analysis Screen | Tabs [Overview \| Subject-wise \| Topic-wise], Accuracy donut chart, Subject performance progress bars |
+| **14** | Saved Questions Screen | Filter pills [All \| Bookmarks \| Incorrect], question cards with subject badges and date |
+| **15** | Leaderboard Screen | Filter pills [All India \| West Bengal \| Friends], Top 3 podium with gold/silver/bronze medals, student rank list, sticky bottom card for user |
+| **16** | Subscription Screen | Crown icon, "Go Premium", Monthly / Yearly toggle, feature checklist, price callout, "Get All Access" CTA |
+| **17** | Profile Screen | Dark navy student card, Pro Plan gold banner with Upgrade button, clean menu item cards (My Tests, Saved Questions, My Results, etc.) |
 
 ---
 
-## 5. Component Design Specifications
-- **Cards:** Rounded 2xl (`rounded-2xl` or `rounded-3xl`), border `border-slate-100/90`, hover elevation `hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 transition-all duration-300`.
-- **Primary Buttons:** Pill or soft-rounded (`rounded-xl`), electric blue `#2563eb`, bold font, `shadow-lg shadow-blue-500/20`.
-- **Status Badges:** Rounded-full, high contrast, subtle borders (e.g. `bg-emerald-50 text-emerald-700 border border-emerald-200`).
-- **Progress Bars:** Smooth animated bars with electric blue fill on slate-100 track.
+## 5. Navigation System
+- **Mobile Bottom Navigation Bar (5 Primary Destinations):**
+  1. 🏠 **Home** (`/dashboard`)
+  2. 📝 **Exams** (`/exams`)
+  3. 📚 **Practice** (`/practice`)
+  4. 📊 **Results** (`/results`)
+  5. 👤 **Profile** (`/profile`)

@@ -27,7 +27,7 @@ export const Settings: React.FC = () => {
 
   // Language preference using existing bilingual system ('bn' | 'en')
   const [language, setLanguageState] = useState<'bn' | 'en'>(() => {
-    return (localStorage.getItem('practicekoro_language') as 'bn' | 'en') || 'bn';
+    return (localStorage.getItem('practicekoro_language') as 'bn' | 'en') || 'en';
   });
 
   const handleLanguageChange = (lang: 'bn' | 'en') => {

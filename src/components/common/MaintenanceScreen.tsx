@@ -36,18 +36,18 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
       setCheckStatusMessage(null);
       const isStillMaint = await checkMaintenanceMode();
       if (!isStillMaint) {
-        setCheckStatusMessage('রক্ষণাবেক্ষণ সম্পন্ন হয়েছে! পেজ রিলোড হচ্ছে...');
+        setCheckStatusMessage('Maintenance completed! Reloading page...');
         setTimeout(() => {
           window.location.reload();
         }, 800);
       } else {
         setCheckStatusMessage(
-          'সিস্টেম এখনো রক্ষণাবেক্ষণে রয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
+          'System is currently undergoing maintenance. Please try again shortly.'
         );
         setTimeout(() => setCheckStatusMessage(null), 4000);
       }
     } catch {
-      setCheckStatusMessage('স্ট্যাটাস চেক ব্যর্থ হয়েছে। ইন্টারনেট সংযোগ পরীক্ষা করুন।');
+      setCheckStatusMessage('Status check failed. Please check your internet connection.');
       setTimeout(() => setCheckStatusMessage(null), 3000);
     } finally {
       setIsChecking(false);
@@ -72,7 +72,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-          <span>রুটিন রক্ষণাবেক্ষণ (Maintenance Active)</span>
+          <span>Scheduled Maintenance Active</span>
         </div>
       </header>
 
@@ -100,12 +100,11 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
         <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-5 sm:p-6 text-slate-300 text-xs sm:text-sm leading-relaxed mb-6 backdrop-blur-sm shadow-2xl text-left sm:text-center space-y-2">
           <p>
             {description ||
-              'আমাদের সার্ভার অপ্টিমাইজেশন, দ্রুত পেজ লোডিং এবং মক টেস্ট মূল্যায়নের সর্বোচ্চ নির্ভুলতা নিশ্চিত করতে একটি প্রয়োজনীয় সিস্টেম আপগ্রেড চলছে।'}
+              'A routine system upgrade is underway to optimize server performance, improve page loading times, and ensure maximum test evaluation accuracy.'}
           </p>
           <p className="text-slate-400 text-xs">
-            এই সময়ে টেস্ট গ্রহণ, প্রশ্নপত্র সমাধান এবং ফলাফল প্রকাশ সাময়িকভাবে স্থগিত রাখা হয়েছে।
-            আপগ্রেড শেষ হওয়া মাত্রই সম্পূর্ণ পোর্টাল স্বয়ংক্রিয়ভাবে সক্রিয় হবে। সাময়িক অসুবিধার জন্য
-            আমরা আন্তরিকভাবে দুঃখিত।
+            Test attempts, question evaluation, and results are temporarily paused. All services
+            will resume automatically once the upgrade concludes. We apologize for any inconvenience.
           </p>
         </div>
 
@@ -125,7 +124,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold transition-all shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
-            <span>{isChecking ? 'চেক করা হচ্ছে...' : 'আবার চেষ্টা করুন (Check Status)'}</span>
+            <span>{isChecking ? 'Checking status...' : 'আবার চেষ্টা করুন (Check Status Again)'}</span>
           </button>
 
           {allowAdminBypass && isAdmin && (
@@ -134,7 +133,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95 cursor-pointer"
             >
               <Shield className="w-4 h-4" />
-              <span>Admin Console এ প্রবেশ</span>
+              <span>Enter Admin Console</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -147,7 +146,9 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
               <Mail className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase">সাপোর্ট ইমেইল</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase">
+                Support Email (সাপোর্ট ইমেইল)
+              </p>
               <a
                 href={`mailto:${supportEmail}`}
                 className="text-xs font-semibold text-slate-200 hover:text-white hover:underline transition-colors"
@@ -162,7 +163,9 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
               <Phone className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase">জরুরি হেল্পলাইন</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase">
+                Emergency Helpline (জরুরি হেল্পলাইন)
+              </p>
               <p className="text-xs font-semibold text-slate-200">
                 {supportPhone || '+91 98765 43210'}
               </p>
@@ -174,7 +177,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
       {/* Footer / Subtle Admin link */}
       <footer className="relative z-10 w-full max-w-5xl mx-auto px-6 py-4 text-center border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
         <p>
-          © {new Date().getFullYear()} {appName || 'PracticeKoro'}. সর্বস্বত্ব সংরক্ষিত।
+          © {new Date().getFullYear()} {appName || 'PracticeKoro'}. All rights reserved.
         </p>
         <div className="flex items-center gap-4">
           {!user && (

@@ -43,3 +43,7 @@ scratch/
 coverage/
 playwright-report/
 test-results/
+
+# Scratch and build binaries
+scratch_*
+*.apk

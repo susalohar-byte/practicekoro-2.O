@@ -32,7 +32,7 @@ describe('Legal & Compliance Pages (Razorpay & Indian Statutory Compliance)', ()
       expect(
         screen.getByRole('heading', { level: 1, name: /Terms and Conditions/i })
       ).toBeInTheDocument();
-      expect(screen.getByText(/ব্যবহারের সাধারণ নিয়ম ও শর্তাবলি/i)).toBeInTheDocument();
+      expect(screen.getByText(/General Terms & Conditions of Use/i)).toBeInTheDocument();
       expect(screen.getByText(/1\. Introduction & Acceptance of Terms/i)).toBeInTheDocument();
       expect(screen.getByText(/3\. Subscriptions, Payments & Access Rights/i)).toBeInTheDocument();
       expect(screen.getByText(/4\. Intellectual Property Rights/i)).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('Legal & Compliance Pages (Razorpay & Indian Statutory Compliance)', ()
       expect(
         screen.getByRole('heading', { level: 1, name: /Privacy Policy/i })
       ).toBeInTheDocument();
-      expect(screen.getByText(/গোপনীয়তা ও তথ্য সুরক্ষা নীতি/i)).toBeInTheDocument();
+      expect(screen.getByText(/Privacy & Data Protection Policy/i)).toBeInTheDocument();
       expect(
         screen.getByText(/3\. Payment Card & Financial Information Security/i)
       ).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe('Legal & Compliance Pages (Razorpay & Indian Statutory Compliance)', ()
       expect(
         screen.getByRole('heading', { level: 1, name: /Refund & Cancellation Policy/i })
       ).toBeInTheDocument();
-      expect(screen.getByText(/রিফান্ড ও সাবস্ক্রিপশন ক্যান্সেলেশন নীতি/i)).toBeInTheDocument();
+      expect(screen.getByText(/Refund & Subscription Cancellation Policy/i)).toBeInTheDocument();
       expect(screen.getByText(/Eligible for 100% Full Refund:/i)).toBeInTheDocument();
       expect(screen.getByText(/Non-Refundable Circumstances:/i)).toBeInTheDocument();
       expect(screen.getByText(/3\. Subscription Cancellation Policy/i)).toBeInTheDocument();
@@ -102,7 +102,7 @@ describe('Legal & Compliance Pages (Razorpay & Indian Statutory Compliance)', ()
       expect(
         screen.getByRole('heading', { level: 1, name: /Contact Us & Support/i })
       ).toBeInTheDocument();
-      expect(screen.getByText(/যোগাযোগ ও সহায়তা কেন্দ্র/i)).toBeInTheDocument();
+      expect(screen.getByText(/Contact & Help Center/i)).toBeInTheDocument();
       expect(screen.getByText(/Mon – Sat: 10:00 AM – 7:00 PM/i)).toBeInTheDocument();
       expect(screen.getByText(/Merchant Information/i)).toBeInTheDocument();
 

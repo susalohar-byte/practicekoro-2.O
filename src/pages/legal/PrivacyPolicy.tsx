@@ -35,8 +35,8 @@ export const PrivacyPolicy: React.FC = () => {
             Privacy Policy
           </h1>
 
-          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400 font-bengali">
-            গোপনীয়তা ও তথ্য সুরক্ষা নীতি
+          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400">
+            Privacy &amp; Data Protection Policy
           </p>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">

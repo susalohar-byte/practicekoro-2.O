@@ -207,7 +207,7 @@ export const ShortNotesBox: React.FC<ShortNotesBoxProps> = ({
   const [uncontrolledExpanded, setUncontrolledExpanded] = useState(defaultExpanded);
 
   // Determine display title based on mathematics vs non-mathematics
-  const displayTitle = title || (isMathematics ? 'Explanation' : 'শর্ট নোটস (Short Notes)');
+  const displayTitle = title || (isMathematics ? 'Explanation' : 'Short Notes');
 
   // Normalize escaped \n or \\n from DB
   const normalizedExplanation = useMemo(() => {

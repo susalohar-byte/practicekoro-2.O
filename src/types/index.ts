@@ -893,3 +893,24 @@ export interface PlatformAnalyticsData {
   };
 }
 
+export type BannerThemeColor = 'blue' | 'purple' | 'emerald' | 'amber' | 'rose' | 'indigo' | 'cyan';
+
+export interface HeroBanner {
+  id: string;
+  badgeText?: string;
+  title: string;
+  highlightWord?: string;
+  subtitle: string;
+  primaryCtaText: string;
+  primaryCtaLink: string;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
+  featurePills?: string[];
+  imageUrl?: string;
+  themeGradient?: BannerThemeColor;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+

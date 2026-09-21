@@ -84,10 +84,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
           <div className="space-y-1">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              কিছু একটা ভুল হয়েছে
+              Something went wrong
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Something went wrong{this.props.area ? ` in the ${this.props.area}` : ''}. Your saved
+              An unexpected error occurred{this.props.area ? ` in the ${this.props.area}` : ''}. Your saved
               progress and attempts are safe.
             </p>
           </div>
@@ -103,7 +103,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               leftIcon={<RefreshCw className="w-4 h-4" />}
               onClick={this.handleRetry}
             >
-              আবার চেষ্টা করুন
+              Try Again
             </Button>
             <Button
               size="sm"

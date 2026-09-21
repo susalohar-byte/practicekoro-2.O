@@ -21,7 +21,7 @@ export const FaqSection: React.FC = () => {
         <SectionHeading
           eyebrow="Help Center"
           title="Frequently Asked Questions (FAQ)"
-          description="সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্নাবলি ও সঠিক উত্তর"
+          description="Frequently asked questions and comprehensive answers"
         />
 
         <div className="space-y-3">

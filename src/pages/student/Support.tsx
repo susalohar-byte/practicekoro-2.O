@@ -49,22 +49,18 @@ export const Support: React.FC = () => {
   const faqs = [
     {
       q: 'What if a question or answer key seems incorrect in a test?',
-      bn: 'মক টেস্টে কোনো প্রশ্ন বা উত্তরের অপশন ভুল মনে হলে কী করব?',
       a: 'You can report it directly from the Test Solutions page by clicking "Report Issue" next to that question, or submit a ticket here under "Exam & Question Issue". Our academic editorial team verifies the discrepancy and updates the question bank within 24-48 hours.',
     },
     {
       q: 'My payment succeeded but Pro Pass was not unlocked?',
-      bn: 'টাকা কেটে নেওয়া হয়েছে কিন্তু প্রো পাস চালু হয়নি?',
       a: 'Occasionally payment gateway webhooks face a short delay. Submit a ticket under "Payment & Transaction" with your Payment ID or UTR number. Our admin support team verifies the transaction and activates your Pro subscription immediately.',
     },
     {
       q: 'How does negative marking and percentile ranking work?',
-      bn: 'নেগেটিভ মার্কিং এবং পার্সেন্টাইল র‍্যাঙ্কিং কীভাবে গণনা করা হয়?',
       a: 'PracticeKoro strictly follows the official examination pattern (e.g. 0.25 negative marks for WBP / KP / Food SI). Your percentile and live ranks are dynamically recalculated against all candidates who completed the test.',
     },
     {
       q: 'Can I re-attempt a mock test after submission?',
-      bn: 'একবার মক টেস্ট দেওয়ার পর কি পুনরায় চেষ্টা করা যায়?',
       a: 'Yes, you can re-attempt practice tests anytime. Your latest attempt as well as past analytics remain safely saved in your Results history and Mistakes Notebook.',
     },
   ];
@@ -140,7 +136,7 @@ export const Support: React.FC = () => {
         <div className="relative z-10 max-w-2xl space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-white text-xs font-bold border border-white/20">
             <LifeBuoy className="w-3.5 h-3.5 text-blue-200" />
-            <span>PracticeKoro Support Desk / সহায়তা কেন্দ্র</span>
+            <span>PracticeKoro Support Desk</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
             How can we help you today?
@@ -221,7 +217,7 @@ export const Support: React.FC = () => {
                 }`}
               >
                 <Send className="w-4 h-4" />
-                <span>Raise Ticket / রিপোর্ট জমা দিন</span>
+                <span>Raise Ticket</span>
               </button>
               <button
                 type="button"
@@ -236,7 +232,7 @@ export const Support: React.FC = () => {
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>My Tickets / আমার পূর্ববর্তী টিকিট</span>
+                <span>My Tickets</span>
                 {myTickets.length > 0 && (
                   <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-black bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                     {myTickets.length}
@@ -282,7 +278,7 @@ export const Support: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                          Issue Category / ক্যাটাগরি <span className="text-rose-500">*</span>
+                          Issue Category <span className="text-rose-500">*</span>
                         </label>
                         <select
                           value={category}
@@ -301,7 +297,7 @@ export const Support: React.FC = () => {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                          Urgency Level / অগ্রাধিকার
+                          Urgency Level
                         </label>
                         <select
                           value={priority}
@@ -320,7 +316,7 @@ export const Support: React.FC = () => {
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                        Subject / শিরোনাম <span className="text-rose-500">*</span>
+                        Subject <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -334,7 +330,7 @@ export const Support: React.FC = () => {
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                        Detailed Description / বিস্তারিত বিবরণ{' '}
+                        Detailed Description{' '}
                         <span className="text-rose-500">*</span>
                       </label>
                       <textarea
@@ -367,7 +363,7 @@ export const Support: React.FC = () => {
                         className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-2 px-5 py-2.5 shadow-md shadow-blue-600/20"
                       >
                         <Send className="w-4 h-4" />
-                        {isSubmitting ? 'Submitting…' : 'Submit Ticket / রিপোর্ট পাঠান'}
+                        {isSubmitting ? 'Submitting…' : 'Submit Ticket'}
                       </Button>
                     </div>
                   </form>
@@ -467,7 +463,7 @@ export const Support: React.FC = () => {
                               <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300">
                                 <div className="flex items-center gap-1.5 font-bold mb-1 text-xs">
                                   <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                  <span>Admin Resolution / সমাধান উত্তর:</span>
+                                  <span>Admin Resolution:</span>
                                 </div>
                                 <p className="text-xs leading-relaxed whitespace-pre-wrap font-medium">
                                   {t.resolutionNotes}
@@ -508,7 +504,7 @@ export const Support: React.FC = () => {
           <Card className="p-5 border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
               <HelpCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>Common Questions / সাধারণ জিজ্ঞাসা</span>
+              <span>Frequently Asked Questions</span>
             </h3>
 
             <div className="space-y-2.5">
@@ -527,9 +523,6 @@ export const Support: React.FC = () => {
                       <div>
                         <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           {faq.q}
-                        </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                          {faq.bn}
                         </p>
                       </div>
                       <ChevronDown

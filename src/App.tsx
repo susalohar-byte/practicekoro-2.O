@@ -54,6 +54,9 @@ const SavedQuestions = React.lazy(() =>
 const Rank = React.lazy(() =>
   import('@/pages/student/Rank').then((module) => ({ default: module.Rank }))
 );
+const Onboarding = React.lazy(() =>
+  import('@/pages/student/Onboarding').then((module) => ({ default: module.Onboarding }))
+);
 const Login = React.lazy(() =>
   import('@/pages/auth/Login').then((module) => ({ default: module.Login }))
 );
@@ -91,6 +94,9 @@ const AdminDashboard = React.lazy(() =>
 );
 const AdminExams = React.lazy(() =>
   import('@/pages/admin/AdminExams').then((module) => ({ default: module.AdminExams }))
+);
+const AdminBanners = React.lazy(() =>
+  import('@/pages/admin/AdminBanners').then((module) => ({ default: module.AdminBanners }))
 );
 const AdminTopicManage = React.lazy(() =>
   import('@/pages/admin/AdminTopicManage').then((module) => ({ default: module.AdminTopicManage }))
@@ -163,11 +169,11 @@ const AdminAuditLogs = React.lazy(() =>
 
 /**
  * RootRoute:
- * - Always displays the public Landing Page at https://practicekoro.online/
- * - If user is logged in, Landing Page dynamically displays Dashboard button instead of Login/Get Started
+ * - Directs users straight to the Student Dashboard (/dashboard) as requested.
+ * - Public Landing Page remains accessible at /landing.
  */
 const RootRoute: React.FC = () => {
-  return <Landing />;
+  return <Navigate to="/dashboard" replace />;
 };
 
 export const App: React.FC = () => {
@@ -186,9 +192,11 @@ export const App: React.FC = () => {
         {/* Root Route (Landing for guests, redirects to appropriate panel if logged in) */}
         <Route path="/" element={<RootRoute />} />
         <Route path="/landing" element={<Landing />} />
+        <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
         <Route element={<AppLayout />}>
+          <Route path="onboarding" element={<Onboarding />} />
           <Route
             path="dashboard"
             element={
@@ -288,6 +296,10 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="leaderboard"
+            element={<Navigate to="/rank" replace />}
+          />
         </Route>
 
         {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}
@@ -379,6 +391,14 @@ export const App: React.FC = () => {
             element={
               <AdminRoute requiredPermission="canManageExams">
                 <AdminExams />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="banners"
+            element={
+              <AdminRoute requiredPermission="canManageExams">
+                <AdminBanners />
               </AdminRoute>
             }
           />

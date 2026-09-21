@@ -36,8 +36,8 @@ export const TermsAndConditions: React.FC = () => {
             Terms and Conditions
           </h1>
 
-          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400 font-bengali">
-            ব্যবহারের সাধারণ নিয়ম ও শর্তাবলি
+          <p className="text-base sm:text-lg font-semibold text-pk-primary dark:text-blue-400">
+            General Terms &amp; Conditions of Use
           </p>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
