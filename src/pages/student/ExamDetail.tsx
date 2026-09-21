@@ -172,7 +172,7 @@ export const ExamDetail: React.FC = () => {
 
   if (!currentExam && !loading) {
     return (
-      <div className="max-w-4xl mx-auto py-16 px-4 text-center">
+      <div className="max-w-4xl mx-auto py-16 px-4 text-center pk-student-page">
         <EmptyState
           title="Examination not found"
           description="The requested examination could not be found or is no longer active."
