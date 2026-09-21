@@ -45,23 +45,23 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
-  // 7 standard student navigation items matching screenshot
   const navItems = [
     { label: 'Home', path: '/dashboard', icon: Home },
     { label: 'Exams', path: '/exams', icon: Compass },
     { label: 'Practice', path: '/practice', icon: Zap },
     { label: 'Results', path: '/results', icon: BarChart3 },
-    { label: 'Saved Questions', path: '/practice?tab=bookmarks', icon: Bookmark },
+    { label: 'Saved Questions', path: '/saved-questions', icon: Bookmark },
     { label: 'Rank', path: '/rank', icon: Trophy },
     { label: 'Help & Support', path: '/support', icon: HelpCircle },
+    { label: 'Profile', path: '/profile', icon: User },
   ];
 
   const isItemActive = (path: string) => {
     if (path === '/dashboard') {
       return location.pathname === '/' || location.pathname === '/dashboard';
     }
-    if (path.includes('?tab=bookmarks')) {
-      return location.pathname.startsWith('/practice') && location.search.includes('tab=bookmarks');
+    if (path === '/saved-questions') {
+      return location.pathname === '/saved-questions' || (location.pathname.startsWith('/practice') && location.search.includes('tab=bookmarks'));
     }
     if (path === '/practice') {
       return location.pathname.startsWith('/practice') && !location.search.includes('tab=bookmarks');
