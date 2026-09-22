@@ -14,6 +14,9 @@ export default defineConfig({
     host: true,
   },
   build: {
+    // Warn when a single chunk grows past 600 kB (raw). CI enforces the
+    // total dist budget separately — see .github/workflows/ci.yml.
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks(id) {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
-import type { HeroBanner } from '@/types';
 import {
   ArrowRight,
   ChevronRight,
@@ -26,8 +26,17 @@ export const Home: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Dynamic Banners State
-  const [banners, setBanners] = useState<HeroBanner[]>(DEFAULT_HERO_BANNERS);
+  // Dynamic Banners (cached query with static fallback)
+  const queryClient = useQueryClient();
+  const { data: banners = DEFAULT_HERO_BANNERS } = useQuery({
+    queryKey: ['hero-banners'],
+    queryFn: () => bannerService.getActiveBanners(),
+    select: (active) => (active && active.length > 0 ? active : DEFAULT_HERO_BANNERS),
+    placeholderData: DEFAULT_HERO_BANNERS,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -42,14 +51,11 @@ export const Home: React.FC = () => {
 
   const loadBanners = useCallback(async () => {
     try {
-      const active = await bannerService.getActiveBanners();
-      if (active && active.length > 0) {
-        setBanners(active);
-      }
+      await queryClient.invalidateQueries({ queryKey: ['hero-banners'] });
     } catch {
       // Retain fallback banners
     }
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     loadBanners();

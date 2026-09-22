@@ -317,6 +317,7 @@ export const TestSolutions: React.FC = () => {
               <ShortNotesBox
                 explanation={sol.explanationBengali || sol.explanation}
                 isMathematics={isMathTest}
+                title={isMathTest ? undefined : 'শর্ট নোটস (Short Notes)'}
                 defaultExpanded={true}
                 collapsible={false}
               />

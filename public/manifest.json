@@ -55,7 +55,7 @@
         {
             "name": "Dashboard",
             "short_name": "Dashboard",
-            "url": "/student/dashboard",
+            "url": "/dashboard",
             "icons": [
                 {
                     "src": "/icons/icon-96x96.png",
@@ -66,7 +66,7 @@
         {
             "name": "Exams",
             "short_name": "Exams",
-            "url": "/student/exams",
+            "url": "/exams",
             "icons": [
                 {
                     "src": "/icons/icon-96x96.png",

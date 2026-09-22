@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/services/api';
+import {
+  usePracticeRevision,
+  useRemoveBookmark,
+  useResolveMistake,
+} from '@/hooks/usePracticeRevision';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
@@ -23,7 +27,7 @@ import {
   Trash2,
   Award,
 } from 'lucide-react';
-import type { MistakeItem, BookmarkItem, Question } from '@/types';
+import type { Question } from '@/types';
 
 type PracticeTab = 'topics' | 'mistakes' | 'bookmarks';
 
@@ -39,12 +43,24 @@ export const Practice: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Revision data: cached mistakes + bookmarks (TanStack Query).
+  // `loadData` is kept as the refetch alias so retry buttons keep working.
+  const {
+    data: revision,
+    isLoading: loading,
+    isError: revisionError,
+    refetch: loadData,
+  } = usePracticeRevision(user?.id);
+  const mistakes = useMemo(() => revision?.mistakes ?? [], [revision]);
+  const bookmarks = useMemo(() => revision?.bookmarks ?? [], [revision]);
+  const error = revisionError
+    ? 'Unable to load revision items. Please check your connection.'
+    : null;
+  const resolveMistake = useResolveMistake(user?.id);
+  const removeBookmark = useRemoveBookmark(user?.id);
+
   // Data state
   const [activeTab, setActiveTab] = useState<PracticeTab>('topics');
-  const [mistakes, setMistakes] = useState<MistakeItem[]>([]);
-  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   // List view state
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -64,29 +80,8 @@ export const Practice: React.FC = () => {
   );
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
-  // Fetch mistakes and bookmarks
-  const loadData = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [mList, bList] = await Promise.all([
-        api.getMistakes(user.id),
-        api.getBookmarks(user.id),
-      ]);
-      setMistakes(mList || []);
-      setBookmarks(bList || []);
-    } catch (err) {
-      console.error('Failed to load practice data:', err);
-      setError('Unable to load revision items. Please check your connection.');
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Revision data is fetched by usePracticeRevision (cached, auto-fetch on
+  // mount). `loadData` above is the query refetch used by retry buttons.
 
   // Sync active tab with URL (?tab=mistakes|bookmarks|topics) and
   // legacy/dedicated paths (/practice/mistakes, /practice/bookmarks).
@@ -167,43 +162,25 @@ export const Practice: React.FC = () => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Toggle mistake resolution (persists to Supabase)
+  // Toggle mistake resolution (optimistic cached update, persists to Supabase)
   const handleToggleResolve = async (mistakeId: string, currentResolvedState: boolean) => {
     setResolvingId(mistakeId);
-    const nextState = !currentResolvedState;
-
-    // Optimistic local update
-    setMistakes((prev) =>
-      prev.map((m) =>
-        m.id === mistakeId
-          ? { ...m, isResolved: nextState, lastReviewedAt: new Date().toISOString() }
-          : m
-      )
-    );
-
     try {
-      await api.resolveMistake(mistakeId, nextState);
+      await resolveMistake.mutateAsync({ mistakeId, nextState: !currentResolvedState });
     } catch (err) {
       console.error('Failed to update mistake resolution:', err);
-      // Revert on error
-      setMistakes((prev) =>
-        prev.map((m) => (m.id === mistakeId ? { ...m, isResolved: currentResolvedState } : m))
-      );
     } finally {
       setResolvingId(null);
     }
   };
 
-  // Remove bookmark (persists to Supabase)
+  // Remove bookmark (optimistic cached remove, persists to Supabase)
   const handleRemoveBookmark = async (bookmarkId: string, questionId: string) => {
     if (!user) return;
-    // Optimistic remove
-    setBookmarks((prev) => prev.filter((b) => b.id !== bookmarkId));
     try {
-      await api.toggleBookmark(user.id, questionId);
+      await removeBookmark.mutateAsync({ bookmarkId, questionId });
     } catch (err) {
       console.error('Failed to remove bookmark:', err);
-      loadData();
     }
   };
 
@@ -475,6 +452,9 @@ export const Practice: React.FC = () => {
                 <ShortNotesBox
                   explanation={currentQuestion.explanationBengali || currentQuestion.explanation}
                   isMathematics={isMathematicsQuestion(currentQuestion)}
+                  title={
+                    isMathematicsQuestion(currentQuestion) ? undefined : 'শর্ট নোটস (Short Notes)'
+                  }
                   defaultExpanded={true}
                   collapsible={false}
                 />
@@ -636,7 +616,9 @@ export const Practice: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={loadData}
+                onClick={() => {
+                  void loadData();
+                }}
                 leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
                 className="text-rose-700 border-rose-300 hover:bg-rose-100 font-bold text-xs"
               >
@@ -867,6 +849,9 @@ export const Practice: React.FC = () => {
                             <ShortNotesBox
                               explanation={q.explanationBengali || q.explanation}
                               isMathematics={isMathematicsQuestion(q)}
+                              title={
+                                isMathematicsQuestion(q) ? undefined : 'শর্ট নোটস (Short Notes)'
+                              }
                               defaultExpanded={true}
                               collapsible={false}
                             />
@@ -1045,6 +1030,9 @@ export const Practice: React.FC = () => {
                             <ShortNotesBox
                               explanation={q.explanationBengali || q.explanation}
                               isMathematics={isMathematicsQuestion(q)}
+                              title={
+                                isMathematicsQuestion(q) ? undefined : 'শর্ট নোটস (Short Notes)'
+                              }
                               defaultExpanded={true}
                               collapsible={false}
                             />

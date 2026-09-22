@@ -7,10 +7,8 @@ import {
   Plus,
   Upload,
   Search,
-  Eye,
   Edit2,
   Trash2,
-  Archive,
   Download,
   CheckCircle2,
   AlertCircle,
@@ -20,7 +18,6 @@ import {
   ChevronRight,
   RotateCcw,
   Award,
-  Lock,
   LayoutGrid,
   List,
   Check,
@@ -43,7 +40,9 @@ import {
   downloadSampleTxt,
 } from '@/utils/txtQuestionParser';
 import { downloadSampleCsvFile, parseQuestionsCsv } from '@/utils/csvParser';
-import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { QuestionCard } from './questionBank/QuestionCard';
+import { QuestionTableRow } from './questionBank/QuestionTableRow';
+import { PreviewQuestionModal } from './questionBank/PreviewQuestionModal';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 import { getErrorMessage } from '@/lib/errors';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -2080,274 +2079,22 @@ export const AdminQuestionBank: React.FC = () => {
                     q.topicName || q.chapterName || q.subjectName || 'bengali Literature';
 
                   return (
-                    <div
+                    <QuestionCard
                       key={q.id}
-                      className={`bg-white dark:bg-slate-900 border rounded-2xl p-5 sm:p-6 transition-all shadow-xs ${
-                        isSelected
-                          ? 'border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/20 dark:bg-sky-950/20'
-                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                      }`}
-                    >
-                      {/* Top Row: Selection circle, Question text, Action Icons */}
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                          {/* Selection Circle */}
-                          <button
-                            type="button"
-                            onClick={() => toggleSelectQuestion(q.id)}
-                            title={isSelected ? 'Deselect question' : 'Select question'}
-                            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                              isSelected
-                                ? 'border-sky-500 bg-sky-500 text-white shadow-xs'
-                                : 'border-sky-400 dark:border-sky-500 bg-white dark:bg-slate-950 hover:border-sky-600'
-                            }`}
-                          >
-                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                          </button>
-
-                          {/* Question Number & Text */}
-                          <div className="space-y-1 flex-1 min-w-0">
-                            <h3 className="text-[15px] sm:text-base font-bold text-slate-900 dark:text-white leading-relaxed">
-                              {questionNumber}. {q.questionBengaliText || q.questionText}
-                            </h3>
-                            {q.questionBengaliText &&
-                              q.questionText &&
-                              q.questionBengaliText !== q.questionText && (
-                                <p className="text-xs text-slate-400 dark:text-slate-500 italic">
-                                  {q.questionText}
-                                </p>
-                              )}
-                            {q.imageUrl && (
-                              <div className="pt-2 max-w-sm">
-                                <div className="p-1.5 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 inline-block">
-                                  <img
-                                    src={q.imageUrl}
-                                    alt="Question diagram"
-                                    className="max-h-44 max-w-full rounded-lg object-contain bg-white dark:bg-black"
-                                    loading="lazy"
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Top-Right Actions: Edit & Delete */}
-                        <div className="flex items-center gap-1 shrink-0 pt-0.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(q)}
-                            title="Edit Question"
-                            className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setQuestionToDelete(q)}
-                            title="Delete Question"
-                            className="p-1.5 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Middle: 2-Column Options Grid (Column 1 = A & C, Column 2 = B & D) */}
-                      <div className="ml-8 mt-3.5 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5 text-sm text-slate-800 dark:text-slate-200">
-                        {/* Column 1: A and C */}
-                        <div className="space-y-2">
-                          {/* Option A */}
-                          <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
-                              q.correctOption === 'A'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
-                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
-                            }`}
-                          >
-                            <div className="flex items-baseline gap-2 min-w-0">
-                              <span
-                                className={`font-bold shrink-0 ${
-                                  q.correctOption === 'A'
-                                    ? 'text-emerald-700 dark:text-emerald-400'
-                                    : 'text-slate-900 dark:text-white'
-                                }`}
-                              >
-                                A.
-                              </span>
-                              <span
-                                className={
-                                  q.correctOption === 'A'
-                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
-                                    : ''
-                                }
-                              >
-                                {q.optionA}
-                              </span>
-                            </div>
-                            {q.correctOption === 'A' && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
-                                ✓ Correct
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Option C */}
-                          <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
-                              q.correctOption === 'C'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
-                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
-                            }`}
-                          >
-                            <div className="flex items-baseline gap-2 min-w-0">
-                              <span
-                                className={`font-bold shrink-0 ${
-                                  q.correctOption === 'C'
-                                    ? 'text-emerald-700 dark:text-emerald-400'
-                                    : 'text-slate-900 dark:text-white'
-                                }`}
-                              >
-                                C.
-                              </span>
-                              <span
-                                className={
-                                  q.correctOption === 'C'
-                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
-                                    : ''
-                                }
-                              >
-                                {q.optionC}
-                              </span>
-                            </div>
-                            {q.correctOption === 'C' && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
-                                ✓ Correct
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Column 2: B and D */}
-                        <div className="space-y-2">
-                          {/* Option B */}
-                          <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
-                              q.correctOption === 'B'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
-                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
-                            }`}
-                          >
-                            <div className="flex items-baseline gap-2 min-w-0">
-                              <span
-                                className={`font-bold shrink-0 ${
-                                  q.correctOption === 'B'
-                                    ? 'text-emerald-700 dark:text-emerald-400'
-                                    : 'text-slate-900 dark:text-white'
-                                }`}
-                              >
-                                B.
-                              </span>
-                              <span
-                                className={
-                                  q.correctOption === 'B'
-                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
-                                    : ''
-                                }
-                              >
-                                {q.optionB}
-                              </span>
-                            </div>
-                            {q.correctOption === 'B' && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
-                                ✓ Correct
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Option D */}
-                          <div
-                            className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all ${
-                              q.correctOption === 'D'
-                                ? 'bg-emerald-50/90 dark:bg-emerald-950/35 border-emerald-300/80 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100 shadow-2xs font-medium ring-1 ring-emerald-500/15'
-                                : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200'
-                            }`}
-                          >
-                            <div className="flex items-baseline gap-2 min-w-0">
-                              <span
-                                className={`font-bold shrink-0 ${
-                                  q.correctOption === 'D'
-                                    ? 'text-emerald-700 dark:text-emerald-400'
-                                    : 'text-slate-900 dark:text-white'
-                                }`}
-                              >
-                                D.
-                              </span>
-                              <span
-                                className={
-                                  q.correctOption === 'D'
-                                    ? 'font-semibold text-emerald-950 dark:text-emerald-100'
-                                    : ''
-                                }
-                              >
-                                {q.optionD}
-                              </span>
-                            </div>
-                            {q.correctOption === 'D' && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md select-none shrink-0 ml-1">
-                                ✓ Correct
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Short Notes / Explanation Toggle Icon & Clean Format */}
-                      {Boolean(q.explanationBengali || q.explanation) && (
-                        <div className="ml-8 mt-3.5">
-                          <ShortNotesBox
-                            explanation={q.explanationBengali || q.explanation}
-                            isExpanded={Boolean(expandedNotesIds[q.id])}
-                            collapsible={true}
-                            onToggle={() => toggleNotes(q.id)}
-                            isMathematics={isMathematicsQuestion(q)}
-                          />
-                        </div>
-                      )}
-
-                      {/* Bottom Row: Book icon, subject name, bn, Lock icon */}
-                      <div className="ml-8 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-                        <div className="flex items-center gap-3.5">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
-                            <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{subjectTitle}</span>
-                          </div>
-                          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                            bn
-                          </span>
-                          <Lock className="w-3.5 h-3.5 text-slate-400" />
-                        </div>
-
-                        <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                          <span>{q.defaultMarks || 1} Mark</span>
-                          <span>•</span>
-                          <span>{q.defaultNegativeMarks || 0.25} Neg</span>
-                          {q.explanation && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPreviewingQuestion(q);
-                                setIsPreviewModalOpen(true);
-                              }}
-                              className="ml-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-semibold"
-                            >
-                              View Solution
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                      q={q}
+                      questionNumber={questionNumber}
+                      isSelected={isSelected}
+                      subjectTitle={subjectTitle}
+                      notesExpanded={Boolean(expandedNotesIds[q.id])}
+                      onToggleSelect={() => toggleSelectQuestion(q.id)}
+                      onOpenEdit={() => handleOpenEdit(q)}
+                      onRequestDelete={() => setQuestionToDelete(q)}
+                      onToggleNotes={() => toggleNotes(q.id)}
+                      onPreview={() => {
+                        setPreviewingQuestion(q);
+                        setIsPreviewModalOpen(true);
+                      }}
+                    />
                   );
                 })}
               </div>
@@ -2367,194 +2114,23 @@ export const AdminQuestionBank: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
                     {paginatedQuestions.map((q, idx) => {
-                      const isTopic = q.sourceType === 'topic';
-                      const isExam = q.sourceType === 'other' || Boolean(q.sourceExam);
-                      const isPyq = q.sourceType === 'pyq';
-                      const examObj = exams.find((e) => e.id === q.sourceExam);
                       const questionNumber = (currentPage - 1) * pageSize + idx + 1;
+                      const examTitle = exams.find((e) => e.id === q.sourceExam)?.title;
 
                       return (
-                        <tr
+                        <QuestionTableRow
                           key={q.id}
-                          className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors"
-                        >
-                          {/* Question Index */}
-                          <td className="px-3 py-3.5 text-center font-bold text-slate-400 dark:text-slate-500 text-[11px]">
-                            {questionNumber}
-                          </td>
-
-                          {/* Question Text */}
-                          <td className="px-4 py-3.5 max-w-md">
-                            <div className="space-y-1">
-                              <p className="font-bold text-slate-900 dark:text-white line-clamp-2 leading-relaxed">
-                                {q.questionBengaliText || q.questionText}
-                              </p>
-                              {q.questionBengaliText &&
-                                q.questionText &&
-                                q.questionBengaliText !== q.questionText && (
-                                  <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 italic">
-                                    {q.questionText}
-                                  </p>
-                                )}
-                              <div className="flex items-center gap-2 pt-0.5">
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
-                                  {q.defaultMarks} Mark • {q.defaultNegativeMarks} Neg
-                                </span>
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
-                                  {q.difficulty || 'medium'}
-                                </span>
-                                {q.imageUrl && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                                    <ImageIcon className="w-2.5 h-2.5" /> Diagram
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Source & Hierarchy */}
-                          <td className="px-4 py-3 text-[11px]">
-                            {isTopic && (
-                              <div className="space-y-1">
-                                <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40">
-                                  Topic Test
-                                </span>
-                                <p className="font-medium text-slate-700 dark:text-slate-300">
-                                  {q.subjectName || 'Subject'}
-                                </p>
-                                <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                  {q.topicName || q.chapterName || 'General Topic'}
-                                </p>
-                              </div>
-                            )}
-
-                            {isExam && (
-                              <div className="space-y-1">
-                                <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40">
-                                  Full Mock Test
-                                </span>
-                                <p className="font-medium text-slate-700 dark:text-slate-300">
-                                  {examObj?.title || q.sourceExam || 'Standard Exam'}
-                                </p>
-                                {q.testTitle && (
-                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                    {q.testTitle}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-
-                            {isPyq && (
-                              <div className="space-y-1">
-                                <span className="inline-block px-2 py-0.5 rounded-full font-bold text-[10px] bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
-                                  PYQ Paper
-                                </span>
-                                <p className="font-medium text-slate-700 dark:text-slate-300">
-                                  {q.sourceExam || 'WBP Exam'}{' '}
-                                  {q.sourceYear ? `(${q.sourceYear})` : ''}
-                                </p>
-                                <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                  {q.sourcePaper || 'Official Paper'}
-                                </p>
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Options Overview */}
-                          <td className="px-4 py-3 text-[11px] max-w-xs">
-                            <div className="grid grid-cols-2 gap-1.5">
-                              <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
-                                  q.correctOption === 'A'
-                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                    : 'text-slate-500'
-                                }`}
-                              >
-                                (a) {q.optionA}
-                              </div>
-                              <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
-                                  q.correctOption === 'B'
-                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                    : 'text-slate-500'
-                                }`}
-                              >
-                                (b) {q.optionB}
-                              </div>
-                              <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
-                                  q.correctOption === 'C'
-                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                    : 'text-slate-500'
-                                }`}
-                              >
-                                (c) {q.optionC}
-                              </div>
-                              <div
-                                className={`p-1 rounded text-[10px] line-clamp-1 ${
-                                  q.correctOption === 'D'
-                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800'
-                                    : 'text-slate-500'
-                                }`}
-                              >
-                                (d) {q.optionD}
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Status */}
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                q.status === 'active' || (!q.status && q.isActive)
-                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
-                                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
-                              }`}
-                            >
-                              {q.status || (q.isActive ? 'active' : 'archived')}
-                            </span>
-                          </td>
-
-                          {/* Actions */}
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <button
-                                onClick={() => {
-                                  setPreviewingQuestion(q);
-                                  setIsPreviewModalOpen(true);
-                                }}
-                                title="Preview Question"
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                              </button>
-
-                              <button
-                                onClick={() => handleOpenEdit(q)}
-                                title="Edit Question"
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-
-                              <button
-                                onClick={() => handleArchiveQuestion(q)}
-                                title={q.status === 'archived' ? 'Unarchive' : 'Archive'}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                              >
-                                <Archive className="w-3.5 h-3.5" />
-                              </button>
-
-                              <button
-                                onClick={() => setQuestionToDelete(q)}
-                                title="Delete Question"
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
+                          q={q}
+                          questionNumber={questionNumber}
+                          examTitle={examTitle}
+                          onPreview={() => {
+                            setPreviewingQuestion(q);
+                            setIsPreviewModalOpen(true);
+                          }}
+                          onOpenEdit={() => handleOpenEdit(q)}
+                          onArchive={() => handleArchiveQuestion(q)}
+                          onRequestDelete={() => setQuestionToDelete(q)}
+                        />
                       );
                     })}
                   </tbody>
@@ -3682,91 +3258,12 @@ export const AdminQuestionBank: React.FC = () => {
         </div>
       )}
 
-      {/* QUESTION PREVIEW MODAL */}
+{/* QUESTION PREVIEW MODAL */}
       {isPreviewModalOpen && previewingQuestion && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Eye className="w-4 h-4 text-indigo-500" /> Question Details
-              </h3>
-              <button
-                onClick={() => setIsPreviewModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-black text-slate-900 dark:text-white leading-relaxed">
-                {previewingQuestion.questionBengaliText || previewingQuestion.questionText}
-              </p>
-
-              {previewingQuestion.imageUrl && (
-                <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center">
-                  <img
-                    src={previewingQuestion.imageUrl}
-                    alt="Question diagram"
-                    className="max-h-56 max-w-full rounded-lg object-contain bg-white dark:bg-black"
-                  />
-                </div>
-              )}
-
-              <div className="space-y-1.5 pt-1">
-                {[
-                  { key: 'A', text: previewingQuestion.optionA },
-                  { key: 'B', text: previewingQuestion.optionB },
-                  { key: 'C', text: previewingQuestion.optionC },
-                  { key: 'D', text: previewingQuestion.optionD },
-                ].map((opt) => {
-                  const isCorrect = previewingQuestion.correctOption === opt.key;
-                  return (
-                    <div
-                      key={opt.key}
-                      className={`p-2.5 rounded-xl text-xs flex items-center justify-between border ${
-                        isCorrect
-                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold'
-                          : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      <span>
-                        ({opt.key.toLowerCase()}) {opt.text}
-                      </span>
-                      {isCorrect && (
-                        <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black">
-                          Correct Answer
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {(previewingQuestion.explanationBengali || previewingQuestion.explanation) && (
-                <div className="space-y-2">
-                  <ShortNotesBox
-                    explanation={
-                      previewingQuestion.explanationBengali || previewingQuestion.explanation
-                    }
-                    isMathematics={isMathematicsQuestion(previewingQuestion)}
-                    defaultExpanded={true}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
-              <Button
-                variant="outline"
-                onClick={() => setIsPreviewModalOpen(false)}
-                className="text-xs"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
+        <PreviewQuestionModal
+          question={previewingQuestion}
+          onClose={() => setIsPreviewModalOpen(false)}
+        />
       )}
 
       {/* QUESTION EDIT MODAL */}

@@ -57,6 +57,12 @@ const Rank = React.lazy(() =>
 const Onboarding = React.lazy(() =>
   import('@/pages/student/Onboarding').then((module) => ({ default: module.Onboarding }))
 );
+const SavedQuestions = React.lazy(() =>
+  import('@/pages/student/SavedQuestions').then((module) => ({ default: module.SavedQuestions }))
+);
+const Rank = React.lazy(() =>
+  import('@/pages/student/Rank').then((module) => ({ default: module.Rank }))
+);
 const Login = React.lazy(() =>
   import('@/pages/auth/Login').then((module) => ({ default: module.Login }))
 );
