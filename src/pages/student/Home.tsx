@@ -95,7 +95,7 @@ export const Home: React.FC = () => {
   // Tab state for Leaderboard
   const [leaderboardTab, setLeaderboardTab] = useState<'all' | 'wb' | 'friends'>('all');
 
-  // Time-based greeting with fallback to Susanta
+  // Time-based greeting with fallback to Candidate
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'GOOD MORNING';
@@ -103,7 +103,7 @@ export const Home: React.FC = () => {
     return 'GOOD EVENING';
   };
 
-  const displayName = user?.fullName?.split(' ')[0]?.toUpperCase() || 'SUSANTA';
+  const displayName = user?.fullName?.split(' ')[0]?.toUpperCase() || 'CANDIDATE';
 
   // Popular exams data with emblems
   const popularExams = [
@@ -1118,7 +1118,9 @@ export const Home: React.FC = () => {
                     e.currentTarget.src = '/logo-icon-transparent.png';
                   }}
                 />
-                <span className="font-black text-blue-900">You (Susanta)</span>
+                <span className="font-black text-blue-900">
+                  You ({user?.fullName?.split(' ')[0] || 'Candidate'})
+                </span>
               </div>
               <span className="font-black text-blue-700">78.3%</span>
             </div>

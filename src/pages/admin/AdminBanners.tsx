@@ -339,7 +339,7 @@ export const AdminBanners: React.FC = () => {
           <div className="rounded-2xl bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#cee9fe] border border-blue-200/80 p-5 sm:p-7 relative overflow-hidden shadow-2xs">
             <div className="max-w-md relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/90 border border-blue-200 text-blue-700 text-[10px] font-black tracking-wider uppercase mb-2.5">
-                <span>{currentPreviewBanner.badgeText || 'GOOD AFTERNOON, SUSANTA 🎓'}</span>
+                <span>{currentPreviewBanner.badgeText || 'GOOD AFTERNOON, CANDIDATE 🎓'}</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
                 {currentPreviewBanner.title}{' '}
