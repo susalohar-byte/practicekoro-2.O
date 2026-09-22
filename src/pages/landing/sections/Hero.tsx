@@ -29,28 +29,28 @@ const PHONE_EXAMS = [
     name: 'WBP Constable 2025',
     sub: 'West Bengal Police',
     tests: '42 Mocks',
-    icon: '/images/exams/wbp_police.png',
+    icon: '/images/exams/emblem_wbp.svg',
     badge: 'Popular',
   },
   {
-    name: 'Kolkata Police SI',
-    sub: 'KP Recruitment Board',
-    tests: '28 Mocks',
-    icon: '/images/exams/icon_kolkata_police.png',
-    badge: 'New',
+    name: 'WBPSC Clerkship',
+    sub: 'Public Service Comm.',
+    tests: '35 Mocks',
+    icon: '/images/exams/emblem_wbpsc.svg',
+    badge: 'Hot',
   },
   {
     name: 'RRB Railway Group D',
     sub: 'Indian Railways',
-    tests: '35 Mocks',
-    icon: '/images/exams/icon_railway_exact.png',
+    tests: '28 Mocks',
+    icon: '/images/exams/emblem_railway.svg',
     badge: 'Bengali',
   },
   {
     name: 'SSC GD Constable',
     sub: 'Staff Selection Comm.',
     tests: '25 Mocks',
-    icon: '/images/exams/icon_ssc_clean.png',
+    icon: '/images/exams/emblem_ssc.svg',
   },
 ];
 
@@ -85,45 +85,47 @@ export const Hero: React.FC = () => {
           {/* Left Content Column */}
           <div className="lg:col-span-6 text-center lg:text-left">
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur border border-pk-blue-soft text-[11px] font-extrabold tracking-[0.12em] text-pk-navy uppercase shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
-              <Sparkles className="w-3 h-3 text-pk-primary" />
-              <span>Practice more. Worry less.</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-blue-200 dark:border-slate-800 text-[11px] font-extrabold tracking-wider text-slate-800 dark:text-slate-200 uppercase shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <span>West Bengal's #1 Govt Exam Practice Platform</span>
             </div>
 
             {/* Main Headline */}
             <h1
-              aria-label="Crack Your Dream Exam."
-              className="mt-5 text-4xl sm:text-5xl lg:text-[3.75rem] font-black text-pk-navy tracking-tight leading-[1.08]"
+              aria-label="Crack Your Dream Govt Exam."
+              className="mt-5 text-4xl sm:text-5xl lg:text-[3.5rem] font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]"
             >
               Crack Your{' '}
-              <span className="bg-gradient-to-r from-pk-primary via-pk-primary-interactive to-pk-primary-bright bg-clip-text text-transparent">
-                Dream
-              </span>{' '}
-              Exam.
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">
+                Dream Govt Exam
+              </span>
+              <br className="hidden sm:inline" />
+              {' '}with Confidence.
             </h1>
 
             {/* Subheadline */}
-            <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-              Mock tests, PYQs &amp; topic-wise practice for competitive exams —
-              in <span className="font-semibold text-pk-navy">English</span>.
+            <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
+              Real exam-pattern mock tests, 10+ years solved PYQs &amp; topic-wise practice
+              for <span className="font-semibold text-slate-900 dark:text-white">WBP, WBPSC, WBSSC, Primary TET &amp; Railways</span> —
+              in <span className="font-semibold text-blue-600 dark:text-blue-400">Bengali &amp; English</span>.
             </p>
 
             {/* Action Buttons */}
             <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-3.5">
               {user ? (
                 <InteractiveHoverButton
-                  text="Dashboard"
+                  text="Go to Dashboard"
                   onClick={() => navigate(dashboardUrl)}
-                  className="w-44 h-12 text-sm sm:text-base border-pk-blue-soft text-pk-primary shadow-md"
+                  className="w-48 h-12 text-sm sm:text-base border-blue-200 text-blue-600 shadow-md"
                 />
               ) : (
                 <Button
                   size="lg"
                   onClick={() => navigate('/register')}
-                  className="bg-gradient-to-r from-pk-primary to-pk-primary-bright hover:from-pk-primary-interactive hover:to-pk-primary text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-pk-primary/30 text-sm sm:text-base gap-2 transition-all hover:-translate-y-0.5"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 text-sm sm:text-base gap-2 transition-all hover:-translate-y-0.5 cursor-pointer"
                 >
-                  <span>Get Started Free</span>
+                  <span>Start Free Practice</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               )}
@@ -134,9 +136,9 @@ export const Hero: React.FC = () => {
                   const el = document.getElementById('exams');
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="border-2 border-pk-primary/70 bg-white/70 backdrop-blur text-pk-primary hover:bg-pk-blue-light font-bold px-7 py-3.5 rounded-xl text-sm sm:text-base"
+                className="border-2 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold px-7 py-3.5 rounded-xl text-sm sm:text-base cursor-pointer"
               >
-                View Exams
+                Explore Exams &amp; Tests
               </Button>
             </div>
 
@@ -149,12 +151,12 @@ export const Hero: React.FC = () => {
                     src={t.avatar}
                     alt={t.name}
                     loading="lazy"
-                    className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm first:ml-0 -ml-2.5"
+                    className="w-8 h-8 rounded-full object-cover border-2 border-white dark:border-slate-900 shadow-xs first:ml-0 -ml-2.5"
                     style={{ zIndex: testimonials.length - i }}
                   />
                 ))}
-                <span className="w-8 h-8 -ml-2.5 rounded-full bg-pk-primary text-white text-[10px] font-black border-2 border-white shadow-sm flex items-center justify-center">
-                  6+
+                <span className="w-8 h-8 -ml-2.5 rounded-full bg-blue-600 text-white text-[10px] font-black border-2 border-white dark:border-slate-900 shadow-xs flex items-center justify-center">
+                  10k+
                 </span>
               </div>
               <div className="text-center sm:text-left">
@@ -162,27 +164,27 @@ export const Hero: React.FC = () => {
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
                   ))}
-                  <span className="ml-1.5 text-xs font-bold text-slate-700">
-                    Loved by aspirants
+                  <span className="ml-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Loved by 10,000+ Aspirants
                   </span>
                 </div>
                 <p className="mt-0.5 text-[11px] text-slate-500 font-medium">
-                  Free to start • No card required
+                  Free forever to start • Instant Statewide Rank &amp; Analysis
                 </p>
               </div>
             </div>
 
             {/* Feature Pills */}
-            <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+            <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-2">
               {[
-                { icon: FileText, label: 'Mock Tests' },
-                { icon: CheckCircle2, label: 'PYQs' },
+                { icon: FileText, label: 'Full-Length Mocks' },
+                { icon: CheckCircle2, label: '10+ Yrs Solved PYQs' },
                 { icon: Target, label: 'Topic Practice' },
-                { icon: Languages, label: 'English Medium' },
+                { icon: Languages, label: 'বাংলা ও English' },
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 backdrop-blur border border-blue-100 text-xs font-semibold text-slate-700 shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-slate-200/80 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs"
                 >
                   <Icon className="w-3.5 h-3.5 text-blue-600" />
                   <span>{label}</span>
@@ -191,10 +193,10 @@ export const Hero: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Graphic Column */}
+          {/* Right Graphic Column: Simplified, Compact Smartphone Mockup */}
           <div className="lg:col-span-6 flex items-center justify-center relative py-4 lg:py-0">
             {/* Silhouette Map of West Bengal */}
-            <div className="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 w-[230px] sm:w-[280px] opacity-25 dark:opacity-15 pointer-events-none select-none z-0">
+            <div className="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 w-[210px] sm:w-[260px] opacity-20 dark:opacity-10 pointer-events-none select-none z-0">
               <img
                 src="/images/west_bengal_silhouette.svg"
                 alt=""
@@ -204,131 +206,118 @@ export const Hero: React.FC = () => {
             </div>
 
             {/* Ambient Device Glow */}
-            <div className="absolute -inset-2 sm:-inset-6 bg-gradient-to-tr from-blue-600/20 via-indigo-500/15 to-purple-500/20 rounded-[3rem] blur-2xl -z-10 opacity-70" />
+            <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-tr from-blue-600/15 via-indigo-500/10 to-purple-500/15 rounded-[2.8rem] blur-2xl -z-10 opacity-60" />
 
             {/* Phone & Floating Badges Relative Container */}
             <div className="relative w-fit mx-auto">
               {/* Floating Glass Card - Avg Score (Left) */}
-              <div className="absolute right-[calc(100%+12px)] top-12 z-30 animate-float hidden md:flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pl-2 pr-3.5 py-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xl pointer-events-none select-none">
-                <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0">
-                  <Trophy className="w-4 h-4 text-white" />
+              <div className="absolute right-[calc(100%+8px)] top-10 z-30 animate-float hidden md:flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pl-2 pr-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-lg pointer-events-none select-none">
+                <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-xs shrink-0">
+                  <Trophy className="w-3.5 h-3.5 text-white" />
                 </span>
                 <span>
-                  <span className="block text-sm font-black text-slate-900 dark:text-white leading-none">
+                  <span className="block text-xs font-black text-slate-900 dark:text-white leading-none">
                     78%
                   </span>
-                  <span className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
+                  <span className="block text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
                     Avg. Mock Score
                   </span>
                 </span>
               </div>
 
               {/* Floating Glass Card - Streak (Right) */}
-              <div className="absolute left-[calc(100%+12px)] bottom-16 z-30 animate-float-soft hidden md:flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pl-2 pr-3.5 py-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xl pointer-events-none select-none">
-                <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-md shadow-rose-500/20 shrink-0">
-                  <Flame className="w-4 h-4 text-white" />
+              <div className="absolute left-[calc(100%+8px)] bottom-12 z-30 animate-float-soft hidden md:flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pl-2 pr-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-lg pointer-events-none select-none">
+                <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-xs shrink-0">
+                  <Flame className="w-3.5 h-3.5 text-white" />
                 </span>
                 <span>
-                  <span className="block text-sm font-black text-slate-900 dark:text-white leading-none">
+                  <span className="block text-xs font-black text-slate-900 dark:text-white leading-none">
                     12-Day
                   </span>
-                  <span className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
+                  <span className="block text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
                     Active Streak 🔥
                   </span>
                 </span>
               </div>
 
-              {/* Realistic Flagship Smartphone Mockup (Compact & Proportioned) */}
-              <div className="relative z-10 w-[255px] sm:w-[275px] md:w-[285px] h-[515px] sm:h-[555px] bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 p-[8px] sm:p-[10px] rounded-[2.8rem] sm:rounded-[3.2rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.45),0_0_0_1px_rgba(255,255,255,0.12)_inset,0_0_25px_rgba(59,130,246,0.1)] ring-1 ring-slate-800 select-none">
-                {/* Hardware Side Buttons */}
-                {/* Left: Action Button */}
-                <div className="absolute -left-[3px] top-20 w-[3px] h-5 bg-slate-700 rounded-l-xs shadow-inner" />
-                {/* Left: Volume Up */}
-                <div className="absolute -left-[3px] top-29 w-[3px] h-9 bg-slate-700 rounded-l-xs shadow-inner" />
-                {/* Left: Volume Down */}
-                <div className="absolute -left-[3px] top-41 w-[3px] h-9 bg-slate-700 rounded-l-xs shadow-inner" />
-                {/* Right: Power / Lock Button */}
-                <div className="absolute -right-[3px] top-27 w-[3px] h-12 bg-slate-700 rounded-r-xs shadow-inner" />
-
+              {/* Sleek, Simplified & Smaller Smartphone Frame */}
+              <div className="relative z-10 w-[240px] sm:w-[255px] md:w-[265px] h-[480px] sm:h-[505px] bg-slate-900 p-[7px] sm:p-[8px] rounded-[2.6rem] sm:rounded-[2.8rem] shadow-[0_20px_50px_-10px_rgba(15,23,42,0.35),0_0_0_1px_rgba(255,255,255,0.12)_inset] ring-1 ring-slate-800/90 select-none">
                 {/* Screen Glass Surface */}
-                <div className="relative w-full h-full bg-slate-50 dark:bg-slate-950 rounded-[2.2rem] sm:rounded-[2.5rem] overflow-hidden flex flex-col justify-between border border-slate-200/80 dark:border-slate-800 shadow-inner">
+                <div className="relative w-full h-full bg-slate-50 dark:bg-slate-950 rounded-[2.1rem] sm:rounded-[2.3rem] overflow-hidden flex flex-col justify-between border border-slate-200/80 dark:border-slate-800 shadow-inner">
                   {/* Subtle Screen Gloss Glare */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-30" />
 
-                  {/* 1. iOS Status Bar & Dynamic Island */}
-                  <div className="relative z-20 pt-2 px-5 pb-0.5 flex items-center justify-between text-slate-800 dark:text-slate-200 shrink-0">
+                  {/* 1. iOS Status Bar & Minimal Camera Pill */}
+                  <div className="relative z-20 pt-2 px-4 pb-0.5 flex items-center justify-between text-slate-800 dark:text-slate-200 shrink-0">
                     {/* Time */}
-                    <span className="text-[10px] font-semibold tracking-tight">9:41</span>
+                    <span className="text-[9.5px] font-semibold tracking-tight">9:41</span>
 
-                    {/* Dynamic Island (Centered Absolutely) */}
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 sm:w-22 h-4.5 bg-black rounded-full flex items-center justify-end pr-2 shadow-sm">
-                      {/* Front Camera Lens */}
-                      <div className="w-2 h-2 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
-                        <div className="w-1 h-1 rounded-full bg-blue-950" />
-                      </div>
+                    {/* Minimal Sleek Camera Notch Pill */}
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-3.5 bg-black rounded-full flex items-center justify-center shadow-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-800 ml-auto mr-1.5" />
                     </div>
 
                     {/* Status Icons */}
                     <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
                       <Wifi className="w-2.5 h-2.5" />
                       {/* Battery */}
-                      <div className="w-4 h-2 border border-slate-700 dark:border-slate-300 rounded-[2.5px] p-[0.5px] flex items-center">
-                        <div className="w-2.5 h-1 bg-slate-800 dark:bg-slate-200 rounded-[1px]" />
+                      <div className="w-3.5 h-1.5 border border-slate-700 dark:border-slate-300 rounded-[2px] p-[0.5px] flex items-center">
+                        <div className="w-2 h-0.5 bg-slate-800 dark:bg-slate-200 rounded-[0.5px]" />
                       </div>
                     </div>
                   </div>
 
                   {/* 2. Mobile App Header */}
-                  <div className="px-3 pt-0.5 pb-1.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 shrink-0">
+                  <div className="px-3 pt-0.5 pb-1 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 shrink-0">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-[10px] shadow-xs">
+                      <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center text-white font-black text-[9px] shadow-xs">
                         PK
                       </div>
                       <div>
                         <div className="flex items-center gap-1">
-                          <span className="text-[10px] font-extrabold text-slate-900 dark:text-white">
+                          <span className="text-[9.5px] font-black text-slate-900 dark:text-white">
                             PracticeKoro
                           </span>
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         </div>
-                        <p className="text-[8.5px] text-slate-400 font-medium leading-none">
+                        <p className="text-[8px] text-slate-400 font-medium leading-none">
                           🎯 WBP Constable 2025
                         </p>
                       </div>
                     </div>
-                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 relative">
-                      <Bell className="w-3 h-3" />
-                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 relative">
+                      <Bell className="w-2.5 h-2.5" />
+                      <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-rose-500" />
                     </div>
                   </div>
 
-                  {/* 3. Screen Main Content (App Body) */}
-                  <div className="px-3 py-1.5 flex-1 flex flex-col justify-between space-y-2 overflow-hidden">
+                  {/* 3. Screen Main Content (Clean & Simple App Body) */}
+                  <div className="px-2.5 py-1.5 flex-1 flex flex-col justify-between space-y-1.5 overflow-hidden">
                     {/* Live Mock Hero Banner */}
-                    <div className="rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-2.5 text-white shadow-md shadow-blue-500/20 relative overflow-hidden">
+                    <div className="rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-2.5 text-white shadow-md shadow-blue-500/15 relative overflow-hidden">
                       <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1 text-[8px] font-bold bg-white/20 backdrop-blur-xs px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[7.5px] font-bold bg-white/20 backdrop-blur-xs px-1.5 py-0.5 rounded-full">
                           <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
                           LIVE MOCK TEST
                         </span>
-                        <span className="text-[8.5px] text-blue-100 font-medium">1,420 Active</span>
+                        <span className="text-[8px] text-blue-100 font-medium">1,420 Active</span>
                       </div>
-                      <p className="mt-1 text-[11px] font-black tracking-tight leading-snug">
+                      <p className="mt-1 text-[10.5px] font-black tracking-tight leading-snug">
                         WBP Constable Prelims #01
                       </p>
-                      <p className="text-[9px] text-blue-100/90 font-medium mt-0.5">
-                        85 Questions • 60 Mins • English
+                      <p className="text-[8.5px] text-blue-100/90 font-medium mt-0.5">
+                        85 Questions • 60 Mins • বাংলা ও English
                       </p>
-                      <div className="mt-2 flex items-center justify-between pt-1.5 border-t border-white/15">
-                        <span className="text-[9px] font-semibold text-white/90">Free Test</span>
-                        <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-white text-blue-600 px-2 py-0.5 rounded-md shadow-xs hover:bg-blue-50 transition-colors">
-                          Start Test <ArrowRight className="w-2.5 h-2.5" />
+                      <div className="mt-1.5 flex items-center justify-between pt-1 border-t border-white/15">
+                        <span className="text-[8.5px] font-bold text-white/90">Free Test</span>
+                        <span className="inline-flex items-center gap-1 text-[8.5px] font-bold bg-white text-blue-600 px-2 py-0.5 rounded-md shadow-xs">
+                          Start Test <ArrowRight className="w-2 h-2" />
                         </span>
                       </div>
                     </div>
 
-                    {/* Quick Practice Chips */}
-                    <div className="grid grid-cols-3 gap-1.5">
+                    {/* Quick Practice 3-Grid */}
+                    <div className="grid grid-cols-3 gap-1">
                       {[
                         {
                           icon: Zap,
@@ -348,56 +337,56 @@ export const Hero: React.FC = () => {
                       ].map(({ icon: Icon, label, color }) => (
                         <div
                           key={label}
-                          className="flex flex-col items-center justify-center p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center shadow-2xs"
+                          className="flex flex-col items-center justify-center py-1 px-0.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center shadow-2xs"
                         >
                           <span
-                            className={`w-5 h-5 rounded-md ${color} flex items-center justify-center mb-0.5`}
+                            className={`w-4 h-4 rounded-md ${color} flex items-center justify-center mb-0.5`}
                           >
-                            <Icon className="w-3 h-3" />
+                            <Icon className="w-2.5 h-2.5" />
                           </span>
-                          <span className="text-[8.5px] font-bold text-slate-700 dark:text-slate-300">
+                          <span className="text-[8px] font-bold text-slate-700 dark:text-slate-300">
                             {label}
                           </span>
                         </div>
                       ))}
                     </div>
 
-                    {/* Popular Exams List */}
+                    {/* Popular Exams List (2 crisp, clean rows) */}
                     <div>
                       <div className="flex items-center justify-between mb-1 px-0.5">
-                        <span className="text-[9.5px] font-extrabold text-slate-800 dark:text-slate-200">
+                        <span className="text-[9px] font-extrabold text-slate-800 dark:text-slate-200">
                           Popular Exams
                         </span>
-                        <span className="text-[8.5px] font-bold text-blue-600 hover:underline">
+                        <span className="text-[8px] font-bold text-blue-600">
                           View All
                         </span>
                       </div>
                       <div className="space-y-1">
-                        {PHONE_EXAMS.slice(0, 3).map((item) => (
+                        {PHONE_EXAMS.slice(0, 2).map((item) => (
                           <div
                             key={item.name}
-                            className="flex items-center justify-between p-1.5 bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800/80 rounded-lg border border-slate-100 dark:border-slate-800/80 transition-colors shadow-2xs"
+                            className="flex items-center justify-between p-1.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800/80 shadow-2xs"
                           >
                             <div className="flex items-center gap-1.5">
-                              <span className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center p-0.5 shrink-0">
+                              <span className="w-5 h-5 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center p-0.5 shrink-0">
                                 <img
                                   src={item.icon}
                                   alt={item.name}
                                   loading="lazy"
-                                  className="w-4 h-4 object-contain"
+                                  className="w-3.5 h-3.5 object-contain"
                                 />
                               </span>
                               <div className="text-left">
-                                <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                                <p className="text-[9px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
                                   {item.name}
                                 </p>
-                                <p className="text-[8.5px] text-slate-400 leading-none mt-0.5">
+                                <p className="text-[7.5px] text-slate-400 leading-none mt-0.5">
                                   {item.tests} • {item.sub}
                                 </p>
                               </div>
                             </div>
                             {item.badge ? (
-                              <span className="text-[7.5px] font-bold px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-md">
+                              <span className="text-[7px] font-bold px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-md">
                                 {item.badge}
                               </span>
                             ) : (
@@ -408,10 +397,10 @@ export const Hero: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Mobile Full CTA Button */}
+                    {/* Mobile CTA Button */}
                     <button
                       onClick={() => navigate(dashboardUrl)}
-                      className="w-full py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-[10px] font-bold shadow-md shadow-blue-500/20 flex items-center justify-center gap-1 hover:opacity-95 transition-opacity cursor-pointer"
+                      className="w-full py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-[9px] font-bold shadow-md shadow-blue-500/15 flex items-center justify-center gap-1 hover:opacity-95 transition-opacity cursor-pointer"
                     >
                       <span>Explore All 500+ Mocks</span>
                       <ArrowRight className="w-2.5 h-2.5" />
@@ -422,24 +411,24 @@ export const Hero: React.FC = () => {
                   <div className="pt-1 pb-0.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800/80 shrink-0">
                     <div className="flex items-center justify-around px-2 text-slate-400">
                       <div className="flex flex-col items-center gap-0.5 text-blue-600">
-                        <Home className="w-3.5 h-3.5" />
-                        <span className="text-[7.5px] font-bold">Home</span>
+                        <Home className="w-3 h-3" />
+                        <span className="text-[7px] font-bold">Home</span>
                       </div>
                       <div className="flex flex-col items-center gap-0.5">
-                        <FileText className="w-3.5 h-3.5" />
-                        <span className="text-[7.5px] font-medium">Tests</span>
+                        <FileText className="w-3 h-3" />
+                        <span className="text-[7px] font-medium">Tests</span>
                       </div>
                       <div className="flex flex-col items-center gap-0.5">
-                        <Target className="w-3.5 h-3.5" />
-                        <span className="text-[7.5px] font-medium">Practice</span>
+                        <Target className="w-3 h-3" />
+                        <span className="text-[7px] font-medium">Practice</span>
                       </div>
                       <div className="flex flex-col items-center gap-0.5">
-                        <User className="w-3.5 h-3.5" />
-                        <span className="text-[7.5px] font-medium">Profile</span>
+                        <User className="w-3 h-3" />
+                        <span className="text-[7px] font-medium">Profile</span>
                       </div>
                     </div>
                     {/* iOS Home Indicator Bar */}
-                    <div className="w-20 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-1 mb-0.5" />
+                    <div className="w-16 h-0.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-1 mb-0.5" />
                   </div>
                 </div>
               </div>
