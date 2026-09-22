@@ -24,6 +24,7 @@ import type {
   BookmarkItem,
 } from '@/types';
 import { calculateScore } from '@/utils/scoring';
+import { resolveTestNegativeMarking } from '@/utils/negativeMarking';
 import { localAttemptsStore, localTests } from '@/services/domains/localStore';
 import type {
   AttemptRow,
@@ -609,7 +610,7 @@ export const catalogApi = {
           explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
           difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
           defaultMarks: Number(item.marks || q.default_marks || 1),
-          defaultNegativeMarks: Number(item.negative_marks || q.default_negative_marks || 0.25),
+          defaultNegativeMarks: Number(item.negative_marks || q.default_negative_marks || 0),
           isActive: Boolean(q.is_active),
         };
       });
@@ -814,12 +815,14 @@ export const catalogApi = {
     const answersMap = new Map(answers.map((a) => [a.questionId, a.selectedOption]));
     const totalMarks = test ? test.totalMarks : 5;
     const passingMarks = test?.passingMarks || 2;
+    // Negative marking is test-level only (Full Mock / PYQ, optional) — never per-question.
+    const effectiveNegative = resolveTestNegativeMarking(test?.testType, test?.negativeMarking);
     const scoreSummary = calculateScore(
       questions.map((q) => ({
         id: q.id,
         correctOption: q.correctOption,
         marks: q.defaultMarks || 1,
-        negativeMarks: q.defaultNegativeMarks || 0.25,
+        negativeMarks: effectiveNegative,
       })),
       answers,
       totalMarks,
@@ -1233,7 +1236,7 @@ export const catalogApi = {
               explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
               difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
               defaultMarks: Number(q.default_marks || 1),
-              defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+              defaultNegativeMarks: Number(q.default_negative_marks || 0),
               isActive: Boolean(q.is_active),
               examTitle: ex?.title,
               subjectName: sub?.name,
@@ -1332,7 +1335,7 @@ export const catalogApi = {
               explanationBengali: q.explanation_bengali ? String(q.explanation_bengali) : undefined,
               difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
               defaultMarks: Number(q.default_marks || 1),
-              defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+              defaultNegativeMarks: Number(q.default_negative_marks || 0),
               isActive: Boolean(q.is_active),
               examTitle: ex?.title,
               subjectName: sub?.name,

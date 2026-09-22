@@ -99,7 +99,8 @@ export async function createQuestionForTest(
         question_id: question.id,
         question_order: nextOrder,
         marks: question.defaultMarks ?? 1.0,
-        negative_marks: question.defaultNegativeMarks ?? 0.25,
+        // Questions never carry negative marks — scoring uses the test-level scheme.
+        negative_marks: question.defaultNegativeMarks ?? 0,
       });
 
       if (insertError) {
@@ -131,7 +132,8 @@ export async function createQuestionForTest(
         questionId: question.id,
         questionOrder: nextOrder,
         marks: question.defaultMarks ?? 1.0,
-        negativeMarks: question.defaultNegativeMarks ?? 0.25,
+        // Questions never carry negative marks — scoring uses the test-level scheme.
+        negativeMarks: question.defaultNegativeMarks ?? 0,
       });
     }
 
@@ -149,7 +151,8 @@ export async function bulkCreateQuestionsFromTxt(params: {
   examId?: string;
   testId?: string;
   defaultMarks?: number;
-  defaultNegativeMarks?: number;
+  // NOTE: no defaultNegativeMarks — questions never carry negative marks.
+  // Scoring uses the test-level scheme (Full Mock / PYQ only, optional).
 }): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
   let successCount = 0;
   const errors: string[] = [];
@@ -191,7 +194,8 @@ export async function bulkCreateQuestionsFromTxt(params: {
         sourceType: params.sourceType,
         sourceExam: params.examId,
         defaultMarks: params.defaultMarks ?? 1.0,
-        defaultNegativeMarks: params.defaultNegativeMarks ?? 0.25,
+        // Questions never carry negative marks — scoring uses the test-level scheme.
+        defaultNegativeMarks: 0,
         isActive: true,
         status: 'active',
       });
@@ -203,7 +207,8 @@ export async function bulkCreateQuestionsFromTxt(params: {
             question_id: created.id,
             question_order: currentTestOrder++,
             marks: params.defaultMarks ?? 1.0,
-            negative_marks: params.defaultNegativeMarks ?? 0.25,
+            // Questions never carry negative marks — scoring uses the test-level scheme.
+            negative_marks: 0,
           });
         } else {
           localTestQuestions.push({
@@ -212,7 +217,8 @@ export async function bulkCreateQuestionsFromTxt(params: {
             questionId: created.id,
             questionOrder: currentTestOrder++,
             marks: params.defaultMarks ?? 1.0,
-            negativeMarks: params.defaultNegativeMarks ?? 0.25,
+            // Questions never carry negative marks — scoring uses the test-level scheme.
+            negativeMarks: 0,
           });
         }
       }

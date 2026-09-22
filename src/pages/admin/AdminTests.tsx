@@ -120,6 +120,9 @@ export const AdminTests: React.FC = () => {
   const [formTotalMarks, setFormTotalMarks] = useState(25);
   const [formPassingMarks, setFormPassingMarks] = useState(10);
   const [formNegativeMarking, setFormNegativeMarking] = useState(0.25);
+  // Optional scheme: only Full Mock & PYQ tests may carry negative marking.
+  // Topic tests always save 0 (field hidden in the form).
+  const [formNegativeEnabled, setFormNegativeEnabled] = useState(false);
   const [formIsPremium, setFormIsPremium] = useState(false);
   const [formYear, setFormYear] = useState<number>(new Date().getFullYear());
   const [formPaperName, setFormPaperName] = useState('Preliminary');
@@ -300,7 +303,10 @@ export const AdminTests: React.FC = () => {
     setFormDuration(defDuration);
     setFormTotalMarks(defMarks);
     setFormPassingMarks(defPassMarks);
-    setFormNegativeMarking(globalDefaults.negativeMarks);
+    // Negative marking is optional and only for Full Mock / PYQ.
+    const negSupported = type === 'full_mock' || type === 'pyq';
+    setFormNegativeEnabled(negSupported);
+    setFormNegativeMarking(negSupported ? globalDefaults.negativeMarks : 0);
     setFormIsPremium(false);
     setFormYear(new Date().getFullYear());
     setFormPaperName('Preliminary');
@@ -323,7 +329,11 @@ export const AdminTests: React.FC = () => {
     setFormDuration(test.durationMinutes);
     setFormTotalMarks(test.totalMarks);
     setFormPassingMarks(test.passingMarks);
-    setFormNegativeMarking(test.negativeMarking ?? 0.25);
+    // Restore the optional scheme: enabled only when supported and > 0.
+    const editNegSupported = test.testType === 'full_mock' || test.testType === 'pyq';
+    const editNegValue = test.negativeMarking ?? 0;
+    setFormNegativeEnabled(editNegSupported && editNegValue > 0);
+    setFormNegativeMarking(editNegSupported ? editNegValue || globalDefaults.negativeMarks : 0);
     setFormIsPremium(test.isPremium);
     setFormYear(test.year || new Date().getFullYear());
     setFormPaperName(test.paperName || 'Preliminary');
@@ -361,6 +371,10 @@ export const AdminTests: React.FC = () => {
       const mappedTestType =
         modalType === 'pyq' ? 'pyq' : modalType === 'full_mock' ? 'full_mock' : 'topic';
 
+      // Negative marking is optional and applies only to Full Mock / PYQ.
+      const resolvedNegativeMarking =
+        formNegativeEnabled && modalType !== 'topic' ? Number(formNegativeMarking) || 0 : 0;
+
       if (editingTest) {
         await api.updateTest(editingTest.id, {
           title: formTitle.trim(),
@@ -372,7 +386,7 @@ export const AdminTests: React.FC = () => {
           durationMinutes: Number(formDuration),
           totalMarks: Number(formTotalMarks),
           passingMarks: Number(formPassingMarks),
-          negativeMarking: Number(formNegativeMarking),
+          negativeMarking: resolvedNegativeMarking,
           isPremium: formIsPremium,
           testType: mappedTestType,
           year: modalType === 'pyq' ? Number(formYear) : undefined,
@@ -405,7 +419,7 @@ export const AdminTests: React.FC = () => {
           totalQuestions: 0,
           totalMarks: Number(formTotalMarks),
           passingMarks: Number(formPassingMarks),
-          negativeMarking: Number(formNegativeMarking),
+          negativeMarking: resolvedNegativeMarking,
           isPremium: formIsPremium,
           testType: mappedTestType,
           year: modalType === 'pyq' ? Number(formYear) : undefined,
@@ -1424,7 +1438,13 @@ export const AdminTests: React.FC = () => {
               </div>
 
               {/* Duration & Marks */}
-              <div className="grid grid-cols-4 gap-2.5">
+              <div
+                className={
+                  modalType === 'topic'
+                    ? 'grid grid-cols-3 gap-2.5'
+                    : 'grid grid-cols-4 gap-2.5'
+                }
+              >
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                     Duration (Min)
@@ -1459,19 +1479,43 @@ export const AdminTests: React.FC = () => {
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Neg. Mark
-                  </label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={formNegativeMarking}
-                    onChange={(e) => setFormNegativeMarking(Number(e.target.value))}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
-                  />
-                </div>
+                {modalType !== 'topic' && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Neg. Mark
+                    </label>
+                    <input
+                      type="number"
+                      step="0.05"
+                      min={0}
+                      value={formNegativeMarking}
+                      disabled={!formNegativeEnabled}
+                      onChange={(e) => setFormNegativeMarking(Number(e.target.value))}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white disabled:opacity-40"
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Negative marking is optional and applies only to Full Mock & PYQ tests */}
+              {modalType !== 'topic' && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="formNegativeEnabled"
+                    checked={formNegativeEnabled}
+                    onChange={(e) => setFormNegativeEnabled(e.target.checked)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <label
+                    htmlFor="formNegativeEnabled"
+                    className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                  >
+                    Negative marking (optional — enable only if this exam deducts marks for wrong
+                    answers)
+                  </label>
+                </div>
+              )}
 
               {/* Premium toggle */}
               <div className="flex items-center gap-2 pt-2">

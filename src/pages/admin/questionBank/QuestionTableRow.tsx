@@ -45,7 +45,7 @@ export const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
           )}
           <div className="flex items-center gap-2 pt-0.5">
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
-              {q.defaultMarks} Mark • {q.defaultNegativeMarks} Neg
+              {q.defaultMarks} Mark
             </span>
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
               {q.difficulty || 'medium'}

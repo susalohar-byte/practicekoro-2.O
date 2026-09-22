@@ -1008,7 +1008,7 @@ export const AdminSettings: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Negative Penalty (marks)
+                Negative Penalty (marks) — suggested default for new Full Mock / PYQ tests
               </label>
               <input
                 type="number"

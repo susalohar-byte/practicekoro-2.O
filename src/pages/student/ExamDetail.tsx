@@ -391,10 +391,14 @@ export const ExamDetail: React.FC = () => {
                             </span>
                             <span>•</span>
                             <span>{test.totalMarks} Marks</span>
-                            <span>•</span>
-                            <span className="text-amber-600 font-semibold">
-                              -{test.negativeMarking} Neg.
-                            </span>
+                            {test.negativeMarking > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="text-amber-600 font-semibold">
+                                  -{test.negativeMarking} Neg.
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
 

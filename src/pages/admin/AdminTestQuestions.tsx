@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import type { MockTest, Question, TestQuestionAssignment, Subject, Chapter, Exam } from '@/types';
 import { parseQuestionsTxt, SAMPLE_TXT_CONTENT } from '@/utils/txtQuestionParser';
+import { resolveTestNegativeMarking } from '@/utils/negativeMarking';
 import { getErrorMessage } from '@/lib/errors';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
@@ -99,7 +100,8 @@ export const AdminTestQuestions: React.FC = () => {
   const [newCorrectOption, setNewCorrectOption] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const [newExplanation, setNewExplanation] = useState('');
   const [newMarks, setNewMarks] = useState(1.0);
-  const [newNegativeMarks, setNewNegativeMarks] = useState(0.25);
+  // NOTE: questions never carry negative marks (test-level policy), so there
+  // is intentionally no per-question negative-marks field anywhere here.
 
   // Sync route param with state
   useEffect(() => {
@@ -387,13 +389,14 @@ export const AdminTestQuestions: React.FC = () => {
       test.totalMarks && test.totalQuestions
         ? Number((test.totalMarks / test.totalQuestions).toFixed(2))
         : 1.0;
-    const defNeg = test.negativeMarking ?? 0.25;
+    const defNeg = resolveTestNegativeMarking(test.testType, test.negativeMarking);
 
     const newAssignments: TestQuestionAssignment[] = questionsToAdd.map((q, idx) => ({
       questionId: q.id,
       questionOrder: assignedQuestions.length + idx + 1,
       marks: q.defaultMarks || defMarks,
-      negativeMarks: q.defaultNegativeMarks || defNeg,
+      // Negative marking always follows the test-level scheme (never per-question).
+      negativeMarks: defNeg,
       questionText: q.questionText,
       questionBengaliText: q.questionBengaliText,
       correctOption: q.correctOption,
@@ -417,7 +420,8 @@ export const AdminTestQuestions: React.FC = () => {
         questionId: q.questionId,
         orderIndex: idx + 1,
         marks: q.marks,
-        negativeMarks: q.negativeMarks,
+        // Negative marking always follows the test-level scheme (never per-question).
+        negativeMarks: resolveTestNegativeMarking(test.testType, test.negativeMarking),
       }));
 
       const res = await api.saveTestQuestions(test.id, payload);
@@ -465,7 +469,8 @@ export const AdminTestQuestions: React.FC = () => {
         questionId: q.questionId,
         orderIndex: idx + 1,
         marks: q.marks,
-        negativeMarks: q.negativeMarks,
+        // Negative marking always follows the test-level scheme (never per-question).
+        negativeMarks: resolveTestNegativeMarking(test.testType, test.negativeMarking),
       }));
 
       await api.saveTestQuestions(test.id, payload);
@@ -482,9 +487,14 @@ export const AdminTestQuestions: React.FC = () => {
     }
   };
 
-  const updateQuestionMarks = (index: number, marks: number, negativeMarks: number) => {
+  const updateQuestionMarks = (index: number, marks: number) => {
     const updated = [...assignedQuestions];
-    updated[index] = { ...updated[index], marks, negativeMarks };
+    updated[index] = {
+      ...updated[index],
+      marks,
+      // Negative marking always follows the test-level scheme (never per-question).
+      negativeMarks: resolveTestNegativeMarking(test?.testType, test?.negativeMarking),
+    };
     setAssignedQuestions(updated);
     setSaveSuccess(false);
   };
@@ -494,7 +504,7 @@ export const AdminTestQuestions: React.FC = () => {
       test?.totalMarks && test?.totalQuestions
         ? Number((test.totalMarks / test.totalQuestions).toFixed(2))
         : 1.0;
-    const defNeg = test?.negativeMarking ?? 0.25;
+    const defNeg = resolveTestNegativeMarking(test?.testType, test?.negativeMarking);
     setAssignedQuestions((prev) =>
       prev.map((q) => ({
         ...q,
@@ -523,7 +533,6 @@ export const AdminTestQuestions: React.FC = () => {
 
   const [sectionalSubjectId, setSectionalSubjectId] = useState<string>('');
   const [sectionalMarks, setSectionalMarks] = useState<number>(1);
-  const [sectionalNegativeMarks, setSectionalNegativeMarks] = useState<number>(0.25);
   const [isSectionalOpen, setIsSectionalOpen] = useState(false);
 
   // Set default sectional subject when assignedSections updates
@@ -545,16 +554,15 @@ export const AdminTestQuestions: React.FC = () => {
           return {
             ...q,
             marks: Number(sectionalMarks),
-            negativeMarks: Number(sectionalNegativeMarks),
+            // Negative marking always follows the test-level scheme (never per-question).
+            negativeMarks: resolveTestNegativeMarking(test?.testType, test?.negativeMarking),
           };
         }
         return q;
       })
     );
     setSaveSuccess(true);
-    setSaveMessage(
-      `Applied ${sectionalMarks} Marks (-${sectionalNegativeMarks} Neg) to selected section questions.`
-    );
+    setSaveMessage(`Applied ${sectionalMarks} Marks to selected section questions.`);
     setTimeout(() => setSaveSuccess(false), 3000);
   };
 
@@ -567,7 +575,8 @@ export const AdminTestQuestions: React.FC = () => {
         questionId: q.questionId,
         orderIndex: idx + 1,
         marks: q.marks,
-        negativeMarks: q.negativeMarks,
+        // Negative marking always follows the test-level scheme (never per-question).
+        negativeMarks: resolveTestNegativeMarking(test?.testType, test?.negativeMarking),
       }));
 
       const res = await api.saveTestQuestions(currentTestId, payload);
@@ -622,7 +631,8 @@ export const AdminTestQuestions: React.FC = () => {
           explanationBengali: q.explanation,
           difficulty: 'medium',
           defaultMarks: 1.0,
-          defaultNegativeMarks: test.negativeMarking ?? 0.25,
+          // Questions never carry negative marks — scoring uses the test-level scheme.
+          defaultNegativeMarks: 0,
           isActive: true,
           status: 'active',
         });
@@ -677,7 +687,8 @@ export const AdminTestQuestions: React.FC = () => {
         explanation: newExplanation.trim() || undefined,
         difficulty: 'medium',
         defaultMarks: newMarks,
-        defaultNegativeMarks: newNegativeMarks,
+        // Questions never carry negative marks — scoring uses the test-level scheme.
+        defaultNegativeMarks: 0,
         isActive: true,
         status: 'active',
       });
@@ -894,7 +905,7 @@ export const AdminTestQuestions: React.FC = () => {
                 <div className="flex items-center gap-1.5">
                   <span className="text-rose-400 font-bold">Negative:</span>
                   <strong className="text-white font-mono" style={{ color: '#ffffff' }}>
-                    -{test.negativeMarking}
+                    {test.negativeMarking > 0 ? `-${test.negativeMarking}` : 'None'}
                   </strong>
                 </div>
               </div>
@@ -1149,7 +1160,7 @@ export const AdminTestQuestions: React.FC = () => {
               }`}
               leftIcon={<SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />}
               onClick={() => setIsSectionalOpen((v) => !v)}
-              title="Bulk assign marks & negative marks by subject/section"
+              title="Bulk assign marks by subject/section"
             >
               Sectional Marking
             </Button>
@@ -1175,7 +1186,7 @@ export const AdminTestQuestions: React.FC = () => {
             <div className="flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                Bulk Sectional Marking & Negative Marking
+                Bulk Sectional Marking
               </h4>
             </div>
             <button
@@ -1186,8 +1197,8 @@ export const AdminTestQuestions: React.FC = () => {
             </button>
           </div>
           <p className="text-[11px] text-slate-600 dark:text-slate-400">
-            Select a subject/section to assign customized positive and negative marks to all its
-            questions at once.
+            Select a subject/section to assign customized marks to all its questions at once.
+            Negative marking (if any) always follows the test-level scheme.
           </p>
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div>
@@ -1218,20 +1229,6 @@ export const AdminTestQuestions: React.FC = () => {
                 min="0"
                 value={sectionalMarks}
                 onChange={(e) => setSectionalMarks(parseFloat(e.target.value) || 0)}
-                className="w-20 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white text-center"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                Negative Marks
-              </label>
-              <input
-                type="number"
-                step="0.05"
-                min="0"
-                value={sectionalNegativeMarks}
-                onChange={(e) => setSectionalNegativeMarks(parseFloat(e.target.value) || 0)}
                 className="w-20 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white text-center"
               />
             </div>
@@ -1921,7 +1918,7 @@ export const AdminTestQuestions: React.FC = () => {
                   <div className="flex flex-row md:flex-col items-end justify-between md:justify-start gap-3 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 dark:border-[#152347] pt-2 md:pt-0 md:pl-4">
                     <div className="space-y-1 text-right">
                       <label className="text-[10px] uppercase font-black text-slate-400 block">
-                        Marks / Neg
+                        Marks
                       </label>
                       <div className="flex items-center gap-1.5 justify-end">
                         <input
@@ -1929,26 +1926,8 @@ export const AdminTestQuestions: React.FC = () => {
                           step="0.25"
                           min="0"
                           value={q.marks}
-                          onChange={(e) =>
-                            updateQuestionMarks(
-                              idx,
-                              parseFloat(e.target.value) || 0,
-                              q.negativeMarks
-                            )
-                          }
+                          onChange={(e) => updateQuestionMarks(idx, parseFloat(e.target.value) || 0)}
                           className="w-14 px-2 py-1.5 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-xs font-black text-center text-slate-900 dark:text-white focus:outline-none focus:border-[#0075FF]"
-                        />
-                        <span className="text-xs text-slate-400 font-mono">/</span>
-                        <input
-                          type="number"
-                          step="0.05"
-                          min="0"
-                          value={q.negativeMarks}
-                          onChange={(e) =>
-                            updateQuestionMarks(idx, q.marks, parseFloat(e.target.value) || 0)
-                          }
-                          className="w-14 px-2 py-1.5 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-xs font-black text-center text-rose-500 focus:outline-none focus:border-[#0075FF]"
-                          title="Negative mark deduction"
                         />
                       </div>
                     </div>
@@ -2272,7 +2251,7 @@ export const AdminTestQuestions: React.FC = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div>
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
                     Marks
@@ -2282,18 +2261,6 @@ export const AdminTestQuestions: React.FC = () => {
                     step="0.25"
                     value={newMarks}
                     onChange={(e) => setNewMarks(parseFloat(e.target.value) || 1)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-slate-900 dark:text-white focus:outline-none focus:border-[#0075FF]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                    Negative Deduction
-                  </label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={newNegativeMarks}
-                    onChange={(e) => setNewNegativeMarks(parseFloat(e.target.value) || 0.25)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-slate-900 dark:text-white focus:outline-none focus:border-[#0075FF]"
                   />
                 </div>

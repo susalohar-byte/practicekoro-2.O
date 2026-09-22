@@ -79,7 +79,8 @@ Object.entries(MOCK_QUESTIONS).forEach(([testId, questions]) => {
       questionId: q.id,
       questionOrder: idx + 1,
       marks: q.defaultMarks || 1.0,
-      negativeMarks: q.defaultNegativeMarks || 0.25,
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      negativeMarks: q.defaultNegativeMarks || 0,
     });
   });
 });

@@ -149,7 +149,8 @@ export const AdminQuestionBank: React.FC = () => {
   const [singleCorrect, setSingleCorrect] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const [singleExplanation, setSingleExplanation] = useState('');
   const [singleMarks, setSingleMarks] = useState(1.0);
-  const [singleNegativeMarks, setSingleNegativeMarks] = useState(0.25);
+  // NOTE: questions never carry negative marks (test-level policy for Full
+  // Mock / PYQ only), so there is intentionally no negative-marks field here.
   const [isSavingSingle, setIsSavingSingle] = useState(false);
   const [singleError, setSingleError] = useState('');
 
@@ -544,7 +545,6 @@ export const AdminQuestionBank: React.FC = () => {
     setSingleCorrect('A');
     setSingleExplanation('');
     setSingleMarks(1.0);
-    setSingleNegativeMarks(0.25);
     setSingleError('');
     setIsAddModalOpen(true);
   };
@@ -627,7 +627,8 @@ export const AdminQuestionBank: React.FC = () => {
           sourceExam: singleExamId,
           sourceType: singleExamType === 'pyq' ? 'pyq' : 'other',
           defaultMarks: singleMarks,
-          defaultNegativeMarks: singleNegativeMarks,
+          // Questions never carry negative marks — scoring uses the test-level scheme.
+          defaultNegativeMarks: 0,
           isActive: true,
           status: 'active',
         });
@@ -648,7 +649,8 @@ export const AdminQuestionBank: React.FC = () => {
           chapterId: singleTopicId,
           sourceType: 'topic',
           defaultMarks: singleMarks,
-          defaultNegativeMarks: singleNegativeMarks,
+          // Questions never carry negative marks — scoring uses the test-level scheme.
+          defaultNegativeMarks: 0,
           isActive: true,
           status: 'active',
         });
@@ -670,7 +672,8 @@ export const AdminQuestionBank: React.FC = () => {
           sourceType: singleSource === 'topic' ? 'topic' : 'other',
           sourceExam: singleSource === 'exam' ? singleExamId : undefined,
           defaultMarks: singleMarks,
-          defaultNegativeMarks: singleNegativeMarks,
+          // Questions never carry negative marks — scoring uses the test-level scheme.
+          defaultNegativeMarks: 0,
           isActive: true,
           status: 'active',
         });
@@ -1064,7 +1067,6 @@ export const AdminQuestionBank: React.FC = () => {
       'Explanation',
       'Difficulty',
       'Marks',
-      'Negative Marks',
       'Subject',
       'Topic',
       'Source Type',
@@ -1086,7 +1088,6 @@ export const AdminQuestionBank: React.FC = () => {
       q.explanation || '',
       q.difficulty || 'medium',
       q.defaultMarks,
-      q.defaultNegativeMarks,
       q.subjectName || subjects.find((s) => s.id === q.subjectId)?.name || '',
       q.topicName ||
         q.chapterName ||

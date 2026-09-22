@@ -270,7 +270,8 @@ export async function createQuestion(qData: Omit<Question, 'id'>): Promise<Quest
       explanation_bengali: qData.explanationBengali || null,
       difficulty: qData.difficulty || 'medium',
       default_marks: qData.defaultMarks ?? 1.0,
-      default_negative_marks: qData.defaultNegativeMarks ?? 0.25,
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      default_negative_marks: qData.defaultNegativeMarks ?? 0,
       question_type: qData.questionType || 'mcq',
       source_type: qData.sourceType || 'topic',
       source_year: qData.sourceYear || null,

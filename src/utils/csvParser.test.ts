@@ -11,12 +11,11 @@ describe('parseCsvRaw', () => {
 });
 
 describe('parseQuestionsCsv', () => {
-  const headers =
-    'question_text,option_a,option_b,option_c,option_d,correct_option,marks,negative_marks';
+  const headers = 'question_text,option_a,option_b,option_c,option_d,correct_option,marks';
 
-  it('parses a valid question with marks', () => {
+  it('parses a valid question with marks and no question-level negative marks', () => {
     const result = parseQuestionsCsv(
-      `${headers}\nCapital of West Bengal?,Kolkata,Delhi,Mumbai,Chennai,A,2,0.5`
+      `${headers}\nCapital of West Bengal?,Kolkata,Delhi,Mumbai,Chennai,A,2`
     );
 
     expect(result.validCount).toBe(1);
@@ -24,7 +23,20 @@ describe('parseQuestionsCsv', () => {
       questionText: 'Capital of West Bengal?',
       correctOption: 'A',
       defaultMarks: 2,
-      defaultNegativeMarks: 0.5,
+      // Questions never carry negative marks (test-level policy).
+      defaultNegativeMarks: 0,
+    });
+  });
+
+  it('ignores a legacy negative_marks column', () => {
+    const result = parseQuestionsCsv(
+      `${headers},negative_marks\nCapital of West Bengal?,Kolkata,Delhi,Mumbai,Chennai,A,2,0.5`
+    );
+
+    expect(result.validCount).toBe(1);
+    expect(result.questions[0]).toMatchObject({
+      defaultMarks: 2,
+      defaultNegativeMarks: 0,
     });
   });
 
@@ -38,7 +50,7 @@ describe('parseQuestionsCsv', () => {
   });
 
   it('rejects invalid answer options', () => {
-    const result = parseQuestionsCsv(`${headers}\nQuestion,A,B,C,D,X,1,0.25`);
+    const result = parseQuestionsCsv(`${headers}\nQuestion,A,B,C,D,X,1`);
 
     expect(result.invalidCount).toBe(1);
     expect(result.parsedRows[0].errors[0]).toContain('Invalid correct option');

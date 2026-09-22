@@ -280,8 +280,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
         <div className="flex items-center gap-2 text-[11px] text-slate-400">
           <span>{q.defaultMarks || 1} Mark</span>
-          <span>•</span>
-          <span>{q.defaultNegativeMarks || 0.25} Neg</span>
           {q.explanation && (
             <button
               type="button"

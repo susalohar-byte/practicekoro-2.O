@@ -177,7 +177,8 @@ export function parseQuestionsCsv(
   const colExplanation = getCol(['explanation', 'explanation_text']);
   const colExplanationBengali = getCol(['explanation_bengali', 'explanationbengali']);
   const colMarks = getCol(['marks', 'default_marks', 'defaultmarks']);
-  const colNegativeMarks = getCol(['negative_marks', 'default_negative_marks', 'negativemarking']);
+  // NOTE: questions never carry negative marks (test-level policy for Full
+  // Mock / PYQ only). A legacy `negative_marks` column, if present, is ignored.
   const colSubjectId = getCol(['subject_id', 'subjectid']);
   const colChapterId = getCol(['chapter_id', 'chapterid']);
   const colImageUrl = getCol([
@@ -235,7 +236,6 @@ export function parseQuestionsCsv(
     const explanation = normalizeExplanationBullets(getVal(colExplanation));
     const explanationBengali = normalizeExplanationBullets(getVal(colExplanationBengali));
     const rawMarks = getVal(colMarks);
-    const rawNegativeMarks = getVal(colNegativeMarks);
     const rowSubjectId = getVal(colSubjectId) || defaults?.defaultSubjectId;
     const rowChapterId = getVal(colChapterId) || defaults?.defaultChapterId;
     const imageUrl = getVal(colImageUrl) || undefined;
@@ -297,7 +297,6 @@ export function parseQuestionsCsv(
     }
 
     const marks = rawMarks ? parseFloat(rawMarks) || 1.0 : 1.0;
-    const negativeMarks = rawNegativeMarks ? parseFloat(rawNegativeMarks) || 0.25 : 0.25;
 
     const data: Omit<Question, 'id'> = {
       subjectId: rowSubjectId || undefined,
@@ -313,7 +312,8 @@ export function parseQuestionsCsv(
       explanation: finalExplanation,
       explanationBengali: finalExplanationBengali,
       defaultMarks: marks,
-      defaultNegativeMarks: negativeMarks,
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      defaultNegativeMarks: 0,
       isActive: true,
       status: 'active',
     };
@@ -514,7 +514,8 @@ export function parseQuestionsText(
       explanation: finalExplanation || undefined,
       explanationBengali: finalExplanationBengali || finalExplanation || undefined,
       defaultMarks: 1.0,
-      defaultNegativeMarks: 0.25,
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      defaultNegativeMarks: 0,
       isActive: true,
       status: 'active',
     };
@@ -565,7 +566,6 @@ export function generateSampleCsvContent(): string {
     'correct_option',
     'explanation',
     'marks',
-    'negative_marks',
     'image_url',
   ];
 
@@ -580,7 +580,6 @@ export function generateSampleCsvContent(): string {
       'A',
       '• ড. রাজেন্দ্র প্রসাদ ছিলেন স্বাধীন ভারতের প্রথম রাষ্ট্রপতি (১৯৫০-১৯৬২)।\n• তিনি ভারতের একমাত্র রাষ্ট্রপতি যিনি টানা দুইবার এই সম্মানজনক পদে আসীন ছিলেন।\n• ১৯৬২ সালে দেশসেবার স্বীকৃতি হিসেবে তাঁকে ভারতরত্ন প্রদান করা হয়।',
       '1.0',
-      '0.25',
       '',
     ],
     [
@@ -593,7 +592,6 @@ export function generateSampleCsvContent(): string {
       'B',
       '• Region B lies strictly in the mutual intersection.\n• Represents aspirants engaged in both sports simultaneously.',
       '1.0',
-      '0.25',
       'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600',
     ],
     [
@@ -606,7 +604,6 @@ export function generateSampleCsvContent(): string {
       'A',
       '• Kolkata is the principal educational and cultural center of West Bengal.\n• Situated on the eastern bank of the Hooghly River.',
       '1.0',
-      '0.25',
       '',
     ],
   ];

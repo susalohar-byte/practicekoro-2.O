@@ -172,6 +172,12 @@ export interface MockTest {
   totalQuestions: number;
   totalMarks: number;
   passingMarks: number;
+  /**
+   * Test-level negative marking (marks deducted per wrong answer).
+   * Applies ONLY to Full Mock ('full_mock') and PYQ ('pyq') tests, and is
+   * OPTIONAL — 0 means the exam has no negative marking scheme.
+   * Configured once at test creation time; questions never carry negatives.
+   */
   negativeMarking: number;
   isPremium: boolean;
   year?: number;
@@ -207,6 +213,10 @@ export interface Question {
   explanationBengali?: string;
   difficulty?: 'easy' | 'medium' | 'hard' | string;
   defaultMarks: number;
+  /**
+   * Legacy column only — questions NEVER carry negative marks.
+   * Always 0 for new questions; scoring uses the test-level scheme.
+   */
   defaultNegativeMarks: number;
   questionType?: string;
   sourceType?: 'topic' | 'pyq' | 'other';
@@ -900,13 +910,14 @@ export interface HeroBanner {
   badgeText?: string;
   title: string;
   highlightWord?: string;
-  subtitle: string;
-  primaryCtaText: string;
+  subtitle?: string;
+  primaryCtaText?: string;
   primaryCtaLink: string;
   secondaryCtaText?: string;
   secondaryCtaLink?: string;
   featurePills?: string[];
   imageUrl?: string;
+  bannerType?: 'full_image' | 'text_overlay';
   themeGradient?: BannerThemeColor;
   isActive: boolean;
   displayOrder: number;

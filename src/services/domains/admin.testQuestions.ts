@@ -105,7 +105,8 @@ export async function saveTestQuestions(
     let totalMarks = 0;
     questions.forEach((q, idx) => {
       const marks = q.marks ?? 1.0;
-      const negMarks = q.negativeMarks ?? 0.25;
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      const negMarks = q.negativeMarks ?? 0;
       totalMarks += marks;
       localTestQuestions.push({
         id: `tq-${testId}-${q.questionId}`,
@@ -130,7 +131,8 @@ export async function saveTestQuestions(
       question_id: q.questionId,
       question_order: q.orderIndex || idx + 1,
       marks: q.marks ?? 1.0,
-      negative_marks: q.negativeMarks ?? 0.25,
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      negative_marks: q.negativeMarks ?? 0,
     }));
 
     // First attempt atomic RPC
@@ -152,7 +154,8 @@ export async function saveTestQuestions(
         question_id: q.questionId,
         question_order: q.orderIndex || idx + 1,
         marks: q.marks ?? 1.0,
-        negative_marks: q.negativeMarks ?? 0.25,
+        // Questions never carry negative marks — scoring uses the test-level scheme.
+        negative_marks: q.negativeMarks ?? 0,
       }));
 
       const { error: insertError } = await supabase.from('test_questions').insert(rows);
@@ -200,7 +203,8 @@ export async function addQuestionToTest(
       questionId,
       questionOrder: nextOrder,
       marks: marks ?? 1.0,
-      negativeMarks: negativeMarks ?? 0.25,
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      negativeMarks: negativeMarks ?? 0,
     });
     return { success: true };
   }
@@ -233,7 +237,8 @@ export async function addQuestionToTest(
       question_id: questionId,
       question_order: nextOrder,
       marks: marks ?? 1.0,
-      negative_marks: negativeMarks ?? 0.25,
+      // Questions never carry negative marks — scoring uses the test-level scheme.
+      negative_marks: negativeMarks ?? 0,
     });
 
     if (insertError) return { success: false, error: insertError.message };

@@ -162,8 +162,13 @@ export const TestDetails: React.FC = () => {
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
             <p className="text-[10px] uppercase font-bold text-slate-400">Marking Scheme</p>
             <p className="text-sm font-black text-slate-900 mt-1">
-              <span className="text-emerald-600">+{marksPerQuestion}</span> /{' '}
-              <span className="text-rose-600">-{test.negativeMarking}</span>
+              <span className="text-emerald-600">+{marksPerQuestion}</span>
+              {test.negativeMarking > 0 && (
+                <>
+                  {' / '}
+                  <span className="text-rose-600">-{test.negativeMarking}</span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -213,9 +218,18 @@ export const TestDetails: React.FC = () => {
           <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Negative Marking Notice:</span> Every incorrect answer
-              will deduct <strong>{test.negativeMarking} marks</strong>. Unanswered questions do not
-              carry negative marks.
+              <span className="font-bold">Negative Marking Notice:</span>{' '}
+              {test.negativeMarking > 0 ? (
+                <>
+                  Every incorrect answer will deduct <strong>{test.negativeMarking} marks</strong>.
+                  Unanswered questions do not carry negative marks.
+                </>
+              ) : (
+                <>
+                  There is <strong>no negative marking</strong> in this test. Unanswered
+                  questions do not carry negative marks.
+                </>
+              )}
             </div>
           </div>
 

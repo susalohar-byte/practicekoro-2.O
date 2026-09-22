@@ -240,7 +240,8 @@ export async function createTest(
       total_questions: testData.totalQuestions || 0,
       total_marks: testData.totalMarks || 0,
       passing_marks: testData.passingMarks || 0,
-      negative_marking: testData.negativeMarking ?? 0.25,
+      // Negative marking is optional and set at test creation (Full Mock / PYQ only).
+      negative_marking: testData.negativeMarking ?? 0,
       is_premium: testData.isPremium ?? false,
       order_index: testData.orderIndex || 0,
       is_active: testData.isActive ?? true,
@@ -640,7 +641,7 @@ export function exportTestQuestionsToCsv(testTitle: string, questions: Question[
         escapeCsv(q.optionD),
         q.correctOption,
         q.defaultMarks ?? 1,
-        q.defaultNegativeMarks ?? 0.25,
+        q.defaultNegativeMarks ?? 0,
         escapeCsv(q.difficulty),
         escapeCsv(q.subjectName || '-'),
         escapeCsv(q.chapterName || q.topicName || '-'),

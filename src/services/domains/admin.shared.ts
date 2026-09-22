@@ -19,7 +19,8 @@ export function mapQuestionRow(q: any): Question {
     explanationBengali: q.explanation_bengali ?? undefined,
     difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
     defaultMarks: Number(q.default_marks || 1),
-    defaultNegativeMarks: Number(q.default_negative_marks || 0.25),
+    // Questions never carry negative marks — scoring uses the test-level scheme.
+    defaultNegativeMarks: Number(q.default_negative_marks || 0),
     questionType: q.question_type || 'mcq',
     sourceType: (q.source_type as 'topic' | 'pyq' | 'other') || (q.source_exam ? 'other' : 'topic'),
     sourceYear: q.source_year ? Number(q.source_year) : undefined,
