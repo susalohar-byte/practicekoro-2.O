@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useOutletContext } from 'react-router-dom';
+import { StudentNavbar } from '@/components/layout/StudentNavbar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
@@ -21,10 +22,16 @@ import {
   Headphones,
 } from 'lucide-react';
 import { OnboardingModal } from '@/components/student/OnboardingModal';
+import { cn } from '@/lib/utils';
 
 export const Home: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { onToggleMobileSidebar } = useOutletContext<{
+    onToggleMobileSidebar: () => void;
+    onToggleCollapse: () => void;
+    isSidebarCollapsed: boolean;
+  }>();
 
   // Dynamic Banners (cached query with static fallback)
   const queryClient = useQueryClient();
@@ -104,37 +111,49 @@ export const Home: React.FC = () => {
       id: 'wbssc-group-d',
       title: 'WBSSC Group D',
       testsCount: '25+ Tests',
-      emblem: '/images/exams/emblem_wbssc.png',
+      emblem: '/images/exams/emblem_wbssc.svg',
+      bgColor: 'bg-[#FFE8EC]',
+      active: false,
     },
     {
       id: 'wbp-constable',
       title: 'WBP Constable',
       testsCount: '18+ Tests',
-      emblem: '/images/exams/emblem_wbp.png',
+      emblem: '/images/exams/emblem_wbp.svg',
+      bgColor: 'bg-[#FFE8EC]',
+      active: false,
     },
     {
       id: 'wbpsc-clerkship',
       title: 'WBPSC Clerkship',
       testsCount: '20+ Tests',
-      emblem: '/images/exams/emblem_wbpsc.png',
+      emblem: '/images/exams/emblem_wbpsc.svg',
+      bgColor: 'bg-[#FFF6E5]',
+      active: true,
     },
     {
       id: 'primary-tet',
       title: 'Primary TET',
       testsCount: '12+ Tests',
-      emblem: '/images/exams/emblem_tet.png',
+      emblem: '/images/exams/emblem_tet.svg',
+      bgColor: 'bg-[#FFE8EC]',
+      active: false,
     },
     {
       id: 'ssc-gd',
       title: 'SSC GD',
       testsCount: '25+ Tests',
-      emblem: '/images/exams/emblem_ssc.png',
+      emblem: '/images/exams/emblem_ssc.svg',
+      bgColor: 'bg-[#F1F5F9]',
+      active: false,
     },
     {
       id: 'railway-ntpc',
       title: 'Railway (NTPC)',
       testsCount: '18+ Tests',
-      emblem: '/images/exams/emblem_railway.png',
+      emblem: '/images/exams/emblem_railway.svg',
+      bgColor: 'bg-[#111827]',
+      active: false,
     },
   ];
 
@@ -372,6 +391,9 @@ export const Home: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      {/* Top Bar: Search, Theme, Bell, Profile — embedded directly into the page (no sticky header) */}
+      <StudentNavbar embedded onToggleMobileSidebar={onToggleMobileSidebar} />
+
       {/* 1. DYNAMIC HERO BANNER CAROUSEL */}
       {(() => {
         const activeBanners = banners.length > 0 ? banners : DEFAULT_HERO_BANNERS;
@@ -637,17 +659,32 @@ export const Home: React.FC = () => {
               <Link
                 key={exam.id}
                 to={`/exams/${exam.id}`}
-                className="group flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition-all text-center"
+                className={cn(
+                  'group flex flex-col items-center justify-center p-4 rounded-2xl bg-white border transition-all text-center',
+                  exam.active
+                    ? 'border-[#0158FC] ring-1 ring-[#0158FC]/20 shadow-xs'
+                    : 'border-slate-200/80 hover:border-blue-300 hover:shadow-md'
+                )}
               >
                 {/* Official seal emblem */}
-                <div className="w-14 h-14 rounded-full bg-slate-50 p-2 mb-3 flex items-center justify-center border border-slate-100 group-hover:scale-105 transition-transform">
+                <div
+                  className={cn(
+                    'w-12 h-12 rounded-xl mb-3 flex items-center justify-center p-2 group-hover:scale-105 transition-transform shadow-2xs',
+                    exam.bgColor
+                  )}
+                >
                   <img
                     src={exam.emblem}
                     alt={exam.title}
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#0158FC] transition-colors leading-tight mb-1">
+                <h4
+                  className={cn(
+                    'text-xs font-bold leading-tight mb-1 transition-colors',
+                    exam.active ? 'text-[#0158FC]' : 'text-slate-900 group-hover:text-[#0158FC]'
+                  )}
+                >
                   {exam.title}
                 </h4>
                 <p className="text-[11px] font-semibold text-slate-500">

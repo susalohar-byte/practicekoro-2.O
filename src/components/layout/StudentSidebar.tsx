@@ -53,7 +53,6 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     { label: 'Saved Questions', path: '/saved-questions', icon: Bookmark },
     { label: 'Rank', path: '/rank', icon: Trophy },
     { label: 'Help & Support', path: '/support', icon: HelpCircle },
-    { label: 'Profile', path: '/profile', icon: User },
   ];
 
   const isItemActive = (path: string) => {
