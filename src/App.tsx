@@ -169,11 +169,14 @@ const AdminAuditLogs = React.lazy(() =>
 
 /**
  * RootRoute:
- * - Directs users straight to the Student Dashboard (/dashboard) as requested.
- * - Public Landing Page remains accessible at /landing.
+ * - Always renders the public Landing Page at `/` — this is the first page
+ *   every visitor sees, on mobile web and desktop web alike.
+ * - Authenticated users reach their panel only via an explicit sign-in
+ *   (`/login` -> `/dashboard` for students, `/admin` for admins) or via the
+ *   Landing page CTA. There is intentionally NO auto-redirect to a dashboard.
  */
 const RootRoute: React.FC = () => {
-  return <Navigate to="/dashboard" replace />;
+  return <Landing />;
 };
 
 export const App: React.FC = () => {
@@ -189,9 +192,10 @@ export const App: React.FC = () => {
       }
     >
       <Routes>
-        {/* Root Route (Landing for guests, redirects to appropriate panel if logged in) */}
+        {/* Root Route (public Landing Page for guests and signed-in users alike) */}
         <Route path="/" element={<RootRoute />} />
-        <Route path="/landing" element={<Landing />} />
+        {/* Legacy alias: canonical landing URL is `/` */}
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}

@@ -265,10 +265,11 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                  {user?.fullName || 'Susanta Lohar'}
+                  {user?.fullName || 'Candidate'}
                 </p>
                 <p className="text-[11px] text-slate-500 font-medium leading-none mt-1">
-                  Student • <span className="text-amber-500 font-bold">Pro Pass</span>
+                  Student •{' '}
+                  <span className="text-amber-500 font-bold">{isPro ? 'Pro Pass' : 'Free'}</span>
                 </p>
               </div>
             )}
@@ -297,7 +298,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
               <div className="px-4 py-2.5 border-b border-slate-100">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold text-slate-900 truncate">
-                    {user?.fullName || 'Susanta Lohar'}
+                    {user?.fullName || 'Candidate'}
                   </p>
                   {isPro ? (
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200">
@@ -310,7 +311,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                   )}
                 </div>
                 <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                  {user?.email || 'susanta@practicekoro.com'}
+                  {user?.email || ''}
                 </p>
               </div>
 

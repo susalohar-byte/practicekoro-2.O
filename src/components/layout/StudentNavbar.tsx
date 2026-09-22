@@ -536,7 +536,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
 
                   <div className="hidden md:block text-left pr-1">
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
-                      {user?.fullName || 'Susanta Lohar'}
+                      {user?.fullName || 'Candidate'}
                     </p>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-none mt-0.5">
                       Student • <span className="text-amber-500 font-bold">{isPro ? 'Pro Pass' : 'Free'}</span>
@@ -558,7 +558,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
                     <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                          {user?.fullName || 'Susanta Lohar'}
+                          {user?.fullName || 'Candidate'}
                         </p>
                         {isPro ? (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200">
@@ -571,7 +571,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
                         )}
                       </div>
                       <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                        {user?.email || 'susanta@practicekoro.com'}
+                        {user?.email || ''}
                       </p>
                     </div>
 

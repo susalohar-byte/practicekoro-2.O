@@ -27,9 +27,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    if (location.pathname === '/' || location.pathname === '/dashboard') {
-      return <>{children}</>;
-    }
+    // No exceptions: every protected page (including /dashboard) requires a
+    // valid session. Guests are sent to /login and returned after sign-in.
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -173,7 +172,8 @@ export const PublicOnlyRoute: React.FC<ProtectedRouteProps> = ({ children }) => 
     );
   }
 
-  if (user && user.id !== 'usr-student-susanta') {
+  // Any authenticated user is sent to their panel — no fake/demo exceptions.
+  if (user) {
     return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
   }
 

@@ -41,41 +41,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const DEFAULT_STUDENT_USER: UserProfile = {
-  id: 'usr-student-susanta',
-  fullName: 'Susanta Lohar',
-  email: 'susanta@practicekoro.com',
-  phone: '+91 9876543210',
-  targetExamId: 'wbssc-group-d',
-  role: 'student',
-  avatarUrl: '/images/student_avatar.png',
-  createdAt: '2026-01-01T00:00:00.000Z',
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(() => {
-    // Restore cached user for instant UI — Supabase session validation happens in initAuth
-    const saved = localStorage.getItem('practicekoro_user');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed?.id && parsed?.fullName) {
-          return parsed;
-        }
-      } catch {
-        // fallback
-      }
-    }
-    return DEFAULT_STUDENT_USER;
-  });
+  // Start logged out. The real session (if any) is resolved in `initAuth`
+  // below. Never fall back to a fake/demo user — a visitor without a valid
+  // Supabase session must see the public site, not a logged-in dashboard.
+  const [user, setUser] = useState<UserProfile | null>(null);
 
-  const [isPro, setIsPro] = useState<boolean>(() => {
-    const saved = localStorage.getItem('practicekoro_is_pro');
-    if (saved !== null) {
-      return saved === 'true';
-    }
-    return true; // Default Pro Pass as shown in mockup
-  });
+  const [isPro, setIsPro] = useState<boolean>(false);
 
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -252,31 +224,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
           await refreshProStatus();
         } else {
-          // If the user explicitly logged out in this session, stay logged out
-          const explicitlySignedOut = sessionStorage.getItem('practicekoro_signed_out') === 'true';
-          if (explicitlySignedOut) {
-            setUser(null);
-            setIsPro(false);
-          } else {
-            // Retain cached user or fallback to DEFAULT_STUDENT_USER so the student dashboard is immediately visible
-            const saved = localStorage.getItem('practicekoro_user');
-            if (saved) {
-              try {
-                const parsed = JSON.parse(saved);
-                if (parsed?.id) {
-                  setUser(parsed);
-                  setIsPro(localStorage.getItem('practicekoro_is_pro') !== 'false');
-                  return;
-                }
-              } catch {
-                // fallback
-              }
-            }
-            setUser(DEFAULT_STUDENT_USER);
-            setIsPro(true);
-            localStorage.setItem('practicekoro_user', JSON.stringify(DEFAULT_STUDENT_USER));
-            localStorage.setItem('practicekoro_is_pro', 'true');
-          }
+          // No active Supabase session: the visitor is logged out. Never
+          // restore a cached profile or fall back to a demo user here — a
+          // stale cache is exactly how a previous account could appear
+          // "still logged in" without a valid session. Clear it instead.
+          setUser(null);
+          setIsPro(false);
+          localStorage.removeItem('practicekoro_user');
+          localStorage.removeItem('practicekoro_is_pro');
         }
       } catch (err) {
         console.error('Supabase session load error:', err);
@@ -291,13 +246,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        sessionStorage.removeItem('practicekoro_signed_out');
         const userObj = await resolveUserProfile(session.user);
         setUser(userObj);
         localStorage.setItem('practicekoro_user', JSON.stringify(userObj));
         await refreshProStatus();
       } else if (event === 'SIGNED_OUT') {
-        sessionStorage.setItem('practicekoro_signed_out', 'true');
         setUser(null);
         setIsPro(false);
         localStorage.removeItem('practicekoro_user');
@@ -474,7 +427,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUser(null);
     setIsPro(false);
-    sessionStorage.setItem('practicekoro_signed_out', 'true');
     localStorage.removeItem('practicekoro_user');
     localStorage.removeItem('practicekoro_is_pro');
   };
