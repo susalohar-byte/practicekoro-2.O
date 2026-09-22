@@ -732,10 +732,8 @@ export const AdminBanners: React.FC = () => {
                     .filter(Boolean);
                   if (bannerType === 'text_overlay') {
                     return (
-                      <div
-                        className={`rounded-xl border ${theme.card} p-4 flex items-center gap-3 overflow-hidden`}
-                      >
-                        <div className="flex-1 min-w-0">
+                      <div className={`rounded-xl border ${theme.card} p-4 overflow-hidden`}>
+                        <div className="min-w-0">
                           {badgeText.trim() && (
                             <span
                               className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${theme.badge}`}
@@ -781,16 +779,6 @@ export const AdminBanners: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        {imageUrl.trim() && (
-                          <img
-                            src={imageUrl.trim()}
-                            alt=""
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                            className="w-24 h-24 rounded-xl object-cover border border-white/60 shadow-sm shrink-0"
-                          />
-                        )}
                       </div>
                     );
                   }

@@ -513,7 +513,7 @@ export const Home: React.FC = () => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            <div className="max-w-lg lg:max-w-2xl relative z-10">
+            <div className="max-w-3xl relative z-10">
               {/* Greeting Badge & App Tour Trigger */}
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 {formattedBadge && (
@@ -584,18 +584,6 @@ export const Home: React.FC = () => {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Right Character Graphic - Uniform size and alignment across all banners */}
-            <div className="hidden md:flex absolute right-2 lg:right-6 bottom-0 w-[360px] lg:w-[420px] h-[280px] items-end justify-end pointer-events-none select-none overflow-hidden">
-              <img
-                src={banner.imageUrl || '/images/hero_student_illustration.png'}
-                alt={banner.title}
-                onError={(e) => {
-                  e.currentTarget.src = '/images/hero_student_illustration.png';
-                }}
-                className="w-full h-full object-contain object-bottom transition-all duration-300 pointer-events-none"
-              />
             </div>
 
             {/* Carousel Controls (When multiple active banners exist) */}
