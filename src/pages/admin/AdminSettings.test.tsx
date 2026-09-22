@@ -372,7 +372,7 @@ describe('AdminSettings & Maintenance Mode System', () => {
       await adminApi.updateAppSetting('sys_maintenance_mode', true);
 
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/exams']}>
           <MaintenanceProvider>
             <AppLayout />
           </MaintenanceProvider>
