@@ -55,9 +55,68 @@ const SYSTEM_BANNER_PRESETS = [
 const QUICK_TARGET_LINKS = [
   { label: 'Exams (/exams)', url: '/exams' },
   { label: 'Pro Pass (/subscription)', url: '/subscription' },
-  { label: 'Mock Tests (/mock-tests)', url: '/mock-tests' },
+  { label: 'Dashboard (/dashboard)', url: '/dashboard' },
   { label: 'Topic Practice (/practice)', url: '/practice' },
 ];
+
+/**
+ * Compact mirror of the student Home hero theme mapping, so the in-modal
+ * live preview renders exactly what students will see.
+ */
+const PREVIEW_THEMES: Record<
+  BannerThemeColor,
+  { card: string; badge: string; primaryBtn: string; secondaryBtn: string; highlight: string }
+> = {
+  blue: {
+    card: 'bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#cee9fe] border-blue-200/80',
+    badge: 'bg-blue-100/80 border-blue-200/60 text-blue-700',
+    primaryBtn: 'bg-[#0158FC] text-white',
+    secondaryBtn: 'bg-white border-blue-200 text-slate-700',
+    highlight: 'text-[#0158FC]',
+  },
+  indigo: {
+    card: 'bg-gradient-to-r from-[#eef2ff] via-[#e0e7ff] to-[#c7d2fe] border-indigo-200/80',
+    badge: 'bg-indigo-100/90 border-indigo-200/80 text-indigo-800',
+    primaryBtn: 'bg-[#4f46e5] text-white',
+    secondaryBtn: 'bg-white border-indigo-200 text-slate-700',
+    highlight: 'text-[#4f46e5]',
+  },
+  purple: {
+    card: 'bg-gradient-to-r from-[#f5f3ff] via-[#ede9fe] to-[#ddd6fe] border-purple-200/80',
+    badge: 'bg-purple-100/90 border-purple-200/80 text-purple-800',
+    primaryBtn: 'bg-[#7c3aed] text-white',
+    secondaryBtn: 'bg-white border-purple-200 text-slate-700',
+    highlight: 'text-[#7c3aed]',
+  },
+  emerald: {
+    card: 'bg-gradient-to-r from-[#ecfdf5] via-[#d1fae5] to-[#a7f3d0] border-emerald-200/80',
+    badge: 'bg-emerald-100/90 border-emerald-200/80 text-emerald-800',
+    primaryBtn: 'bg-[#059669] text-white',
+    secondaryBtn: 'bg-white border-emerald-200 text-slate-700',
+    highlight: 'text-[#059669]',
+  },
+  amber: {
+    card: 'bg-gradient-to-r from-[#fffbeb] via-[#fef3c7] to-[#fde68a] border-amber-200/80',
+    badge: 'bg-amber-100/90 border-amber-200/80 text-amber-900',
+    primaryBtn: 'bg-[#d97706] text-white',
+    secondaryBtn: 'bg-white border-amber-200 text-slate-700',
+    highlight: 'text-[#d97706]',
+  },
+  rose: {
+    card: 'bg-gradient-to-r from-[#fff1f2] via-[#ffe4e6] to-[#fecdd3] border-rose-200/80',
+    badge: 'bg-rose-100/90 border-rose-200/80 text-rose-800',
+    primaryBtn: 'bg-[#e11d48] text-white',
+    secondaryBtn: 'bg-white border-rose-200 text-slate-700',
+    highlight: 'text-[#e11d48]',
+  },
+  cyan: {
+    card: 'bg-gradient-to-r from-[#ecfeff] via-[#cffafe] to-[#a5f3fc] border-cyan-200/80',
+    badge: 'bg-cyan-100/90 border-cyan-200/80 text-cyan-800',
+    primaryBtn: 'bg-[#0891b2] text-white',
+    secondaryBtn: 'bg-white border-cyan-200 text-slate-700',
+    highlight: 'text-[#0891b2]',
+  },
+};
 
 export const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
@@ -219,6 +278,16 @@ export const AdminBanners: React.FC = () => {
       showToast('error', 'Please upload or provide a banner image link.');
       return;
     }
+    const destLink = primaryCtaLink.trim() || '/exams';
+    if (!/^(\/|https?:\/\/)/.test(destLink)) {
+      showToast('error', 'Destination link must start with / (e.g. /exams) or http(s)://.');
+      return;
+    }
+    const secondaryLink = secondaryCtaLink.trim();
+    if (secondaryLink && !/^(\/|https?:\/\/)/.test(secondaryLink)) {
+      showToast('error', 'Secondary button link must start with / or http(s)://.');
+      return;
+    }
 
     const pills = featurePillsRaw
       .split(',')
@@ -228,7 +297,7 @@ export const AdminBanners: React.FC = () => {
     try {
       const payload = {
         title: title.trim(),
-        primaryCtaLink: primaryCtaLink.trim() || '/exams',
+        primaryCtaLink: destLink,
         imageUrl: imageUrl.trim(),
         bannerType,
         badgeText: badgeText.trim(),
@@ -236,7 +305,7 @@ export const AdminBanners: React.FC = () => {
         subtitle: subtitle.trim(),
         primaryCtaText: primaryCtaText.trim() || 'Start Now',
         secondaryCtaText: secondaryCtaText.trim(),
-        secondaryCtaLink: secondaryCtaLink.trim(),
+        secondaryCtaLink: secondaryLink,
         featurePills: pills,
         themeGradient,
         isActive,
@@ -644,6 +713,113 @@ export const AdminBanners: React.FC = () => {
 
             {/* Modal Form */}
             <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[78vh] overflow-y-auto">
+              {/* 0. Live Student-View Preview (updates as you type — no need to save first) */}
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-[11px] font-bold text-blue-700 flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5" />
+                    Live Preview — exactly how students will see it
+                  </span>
+                  <span className="text-[10px] font-semibold text-blue-500 shrink-0">
+                    {bannerType === 'full_image' ? 'Full Graphic mode' : 'Text Overlay mode'}
+                  </span>
+                </div>
+                {(() => {
+                  const theme = PREVIEW_THEMES[themeGradient] || PREVIEW_THEMES.blue;
+                  const pills = featurePillsRaw
+                    .split(',')
+                    .map((p) => p.trim())
+                    .filter(Boolean);
+                  if (bannerType === 'text_overlay') {
+                    return (
+                      <div
+                        className={`rounded-xl border ${theme.card} p-4 flex items-center gap-3 overflow-hidden`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          {badgeText.trim() && (
+                            <span
+                              className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${theme.badge}`}
+                            >
+                              {badgeText.trim()}
+                            </span>
+                          )}
+                          <p className="text-sm font-black text-slate-900 mt-1.5 leading-snug">
+                            {title.trim() || 'Banner headline goes here'}{' '}
+                            {highlightWord.trim() && (
+                              <span className={theme.highlight}>{highlightWord.trim()}</span>
+                            )}
+                          </p>
+                          {subtitle.trim() && (
+                            <p className="text-[11px] text-slate-600 mt-1 line-clamp-2">
+                              {subtitle.trim()}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            <span
+                              className={`text-[11px] font-bold px-3 py-1.5 rounded-xl ${theme.primaryBtn}`}
+                            >
+                              {primaryCtaText.trim() || 'Start Now'}
+                            </span>
+                            {secondaryCtaText.trim() && (
+                              <span
+                                className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border ${theme.secondaryBtn}`}
+                              >
+                                {secondaryCtaText.trim()}
+                              </span>
+                            )}
+                          </div>
+                          {pills.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {pills.slice(0, 5).map((pill, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/70 border border-slate-200 text-slate-600"
+                                >
+                                  {pill}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {imageUrl.trim() && (
+                          <img
+                            src={imageUrl.trim()}
+                            alt=""
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                            className="w-24 h-24 rounded-xl object-cover border border-white/60 shadow-sm shrink-0"
+                          />
+                        )}
+                      </div>
+                    );
+                  }
+                  return imageUrl.trim() ? (
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
+                      <img
+                        src={imageUrl.trim()}
+                        alt={title.trim() || 'Banner preview'}
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/exam_hero_banner.png';
+                        }}
+                        className="w-full h-auto max-h-44 object-cover"
+                      />
+                      <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white px-2.5 py-1 rounded-lg text-[10.5px] font-semibold flex items-center gap-1.5">
+                        <ExternalLink className="w-3 h-3 text-blue-400" />
+                        <span>
+                          Click redirect:{' '}
+                          <b className="text-blue-300">{primaryCtaLink.trim() || '/exams'}</b>
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center text-[11px] text-slate-400 font-semibold">
+                      Upload an image above to preview the full graphic banner.
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* 1. Full Banner Image (Upload or Link) */}
               <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/90">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -835,7 +1011,7 @@ export const AdminBanners: React.FC = () => {
                   value={primaryCtaLink}
                   onChange={(e) => setPrimaryCtaLink(e.target.value)}
                   required
-                  placeholder="e.g. /exams or /subscription or /mock-tests"
+                  placeholder="e.g. /exams or /subscription or /practice"
                   className="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 />
                 {/* Quick Target Link Buttons */}
@@ -987,6 +1163,34 @@ export const AdminBanners: React.FC = () => {
                           value={featurePillsRaw}
                           onChange={(e) => setFeaturePillsRaw(e.target.value)}
                           placeholder="Mock Tests, PYQ, Full Solutions"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Secondary button (optional second CTA shown next to primary) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700">
+                          Secondary Button Text <span className="font-medium text-slate-400">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={secondaryCtaText}
+                          onChange={(e) => setSecondaryCtaText(e.target.value)}
+                          placeholder="e.g. View Test Series"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700">
+                          Secondary Button Link <span className="font-medium text-slate-400">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={secondaryCtaLink}
+                          onChange={(e) => setSecondaryCtaLink(e.target.value)}
+                          placeholder="e.g. /exams or /dashboard"
                           className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
