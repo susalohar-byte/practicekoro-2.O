@@ -18,8 +18,6 @@ import {
   ExternalLink,
   Loader2,
   SlidersHorizontal,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
 import type { HeroBanner, BannerThemeColor } from '@/types';
@@ -142,7 +140,6 @@ export const AdminBanners: React.FC = () => {
   const [displayOrder, setDisplayOrder] = useState(1);
 
   // Advanced Overlay (optional)
-  const [showAdvancedOverlay, setShowAdvancedOverlay] = useState(false);
   const [badgeText, setBadgeText] = useState('');
   const [highlightWord, setHighlightWord] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -236,7 +233,6 @@ export const AdminBanners: React.FC = () => {
     setBannerType('full_image');
     setIsActive(true);
     setDisplayOrder(banners.length + 1);
-    setShowAdvancedOverlay(false);
     setBadgeText('TARGET 2026 🎯');
     setHighlightWord('');
     setSubtitle('');
@@ -256,7 +252,6 @@ export const AdminBanners: React.FC = () => {
     setBannerType(banner.bannerType || 'full_image');
     setIsActive(banner.isActive);
     setDisplayOrder(banner.displayOrder);
-    setShowAdvancedOverlay(banner.bannerType === 'text_overlay');
     setBadgeText(banner.badgeText || '');
     setHighlightWord(banner.highlightWord || '');
     setSubtitle(banner.subtitle || '');
@@ -1048,22 +1043,14 @@ export const AdminBanners: React.FC = () => {
                 </div>
               </div>
 
-              {/* 5. Optional Advanced Text Overlay Accordion */}
+              {/* 5. Banner Texts & Call-to-Action Buttons (always visible) */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden mt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAdvancedOverlay(!showAdvancedOverlay)}
-                  className="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-bold text-slate-700 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Optional: Text Overlay & Custom HTML Buttons</span>
-                  </div>
-                  {showAdvancedOverlay ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
-                </button>
+                <div className="px-4 py-2.5 bg-slate-50 flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Banner Texts & Call-to-Action Buttons</span>
+                </div>
 
-                {showAdvancedOverlay && (
-                  <div className="p-4 space-y-3 bg-white border-t border-slate-200">
+                <div className="p-4 space-y-3 bg-white border-t border-slate-200">
                     {/* Display Mode Selection */}
                     <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                       <div>
@@ -1206,8 +1193,7 @@ export const AdminBanners: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
 
               {/* Modal Action Buttons */}
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
