@@ -349,7 +349,7 @@ export const Support: React.FC = () => {
                         <span>Submitting as:</span>
                       </div>
                       <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-xs">
-                        {user?.fullName || 'Student'} ({user?.email || 'Logged In'})
+                        {user?.fullName || 'Student'} ({user?.email || 'guest account'})
                       </span>
                     </div>
 

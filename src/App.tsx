@@ -200,7 +200,6 @@ export const App: React.FC = () => {
 
         {/* Student App Layout Routes (Standard Navbar & Bottom Nav) */}
         <Route element={<AppLayout />}>
-          <Route path="onboarding" element={<Onboarding />} />
           <Route
             path="dashboard"
             element={
