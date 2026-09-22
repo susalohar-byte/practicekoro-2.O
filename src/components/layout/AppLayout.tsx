@@ -40,7 +40,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
       {/* Side Navbar Component for Student Dashboard */}
       <StudentSidebar
         isOpen={mobileSidebarOpen}

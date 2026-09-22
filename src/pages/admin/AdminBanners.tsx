@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Sparkles,
   Plus,
@@ -11,8 +11,15 @@ import {
   XCircle,
   RotateCcw,
   Layers,
-  CheckCircle2,
   X,
+  Upload,
+  Image as ImageIcon,
+  Link2,
+  ExternalLink,
+  Loader2,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
 import type { HeroBanner, BannerThemeColor } from '@/types';
@@ -27,19 +34,29 @@ const THEME_OPTIONS: { id: BannerThemeColor; label: string; bgClass: string; tex
   { id: 'cyan', label: 'Electric Cyan', bgClass: 'from-cyan-50 to-cyan-100 border-cyan-200', textClass: 'text-cyan-600' },
 ];
 
-const PRESET_IMAGES = [
+const SYSTEM_BANNER_PRESETS = [
   {
-    label: '3D Student with Tablet & Motivational Chart',
-    url: '/images/hero_student_illustration.png',
+    label: 'WBPSC & WBP Exam Series Banner',
+    url: '/images/exam_hero_banner.png',
+    target: '/exams',
   },
   {
-    label: '3D Student Portrait',
-    url: '/images/student_hero_3d.jpg',
+    label: 'PracticeKoro Pro Pass Banner',
+    url: '/images/student_hero_banner.jpg',
+    target: '/subscription',
   },
   {
-    label: 'Pro Pass Crown Asset',
-    url: '/images/subscription_crown.png',
+    label: 'Daily 10 Rapid Challenge Banner',
+    url: '/images/daily_10_banner_exact.png',
+    target: '/practice',
   },
+];
+
+const QUICK_TARGET_LINKS = [
+  { label: 'Exams (/exams)', url: '/exams' },
+  { label: 'Pro Pass (/subscription)', url: '/subscription' },
+  { label: 'Mock Tests (/mock-tests)', url: '/mock-tests' },
+  { label: 'Topic Practice (/practice)', url: '/practice' },
 ];
 
 export const AdminBanners: React.FC = () => {
@@ -51,90 +68,155 @@ export const AdminBanners: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<HeroBanner | null>(null);
 
-  // Form fields
-  const [badgeText, setBadgeText] = useState('');
+  // Image Upload & Linking state
+  const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
+  const [imageUrl, setImageUrl] = useState('/images/exam_hero_banner.png');
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Banner Details
   const [title, setTitle] = useState('');
-  const [highlightWord, setHighlightWord] = useState('');
-  const [subtitle, setSubtitle] = useState('');
-  const [primaryCtaText, setPrimaryCtaText] = useState('Start a Mock Test');
   const [primaryCtaLink, setPrimaryCtaLink] = useState('/exams');
-  const [secondaryCtaText, setSecondaryCtaText] = useState('Explore Exams');
-  const [secondaryCtaLink, setSecondaryCtaLink] = useState('/exams');
-  const [featurePillsRaw, setFeaturePillsRaw] = useState(
-    'Mock Tests, Topic Practice, PYQ, Detailed Solutions, Performance Analysis'
-  );
-  const [imageUrl, setImageUrl] = useState('/images/hero_student_illustration.png');
-  const [themeGradient, setThemeGradient] = useState<BannerThemeColor>('blue');
+  const [bannerType, setBannerType] = useState<'full_image' | 'text_overlay'>('full_image');
   const [isActive, setIsActive] = useState(true);
   const [displayOrder, setDisplayOrder] = useState(1);
+
+  // Advanced Overlay (optional)
+  const [showAdvancedOverlay, setShowAdvancedOverlay] = useState(false);
+  const [badgeText, setBadgeText] = useState('');
+  const [highlightWord, setHighlightWord] = useState('');
+  const [subtitle, setSubtitle] = useState('');
+  const [primaryCtaText, setPrimaryCtaText] = useState('Start Now');
+  const [secondaryCtaText, setSecondaryCtaText] = useState('');
+  const [secondaryCtaLink, setSecondaryCtaLink] = useState('');
+  const [featurePillsRaw, setFeaturePillsRaw] = useState('');
+  const [themeGradient, setThemeGradient] = useState<BannerThemeColor>('blue');
+
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   );
 
-  const fetchBanners = async () => {
+  const fetchBanners = useCallback(async () => {
     try {
       setLoading(true);
       const data = await bannerService.getBanners();
       setBanners(data);
-      if (data.length > 0 && !previewBannerId) {
-        setPreviewBannerId(data[0].id);
+      if (data.length > 0) {
+        setPreviewBannerId((prev) => prev || data[0].id);
       }
     } catch {
       setFeedbackMsg({ type: 'error', text: 'Failed to load banners.' });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchBanners();
-  }, []);
+  }, [fetchBanners]);
 
   const showToast = (type: 'success' | 'error', text: string) => {
     setFeedbackMsg({ type, text });
     setTimeout(() => setFeedbackMsg(null), 3500);
   };
 
+  // Process image file for upload
+  const processImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      showToast('error', 'Please upload a valid image file (PNG, JPG, WebP, SVG).');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('error', 'Image size must be less than 5MB.');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const uploadedUrl = await bannerService.uploadBannerImage(file);
+      setImageUrl(uploadedUrl);
+      showToast('success', 'Banner image uploaded successfully!');
+    } catch (err: any) {
+      showToast('error', err?.message || 'Failed to upload image.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
   const handleOpenAdd = () => {
     setEditingBanner(null);
-    setBadgeText('{GREETING}, {USER} 🎓');
-    setTitle('Small Steps Today,');
-    setHighlightWord('Big Results Tomorrow.');
-    setSubtitle('Join thousands of aspirants preparing smarter with PracticeKoro.');
-    setPrimaryCtaText('Start a Mock Test');
+    setTitle('');
     setPrimaryCtaLink('/exams');
-    setSecondaryCtaText('Explore Exams');
-    setSecondaryCtaLink('/exams');
-    setFeaturePillsRaw('Mock Tests, Topic Practice, PYQ, Detailed Solutions, Performance Analysis');
-    setImageUrl('/images/hero_student_illustration.png');
-    setThemeGradient('blue');
+    setImageUrl('/images/exam_hero_banner.png');
+    setBannerType('full_image');
     setIsActive(true);
     setDisplayOrder(banners.length + 1);
+    setShowAdvancedOverlay(false);
+    setBadgeText('TARGET 2026 🎯');
+    setHighlightWord('');
+    setSubtitle('');
+    setPrimaryCtaText('Start Now');
+    setSecondaryCtaText('');
+    setSecondaryCtaLink('');
+    setFeaturePillsRaw('');
+    setThemeGradient('blue');
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (banner: HeroBanner) => {
     setEditingBanner(banner);
-    setBadgeText(banner.badgeText || '');
     setTitle(banner.title);
+    setPrimaryCtaLink(banner.primaryCtaLink || '/exams');
+    setImageUrl(banner.imageUrl || '/images/exam_hero_banner.png');
+    setBannerType(banner.bannerType || 'full_image');
+    setIsActive(banner.isActive);
+    setDisplayOrder(banner.displayOrder);
+    setShowAdvancedOverlay(banner.bannerType === 'text_overlay');
+    setBadgeText(banner.badgeText || '');
     setHighlightWord(banner.highlightWord || '');
     setSubtitle(banner.subtitle || '');
-    setPrimaryCtaText(banner.primaryCtaText || '');
-    setPrimaryCtaLink(banner.primaryCtaLink || '/exams');
+    setPrimaryCtaText(banner.primaryCtaText || 'Start Now');
     setSecondaryCtaText(banner.secondaryCtaText || '');
     setSecondaryCtaLink(banner.secondaryCtaLink || '');
     setFeaturePillsRaw((banner.featurePills || []).join(', '));
-    setImageUrl(banner.imageUrl || '/images/hero_student_illustration.png');
     setThemeGradient(banner.themeGradient || 'blue');
-    setIsActive(banner.isActive);
-    setDisplayOrder(banner.displayOrder);
     setIsModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      showToast('error', 'Title is required');
+      showToast('error', 'Banner Name / Title is required.');
+      return;
+    }
+    if (!imageUrl.trim()) {
+      showToast('error', 'Please upload or provide a banner image link.');
       return;
     }
 
@@ -144,39 +226,28 @@ export const AdminBanners: React.FC = () => {
       .filter(Boolean);
 
     try {
+      const payload = {
+        title: title.trim(),
+        primaryCtaLink: primaryCtaLink.trim() || '/exams',
+        imageUrl: imageUrl.trim(),
+        bannerType,
+        badgeText: badgeText.trim(),
+        highlightWord: highlightWord.trim(),
+        subtitle: subtitle.trim(),
+        primaryCtaText: primaryCtaText.trim() || 'Start Now',
+        secondaryCtaText: secondaryCtaText.trim(),
+        secondaryCtaLink: secondaryCtaLink.trim(),
+        featurePills: pills,
+        themeGradient,
+        isActive,
+        displayOrder: Number(displayOrder) || 1,
+      };
+
       if (editingBanner) {
-        await bannerService.updateBanner(editingBanner.id, {
-          badgeText: badgeText.trim(),
-          title: title.trim(),
-          highlightWord: highlightWord.trim(),
-          subtitle: subtitle.trim(),
-          primaryCtaText: primaryCtaText.trim(),
-          primaryCtaLink: primaryCtaLink.trim(),
-          secondaryCtaText: secondaryCtaText.trim(),
-          secondaryCtaLink: secondaryCtaLink.trim(),
-          featurePills: pills,
-          imageUrl: imageUrl.trim(),
-          themeGradient,
-          isActive,
-          displayOrder: Number(displayOrder) || 1,
-        });
+        await bannerService.updateBanner(editingBanner.id, payload);
         showToast('success', 'Banner updated successfully!');
       } else {
-        await bannerService.createBanner({
-          badgeText: badgeText.trim(),
-          title: title.trim(),
-          highlightWord: highlightWord.trim(),
-          subtitle: subtitle.trim(),
-          primaryCtaText: primaryCtaText.trim(),
-          primaryCtaLink: primaryCtaLink.trim(),
-          secondaryCtaText: secondaryCtaText.trim(),
-          secondaryCtaLink: secondaryCtaLink.trim(),
-          featurePills: pills,
-          imageUrl: imageUrl.trim(),
-          themeGradient,
-          isActive,
-          displayOrder: Number(displayOrder) || banners.length + 1,
-        });
+        await bannerService.createBanner(payload);
         showToast('success', 'New banner created successfully!');
       }
 
@@ -190,7 +261,7 @@ export const AdminBanners: React.FC = () => {
   const handleToggleStatus = async (banner: HeroBanner) => {
     try {
       await bannerService.toggleBannerStatus(banner.id, !banner.isActive);
-      showToast('success', `Banner ${banner.isActive ? 'deactivated' : 'activated'}!`);
+      showToast('success', `Banner ${banner.isActive ? 'hidden from students' : 'activated'}!`);
       await fetchBanners();
     } catch {
       showToast('error', 'Failed to update status.');
@@ -260,11 +331,11 @@ export const AdminBanners: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-bold mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Content Management</span>
+            <span>Promotional Banners</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hero Banners</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Manage, reorder, and customize promotional banners displayed on the student home dashboard.
+            Upload full promotional graphics, set click destination links, and control slides on the student dashboard.
           </p>
         </div>
 
@@ -272,7 +343,7 @@ export const AdminBanners: React.FC = () => {
           <button
             type="button"
             onClick={handleResetDefaults}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
             title="Reset to default banners"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -281,7 +352,7 @@ export const AdminBanners: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0158FC] hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0158FC] hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98] cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Banner</span>
@@ -307,13 +378,13 @@ export const AdminBanners: React.FC = () => {
           </div>
           <div className="text-2xl font-black text-emerald-600 mt-2">{activeCount}</div>
           <p className="text-[11px] text-slate-500 mt-1">
-            {activeCount > 1 ? `Multi-banner carousel enabled (${activeCount} slides)` : 'Single static banner mode'}
+            {activeCount > 1 ? `Carousel enabled (${activeCount} slides)` : 'Single banner displayed'}
           </p>
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Inactive / Hidden</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hidden / Drafts</span>
             <XCircle className="w-4 h-4 text-slate-400" />
           </div>
           <div className="text-2xl font-black text-slate-400 mt-2">{banners.length - activeCount}</div>
@@ -324,66 +395,53 @@ export const AdminBanners: React.FC = () => {
       {/* Live Preview Section */}
       {currentPreviewBanner && (
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-[#0158FC]" />
-              <h2 className="text-sm font-bold text-slate-900">Live Student View Preview</h2>
-              <span className="text-[11px] text-slate-400">({currentPreviewBanner.title})</span>
+              <h2 className="text-sm font-bold text-slate-900">Student Dashboard Live Preview</h2>
+              <span className="text-[11px] text-slate-400 truncate max-w-xs">({currentPreviewBanner.title})</span>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 uppercase">
-              Theme: {currentPreviewBanner.themeGradient || 'blue'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10.5px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 flex items-center gap-1 border border-blue-100">
+                <Link2 className="w-3 h-3" />
+                <span>Target: <b>{currentPreviewBanner.primaryCtaLink || '/exams'}</b></span>
+              </span>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  currentPreviewBanner.isActive
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-slate-100 text-slate-500'
+                }`}
+              >
+                {currentPreviewBanner.isActive ? 'Active' : 'Hidden'}
+              </span>
+            </div>
           </div>
 
-          {/* Mini Render of Student Hero */}
-          <div className="rounded-2xl bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#cee9fe] border border-blue-200/80 p-5 sm:p-7 relative overflow-hidden shadow-2xs">
-            <div className="max-w-md relative z-10">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/90 border border-blue-200 text-blue-700 text-[10px] font-black tracking-wider uppercase mb-2.5">
-                <span>{currentPreviewBanner.badgeText || 'GOOD AFTERNOON, CANDIDATE 🎓'}</span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                {currentPreviewBanner.title}{' '}
-                {currentPreviewBanner.highlightWord && (
-                  <span className="text-[#0158FC] block">{currentPreviewBanner.highlightWord}</span>
-                )}
-              </h3>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                {currentPreviewBanner.subtitle}
-              </p>
-              <div className="flex items-center gap-2.5 mt-4">
-                <span className="px-4 py-2 rounded-xl bg-[#0158FC] text-white text-xs font-bold shadow-xs">
-                  {currentPreviewBanner.primaryCtaText || 'Start Now'} →
-                </span>
-                {currentPreviewBanner.secondaryCtaText && (
-                  <span className="px-4 py-2 rounded-xl bg-white border border-blue-200 text-slate-700 text-xs font-bold">
-                    {currentPreviewBanner.secondaryCtaText}
-                  </span>
-                )}
-              </div>
-              {currentPreviewBanner.featurePills && currentPreviewBanner.featurePills.length > 0 && (
-                <div className="flex items-center gap-1.5 mt-4 overflow-x-auto">
-                  {currentPreviewBanner.featurePills.map((pill, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-0.5 rounded-md bg-white/90 border border-slate-200/80 text-[10px] font-semibold text-slate-700 shrink-0"
-                    >
-                      {pill}
-                    </span>
-                  ))}
+          {/* Full Banner Render Preview */}
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/90 shadow-sm bg-slate-900 max-w-full">
+            {currentPreviewBanner.imageUrl ? (
+              <div className="relative group">
+                <img
+                  src={currentPreviewBanner.imageUrl}
+                  alt={currentPreviewBanner.title}
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/exam_hero_banner.png';
+                  }}
+                  className="w-full h-auto max-h-[260px] sm:max-h-[300px] object-cover sm:object-fill transition-transform duration-300 group-hover:scale-[1.005]"
+                />
+                <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors pointer-events-none" />
+                <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md">
+                  <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Click redirect: <b className="text-blue-300">{currentPreviewBanner.primaryCtaLink || '/exams'}</b></span>
                 </div>
-              )}
-            </div>
-
-            <div className="hidden sm:flex absolute right-2 sm:right-4 bottom-0 w-[240px] sm:w-[280px] h-[200px] items-end justify-end pointer-events-none pr-2 overflow-hidden">
-              <img
-                src={currentPreviewBanner.imageUrl || '/images/hero_student_illustration.png'}
-                alt="Banner illustration"
-                onError={(e) => {
-                  e.currentTarget.src = '/images/hero_student_illustration.png';
-                }}
-                className="w-full h-full object-contain object-bottom"
-              />
-            </div>
+              </div>
+            ) : (
+              <div className="h-44 flex flex-col items-center justify-center text-slate-400 p-6 text-center">
+                <ImageIcon className="w-8 h-8 mb-2 opacity-40" />
+                <p className="text-xs font-semibold">No banner graphic uploaded yet.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -406,10 +464,10 @@ export const AdminBanners: React.FC = () => {
             <p className="text-sm font-semibold">No banners created yet.</p>
             <button
               onClick={handleOpenAdd}
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0158FC] text-white text-xs font-bold"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0158FC] text-white text-xs font-bold cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Create First Banner</span>
+              <span>Upload First Banner</span>
             </button>
           </div>
         ) : (
@@ -423,15 +481,15 @@ export const AdminBanners: React.FC = () => {
                     isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
                   }`}
                 >
-                  {/* Left: Order, Thumbnail, Details */}
-                  <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                  {/* Left: Order, Banner Image Thumbnail, Details */}
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
                     {/* Order Controls */}
                     <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
                       <button
                         type="button"
                         onClick={() => handleMoveOrder(index, 'up')}
                         disabled={index === 0}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-1 rounded hover:bg-slate-200 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         title="Move Up"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
@@ -443,33 +501,32 @@ export const AdminBanners: React.FC = () => {
                         type="button"
                         onClick={() => handleMoveOrder(index, 'down')}
                         disabled={index === banners.length - 1}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-1 rounded hover:bg-slate-200 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         title="Move Down"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
-                    {/* Thumbnail */}
-                    <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative">
-                      <img
-                        src={banner.imageUrl || '/images/hero_student_illustration.png'}
-                        alt={banner.title}
-                        className="w-full h-full object-contain p-1"
-                      />
+                    {/* Wide Banner Image Thumbnail */}
+                    <div className="w-32 sm:w-44 h-16 sm:h-20 rounded-xl bg-slate-900 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative shadow-2xs">
+                      {banner.imageUrl ? (
+                        <img
+                          src={banner.imageUrl}
+                          alt={banner.title}
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/exam_hero_banner.png';
+                          }}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="w-6 h-6 text-slate-400" />
+                      )}
                     </div>
 
-                    {/* Metadata */}
+                    {/* Details */}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        {banner.badgeText && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                            {banner.badgeText}
-                          </span>
-                        )}
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 uppercase">
-                          Theme: {banner.themeGradient || 'blue'}
-                        </span>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             banner.isActive
@@ -477,26 +534,23 @@ export const AdminBanners: React.FC = () => {
                               : 'bg-slate-200 text-slate-600'
                           }`}
                         >
-                          {banner.isActive ? 'Active' : 'Inactive'}
+                          {banner.isActive ? 'Active' : 'Hidden'}
+                        </span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                          {banner.bannerType === 'text_overlay' ? 'Text Overlay' : 'Full Graphic Banner'}
                         </span>
                       </div>
 
                       <h3 className="text-sm font-bold text-slate-900 truncate">
-                        {banner.title}{' '}
-                        {banner.highlightWord && (
-                          <span className="text-[#0158FC]">{banner.highlightWord}</span>
-                        )}
+                        {banner.title}
                       </h3>
-                      <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{banner.subtitle}</p>
 
-                      <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-slate-400">
-                        <span>Primary: <b className="text-slate-600">{banner.primaryCtaText}</b> ({banner.primaryCtaLink})</span>
-                        {banner.secondaryCtaText && (
-                          <>
-                            <span>•</span>
-                            <span>Secondary: <b className="text-slate-600">{banner.secondaryCtaText}</b></span>
-                          </>
-                        )}
+                      <div className="flex items-center gap-1.5 mt-1 text-xs text-blue-600 font-medium truncate">
+                        <Link2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                        <span className="text-slate-500">Redirects to:</span>
+                        <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                          {banner.primaryCtaLink || '/exams'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -507,7 +561,7 @@ export const AdminBanners: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleToggleStatus(banner)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         banner.isActive
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                           : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
@@ -530,7 +584,7 @@ export const AdminBanners: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setPreviewBannerId(banner.id)}
-                      className={`p-2 rounded-xl text-slate-600 hover:bg-slate-100 border transition-all ${
+                      className={`p-2 rounded-xl text-slate-600 hover:bg-slate-100 border transition-all cursor-pointer ${
                         isSelected ? 'border-blue-400 text-[#0158FC] bg-blue-50' : 'border-slate-200'
                       }`}
                       title="Preview on top"
@@ -542,7 +596,7 @@ export const AdminBanners: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(banner)}
-                      className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all"
+                      className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer"
                       title="Edit banner"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -552,7 +606,7 @@ export const AdminBanners: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDelete(banner)}
-                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all"
+                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all cursor-pointer"
                       title="Delete banner"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -573,216 +627,234 @@ export const AdminBanners: React.FC = () => {
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  {editingBanner ? 'Edit Hero Banner' : 'Create New Hero Banner'}
+                  {editingBanner ? 'Edit Promotional Banner' : 'Upload New Hero Banner'}
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Customize text, colors, action buttons, and graphic artwork.
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Upload your full promotional banner image or provide a link with click redirect.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* Badge Text */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700">Top Badge Text</label>
-                  <span className="text-[11px] text-slate-400">Supports {'{GREETING}'} and {'{USER}'}</span>
+            <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[78vh] overflow-y-auto">
+              {/* 1. Full Banner Image (Upload or Link) */}
+              <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/90">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-blue-600" />
+                      <span>Full Promotional Banner Image *</span>
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Upload your ready-made banner artwork or paste an image URL.
+                    </p>
+                  </div>
+
+                  {/* Mode toggle (Upload file vs Link) */}
+                  <div className="flex items-center bg-white rounded-xl p-1 border border-slate-200 shadow-2xs self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setImageInputMode('upload')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        imageInputMode === 'upload'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Upload className="w-3 h-3 inline mr-1" />
+                      Upload File
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageInputMode('url')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        imageInputMode === 'url'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Link2 className="w-3 h-3 inline mr-1" />
+                      Image Link
+                    </button>
+                  </div>
                 </div>
+
+                {/* Hidden file input */}
                 <input
-                  type="text"
-                  value={badgeText}
-                  onChange={(e) => setBadgeText(e.target.value)}
-                  placeholder="e.g. {GREETING}, {USER} 🎓 or TARGET 2026 🎯"
-                  className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={handleFileSelect}
                 />
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setBadgeText('{GREETING}, {USER} 🎓')}
-                    className="text-[10px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600"
+
+                {/* Upload Mode Box */}
+                {imageInputMode === 'upload' ? (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                      isDragging
+                        ? 'border-blue-500 bg-blue-50/70'
+                        : 'border-slate-300 hover:border-blue-400 hover:bg-slate-100/60 bg-white'
+                    }`}
                   >
-                    Preset: Greeting
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBadgeText('TARGET 2026 🎯')}
-                    className="text-[10px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600"
-                  >
-                    Preset: Exam Target
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBadgeText('UNLIMITED ACCESS 👑')}
-                    className="text-[10px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600"
-                  >
-                    Preset: Pro Pass
-                  </button>
+                    {isUploading ? (
+                      <div className="flex flex-col items-center justify-center py-2">
+                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
+                        <p className="text-xs font-bold text-slate-800">Uploading banner image...</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Please wait a moment</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2 shadow-2xs">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-800">
+                          Click to upload banner or drag & drop image here
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          PNG, JPG, WebP, SVG (Max 5MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* URL Mode Input */
+                  <div>
+                    <div className="relative">
+                      <Link2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="https://example.com/banner.png or /images/exam_hero_banner.png"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Built-in Presets */}
+                <div className="pt-1">
+                  <span className="text-[11px] font-semibold text-slate-500">Or pick an existing template:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1.5">
+                    {SYSTEM_BANNER_PRESETS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setImageUrl(preset.url);
+                          if (!primaryCtaLink) setPrimaryCtaLink(preset.target);
+                        }}
+                        className={`p-1.5 rounded-xl border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                          imageUrl === preset.url
+                            ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20'
+                            : 'border-slate-200 hover:bg-white bg-white/70'
+                        }`}
+                      >
+                        <img
+                          src={preset.url}
+                          alt={preset.label}
+                          className="w-12 h-7 object-cover rounded-md border border-slate-200 shrink-0"
+                        />
+                        <span className="text-[10px] font-bold text-slate-700 line-clamp-1">{preset.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Selected Banner Image Preview */}
+                {imageUrl && (
+                  <div className="mt-3 p-3 bg-white rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Live Image Preview</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl('')}
+                        className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="relative rounded-lg overflow-hidden border border-slate-200 max-h-36 bg-slate-900 flex items-center justify-center">
+                      <img
+                        src={imageUrl}
+                        alt="Banner preview"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/exam_hero_banner.png';
+                        }}
+                        className="w-full h-auto max-h-36 object-contain"
+                      />
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 mt-2">
+                      💡 <b>Recommended Size:</b> 1200 × 360 px (approx. 3:1 ratio). Create your complete artwork with headline, discount, and illustrations directly inside the image.
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Title & Highlight Word */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Main Title *</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    placeholder="e.g. Small Steps Today,"
-                    className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Highlight Text (Colored)</label>
-                  <input
-                    type="text"
-                    value={highlightWord}
-                    onChange={(e) => setHighlightWord(e.target.value)}
-                    placeholder="e.g. Big Results Tomorrow."
-                    className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Subtitle */}
-              <div>
-                <label className="text-xs font-bold text-slate-700">Subtitle / Description</label>
-                <textarea
-                  rows={2}
-                  value={subtitle}
-                  onChange={(e) => setSubtitle(e.target.value)}
-                  placeholder="e.g. Join thousands of aspirants preparing smarter with PracticeKoro."
-                  className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Primary CTA Button */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Primary Button Label</label>
-                  <input
-                    type="text"
-                    value={primaryCtaText}
-                    onChange={(e) => setPrimaryCtaText(e.target.value)}
-                    placeholder="e.g. Start a Mock Test"
-                    className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Primary Button URL</label>
-                  <input
-                    type="text"
-                    value={primaryCtaLink}
-                    onChange={(e) => setPrimaryCtaLink(e.target.value)}
-                    placeholder="e.g. /exams or /mock-tests"
-                    className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Secondary CTA Button */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Secondary Button Label</label>
-                  <input
-                    type="text"
-                    value={secondaryCtaText}
-                    onChange={(e) => setSecondaryCtaText(e.target.value)}
-                    placeholder="e.g. Explore Exams"
-                    className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Secondary Button URL</label>
-                  <input
-                    type="text"
-                    value={secondaryCtaLink}
-                    onChange={(e) => setSecondaryCtaLink(e.target.value)}
-                    placeholder="e.g. /exams"
-                    className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Feature Pills */}
+              {/* 2. Banner Name / Title */}
               <div>
                 <label className="text-xs font-bold text-slate-700">
-                  Feature Pills (Comma-separated)
+                  Banner Name / Title *
                 </label>
                 <input
                   type="text"
-                  value={featurePillsRaw}
-                  onChange={(e) => setFeaturePillsRaw(e.target.value)}
-                  placeholder="Mock Tests, Topic Practice, PYQ, Detailed Solutions, Performance Analysis"
-                  className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  placeholder="e.g. WBPSC Food SI Special Mock Banner 2026"
+                  className="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 />
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  Identifies the banner in admin lists and serves as accessibility alt text for students.
+                </span>
               </div>
 
-              {/* Color Theme Selector */}
+              {/* 3. Target Destination Link */}
               <div>
-                <label className="text-xs font-bold text-slate-700">Color Gradient Theme</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
-                  {THEME_OPTIONS.map((theme) => (
-                    <button
-                      key={theme.id}
-                      type="button"
-                      onClick={() => setThemeGradient(theme.id)}
-                      className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center justify-between transition-all ${
-                        themeGradient === theme.id
-                          ? 'border-blue-600 bg-blue-50 text-blue-800 ring-2 ring-blue-500/20'
-                          : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                      }`}
-                    >
-                      <span className={theme.textClass}>{theme.label}</span>
-                      {themeGradient === theme.id && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Image URL / Presets */}
-              <div>
-                <label className="text-xs font-bold text-slate-700">Banner Illustration Image</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1.5">
-                  {PRESET_IMAGES.map((preset, idx) => (
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                  <Link2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Click Destination Link (URL) *</span>
+                </label>
+                <input
+                  type="text"
+                  value={primaryCtaLink}
+                  onChange={(e) => setPrimaryCtaLink(e.target.value)}
+                  required
+                  placeholder="e.g. /exams or /subscription or /mock-tests"
+                  className="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                />
+                {/* Quick Target Link Buttons */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  {QUICK_TARGET_LINKS.map((link, idx) => (
                     <button
                       key={idx}
                       type="button"
-                      onClick={() => setImageUrl(preset.url)}
-                      className={`p-2 rounded-xl border text-left flex items-center gap-2 transition-all ${
-                        imageUrl === preset.url
-                          ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500/20'
-                          : 'border-slate-200 hover:bg-slate-50'
-                      }`}
+                      onClick={() => setPrimaryCtaLink(link.url)}
+                      className="text-[10.5px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors cursor-pointer"
                     >
-                      <img src={preset.url} alt={preset.label} className="w-8 h-8 object-contain rounded" />
-                      <span className="text-[11px] font-semibold text-slate-800 line-clamp-2">{preset.label}</span>
+                      {link.label}
                     </button>
                   ))}
                 </div>
-                <div className="mt-2">
-                  <span className="text-[11px] text-slate-400">Or custom image URL:</span>
-                  <input
-                    type="text"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://... or /images/..."
-                    className="mt-1 w-full px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
               </div>
 
-              {/* Display Order & Active */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              {/* 4. Display Order & Active Toggle */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="text-xs font-bold text-slate-700">Display Order</label>
                   <input
@@ -790,8 +862,11 @@ export const AdminBanners: React.FC = () => {
                     min={1}
                     value={displayOrder}
                     onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 1)}
-                    className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
+                  <span className="text-[10.5px] text-slate-400 mt-1 block">
+                    Lower number appears first (#1, #2, #3...)
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 pt-6">
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -809,20 +884,155 @@ export const AdminBanners: React.FC = () => {
                 </div>
               </div>
 
-              {/* Modal Buttons */}
+              {/* 5. Optional Advanced Text Overlay Accordion */}
+              <div className="border border-slate-200 rounded-2xl overflow-hidden mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedOverlay(!showAdvancedOverlay)}
+                  className="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Optional: Text Overlay & Custom HTML Buttons</span>
+                  </div>
+                  {showAdvancedOverlay ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                </button>
+
+                {showAdvancedOverlay && (
+                  <div className="p-4 space-y-3 bg-white border-t border-slate-200">
+                    {/* Display Mode Selection */}
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                      <div>
+                        <span className="text-xs font-bold text-slate-700">Display Mode</span>
+                        <p className="text-[11px] text-slate-400">Choose how the banner is rendered</p>
+                      </div>
+                      <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => setBannerType('full_image')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            bannerType === 'full_image'
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'text-slate-600'
+                          }`}
+                        >
+                          Full Graphic
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBannerType('text_overlay')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            bannerType === 'text_overlay'
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'text-slate-600'
+                          }`}
+                        >
+                          Text Overlay
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Top Badge */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-700">Badge Text</label>
+                      <input
+                        type="text"
+                        value={badgeText}
+                        onChange={(e) => setBadgeText(e.target.value)}
+                        placeholder="e.g. TARGET 2026 🎯 or {GREETING}, {USER} 🎓"
+                        className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* Highlight text & Subtitle */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700">Highlight Text (Colored)</label>
+                        <input
+                          type="text"
+                          value={highlightWord}
+                          onChange={(e) => setHighlightWord(e.target.value)}
+                          placeholder="e.g. All-India Standard Mocks"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700">Subtitle</label>
+                        <input
+                          type="text"
+                          value={subtitle}
+                          onChange={(e) => setSubtitle(e.target.value)}
+                          placeholder="Short description..."
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Primary button label */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700">Primary Button Text</label>
+                        <input
+                          type="text"
+                          value={primaryCtaText}
+                          onChange={(e) => setPrimaryCtaText(e.target.value)}
+                          placeholder="e.g. Start Now"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700">Feature Pills (Comma-separated)</label>
+                        <input
+                          type="text"
+                          value={featurePillsRaw}
+                          onChange={(e) => setFeaturePillsRaw(e.target.value)}
+                          placeholder="Mock Tests, PYQ, Full Solutions"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Theme selector */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-700">Color Gradient Theme</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
+                        {THEME_OPTIONS.map((theme) => (
+                          <button
+                            key={theme.id}
+                            type="button"
+                            onClick={() => setThemeGradient(theme.id)}
+                            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                              themeGradient === theme.id
+                                ? 'border-blue-600 bg-blue-50 text-blue-800 ring-2 ring-blue-500/20'
+                                : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            <span className={theme.textClass}>{theme.label}</span>
+                            {themeGradient === theme.id && <CheckCircle className="w-3.5 h-3.5 text-blue-600" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Action Buttons */}
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-all"
+                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0158FC] hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all active:scale-[0.98]"
+                  disabled={isUploading}
+                  className="px-5 py-2 rounded-xl bg-[#0158FC] hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
-                  {editingBanner ? 'Save Changes' : 'Create Banner'}
+                  {isUploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{editingBanner ? 'Save Changes' : 'Upload Banner'}</span>
                 </button>
               </div>
             </form>

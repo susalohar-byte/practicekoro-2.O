@@ -79,34 +79,26 @@ export const Features: React.FC = () => {
                 </span>
               </div>
 
-              {/* Realistic Flagship Smartphone Mockup */}
-              <div className="relative z-10 w-[290px] sm:w-[315px] md:w-[325px] bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 p-[10px] sm:p-[12px] rounded-[3.2rem] sm:rounded-[3.6rem] shadow-[0_25px_70px_-15px_rgba(15,23,42,0.45),0_0_0_1px_rgba(255,255,255,0.12)_inset,0_0_30px_rgba(59,130,246,0.1)] ring-1 ring-slate-800 select-none">
-                {/* Hardware Side Buttons */}
-                <div className="absolute -left-[3.5px] top-24 w-[3.5px] h-6 bg-slate-700 rounded-l-xs shadow-inner" />
-                <div className="absolute -left-[3.5px] top-36 w-[3.5px] h-11 bg-slate-700 rounded-l-xs shadow-inner" />
-                <div className="absolute -left-[3.5px] top-50 w-[3.5px] h-11 bg-slate-700 rounded-l-xs shadow-inner" />
-                <div className="absolute -right-[3.5px] top-32 w-[3.5px] h-14 bg-slate-700 rounded-r-xs shadow-inner" />
-
+              {/* Sleek, Simplified Smartphone Mockup */}
+              <div className="relative z-10 w-[260px] sm:w-[275px] md:w-[285px] bg-slate-900 p-[8px] sm:p-[9px] rounded-[2.8rem] sm:rounded-[3.2rem] shadow-[0_22px_60px_-15px_rgba(15,23,42,0.4),0_0_0_1px_rgba(255,255,255,0.12)_inset] ring-1 ring-slate-800 select-none">
                 {/* Screen Glass Surface */}
-                <div className="relative w-full bg-slate-50 dark:bg-slate-950 rounded-[2.4rem] sm:rounded-[2.8rem] overflow-hidden p-3.5 space-y-3 border border-slate-200/80 dark:border-slate-800 shadow-inner">
+                <div className="relative w-full bg-slate-50 dark:bg-slate-950 rounded-[2.2rem] sm:rounded-[2.6rem] overflow-hidden p-3 space-y-2.5 border border-slate-200/80 dark:border-slate-800 shadow-inner">
                   {/* Subtle Screen Gloss Glare */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-30" />
 
-                  {/* iOS Status Bar & Centered Dynamic Island */}
+                  {/* iOS Status Bar & Minimal Camera Notch */}
                   <div className="relative z-20 pt-1 px-2 flex items-center justify-between text-slate-800 dark:text-slate-200 shrink-0">
-                    <span className="text-[11px] font-semibold tracking-tight">9:41</span>
+                    <span className="text-[10px] font-semibold tracking-tight">9:41</span>
 
-                    {/* Dynamic Island (Centered Absolutely) */}
-                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-24 sm:w-26 h-5 bg-black rounded-full flex items-center justify-end pr-2.5 shadow-sm">
-                      <div className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
-                        <div className="w-1 h-1 rounded-full bg-blue-950" />
-                      </div>
+                    {/* Minimal Notch Pill */}
+                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-18 h-4 bg-black rounded-full flex items-center justify-center shadow-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-800 ml-auto mr-2" />
                     </div>
 
                     <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                      <Wifi className="w-3 h-3" />
-                      <div className="w-5 h-2.5 border border-slate-700 dark:border-slate-300 rounded-[3px] p-[1px] flex items-center">
-                        <div className="w-3 h-1.5 bg-slate-800 dark:bg-slate-200 rounded-[1.5px]" />
+                      <Wifi className="w-2.5 h-2.5" />
+                      <div className="w-4 h-2 border border-slate-700 dark:border-slate-300 rounded-[2.5px] p-[0.5px] flex items-center">
+                        <div className="w-2.5 h-1 bg-slate-800 dark:bg-slate-200 rounded-[1px]" />
                       </div>
                     </div>
                   </div>

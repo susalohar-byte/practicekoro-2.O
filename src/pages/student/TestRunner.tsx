@@ -282,7 +282,8 @@ export const TestRunner: React.FC = () => {
   const answeredCount = Object.values(answers).filter((a) => a.selectedOption !== null).length;
   const markedCount = Object.values(answers).filter((a) => a.isMarkedForReview).length;
   const unansweredCount = questions.length - answeredCount;
-  const isTimeCritical = timeRemaining > 0 && timeRemaining <= 120; // less than 2 minutes
+  const isTimeWarning = timeRemaining > 0 && timeRemaining <= 600 && timeRemaining > 300; // < 10 mins (Amber)
+  const isTimeCritical = timeRemaining > 0 && timeRemaining <= 300; // < 5 mins (Red Pulse)
 
   if (loading) {
     return (
@@ -339,17 +340,17 @@ export const TestRunner: React.FC = () => {
               setLanguage(next);
               localStorage.setItem('practicekoro_language', next);
             }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors active:scale-95"
             title="Toggle Question Language"
           >
-            <Languages className="w-3.5 h-3.5 text-blue-600" />
+            <Languages className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             <span>{language === 'bn' ? 'বাংলা' : 'ENG'}</span>
           </button>
 
           {/* Palette Drawer Toggle */}
           <button
             onClick={() => setPaletteOpen(!paletteOpen)}
-            className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors"
+            className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors active:scale-95"
             title="Question Palette"
           >
             <Grid className="w-4 h-4" />
@@ -358,7 +359,7 @@ export const TestRunner: React.FC = () => {
           {/* Submit CTA */}
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors"
+            className="px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-transform active:scale-95 cursor-pointer"
           >
             Submit
           </button>
@@ -371,11 +372,21 @@ export const TestRunner: React.FC = () => {
         <div
           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all ${
             isTimeCritical
-              ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 animate-pulse'
+              ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse'
+              : isTimeWarning
+              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
               : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs'
           }`}
         >
-          <Clock className={`w-3.5 h-3.5 ${isTimeCritical ? 'text-rose-600' : 'text-blue-600'}`} />
+          <Clock
+            className={`w-3.5 h-3.5 ${
+              isTimeCritical
+                ? 'text-rose-600 dark:text-rose-400'
+                : isTimeWarning
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-blue-600 dark:text-blue-400'
+            }`}
+          />
           <span>{formatSeconds(timeRemaining)}</span>
         </div>
 
@@ -604,9 +615,9 @@ export const TestRunner: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100">
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
             <Button
-              className="w-full font-bold text-xs bg-emerald-600 hover:bg-emerald-700"
+              className="w-full font-bold text-xs bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98]"
               onClick={() => setShowSubmitModal(true)}
               leftIcon={<Send className="w-3.5 h-3.5" />}
             >
@@ -619,36 +630,36 @@ export const TestRunner: React.FC = () => {
       {/* 3. SUBMISSION CONFIRMATION MODAL */}
       {showSubmitModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200/80 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
             <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-full bg-pk-blue-light text-pk-primary flex items-center justify-center mx-auto mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-2 border border-blue-100 dark:border-blue-900/60">
                 <Send className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-black text-pk-navy">Submit Mock Test?</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Submit Mock Test?</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Are you sure you want to complete and submit your exam attempt?
               </p>
             </div>
 
             {/* Metrics Breakdown */}
-            <div className="grid grid-cols-3 gap-2 my-5 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+            <div className="grid grid-cols-3 gap-2 my-5 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-center">
               <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400">Answered</p>
-                <p className="text-base font-black text-emerald-600">{answeredCount}</p>
+                <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Answered</p>
+                <p className="text-base font-black text-emerald-600 dark:text-emerald-400">{answeredCount}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400">Unanswered</p>
-                <p className="text-base font-black text-amber-600">{unansweredCount}</p>
+                <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Unanswered</p>
+                <p className="text-base font-black text-amber-600 dark:text-amber-400">{unansweredCount}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400">Marked</p>
-                <p className="text-base font-black text-purple-600">{markedCount}</p>
+                <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Marked</p>
+                <p className="text-base font-black text-purple-600 dark:text-purple-400">{markedCount}</p>
               </div>
             </div>
 
             {unansweredCount > 0 && (
-              <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-lg border border-amber-200 mb-5 flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs rounded-xl border border-amber-200 dark:border-amber-800/80 mb-5 flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <span>
                   You still have <strong>{unansweredCount} unanswered questions</strong>.
                 </span>
@@ -658,7 +669,7 @@ export const TestRunner: React.FC = () => {
             <div className="space-y-2">
               <Button
                 variant="primary"
-                className="w-full font-bold bg-emerald-600 hover:bg-emerald-700"
+                className="w-full font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98]"
                 isLoading={submitting}
                 onClick={handleSubmitTest}
               >
@@ -667,7 +678,7 @@ export const TestRunner: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-slate-500"
+                className="w-full text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 disabled={submitting}
                 onClick={() => setShowSubmitModal(false)}
               >

@@ -13,14 +13,14 @@ const STEPS = [
     graphic: (
       <div className="grid grid-cols-2 gap-2.5">
         {[
-          { src: '/images/exams/wbp_police.png', alt: 'WBP' },
-          { src: '/images/exams/icon_kolkata_police.png', alt: 'KP' },
-          { src: '/images/exams/icon_railway_exact.png', alt: 'Railway' },
-          { src: '/images/exams/icon_ssc_clean.png', alt: 'SSC' },
+          { src: '/images/exams/emblem_wbp.svg', alt: 'WBP' },
+          { src: '/images/exams/emblem_wbpsc.svg', alt: 'WBPSC' },
+          { src: '/images/exams/emblem_railway.svg', alt: 'Railway' },
+          { src: '/images/exams/emblem_tet.svg', alt: 'TET' },
         ].map((img) => (
           <span
             key={img.alt}
-            className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-xs flex items-center justify-center p-1.5"
+            className="w-12 h-12 rounded-xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-1.5"
           >
             <img src={img.src} alt={img.alt} loading="lazy" className="w-8 h-8 object-contain" />
           </span>
@@ -33,7 +33,7 @@ const STEPS = [
     icon: PenLine,
     title: 'Practice & Test',
     bengali: 'Timed Practice',
-    description: 'Take full mock tests, PYQs and topic-wise tests in English.',
+    description: 'Take full mock tests, PYQs and topic quizzes in Bengali & English.',
     graphic: (
       <div className="w-full space-y-2 text-left">
         <div className="h-2 bg-slate-200 rounded-full w-full" />

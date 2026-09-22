@@ -98,29 +98,38 @@ export const PopularExams: React.FC = () => {
                   />
                   <div className="flex items-center gap-3.5 min-w-0">
                     {exam.isCustomIcon ? (
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
-                        <Layers className="w-5 h-5" />
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
+                        <Layers className="w-6 h-6" />
                       </div>
                     ) : (
-                      <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 p-1 group-hover:border-blue-200 group-hover:bg-blue-50/50 transition-colors">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-blue-300 group-hover:bg-blue-50/50 group-hover:scale-105 transition-all">
                         <img
                           src={exam.icon}
-                          alt=""
-                          aria-hidden="true"
-                          className="w-8 h-8 object-contain"
+                          alt={exam.title}
+                          loading="lazy"
+                          className="w-9 h-9 object-contain"
                         />
                       </div>
                     )}
                     <div className="min-w-0">
-                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
-                        {exam.title}
-                      </h3>
-                      <p className="text-[11px] text-slate-500 truncate mt-0.5">{exam.subtitle}</p>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                          {exam.title}
+                        </h3>
+                        {exam.badge && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100">
+                            {exam.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                        {exam.testsCount ? `${exam.testsCount} • ` : ''}{exam.subtitle}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-px transition-transform" />
+                  <div className="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center shrink-0 border border-slate-200/70 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all shadow-2xs">
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </Reveal>

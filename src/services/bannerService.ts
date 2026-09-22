@@ -5,39 +5,16 @@ const STORAGE_KEY = 'pk_hero_banners';
 
 export const DEFAULT_HERO_BANNERS: HeroBanner[] = [
   {
-    id: 'banner-default-student',
-    badgeText: '{GREETING}, {USER} 🎓',
-    title: 'Small Steps Today,',
-    highlightWord: 'Big Results Tomorrow.',
-    subtitle: 'Join thousands of aspirants preparing smarter with PracticeKoro.',
-    primaryCtaText: 'Start a Mock Test',
-    primaryCtaLink: '/exams',
-    secondaryCtaText: 'Explore Exams',
-    secondaryCtaLink: '/exams',
-    featurePills: [
-      'Mock Tests',
-      'Topic Practice',
-      'PYQ',
-      'Detailed Solutions',
-      'Performance Analysis',
-    ],
-    imageUrl: '/images/hero_student_illustration.png',
-    themeGradient: 'blue',
-    isActive: true,
-    displayOrder: 1,
-    createdAt: '2026-01-01T00:00:00.000Z',
-  },
-  {
     id: 'banner-wb-exam-series',
     badgeText: 'TARGET 2026 🎯',
-    title: 'Ace WBPSC & WBP Exams with',
-    highlightWord: 'All-India Standard Mocks.',
+    title: 'Ace WBPSC & WBP Exams with All-India Standard Mocks',
+    highlightWord: 'All-India Standard Mocks',
     subtitle:
       'Real exam simulation, detailed bilingual solutions & in-depth AI performance rank analysis.',
     primaryCtaText: 'Attempt Free Mock',
-    primaryCtaLink: '/mock-tests',
+    primaryCtaLink: '/exams',
     secondaryCtaText: 'View Test Series',
-    secondaryCtaLink: '/test-series',
+    secondaryCtaLink: '/exams',
     featurePills: [
       'Real Exam Interface',
       'Instant Rank',
@@ -45,17 +22,18 @@ export const DEFAULT_HERO_BANNERS: HeroBanner[] = [
       'Negative Marking',
       'Full Solutions',
     ],
-    imageUrl: '/images/hero_student_illustration.png',
-    themeGradient: 'indigo',
+    imageUrl: '/images/exam_hero_banner.png',
+    bannerType: 'full_image',
+    themeGradient: 'blue',
     isActive: true,
-    displayOrder: 2,
-    createdAt: '2026-01-02T00:00:00.000Z',
+    displayOrder: 1,
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'banner-pro-pass-special',
     badgeText: 'UNLIMITED ACCESS 👑',
-    title: 'Upgrade to Pro Pass & Unlock',
-    highlightWord: '1,000+ Mock Tests & PYQs.',
+    title: 'Upgrade to Pro Pass & Unlock 1,000+ Mock Tests & PYQs',
+    highlightWord: '1,000+ Mock Tests & PYQs',
     subtitle:
       'Get complete 1-year access to all West Bengal & Central government exam test series with detailed solutions.',
     primaryCtaText: 'Get Pro Pass Now',
@@ -69,8 +47,33 @@ export const DEFAULT_HERO_BANNERS: HeroBanner[] = [
       'Detailed Analytics',
       'Ad-Free Experience',
     ],
-    imageUrl: '/images/hero_student_illustration.png',
+    imageUrl: '/images/student_hero_banner.jpg',
+    bannerType: 'full_image',
     themeGradient: 'amber',
+    isActive: true,
+    displayOrder: 2,
+    createdAt: '2026-01-02T00:00:00.000Z',
+  },
+  {
+    id: 'banner-daily-10',
+    badgeText: 'DAILY QUIZ ⚡',
+    title: 'Daily 10 Challenge - Solve 10 Rapid MCQs Daily',
+    highlightWord: 'Daily 10 Challenge',
+    subtitle:
+      'Build daily consistency with fast topic-wise practice questions & explanations.',
+    primaryCtaText: 'Start Daily 10',
+    primaryCtaLink: '/practice',
+    secondaryCtaText: 'Practice Topics',
+    secondaryCtaLink: '/practice',
+    featurePills: [
+      'Daily Habit',
+      'Speed & Accuracy',
+      'Subject Revision',
+      'Streak Badges',
+    ],
+    imageUrl: '/images/daily_10_banner_exact.png',
+    bannerType: 'full_image',
+    themeGradient: 'indigo',
     isActive: true,
     displayOrder: 3,
     createdAt: '2026-01-03T00:00:00.000Z',
@@ -106,6 +109,58 @@ function saveStoredBanners(banners: HeroBanner[]): void {
 
 export const bannerService = {
   /**
+   * Upload a full banner image file (PNG/JPG/WebP/SVG)
+   * Tries Supabase Storage bucket 'banners', falls back to 'question-images',
+   * and if neither is available, safely falls back to a clean Base64 Data URL.
+   */
+  async uploadBannerImage(file: File): Promise<string> {
+    if (isSupabaseConfigured) {
+      try {
+        const ext = file.name.split('.').pop() || 'png';
+        const cleanExt = ext.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const fileName = `banner-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${cleanExt}`;
+        const filePath = `banners/${fileName}`;
+
+        // Attempt 1: 'banners' bucket
+        const { data: bData, error: bError } = await supabaseRuntime.storage
+          .from('banners')
+          .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+        if (!bError && bData?.path) {
+          const { data: pUrl } = supabaseRuntime.storage.from('banners').getPublicUrl(bData.path);
+          if (pUrl?.publicUrl) return pUrl.publicUrl;
+        }
+
+        // Attempt 2: 'question-images' bucket (already active in production)
+        const { data: qData, error: qError } = await supabaseRuntime.storage
+          .from('question-images')
+          .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+        if (!qError && qData?.path) {
+          const { data: qUrl } = supabaseRuntime.storage.from('question-images').getPublicUrl(qData.path);
+          if (qUrl?.publicUrl) return qUrl.publicUrl;
+        }
+      } catch (err) {
+        console.warn('Storage upload error, falling back to base64:', err);
+      }
+    }
+
+    // Attempt 3: Safe Base64 Data URL
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert image to data URL.'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read image file.'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
    * Fetch all banners for Admin panel management
    */
   async getBanners(): Promise<HeroBanner[]> {
@@ -132,7 +187,8 @@ export const bannerService = {
               : typeof row.feature_pills === 'string'
               ? JSON.parse(row.feature_pills)
               : [],
-            imageUrl: row.image_url || '/images/hero_student_illustration.png',
+            imageUrl: row.image_url || '/images/exam_hero_banner.png',
+            bannerType: row.banner_type || 'full_image',
             themeGradient: (row.theme_gradient as BannerThemeColor) || 'blue',
             isActive: Boolean(row.is_active),
             displayOrder: Number(row.display_order) || 1,
@@ -190,6 +246,7 @@ export const bannerService = {
             secondary_cta_link: newBanner.secondaryCtaLink,
             feature_pills: newBanner.featurePills,
             image_url: newBanner.imageUrl,
+            banner_type: newBanner.bannerType || 'full_image',
             theme_gradient: newBanner.themeGradient,
             is_active: newBanner.isActive,
             display_order: newBanner.displayOrder,
@@ -229,6 +286,7 @@ export const bannerService = {
           payload.secondary_cta_link = updates.secondaryCtaLink;
         if (updates.featurePills !== undefined) payload.feature_pills = updates.featurePills;
         if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
+        if (updates.bannerType !== undefined) payload.banner_type = updates.bannerType;
         if (updates.themeGradient !== undefined) payload.theme_gradient = updates.themeGradient;
         if (updates.isActive !== undefined) payload.is_active = updates.isActive;
         if (updates.displayOrder !== undefined) payload.display_order = updates.displayOrder;

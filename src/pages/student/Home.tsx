@@ -403,6 +403,110 @@ export const Home: React.FC = () => {
           .replace('{GREETING}', getGreeting())
           .replace('{USER}', displayName);
 
+        const isTextOverlay = banner.bannerType === 'text_overlay';
+
+        if (!isTextOverlay && banner.imageUrl) {
+          const isExternalLink = banner.primaryCtaLink?.startsWith('http');
+          const destination = banner.primaryCtaLink || '/exams';
+
+          return (
+            <div
+              className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 transition-all duration-300 group bg-slate-100 dark:bg-slate-900"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              {/* App Tour Trigger */}
+              <button
+                type="button"
+                onClick={() => setIsOnboardingOpen(true)}
+                className="absolute top-3 right-3 z-20 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/60 backdrop-blur-md text-white border border-white/20 text-[10.5px] font-bold shadow-md hover:bg-slate-900/80 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                title="Watch App Tour"
+              >
+                <Sparkles className="w-3 h-3 text-amber-400 animate-spin-slow" />
+                <span>App Tour</span>
+              </button>
+
+              {/* Clickable Full Banner Image */}
+              {isExternalLink ? (
+                <a
+                  href={destination}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full overflow-hidden cursor-pointer"
+                  aria-label={banner.title}
+                >
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    className="w-full h-auto max-h-[260px] sm:max-h-[310px] lg:max-h-[340px] object-cover sm:object-fill rounded-2xl sm:rounded-3xl transition-transform duration-500 group-hover:scale-[1.01]"
+                  />
+                </a>
+              ) : (
+                <Link
+                  to={destination}
+                  className="block w-full overflow-hidden cursor-pointer"
+                  aria-label={banner.title}
+                >
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    className="w-full h-auto max-h-[260px] sm:max-h-[310px] lg:max-h-[340px] object-cover sm:object-fill rounded-2xl sm:rounded-3xl transition-transform duration-500 group-hover:scale-[1.01]"
+                  />
+                </Link>
+              )}
+
+              {/* Carousel Controls */}
+              {activeBanners.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      prevSlide();
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 hover:bg-white text-slate-700 dark:text-slate-200 shadow-md border border-slate-200/80 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
+                    aria-label="Previous banner"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      nextSlide();
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 hover:bg-white text-slate-700 dark:text-slate-200 shadow-md border border-slate-200/80 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
+                    aria-label="Next banner"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+
+                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/40 backdrop-blur-md">
+                    {activeBanners.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCurrentSlide(i);
+                        }}
+                        className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                          i === currentSlide ? 'w-6 bg-white shadow-xs' : 'w-2 bg-white/60 hover:bg-white'
+                        }`}
+                        aria-label={`Slide ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        }
+
         return (
           <div
             className={`relative rounded-3xl ${theme.cardBg} border p-6 sm:p-8 lg:p-9 pb-8 sm:pb-9 overflow-hidden shadow-xs transition-colors duration-500 group min-h-[305px] md:h-[325px] flex flex-col justify-between`}
@@ -540,46 +644,46 @@ export const Home: React.FC = () => {
       {/* 2. STAT CARDS (Row of 4) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Tests Taken */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-4 transition-colors">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-900/60">
             <FileCheck className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">12</div>
-            <div className="text-xs font-semibold text-slate-500">Tests Taken</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-white">12</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tests Taken</div>
           </div>
         </div>
 
         {/* Questions Practiced */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-4 transition-colors">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/60">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">342</div>
-            <div className="text-xs font-semibold text-slate-500">Questions Practiced</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-white">342</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Questions Practiced</div>
           </div>
         </div>
 
         {/* Accuracy */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-4 transition-colors">
+          <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-100 dark:border-rose-900/60">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">78%</div>
-            <div className="text-xs font-semibold text-slate-500">Accuracy</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-white">78%</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Accuracy</div>
           </div>
         </div>
 
         {/* Day Streak */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-4 transition-colors">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900/60">
             <Flame className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">7</div>
-            <div className="text-xs font-semibold text-slate-500">Day Streak</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-white">7</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Day Streak</div>
           </div>
         </div>
       </div>
@@ -609,7 +713,7 @@ export const Home: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Link
                   to="/exams"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0158FC] hover:bg-blue-600 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/30"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0158FC] hover:bg-blue-600 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/30 active:scale-95"
                 >
                   <span>Resume Test</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -617,7 +721,7 @@ export const Home: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/exams')}
-                  className="px-4 py-2.5 rounded-xl border border-white/20 hover:bg-white/10 text-white text-xs font-semibold transition-all"
+                  className="px-4 py-2.5 rounded-xl border border-white/20 hover:bg-white/10 text-white text-xs font-semibold transition-all active:scale-95"
                 >
                   View Details
                 </button>
@@ -644,10 +748,10 @@ export const Home: React.FC = () => {
       {/* 4. POPULAR EXAMS */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-slate-900">Popular Exams</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Popular Exams</h3>
           <Link
             to="/exams"
-            className="text-xs font-bold text-[#0158FC] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
           >
             See All <ChevronRight className="w-4 h-4" />
           </Link>
@@ -660,10 +764,10 @@ export const Home: React.FC = () => {
                 key={exam.id}
                 to={`/exams/${exam.id}`}
                 className={cn(
-                  'group flex flex-col items-center justify-center p-4 rounded-2xl bg-white border transition-all text-center',
+                  'group flex flex-col items-center justify-center p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all text-center active:scale-95',
                   exam.active
                     ? 'border-[#0158FC] ring-1 ring-[#0158FC]/20 shadow-xs'
-                    : 'border-slate-200/80 hover:border-blue-300 hover:shadow-md'
+                    : 'border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-700 hover:shadow-md'
                 )}
               >
                 {/* Official seal emblem */}
@@ -682,12 +786,12 @@ export const Home: React.FC = () => {
                 <h4
                   className={cn(
                     'text-xs font-bold leading-tight mb-1 transition-colors',
-                    exam.active ? 'text-[#0158FC]' : 'text-slate-900 group-hover:text-[#0158FC]'
+                    exam.active ? 'text-[#0158FC] dark:text-blue-400' : 'text-slate-900 dark:text-white group-hover:text-[#0158FC] dark:group-hover:text-blue-400'
                   )}
                 >
                   {exam.title}
                 </h4>
-                <p className="text-[11px] font-semibold text-slate-500">
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                   {exam.testsCount}
                 </p>
               </Link>
@@ -699,10 +803,10 @@ export const Home: React.FC = () => {
       {/* 5. PRACTICE BY SUBJECT (8 Subject Cards) */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-slate-900">Practice by Subject</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Practice by Subject</h3>
           <Link
             to="/practice"
-            className="text-xs font-bold text-[#0158FC] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
           >
             See All <ChevronRight className="w-4 h-4" />
           </Link>
@@ -713,7 +817,7 @@ export const Home: React.FC = () => {
             <Link
               key={subj.id}
               to={`/practice?subject=${subj.id}`}
-              className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-300 hover:shadow-xs transition-all group"
+              className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-700 hover:shadow-xs transition-all group active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -722,15 +826,15 @@ export const Home: React.FC = () => {
                   {subj.symbol}
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#0158FC] transition-colors">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#0158FC] dark:group-hover:text-blue-400 transition-colors">
                     {subj.title}
                   </h4>
-                  <p className="text-[11px] font-medium text-slate-500">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     {subj.questions}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0158FC] group-hover:translate-x-0.5 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-[#0158FC] dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
             </Link>
           ))}
         </div>
@@ -739,10 +843,10 @@ export const Home: React.FC = () => {
       {/* 6. RECOMMENDED FOR YOU */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-slate-900">Recommended for You</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recommended for You</h3>
           <Link
             to="/exams"
-            className="text-xs font-bold text-[#0158FC] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
           >
             See All <ChevronRight className="w-4 h-4" />
           </Link>
@@ -752,40 +856,40 @@ export const Home: React.FC = () => {
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
           <button
             onClick={() => setRecommendedTab('mock')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95 ${
               recommendedTab === 'mock'
                 ? 'bg-[#0158FC] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
             }`}
           >
             Mock Tests
           </button>
           <button
             onClick={() => setRecommendedTab('topic')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95 ${
               recommendedTab === 'topic'
                 ? 'bg-[#0158FC] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
             }`}
           >
             Topic Practice
           </button>
           <button
             onClick={() => setRecommendedTab('pyq')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95 ${
               recommendedTab === 'pyq'
                 ? 'bg-[#0158FC] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
             }`}
           >
             PYQ
           </button>
           <button
             onClick={() => setRecommendedTab('progress')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95 ${
               recommendedTab === 'progress'
                 ? 'bg-[#0158FC] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
             }`}
           >
             Based on Your Progress
@@ -797,7 +901,7 @@ export const Home: React.FC = () => {
           {recommendedTests.map((test) => (
             <div
               key={test.id}
-              className="rounded-2xl bg-white border border-slate-200/80 p-5 flex flex-col justify-between hover:border-blue-300 hover:shadow-xs transition-all"
+              className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 flex flex-col justify-between hover:border-blue-300 dark:hover:border-slate-700 hover:shadow-xs transition-all"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -809,31 +913,31 @@ export const Home: React.FC = () => {
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                       test.badgeType === 'orange'
-                        ? 'bg-amber-100 text-amber-800'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
                         : test.badgeType === 'blue'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-rose-100 text-rose-800'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
                     }`}
                   >
                     {test.badge}
                   </span>
                 </div>
 
-                <h4 className="text-sm font-bold text-slate-900 mb-3 leading-snug">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 leading-snug">
                   {test.title}
                 </h4>
 
-                <div className="space-y-1.5 text-xs text-slate-500 mb-5">
+                <div className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 mb-5">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5 text-slate-400" />
+                    <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                     <span>{test.questions}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                     <span>{test.duration}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Globe2 className="w-3.5 h-3.5 text-slate-400" />
+                    <Globe2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                     <span>{test.lang}</span>
                   </div>
                 </div>
@@ -841,7 +945,7 @@ export const Home: React.FC = () => {
 
               <button
                 onClick={() => navigate('/exams')}
-                className="w-full py-2.5 rounded-xl bg-[#0158FC] hover:bg-blue-600 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 rounded-xl bg-[#0158FC] hover:bg-blue-600 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
               >
                 <span>Start Test</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -852,12 +956,12 @@ export const Home: React.FC = () => {
       </div>
 
       {/* 7. YOUR PROGRESS */}
-      <div className="rounded-3xl bg-white border border-slate-200/80 p-6 sm:p-7 shadow-2xs">
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-2xs transition-colors">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-slate-900">Your Progress</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Your Progress</h3>
           <Link
             to="/results"
-            className="text-xs font-bold text-[#0158FC] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
           >
             View Detailed Analytics <ChevronRight className="w-4 h-4" />
           </Link>
@@ -873,7 +977,8 @@ export const Home: React.FC = () => {
                   cx="50"
                   cy="50"
                   r="40"
-                  stroke="#e2e8f0"
+                  stroke="currentColor"
+                  className="text-slate-200 dark:text-slate-800"
                   strokeWidth="10"
                   fill="transparent"
                 />
@@ -890,33 +995,33 @@ export const Home: React.FC = () => {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-2xl font-black text-slate-900">78%</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Overall Accuracy</span>
+                <span className="text-2xl font-black text-slate-900 dark:text-white">78%</span>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Overall Accuracy</span>
               </div>
             </div>
 
             {/* Legend */}
             <div className="space-y-2 text-xs font-semibold">
               <div className="flex items-center justify-between gap-6">
-                <span className="flex items-center gap-2 text-slate-600">
+                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   Correct
                 </span>
-                <span className="font-bold text-slate-900">342</span>
+                <span className="font-bold text-slate-900 dark:text-white">342</span>
               </div>
               <div className="flex items-center justify-between gap-6">
-                <span className="flex items-center gap-2 text-slate-600">
+                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                   Incorrect
                 </span>
-                <span className="font-bold text-slate-900">78</span>
+                <span className="font-bold text-slate-900 dark:text-white">78</span>
               </div>
               <div className="flex items-center justify-between gap-6">
-                <span className="flex items-center gap-2 text-slate-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
                   Skipped
                 </span>
-                <span className="font-bold text-slate-900">20</span>
+                <span className="font-bold text-slate-900 dark:text-white">20</span>
               </div>
             </div>
           </div>
@@ -924,10 +1029,10 @@ export const Home: React.FC = () => {
           {/* Subject Wise Performance */}
           <div className="lg:col-span-7">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Subject Wise Performance
               </h4>
-              <Link to="/results" className="text-xs font-bold text-[#0158FC] hover:underline">
+              <Link to="/results" className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline">
                 View All &gt;
               </Link>
             </div>
@@ -935,50 +1040,50 @@ export const Home: React.FC = () => {
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Mathematics</span>
-                  <span className="text-slate-900 font-bold">82%</span>
+                  <span className="text-slate-700 dark:text-slate-300">Mathematics</span>
+                  <span className="text-slate-900 dark:text-white font-bold">82%</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div className="h-full bg-blue-600 rounded-full" style={{ width: '82%' }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Reasoning</span>
-                  <span className="text-slate-900 font-bold">78%</span>
+                  <span className="text-slate-700 dark:text-slate-300">Reasoning</span>
+                  <span className="text-slate-900 dark:text-white font-bold">78%</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: '78%' }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">General Knowledge</span>
-                  <span className="text-slate-900 font-bold">68%</span>
+                  <span className="text-slate-700 dark:text-slate-300">General Knowledge</span>
+                  <span className="text-slate-900 dark:text-white font-bold">68%</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div className="h-full bg-blue-400 rounded-full" style={{ width: '68%' }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">English</span>
-                  <span className="text-slate-900 font-bold">71%</span>
+                  <span className="text-slate-700 dark:text-slate-300">English</span>
+                  <span className="text-slate-900 dark:text-white font-bold">71%</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: '71%' }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Bengali</span>
-                  <span className="text-slate-900 font-bold">70%</span>
+                  <span className="text-slate-700 dark:text-slate-300">Bengali</span>
+                  <span className="text-slate-900 dark:text-white font-bold">70%</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div className="h-full bg-blue-400 rounded-full" style={{ width: '70%' }} />
                 </div>
               </div>
@@ -990,18 +1095,18 @@ export const Home: React.FC = () => {
       {/* 8. TWO COLUMNS: RECENT MOCK TESTS & LEADERBOARD */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Recent Mock Tests */}
-        <div className="rounded-3xl bg-white border border-slate-200/80 p-6 shadow-2xs">
+        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 shadow-2xs transition-colors">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900">Recent Mock Tests</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Mock Tests</h3>
             <Link
               to="/results"
-              className="text-xs font-bold text-[#0158FC] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
             >
               See All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {recentTests.map((test) => (
               <div key={test.id} className="py-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -1011,10 +1116,10 @@ export const Home: React.FC = () => {
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                       {test.title}
                     </h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{test.date}</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{test.date}</p>
                   </div>
                 </div>
 
@@ -1026,7 +1131,7 @@ export const Home: React.FC = () => {
                   </span>
                   <Link
                     to="/results"
-                    className="text-xs font-semibold text-[#0158FC] hover:underline"
+                    className="text-xs font-semibold text-[#0158FC] dark:text-blue-400 hover:underline"
                   >
                     View Result
                   </Link>
@@ -1037,25 +1142,25 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Right: Rank */}
-        <div className="rounded-3xl bg-white border border-slate-200/80 p-6 shadow-2xs">
+        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 shadow-2xs transition-colors">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900">Rank</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Rank</h3>
             <Link
               to="/rank"
-              className="text-xs font-bold text-[#0158FC] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
             >
               See All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
           {/* Segmented Control */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl mb-4 text-xs font-bold">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-4 text-xs font-bold">
             <button
               onClick={() => setLeaderboardTab('all')}
               className={`flex-1 py-1.5 rounded-lg transition-all ${
                 leaderboardTab === 'all'
                   ? 'bg-[#0158FC] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               All India
@@ -1065,7 +1170,7 @@ export const Home: React.FC = () => {
               className={`flex-1 py-1.5 rounded-lg transition-all ${
                 leaderboardTab === 'wb'
                   ? 'bg-[#0158FC] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               West Bengal
@@ -1075,7 +1180,7 @@ export const Home: React.FC = () => {
               className={`flex-1 py-1.5 rounded-lg transition-all ${
                 leaderboardTab === 'friends'
                   ? 'bg-[#0158FC] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Friends
@@ -1084,7 +1189,7 @@ export const Home: React.FC = () => {
 
           {/* Table */}
           <div className="space-y-2 text-xs">
-            <div className="flex items-center justify-between text-slate-400 font-bold px-3 py-1">
+            <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 font-bold px-3 py-1">
               <span className="w-8">#</span>
               <span className="flex-1">Student</span>
               <span>Score</span>
@@ -1093,73 +1198,73 @@ export const Home: React.FC = () => {
             {leaderboardEntries.map((item) => (
               <div
                 key={item.rank}
-                className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/70 hover:bg-slate-100/80 transition-colors"
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-colors"
               >
                 <span className="w-8 font-bold text-base">{item.icon}</span>
                 <div className="flex items-center gap-2 flex-1">
-                  <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-700">
+                  <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-300">
                     {item.name.charAt(0)}
                   </div>
-                  <span className="font-bold text-slate-800">{item.name}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
                 </div>
-                <span className="font-black text-slate-900">{item.score}</span>
+                <span className="font-black text-slate-900 dark:text-white">{item.score}</span>
               </div>
             ))}
 
             {/* User Row Highlight */}
-            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-blue-50 border border-blue-200/80 mt-3">
-              <span className="w-8 font-black text-blue-700">#147</span>
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 mt-3">
+              <span className="w-8 font-black text-blue-700 dark:text-blue-400">#147</span>
               <div className="flex items-center gap-2 flex-1">
                 <img
                   src="/images/student_avatar.png"
                   alt="You"
-                  className="w-7 h-7 rounded-full object-cover border border-blue-300"
+                  className="w-7 h-7 rounded-full object-cover border border-blue-300 dark:border-blue-700"
                   onError={(e) => {
                     e.currentTarget.src = '/logo-icon-transparent.png';
                   }}
                 />
-                <span className="font-black text-blue-900">
+                <span className="font-black text-blue-900 dark:text-blue-200">
                   You ({user?.fullName?.split(' ')[0] || 'Candidate'})
                 </span>
               </div>
-              <span className="font-black text-blue-700">78.3%</span>
+              <span className="font-black text-blue-700 dark:text-blue-400">78.3%</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* 9. PRO UPGRADE BANNER (Bottom Banner) */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#dbebfe] border border-blue-200/80 p-6 sm:p-8 overflow-hidden shadow-xs">
+      <div className="relative rounded-3xl bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#dbebfe] dark:from-slate-900 dark:via-slate-850 dark:to-indigo-950/60 border border-blue-200/80 dark:border-slate-800 p-6 sm:p-8 overflow-hidden shadow-xs">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-xl bg-[#0158FC] text-white flex items-center justify-center shadow-xs">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                Upgrade to <span className="text-[#0158FC]">PracticeKoro Pro</span>
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                Upgrade to <span className="text-[#0158FC] dark:text-blue-400">PracticeKoro Pro</span>
               </h3>
             </div>
-            <p className="text-xs sm:text-sm text-slate-600">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
               Get unlimited access to all exams, mock tests, PYQ, topic practice and detailed solutions.
             </p>
 
             {/* Checklist */}
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-slate-700">
+            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
               <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[#0158FC]" /> All Exams
+                <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> All Exams
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[#0158FC]" /> Unlimited Tests
+                <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Unlimited Tests
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[#0158FC]" /> Detailed Solutions
+                <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Detailed Solutions
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Smartphone className="w-4 h-4 text-[#0158FC]" /> Web + Mobile App
+                <Smartphone className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Web + Mobile App
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Headphones className="w-4 h-4 text-[#0158FC]" /> Priority Support
+                <Headphones className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Priority Support
               </span>
             </div>
           </div>
