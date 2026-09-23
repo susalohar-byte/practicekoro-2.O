@@ -24,7 +24,22 @@ export const ExamOrTestDispatcher: React.FC = () => {
     }
 
     // Common exam slugs check
-    const knownExamPrefixes = ['wbp-constable', 'kp-police-si', 'wbcs-prelims', 'wbpsc-clerkship'];
+    const knownExamPrefixes = [
+      'wbssc-group-d',
+      'wbp-constable',
+      'wbpsc-clerkship',
+      'primary-tet',
+      'wbssc-slst',
+      'ssc-gd',
+      'ssc-cgl',
+      'ssc-mts',
+      'railway-ntpc',
+      'upper-primary-tet',
+      'ctet',
+      'wbcs-prelims',
+      'kp-police-si',
+      'rrb-group-d',
+    ];
     if (knownExamPrefixes.includes(effectiveId)) {
       setIsExam(true);
       return;
