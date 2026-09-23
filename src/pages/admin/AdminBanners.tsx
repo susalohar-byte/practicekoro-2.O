@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
 import type { HeroBanner, BannerThemeColor, BannerAudience, BannerPlacement } from '@/types';
+import { getBannerTheme } from '@/utils/bannerTheme';
 
 const THEME_OPTIONS: { id: BannerThemeColor; label: string; bgClass: string; textClass: string }[] = [
   { id: 'blue', label: 'Classic Blue', bgClass: 'from-blue-50 to-blue-100 border-blue-200', textClass: 'text-blue-600' },
@@ -41,65 +42,6 @@ const QUICK_TARGET_LINKS = [
   { label: 'Dashboard (/dashboard)', url: '/dashboard' },
   { label: 'Topic Practice (/practice)', url: '/practice' },
 ];
-
-/**
- * Compact mirror of the student Home hero theme mapping, so the in-modal
- * live preview renders exactly what students will see.
- */
-const PREVIEW_THEMES: Record<
-  BannerThemeColor,
-  { card: string; badge: string; primaryBtn: string; secondaryBtn: string; highlight: string }
-> = {
-  blue: {
-    card: 'bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#cee9fe] border-blue-200/80',
-    badge: 'bg-blue-100/80 border-blue-200/60 text-blue-700',
-    primaryBtn: 'bg-[#0158FC] text-white',
-    secondaryBtn: 'bg-white border-blue-200 text-slate-700',
-    highlight: 'text-[#0158FC]',
-  },
-  indigo: {
-    card: 'bg-gradient-to-r from-[#eef2ff] via-[#e0e7ff] to-[#c7d2fe] border-indigo-200/80',
-    badge: 'bg-indigo-100/90 border-indigo-200/80 text-indigo-800',
-    primaryBtn: 'bg-[#4f46e5] text-white',
-    secondaryBtn: 'bg-white border-indigo-200 text-slate-700',
-    highlight: 'text-[#4f46e5]',
-  },
-  purple: {
-    card: 'bg-gradient-to-r from-[#f5f3ff] via-[#ede9fe] to-[#ddd6fe] border-purple-200/80',
-    badge: 'bg-purple-100/90 border-purple-200/80 text-purple-800',
-    primaryBtn: 'bg-[#7c3aed] text-white',
-    secondaryBtn: 'bg-white border-purple-200 text-slate-700',
-    highlight: 'text-[#7c3aed]',
-  },
-  emerald: {
-    card: 'bg-gradient-to-r from-[#ecfdf5] via-[#d1fae5] to-[#a7f3d0] border-emerald-200/80',
-    badge: 'bg-emerald-100/90 border-emerald-200/80 text-emerald-800',
-    primaryBtn: 'bg-[#059669] text-white',
-    secondaryBtn: 'bg-white border-emerald-200 text-slate-700',
-    highlight: 'text-[#059669]',
-  },
-  amber: {
-    card: 'bg-gradient-to-r from-[#fffbeb] via-[#fef3c7] to-[#fde68a] border-amber-200/80',
-    badge: 'bg-amber-100/90 border-amber-200/80 text-amber-900',
-    primaryBtn: 'bg-[#d97706] text-white',
-    secondaryBtn: 'bg-white border-amber-200 text-slate-700',
-    highlight: 'text-[#d97706]',
-  },
-  rose: {
-    card: 'bg-gradient-to-r from-[#fff1f2] via-[#ffe4e6] to-[#fecdd3] border-rose-200/80',
-    badge: 'bg-rose-100/90 border-rose-200/80 text-rose-800',
-    primaryBtn: 'bg-[#e11d48] text-white',
-    secondaryBtn: 'bg-white border-rose-200 text-slate-700',
-    highlight: 'text-[#e11d48]',
-  },
-  cyan: {
-    card: 'bg-gradient-to-r from-[#ecfeff] via-[#cffafe] to-[#a5f3fc] border-cyan-200/80',
-    badge: 'bg-cyan-100/90 border-cyan-200/80 text-cyan-800',
-    primaryBtn: 'bg-[#0891b2] text-white',
-    secondaryBtn: 'bg-white border-cyan-200 text-slate-700',
-    highlight: 'text-[#0891b2]',
-  },
-};
 
 export const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
@@ -784,14 +726,14 @@ export const AdminBanners: React.FC = () => {
                   </span>
                 </div>
                 {(() => {
-                  const theme = PREVIEW_THEMES[themeGradient] || PREVIEW_THEMES.blue;
+                  const theme = getBannerTheme(themeGradient);
                   const pills = featurePillsRaw
                     .split(',')
                     .map((p) => p.trim())
                     .filter(Boolean);
                   if (bannerType === 'text_overlay') {
                     return (
-                      <div className={`rounded-xl border ${theme.card} p-4 overflow-hidden`}>
+                      <div className={`rounded-xl border ${theme.cardBg} p-4 overflow-hidden`}>
                         <div className="min-w-0">
                           {badgeText.trim() && (
                             <span
@@ -803,7 +745,7 @@ export const AdminBanners: React.FC = () => {
                           <p className="text-sm font-black text-slate-900 mt-1.5 leading-snug">
                             {title.trim() || 'Banner headline goes here'}{' '}
                             {highlightWord.trim() && (
-                              <span className={theme.highlight}>{highlightWord.trim()}</span>
+                              <span className={theme.highlightText}>{highlightWord.trim()}</span>
                             )}
                           </p>
                           {subtitle.trim() && (
