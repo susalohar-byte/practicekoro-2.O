@@ -47,6 +47,7 @@ This directory contains the canonical historical Supabase migration files for Pr
 | `036_test_level_negative_marking.sql`           | Test-level optional negative marking (Full Mock / PYQ only) in `submit_test_attempt` | **PENDING** |
 | `037_create_hero_banners_table.sql`             | `hero_banners` table for student dashboard carousel                  |    **PENDING**    |
 | `038_submit_attempt_covering_indexes.sql`       | Covering indexes for `submit_test_attempt` rank/count hot paths       |    **PENDING**    |
+| `039_verify_payment_require_signature.sql`      | `verify_razorpay_payment` rejects empty signatures (no-proof activation hole closed) | **PENDING** |
 
 ---
 

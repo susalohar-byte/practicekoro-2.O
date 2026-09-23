@@ -70,6 +70,7 @@ ALL_MIGRATIONS=(
   "supabase/migrations/035_auto_revoke_subscription_on_refund.sql"
   "supabase/migrations/036_test_level_negative_marking.sql"
   "supabase/migrations/038_submit_attempt_covering_indexes.sql"
+  "supabase/migrations/039_verify_payment_require_signature.sql"
 )
 
 # Unapplied migrations verified missing from production via schema audit (018 to 033)
@@ -94,6 +95,7 @@ PENDING_MIGRATIONS=(
   "supabase/migrations/035_auto_revoke_subscription_on_refund.sql"
   "supabase/migrations/036_test_level_negative_marking.sql"
   "supabase/migrations/038_submit_attempt_covering_indexes.sql"
+  "supabase/migrations/039_verify_payment_require_signature.sql"
 )
 
 # ----------------------------------------------------------------------------
