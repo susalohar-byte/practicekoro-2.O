@@ -10,6 +10,8 @@ import {
   GraduationCap,
   Train,
   Award,
+  Shield,
+  Building,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Exam } from '@/types';
@@ -17,6 +19,7 @@ import type { Exam } from '@/types';
 interface EnrichedExam {
   exam: Exam;
   meta: {
+    category: string;
     subCategory: string;
     badge?: 'Popular' | 'Trending' | 'New';
     mockTestsText: string;
@@ -26,147 +29,114 @@ interface EnrichedExam {
     sectionId: string;
     sectionTitle: string;
     sectionSubtitle: string;
-    sectionIcon: 'wb' | 'central' | 'teaching' | 'railway' | 'civil' | 'generic';
-    categoryKey: string;
-    categoryLabel: string;
+    sectionIcon: 'wb' | 'central' | 'teaching' | 'railway' | 'civil' | 'police' | 'generic';
   };
 }
 
 /**
- * Dynamically resolves metadata for any exam present in the database.
- * Derives emblems, categories, badges and metrics directly from the exam record.
+ * Dynamically resolves metadata for any exam directly from the database and Admin Panel.
+ * Uses exact exam.category stored in the database without artificial remapping.
  */
 function enrichExam(exam: Exam): EnrichedExam {
   const id = (exam.id || '').toLowerCase();
   const title = (exam.title || '').toLowerCase();
-  const rawCat = (exam.category || '').toLowerCase();
+  const category = (exam.category || 'State Govt.').trim();
+  const catLower = category.toLowerCase();
 
-  // 1. Determine department emblem & background color
+  // 1. Department Emblem & Background Color
   let emblem = '/images/exams/emblem_wbpsc.png';
-  let bgColor = 'bg-blue-50 dark:bg-blue-950/40';
+  let bgColor = 'bg-[#FFF9E6] dark:bg-amber-950/40';
 
-  if (id.includes('wbp') || title.includes('wbp') || title.includes('constable') || title.includes('police')) {
-    if (id.includes('kp') || title.includes('kolkata')) {
-      emblem = '/images/exams/icon_kolkata_police.png';
-      bgColor = 'bg-[#FFF0F2] dark:bg-rose-950/40';
-    } else {
-      emblem = '/images/exams/emblem_wbp.png';
-      bgColor = 'bg-[#FFF0F2] dark:bg-rose-950/40';
-    }
-  } else if (id.includes('wbcs') || title.includes('wbcs') || rawCat.includes('civil')) {
+  if (id.includes('wbp-constable') || (title.includes('wbp') && title.includes('constable'))) {
+    emblem = '/images/exams/emblem_wbp.png';
+    bgColor = 'bg-[#FFF0F2] dark:bg-rose-950/40';
+  } else if (id.includes('kp') || title.includes('kolkata')) {
+    // Official Kolkata Police emblem
+    emblem = '/images/exams/wbssc_emblem.png';
+    bgColor = 'bg-[#EFF6FF] dark:bg-blue-950/40';
+  } else if (id.includes('wbcs') || title.includes('wbcs')) {
+    // WBCS official emblem
     emblem = '/images/exams/wbcs_emblem.png';
     bgColor = 'bg-[#EFF6FF] dark:bg-blue-950/40';
   } else if (id.includes('clerk') || title.includes('clerk') || id.includes('wbpsc')) {
+    // WBPSC Clerkship emblem
     emblem = '/images/exams/emblem_wbpsc.png';
     bgColor = 'bg-[#FFF9E6] dark:bg-amber-950/40';
   } else if (id.includes('wbssc') || title.includes('wbssc') || title.includes('group d')) {
     emblem = '/images/exams/emblem_wbssc.png';
     bgColor = 'bg-[#FFF0F2] dark:bg-rose-950/40';
-  } else if (title.includes('tet') || rawCat.includes('teach')) {
+  } else if (title.includes('tet') || catLower.includes('teach')) {
     emblem = '/images/exams/emblem_tet.png';
     bgColor = 'bg-[#FFF0F2] dark:bg-rose-950/40';
-  } else if (title.includes('railway') || title.includes('rrb') || rawCat.includes('rail')) {
+  } else if (title.includes('railway') || title.includes('rrb') || catLower.includes('rail')) {
     emblem = '/images/exams/emblem_railway.png';
     bgColor = 'bg-[#FFF0F2] dark:bg-rose-950/40';
-  } else if (title.includes('ssc') || rawCat.includes('ssc') || rawCat.includes('central')) {
+  } else if (title.includes('ssc') || catLower.includes('ssc') || catLower.includes('central')) {
     emblem = '/images/exams/emblem_ssc.png';
     bgColor = 'bg-[#FFF8ED] dark:bg-amber-950/40';
   }
 
-  // 2. Determine Subcategory & Authority badge
-  let subCategory = exam.category || 'State Government';
-  if (id.includes('wbp-constable') || id.includes('wbpsc') || id.includes('wbssc')) {
-    subCategory = 'State Government';
-  } else if (id.includes('kp-police') || title.includes('police')) {
-    subCategory = 'Police Recruitment';
-  } else if (id.includes('wbcs') || title.includes('wbcs')) {
-    subCategory = 'State Civil Services';
-  } else if (title.includes('tet') || rawCat.includes('teach')) {
-    subCategory = 'Teaching Eligibility';
-  } else if (rawCat.includes('central') || title.includes('ssc') || title.includes('railway')) {
-    subCategory = 'Central Government';
-  }
-
-  // 3. Highlight Badges
+  // 2. Badges (aligned with admin ordering & significance)
   let badge: 'Popular' | 'Trending' | 'New' | undefined = undefined;
-  if (id === 'wbp-constable' || title.includes('constable')) {
+  if (id === 'wbp-constable' || title.includes('wbp constable')) {
     badge = 'Trending';
-  } else if (id === 'wbcs-prelims' || title.includes('wbcs') || id.includes('wbssc-group-d')) {
+  } else if (id === 'wbcs-prelims' || title.includes('wbcs')) {
     badge = 'Popular';
   } else if (exam.orderIndex === 1) {
     badge = 'Popular';
   }
 
-  // 4. Section & Category Grouping
-  let sectionId = 'other';
-  let sectionTitle = `${exam.category || 'General'} Exams`;
-  let sectionSubtitle = `Competitive exams and mock tests for ${exam.category || 'preparation'}.`;
-  let sectionIcon: EnrichedExam['meta']['sectionIcon'] = 'generic';
-  let categoryKey = 'other';
-  let categoryLabel = exam.category || 'Other';
+  // 3. Section Grouping based on exact Admin Panel category
+  const slugKey = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const sectionId = slugKey;
 
-  if (
-    rawCat.includes('state') ||
-    rawCat.includes('bengal') ||
-    rawCat.includes('police') ||
-    id.includes('wbp') ||
-    id.includes('kp') ||
-    id.includes('wbcs') ||
-    id.includes('wbpsc') ||
-    id.includes('wbssc')
-  ) {
-    sectionId = 'west-bengal';
-    sectionTitle = 'West Bengal Government Exams';
-    sectionSubtitle = 'Popular exams for West Bengal state government jobs.';
+  // Title formatting: if category already ends with "Exams", keep it; otherwise append "Exams"
+  const sectionTitle = category.toLowerCase().endsWith('exams')
+    ? category
+    : `${category} Exams`;
+
+  // Contextual Subtitles for Admin Categories
+  let sectionSubtitle = `Curated mock tests and syllabus practice for ${category}.`;
+  let sectionIcon: EnrichedExam['meta']['sectionIcon'] = 'generic';
+
+  if (catLower.includes('state govt') || catLower.includes('state government')) {
+    sectionSubtitle = 'Popular state government recruitment examinations and mock tests.';
     sectionIcon = 'wb';
-    categoryKey = 'west-bengal';
-    categoryLabel = 'West Bengal';
-  } else if (rawCat.includes('teach') || title.includes('tet') || title.includes('slst')) {
-    sectionId = 'teaching';
-    sectionTitle = 'Teaching Exams';
-    sectionSubtitle = 'For a career in teaching and education.';
+  } else if (catLower.includes('police')) {
+    sectionSubtitle = 'West Bengal Police, Kolkata Police & law enforcement recruitment tests.';
+    sectionIcon = 'police';
+  } else if (catLower.includes('teaching')) {
+    sectionSubtitle = 'Primary TET, Upper Primary & SLST teacher recruitment examinations.';
     sectionIcon = 'teaching';
-    categoryKey = 'teaching';
-    categoryLabel = 'Teaching';
-  } else if (rawCat.includes('rail') || title.includes('railway') || title.includes('rrb')) {
-    sectionId = 'railway';
-    sectionTitle = 'Railway Exams';
-    sectionSubtitle = 'Railways and allied central recruitment exams.';
-    sectionIcon = 'railway';
-    categoryKey = 'railway';
-    categoryLabel = 'Railway';
-  } else if (rawCat.includes('central') || rawCat.includes('ssc') || title.includes('ssc')) {
-    sectionId = 'central';
-    sectionTitle = 'Central Government Exams';
-    sectionSubtitle = 'Prepare for major central government competitive exams.';
-    sectionIcon = 'central';
-    categoryKey = 'central';
-    categoryLabel = 'Central';
-  } else if (rawCat.includes('civil') || title.includes('civil')) {
-    sectionId = 'civil';
-    sectionTitle = 'Civil Services Exams';
-    sectionSubtitle = 'Prestigious state administrative and executive exam series.';
+  } else if (catLower.includes('civil')) {
+    sectionSubtitle = 'West Bengal Civil Service (Executive) & state administrative examinations.';
     sectionIcon = 'civil';
-    categoryKey = 'civil';
-    categoryLabel = 'Civil Services';
-  } else {
-    const slugKey = (exam.category || 'other').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    sectionId = slugKey;
-    categoryKey = slugKey;
-    categoryLabel = exam.category || 'Other';
+  } else if (catLower.includes('ssc') || catLower.includes('staff selection')) {
+    sectionSubtitle = 'Staff Selection Commission (CGL, CHSL, MTS, GD) competitive tests.';
+    sectionIcon = 'central';
+  } else if (catLower.includes('rail')) {
+    sectionSubtitle = 'Railway Recruitment Board (NTPC, Group D, ALP) examinations.';
+    sectionIcon = 'railway';
+  } else if (catLower.includes('defence')) {
+    sectionSubtitle = 'Armed forces and defence recruitment examination series.';
+    sectionIcon = 'police';
+  } else if (catLower.includes('banking')) {
+    sectionSubtitle = 'Banking recruitment and financial services mock test packages.';
+    sectionIcon = 'generic';
   }
 
-  // 5. Test & Question Metrics
+  // 4. Test & Question Metrics
   const testCount = exam.testsCount ?? 0;
   const qCount = exam.questionsCount ?? 0;
 
   const mockTestsText = testCount > 0 ? `${testCount}+` : 'Curated';
-  const questionsText = qCount > 0 ? `${qCount.toLocaleString()}+` : 'PYQ & Drills';
+  const questionsText = qCount > 0 ? `${qCount.toLocaleString()}+` : 'Full Mock';
 
   return {
     exam,
     meta: {
-      subCategory,
+      category,
+      subCategory: category,
       badge,
       mockTestsText,
       questionsText,
@@ -176,8 +146,6 @@ function enrichExam(exam: Exam): EnrichedExam {
       sectionTitle,
       sectionSubtitle,
       sectionIcon,
-      categoryKey,
-      categoryLabel,
     },
   };
 }
@@ -205,17 +173,16 @@ export const ExamsCatalog: React.FC = () => {
       .map(enrichExam);
   }, [exams]);
 
-  // Group real database exams into categorized sections
+  // Group real database exams into categorized sections matching Admin Panel categories
   const sections = useMemo(() => {
     const map = new Map<
       string,
       {
         id: string;
+        categoryName: string;
         title: string;
         subtitle: string;
         icon: EnrichedExam['meta']['sectionIcon'];
-        categoryKey: string;
-        categoryLabel: string;
         exams: EnrichedExam[];
       }
     >();
@@ -225,11 +192,10 @@ export const ExamsCatalog: React.FC = () => {
       if (!map.has(secId)) {
         map.set(secId, {
           id: secId,
+          categoryName: item.meta.category,
           title: item.meta.sectionTitle,
           subtitle: item.meta.sectionSubtitle,
           icon: item.meta.sectionIcon,
-          categoryKey: item.meta.categoryKey,
-          categoryLabel: item.meta.categoryLabel,
           exams: [],
         });
       }
@@ -239,7 +205,7 @@ export const ExamsCatalog: React.FC = () => {
     return Array.from(map.values());
   }, [enrichedExams]);
 
-  // Dynamic filter pills computed purely from the database exams
+  // Dynamic filter pills computed purely from active categories in the database
   const filterPills = useMemo(() => {
     const list: { key: string; label: string; count: number }[] = [
       { key: 'all', label: 'All Exams', count: enrichedExams.length },
@@ -247,8 +213,8 @@ export const ExamsCatalog: React.FC = () => {
 
     sections.forEach((sec) => {
       list.push({
-        key: sec.categoryKey,
-        label: sec.categoryLabel,
+        key: sec.categoryName,
+        label: sec.categoryName,
         count: sec.exams.length,
       });
     });
@@ -265,11 +231,11 @@ export const ExamsCatalog: React.FC = () => {
         !q ||
         exam.title.toLowerCase().includes(q) ||
         (exam.description && exam.description.toLowerCase().includes(q)) ||
-        meta.subCategory.toLowerCase().includes(q) ||
+        meta.category.toLowerCase().includes(q) ||
         (exam.slug && exam.slug.toLowerCase().includes(q));
 
       const matchesFilter =
-        selectedFilter === 'all' || meta.categoryKey === selectedFilter;
+        selectedFilter === 'all' || meta.category === selectedFilter;
 
       return matchesSearch && matchesFilter;
     });
@@ -299,7 +265,7 @@ export const ExamsCatalog: React.FC = () => {
     return matches;
   }, [enrichedExams, searchQuery, selectedFilter, sortBy]);
 
-  // Helper to render an individual exam card
+  // Helper to render an individual exam card with full title readability
   const renderExamCard = (item: EnrichedExam) => {
     const { exam, meta } = item;
 
@@ -307,73 +273,77 @@ export const ExamsCatalog: React.FC = () => {
       <div
         key={exam.id || exam.slug}
         onClick={() => handleSelectExam(exam)}
-        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 cursor-pointer group relative"
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 cursor-pointer group relative"
       >
         <div>
-          {/* Card Top Row: Emblem, Title & Subtitle, Badge */}
-          <div className="flex items-start justify-between gap-2.5">
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              {/* Emblem container */}
-              <div
-                className={cn(
-                  'w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center p-1.5 shrink-0 transition-transform group-hover:scale-105',
-                  meta.bgColor
-                )}
-              >
-                <img
-                  src={meta.emblem}
-                  alt={exam.title}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/images/exams/emblem_wbpsc.png';
-                  }}
-                />
-              </div>
-
-              {/* Title & Authority Subtitle */}
-              <div className="min-w-0 flex-1">
-                <h3 className="text-[13.5px] sm:text-sm font-bold text-slate-900 dark:text-white truncate leading-tight group-hover:text-[#0158FC] transition-colors">
-                  {exam.title}
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate font-medium">
-                  {meta.subCategory}
-                </p>
-              </div>
+          {/* Card Top Row: Emblem, Title & Category, Badge */}
+          <div className="flex items-start gap-3">
+            {/* Emblem container */}
+            <div
+              className={cn(
+                'w-12 h-12 rounded-xl flex items-center justify-center p-1.5 shrink-0 transition-transform group-hover:scale-105 shadow-2xs',
+                meta.bgColor
+              )}
+            >
+              <img
+                src={meta.emblem}
+                alt={exam.title}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/images/exams/emblem_wbpsc.png';
+                }}
+              />
             </div>
 
-            {/* Top Right Pill Badge */}
-            {meta.badge && (
-              <span
-                className={cn(
-                  'text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 tracking-tight leading-normal',
-                  meta.badge === 'Popular' &&
-                    'bg-[#FFF3E0] text-[#D97706] dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/60',
-                  meta.badge === 'Trending' &&
-                    'bg-[#E8F8F0] text-[#059669] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60',
-                  meta.badge === 'New' &&
-                    'bg-[#EBF5FF] text-[#2563EB] dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60'
+            {/* Title & Category Label */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-1.5">
+                <h3
+                  className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#0158FC] transition-colors break-words"
+                  title={exam.title}
+                >
+                  {exam.title}
+                </h3>
+
+                {/* Top Right Pill Badge */}
+                {meta.badge && (
+                  <span
+                    className={cn(
+                      'text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 tracking-tight leading-normal',
+                      meta.badge === 'Popular' &&
+                        'bg-[#FFF3E0] text-[#D97706] dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/60',
+                      meta.badge === 'Trending' &&
+                        'bg-[#E8F8F0] text-[#059669] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60',
+                      meta.badge === 'New' &&
+                        'bg-[#EBF5FF] text-[#2563EB] dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60'
+                    )}
+                  >
+                    {meta.badge}
+                  </span>
                 )}
-              >
-                {meta.badge}
-              </span>
-            )}
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1 font-medium">
+                {meta.category}
+              </p>
+            </div>
           </div>
 
           {/* Middle Metric Row (Mock Tests | Questions) */}
-          <div className="grid grid-cols-2 gap-2 my-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-center">
+          <div className="grid grid-cols-2 gap-2 my-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-center">
             <div>
-              <div className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white">
+              <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 {meta.mockTestsText}
               </div>
-              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+              <div className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
                 Mock Tests
               </div>
             </div>
             <div className="border-l border-slate-100 dark:border-slate-800">
-              <div className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white">
+              <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 {meta.questionsText}
               </div>
-              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+              <div className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
                 Questions
               </div>
             </div>
@@ -387,7 +357,7 @@ export const ExamsCatalog: React.FC = () => {
             e.stopPropagation();
             handleSelectExam(exam);
           }}
-          className="w-full py-2 px-3 bg-[#0158FC] hover:bg-[#0047cc] active:bg-[#003bb0] text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs group-hover:shadow-sm"
+          className="w-full py-2.5 px-3 bg-[#0158FC] hover:bg-[#0047cc] active:bg-[#003bb0] text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs group-hover:shadow-sm"
         >
           <span>View Tests</span>
           <span className="text-xs leading-none font-bold">→</span>
@@ -463,7 +433,7 @@ export const ExamsCatalog: React.FC = () => {
 
         {/* Filter Pills and Sort By Row */}
         <div className="flex flex-col sm:flex-row gap-3.5 items-start sm:items-center justify-between pt-1">
-          {/* Category Filter Pills (Derived 100% from Database) */}
+          {/* Category Filter Pills (Derived 100% from Admin Panel categories in Database) */}
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
             {filterPills.map((pill) => (
               <button
@@ -504,7 +474,7 @@ export const ExamsCatalog: React.FC = () => {
 
         {/* Content Body: Categorized Sections or Filtered Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
@@ -533,7 +503,7 @@ export const ExamsCatalog: React.FC = () => {
           </div>
         ) : isCategorizedView ? (
           /* ========================================================= */
-          /* CATEGORIZED SECTIONS (Only sections with real exams)       */
+          /* CATEGORIZED SECTIONS (Sections matching Admin Categories)  */
           /* ========================================================= */
           <div className="space-y-9">
             {sections.map((section) => (
@@ -544,16 +514,20 @@ export const ExamsCatalog: React.FC = () => {
                     {section.icon === 'wb' ? (
                       <img
                         src="/images/exams/header_icon_wb.png"
-                        alt="West Bengal"
+                        alt="State Govt."
                         className="w-5 h-6 object-contain shrink-0"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}
                       />
+                    ) : section.icon === 'police' ? (
+                      <div className="w-6 h-6 rounded-md bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-[#0158FC] shrink-0">
+                        <Shield className="w-4 h-4" />
+                      </div>
                     ) : section.icon === 'central' ? (
                       <img
                         src="/images/exams/header_icon_central.png"
-                        alt="Central Government"
+                        alt="Central"
                         className="w-5 h-6 object-contain shrink-0"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
@@ -573,7 +547,7 @@ export const ExamsCatalog: React.FC = () => {
                       </div>
                     ) : (
                       <div className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
-                        <Layers className="w-4 h-4" />
+                        <Building className="w-4 h-4" />
                       </div>
                     )}
 
@@ -588,7 +562,7 @@ export const ExamsCatalog: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={() => setSelectedFilter(section.categoryKey)}
+                    onClick={() => setSelectedFilter(section.categoryName)}
                     className="text-xs font-semibold text-[#0158FC] hover:text-blue-700 flex items-center gap-1 transition-colors"
                   >
                     <span>View All</span>
@@ -596,8 +570,8 @@ export const ExamsCatalog: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Section Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {/* Section Cards Grid (4 columns for ample space) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {section.exams.map(renderExamCard)}
                 </div>
               </section>
@@ -621,6 +595,12 @@ export const ExamsCatalog: React.FC = () => {
                     matching &ldquo;<span className="text-[#0158FC]">{searchQuery}</span>&rdquo;
                   </span>
                 )}
+                {selectedFilter !== 'all' && (
+                  <span>
+                    {' '}
+                    under <span className="font-bold text-[#0158FC]">{selectedFilter}</span>
+                  </span>
+                )}
               </div>
 
               {(selectedFilter !== 'all' || searchQuery) && (
@@ -636,7 +616,7 @@ export const ExamsCatalog: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filteredAndSortedExams.map(renderExamCard)}
             </div>
           </div>
