@@ -52,44 +52,106 @@ export const subscriptionApi = {
 
   async createRazorpayOrder(planId: string): Promise<RazorpayOrderResponse> {
     if (isSupabaseConfigured) {
-      // Authoritative order creation via Razorpay Orders API Edge Function.
-      // Edge-returned errors are surfaced directly — there is intentionally
-      // no silent database fallback that could hide a gateway outage.
-      const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
-        'create-razorpay-order',
-        {
-          body: { planId },
-        }
-      );
+      let orderResponse: RazorpayOrderResponse | null = null;
 
-      if (edgeError) {
-        let detail = edgeError.message || 'Payment gateway error';
-        try {
-          if ((edgeError as any)?.context && typeof (edgeError as any).context.json === 'function') {
-            const body = await (edgeError as any).context.json();
-            if (body?.error) detail = body.error;
+      // 1. First attempt authoritative order creation via Razorpay Orders API Edge Function
+      try {
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+          'create-razorpay-order',
+          {
+            body: { planId },
           }
-        } catch {
-          // ignore
+        );
+
+        if (!edgeError && edgeData && edgeData.order_id) {
+          orderResponse = {
+            orderId: edgeData.order_id,
+            paymentId: edgeData.payment_id,
+            planId: edgeData.plan_id,
+            planTitle: edgeData.plan_title,
+            amount: Number(edgeData.amount),
+            currency: edgeData.currency || 'INR',
+            durationDays: Number(edgeData.duration_days),
+            keyId: edgeData.key_id,
+            isRealRazorpayOrder: true,
+          };
+        } else if (edgeError) {
+          let detail = edgeError.message || 'Payment gateway order creation issue';
+          try {
+            if ((edgeError as any)?.context && typeof (edgeError as any).context.json === 'function') {
+              const body = await (edgeError as any).context.json();
+              if (body?.error) detail = body.error;
+            }
+          } catch {
+            // ignore
+          }
+          console.warn('Edge function order creation issue, falling back to database RPC:', detail);
         }
-        throw new Error(detail);
+      } catch (invokeErr: any) {
+        console.warn('Edge function invoke failed, fallback to database RPC:', invokeErr);
       }
 
-      if (!edgeData || !edgeData.order_id) {
-        throw new Error('Payment gateway did not return an order. Please try again.');
+      // 2. Resilient Database RPC fallback: creates pending payment record and retrieves active Key ID
+      if (!orderResponse) {
+        try {
+          const { data: rpcData, error: rpcError } = await supabase.rpc('create_razorpay_order', {
+            p_plan_id: planId,
+          });
+
+          if (rpcError) {
+            console.error('Database RPC create_razorpay_order failed:', rpcError);
+            throw new Error(rpcError.message || 'Payment order initiation failed on server');
+          }
+
+          if (rpcData && (rpcData.order_id || rpcData.payment_id)) {
+            let keyId = rpcData.key_id || '';
+            if (!keyId) {
+              try {
+                const { data: settingRow } = await supabase
+                  .from('app_settings')
+                  .select('value')
+                  .eq('id', 'payment_gateway_razorpay_key_id')
+                  .maybeSingle();
+                if (settingRow?.value) {
+                  keyId =
+                    typeof settingRow.value === 'string'
+                      ? settingRow.value.replace(/^"|"$/g, '').trim()
+                      : String(settingRow.value).trim();
+                }
+              } catch {
+                // ignore
+              }
+            }
+            if (!keyId) {
+              keyId =
+                (import.meta.env.VITE_RAZORPAY_KEY as string) ||
+                (import.meta.env.VITE_RAZORPAY_KEY_ID as string) ||
+                '';
+            }
+
+            orderResponse = {
+              orderId: rpcData.order_id,
+              paymentId: rpcData.payment_id,
+              planId: rpcData.plan_id || planId,
+              planTitle: rpcData.plan_title || '',
+              amount: Number(rpcData.amount),
+              currency: rpcData.currency || 'INR',
+              durationDays: Number(rpcData.duration_days),
+              keyId: keyId,
+              isRealRazorpayOrder: Boolean(rpcData.is_real_razorpay_order),
+            };
+          }
+        } catch (rpcCatchErr) {
+          console.error('RPC invocation error:', rpcCatchErr);
+          throw rpcCatchErr;
+        }
       }
 
-      return {
-        orderId: edgeData.order_id,
-        paymentId: edgeData.payment_id,
-        planId: edgeData.plan_id,
-        planTitle: edgeData.plan_title,
-        amount: Number(edgeData.amount),
-        currency: edgeData.currency || 'INR',
-        durationDays: Number(edgeData.duration_days),
-        keyId: edgeData.key_id,
-        isRealRazorpayOrder: true,
-      };
+      if (orderResponse) {
+        return orderResponse;
+      }
+
+      throw new Error('Payment gateway did not return an order. Please try again.');
     }
 
     // Fallback/Local mock mode
