@@ -1366,9 +1366,9 @@ export const AdminSubscriptions: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Discount Badge */}
+                {/* Discount Badge (display-only: must not block the edit/delete buttons below it) */}
                 {p.originalPrice && p.price < p.originalPrice && (
-                  <div className="absolute top-4 right-14">
+                  <div className="absolute top-4 right-14 pointer-events-none">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
                       <TrendingUp className="w-3 h-3" />
                       {Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}% OFF
