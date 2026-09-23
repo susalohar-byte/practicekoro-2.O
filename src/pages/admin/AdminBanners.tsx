@@ -18,9 +18,12 @@ import {
   ExternalLink,
   Loader2,
   SlidersHorizontal,
+  Users,
+  Calendar,
+  MousePointerClick,
 } from 'lucide-react';
 import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
-import type { HeroBanner, BannerThemeColor } from '@/types';
+import type { HeroBanner, BannerThemeColor, BannerAudience, BannerPlacement } from '@/types';
 
 const THEME_OPTIONS: { id: BannerThemeColor; label: string; bgClass: string; textClass: string }[] = [
   { id: 'blue', label: 'Classic Blue', bgClass: 'from-blue-50 to-blue-100 border-blue-200', textClass: 'text-blue-600' },
@@ -120,6 +123,12 @@ export const AdminBanners: React.FC = () => {
   const [bannerType, setBannerType] = useState<'full_image' | 'text_overlay'>('full_image');
   const [isActive, setIsActive] = useState(true);
   const [displayOrder, setDisplayOrder] = useState(1);
+  const [targetAudience, setTargetAudience] = useState<BannerAudience>('all');
+  const [placement, setPlacement] = useState<BannerPlacement>('home_hero');
+  const [mobileImageUrl, setMobileImageUrl] = useState('');
+  const [startsAt, setStartsAt] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [optimizationInfo, setOptimizationInfo] = useState<string | null>(null);
 
   // Advanced Overlay (optional)
   const [badgeText, setBadgeText] = useState('');
@@ -159,22 +168,30 @@ export const AdminBanners: React.FC = () => {
     setTimeout(() => setFeedbackMsg(null), 3500);
   };
 
-  // Process image file for upload
+  // Process image file for upload with client-side canvas compression
   const processImageFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       showToast('error', 'Please upload a valid image file (PNG, JPG, WebP, SVG).');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('error', 'Image size must be less than 5MB.');
+    if (file.size > 8 * 1024 * 1024) {
+      showToast('error', 'Image size must be less than 8MB.');
       return;
     }
 
     try {
       setIsUploading(true);
-      const uploadedUrl = await bannerService.uploadBannerImage(file);
-      setImageUrl(uploadedUrl);
-      showToast('success', 'Banner image uploaded successfully!');
+      setOptimizationInfo(null);
+      const { url, optimization } = await bannerService.uploadBannerImage(file);
+      setImageUrl(url);
+      if (optimization && optimization.compressionRatio > 0) {
+        const origKb = (optimization.originalSize / 1024).toFixed(0);
+        const optKb = (optimization.optimizedSize / 1024).toFixed(0);
+        setOptimizationInfo(`Optimized: ${origKb} KB → ${optKb} KB (-${optimization.compressionRatio}%)`);
+        showToast('success', `Optimized banner: ${origKb} KB → ${optKb} KB (-${optimization.compressionRatio}%)`);
+      } else {
+        showToast('success', 'Banner image uploaded successfully!');
+      }
     } catch (err: any) {
       showToast('error', err?.message || 'Failed to upload image.');
     } finally {
@@ -211,7 +228,13 @@ export const AdminBanners: React.FC = () => {
     setEditingBanner(null);
     setTitle('');
     setPrimaryCtaLink('/exams');
-    setImageUrl('/images/exam_hero_banner.png');
+    setImageUrl('');
+    setMobileImageUrl('');
+    setTargetAudience('all');
+    setPlacement('home_hero');
+    setStartsAt('');
+    setExpiresAt('');
+    setOptimizationInfo(null);
     setBannerType('full_image');
     setIsActive(true);
     setDisplayOrder(banners.length + 1);
@@ -230,7 +253,13 @@ export const AdminBanners: React.FC = () => {
     setEditingBanner(banner);
     setTitle(banner.title);
     setPrimaryCtaLink(banner.primaryCtaLink || '/exams');
-    setImageUrl(banner.imageUrl || '/images/exam_hero_banner.png');
+    setImageUrl(banner.imageUrl || '');
+    setMobileImageUrl(banner.mobileImageUrl || '');
+    setTargetAudience(banner.targetAudience || 'all');
+    setPlacement(banner.placement || 'home_hero');
+    setStartsAt(banner.startsAt ? banner.startsAt.substring(0, 16) : '');
+    setExpiresAt(banner.expiresAt ? banner.expiresAt.substring(0, 16) : '');
+    setOptimizationInfo(null);
     setBannerType(banner.bannerType || 'full_image');
     setIsActive(banner.isActive);
     setDisplayOrder(banner.displayOrder);
@@ -276,7 +305,12 @@ export const AdminBanners: React.FC = () => {
         title: title.trim(),
         primaryCtaLink: destLink,
         imageUrl: imageUrl.trim(),
+        mobileImageUrl: mobileImageUrl.trim() || undefined,
         bannerType,
+        targetAudience,
+        placement,
+        startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
         badgeText: badgeText.trim(),
         highlightWord: highlightWord.trim(),
         subtitle: subtitle.trim(),
@@ -353,6 +387,7 @@ export const AdminBanners: React.FC = () => {
   };
 
   const activeCount = banners.filter((b) => b.isActive).length;
+  const totalClicks = banners.reduce((acc, b) => acc + (b.clickCount || 0), 0);
   const currentPreviewBanner =
     banners.find((b) => b.id === previewBannerId) || banners[0] || DEFAULT_HERO_BANNERS[0];
 
@@ -407,7 +442,7 @@ export const AdminBanners: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Banners</span>
@@ -435,6 +470,15 @@ export const AdminBanners: React.FC = () => {
           </div>
           <div className="text-2xl font-black text-slate-400 mt-2">{banners.length - activeCount}</div>
           <p className="text-[11px] text-slate-500 mt-1">Saved as drafts</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Clicks</span>
+            <MousePointerClick className="w-4 h-4 text-blue-500" />
+          </div>
+          <div className="text-2xl font-black text-blue-600 mt-2">{totalClicks}</div>
+          <p className="text-[11px] text-slate-500 mt-1">Candidate engagements</p>
         </div>
       </div>
 
@@ -585,6 +629,44 @@ export const AdminBanners: React.FC = () => {
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
                           {banner.bannerType === 'text_overlay' ? 'Text Overlay' : 'Full Graphic Banner'}
                         </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                            banner.targetAudience === 'free'
+                              ? 'bg-amber-50 text-amber-700'
+                              : banner.targetAudience === 'pro'
+                              ? 'bg-purple-50 text-purple-700'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          <Users className="w-3 h-3" />
+                          <span>
+                            {banner.targetAudience === 'free'
+                              ? 'Free Users'
+                              : banner.targetAudience === 'pro'
+                              ? 'Pro Pass'
+                              : 'All Students'}
+                          </span>
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 flex items-center gap-1">
+                          <MousePointerClick className="w-3 h-3" />
+                          <span>{banner.clickCount || 0} clicks</span>
+                        </span>
+                        {banner.expiresAt && (
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                              new Date(banner.expiresAt).getTime() < Date.now()
+                                ? 'bg-rose-50 text-rose-700'
+                                : 'bg-amber-50 text-amber-700'
+                            }`}
+                          >
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                              {new Date(banner.expiresAt).getTime() < Date.now()
+                                ? 'Expired'
+                                : 'Scheduled'}
+                            </span>
+                          </span>
+                        )}
                       </div>
 
                       <h3 className="text-sm font-bold text-slate-900 truncate">
@@ -767,7 +849,7 @@ export const AdminBanners: React.FC = () => {
                         onError={(e) => {
                           e.currentTarget.src = '/images/exam_hero_banner.png';
                         }}
-                        className="w-full h-auto max-h-44 object-cover"
+                        className="w-full aspect-[3/1] max-h-44 object-cover object-center"
                       />
                       <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white px-2.5 py-1 rounded-lg text-[10.5px] font-semibold flex items-center gap-1.5">
                         <ExternalLink className="w-3 h-3 text-blue-400" />
@@ -779,7 +861,7 @@ export const AdminBanners: React.FC = () => {
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center text-[11px] text-slate-400 font-semibold">
-                      Upload an image above to preview the full graphic banner.
+                      Upload an image below or enter a link to preview the full graphic banner.
                     </div>
                   );
                 })()}
@@ -887,8 +969,15 @@ export const AdminBanners: React.FC = () => {
 
                 <p className="text-[11px] text-slate-500 flex items-center gap-1.5 pt-0.5">
                   <span className="font-semibold text-slate-700">💡 Recommended banner size:</span>
-                  <span>1200 × 360 px (approx. 3:1 aspect ratio). PNG, JPG, WebP, SVG (Max 5MB).</span>
+                  <span>1200 × 360 px (approx. 3:1 aspect ratio). PNG, JPG, WebP, SVG (Max 8MB).</span>
                 </p>
+
+                {optimizationInfo && (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>{optimizationInfo}</span>
+                  </div>
+                )}
 
                 {/* Selected Banner Image Preview */}
                 {imageUrl && (
@@ -1001,7 +1090,79 @@ export const AdminBanners: React.FC = () => {
                 </div>
               </div>
 
-              {/* 5. Banner Texts & Call-to-Action Buttons (always visible) */}
+              {/* 5. Audience Targeting & Campaign Scheduling */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-200">
+                {/* Target Audience */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
+                    <Users className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Target Candidate Audience</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200 text-[11px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setTargetAudience('all')}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        targetAudience === 'all'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTargetAudience('free')}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        targetAudience === 'free'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Free Only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTargetAudience('pro')}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        targetAudience === 'pro'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Pro Pass
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    {targetAudience === 'all'
+                      ? 'Delivered to all students'
+                      : targetAudience === 'free'
+                      ? 'Shown only to free candidates (e.g. Upgrade offers)'
+                      : 'Shown only to active Pro Pass members'}
+                  </span>
+                </div>
+
+                {/* Campaign Scheduling (Expires At) */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Auto-Expire At (Optional)</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    {expiresAt
+                      ? 'Banner will automatically hide from students after this date'
+                      : 'Runs indefinitely until manually hidden'}
+                  </span>
+                </div>
+              </div>
+
+              {/* 6. Banner Texts & Call-to-Action Buttons (always visible) */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden mt-2">
                 <div className="px-4 py-2.5 bg-slate-50 flex items-center gap-2 text-xs font-bold text-slate-700">
                   <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />

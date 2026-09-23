@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { StudentNavbar } from '@/components/layout/StudentNavbar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,7 +25,7 @@ import { OnboardingModal } from '@/components/student/OnboardingModal';
 import { cn } from '@/lib/utils';
 
 export const Home: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const navigate = useNavigate();
   const { onToggleMobileSidebar } = useOutletContext<{
     onToggleMobileSidebar: () => void;
@@ -33,19 +33,46 @@ export const Home: React.FC = () => {
     isSidebarCollapsed: boolean;
   }>();
 
-  // Dynamic Banners (cached query with static fallback)
+  // Dynamic Banners (cached query with audience targeting and static fallback)
   const queryClient = useQueryClient();
+  const audience = isPro ? 'pro' : 'free';
   const { data: banners = DEFAULT_HERO_BANNERS } = useQuery({
-    queryKey: ['hero-banners'],
-    queryFn: () => bannerService.getActiveBanners(),
+    queryKey: ['hero-banners', audience],
+    queryFn: () => bannerService.getActiveBanners({ audience, placement: 'home_hero' }),
     select: (active) => (active && active.length > 0 ? active : DEFAULT_HERO_BANNERS),
     placeholderData: DEFAULT_HERO_BANNERS,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Mobile Touch Swipe Handling
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 45;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setIsHovered(true);
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    setIsHovered(false);
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > minSwipeDistance) {
+      nextSlide();
+    } else if (distance < -minSwipeDistance) {
+      prevSlide();
+    }
+  };
 
   // Onboarding Modal State
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
@@ -56,24 +83,16 @@ export const Home: React.FC = () => {
     return () => window.removeEventListener('pk_open_onboarding', handleOpenTour);
   }, []);
 
-  const loadBanners = useCallback(async () => {
-    try {
-      await queryClient.invalidateQueries({ queryKey: ['hero-banners'] });
-    } catch {
-      // Retain fallback banners
-    }
-  }, [queryClient]);
-
+  // Real-time synchronization for banner changes
   useEffect(() => {
-    loadBanners();
-    const handleUpdated = () => {
-      loadBanners();
-    };
-    window.addEventListener('pk_hero_banners_updated', handleUpdated);
-    return () => window.removeEventListener('pk_hero_banners_updated', handleUpdated);
-  }, [loadBanners]);
+    const unsubscribe = bannerService.subscribeToBannerUpdates((updatedBanners) => {
+      queryClient.setQueryData(['hero-banners', audience], updatedBanners);
+      queryClient.invalidateQueries({ queryKey: ['hero-banners'] });
+    });
+    return () => unsubscribe();
+  }, [queryClient, audience]);
 
-  // Auto rotation every 5s when not hovered
+  // Auto rotation every 5s when not hovered or touched
   useEffect(() => {
     if (banners.length <= 1 || isHovered) return;
     const timer = setInterval(() => {
@@ -411,9 +430,12 @@ export const Home: React.FC = () => {
 
           return (
             <div
-              className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 transition-all duration-300 group bg-slate-100 dark:bg-slate-900"
+              className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 transition-all duration-300 group bg-slate-100 dark:bg-slate-900 select-none"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
             >
               {/* App Tour Trigger */}
               <button
@@ -426,32 +448,54 @@ export const Home: React.FC = () => {
                 <span>App Tour</span>
               </button>
 
-              {/* Clickable Full Banner Image */}
+              {/* Clickable Full Banner Image with Responsive Aspect Ratio */}
               {isExternalLink ? (
                 <a
                   href={destination}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => bannerService.trackBannerClick(banner.id)}
                   className="block w-full overflow-hidden cursor-pointer"
                   aria-label={banner.title}
                 >
-                  <img
-                    src={banner.imageUrl}
-                    alt={banner.title}
-                    className="w-full h-auto max-h-[260px] sm:max-h-[310px] lg:max-h-[340px] object-cover sm:object-fill rounded-2xl sm:rounded-3xl transition-transform duration-500 group-hover:scale-[1.01]"
-                  />
+                  <picture>
+                    {banner.mobileImageUrl && (
+                      <source media="(max-width: 639px)" srcSet={banner.mobileImageUrl} />
+                    )}
+                    <img
+                      src={banner.imageUrl}
+                      alt={banner.title}
+                      loading={currentSlide === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/exam_hero_banner.png';
+                      }}
+                      className="w-full aspect-[16/7] sm:aspect-[21/8] md:aspect-[3/1] object-cover object-center rounded-2xl sm:rounded-3xl transition-transform duration-500 group-hover:scale-[1.01]"
+                    />
+                  </picture>
                 </a>
               ) : (
                 <Link
                   to={destination}
+                  onClick={() => bannerService.trackBannerClick(banner.id)}
                   className="block w-full overflow-hidden cursor-pointer"
                   aria-label={banner.title}
                 >
-                  <img
-                    src={banner.imageUrl}
-                    alt={banner.title}
-                    className="w-full h-auto max-h-[260px] sm:max-h-[310px] lg:max-h-[340px] object-cover sm:object-fill rounded-2xl sm:rounded-3xl transition-transform duration-500 group-hover:scale-[1.01]"
-                  />
+                  <picture>
+                    {banner.mobileImageUrl && (
+                      <source media="(max-width: 639px)" srcSet={banner.mobileImageUrl} />
+                    )}
+                    <img
+                      src={banner.imageUrl}
+                      alt={banner.title}
+                      loading={currentSlide === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/exam_hero_banner.png';
+                      }}
+                      className="w-full aspect-[16/7] sm:aspect-[21/8] md:aspect-[3/1] object-cover object-center rounded-2xl sm:rounded-3xl transition-transform duration-500 group-hover:scale-[1.01]"
+                    />
+                  </picture>
                 </Link>
               )}
 

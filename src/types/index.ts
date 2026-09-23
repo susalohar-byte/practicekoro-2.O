@@ -904,6 +904,8 @@ export interface PlatformAnalyticsData {
 }
 
 export type BannerThemeColor = 'blue' | 'purple' | 'emerald' | 'amber' | 'rose' | 'indigo' | 'cyan';
+export type BannerAudience = 'all' | 'free' | 'pro';
+export type BannerPlacement = 'home_hero' | 'catalog' | 'all';
 
 export interface HeroBanner {
   id: string;
@@ -917,8 +919,14 @@ export interface HeroBanner {
   secondaryCtaLink?: string;
   featurePills?: string[];
   imageUrl?: string;
+  mobileImageUrl?: string;
   bannerType?: 'full_image' | 'text_overlay';
   themeGradient?: BannerThemeColor;
+  targetAudience?: BannerAudience;
+  placement?: BannerPlacement;
+  startsAt?: string;
+  expiresAt?: string;
+  clickCount?: number;
   isActive: boolean;
   displayOrder: number;
   createdAt: string;
