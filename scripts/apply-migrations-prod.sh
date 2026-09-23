@@ -66,6 +66,9 @@ ALL_MIGRATIONS=(
   "supabase/migrations/031_admin_payment_gateway_management.sql"
   "supabase/migrations/032_app_settings_grants_and_admin_rpc.sql"
   "supabase/migrations/033_strictly_reset_student_roles_and_fix_admin.sql"
+  "supabase/migrations/034_fix_payment_gateway_and_order_creation.sql"
+  "supabase/migrations/035_auto_revoke_subscription_on_refund.sql"
+  "supabase/migrations/036_test_level_negative_marking.sql"
 )
 
 # Unapplied migrations verified missing from production via schema audit (018 to 033)
@@ -86,6 +89,9 @@ PENDING_MIGRATIONS=(
   "supabase/migrations/031_admin_payment_gateway_management.sql"
   "supabase/migrations/032_app_settings_grants_and_admin_rpc.sql"
   "supabase/migrations/033_strictly_reset_student_roles_and_fix_admin.sql"
+  "supabase/migrations/034_fix_payment_gateway_and_order_creation.sql"
+  "supabase/migrations/035_auto_revoke_subscription_on_refund.sql"
+  "supabase/migrations/036_test_level_negative_marking.sql"
 )
 
 # ----------------------------------------------------------------------------

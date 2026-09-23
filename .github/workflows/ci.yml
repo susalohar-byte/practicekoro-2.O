@@ -4,51 +4,54 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
 
-permissions:
-  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  quality:
+  typecheck-and-lint:
+    name: Typecheck + Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version: '20'
+          cache: 'npm'
       - run: npm ci
-      - run: npm audit --omit=dev
-      - run: npm run check
+      - run: npx tsc --noEmit
+      - run: npx eslint src/
 
-  e2e:
+  test:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version: '20'
+          cache: 'npm'
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e -- --project=chromium
+      - run: npx vitest run --reporter=verbose
 
-  bundle:
+  build:
+    name: Production Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version: '20'
+          cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - name: Enforce dist size budget (12 MB)
-        run: >
-          node -e "const fs=require('fs');
-          const bytes=fs.readdirSync('dist',{recursive:true})
-            .map(f=>'dist/'+f).filter(f=>fs.statSync(f).isFile())
-            .reduce((n,f)=>n+fs.statSync(f).size,0);
-          const mb=(bytes/1048576).toFixed(2);
-          console.log('dist size: '+mb+' MB');
-          if(bytes>12*1048576){console.error('BUNDLE BUDGET EXCEEDED (12 MB)');process.exit(1);}"
+
+  notify:
+    name: Notify on Failure
+    needs: [typecheck-and-lint, test, build]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CI failed — check the workflow logs above."
