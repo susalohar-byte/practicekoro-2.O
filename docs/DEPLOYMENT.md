@@ -33,9 +33,29 @@ Values prefixed with `VITE_` are included in the browser bundle and must never c
 
 ## Hostinger SPA routing
 
-Configure the web root so existing files are served normally and all other routes are rewritten
-to `/index.html`. Confirm direct navigation to `/practice`, `/tests/:id` and `/admin` works after
+`public/.htaccess` is copied into `dist/` on every build and already handles:
+HTTPS force, SPA fallback to `/index.html`, immutable caching for hashed
+assets, no-cache for `index.html`, and baseline security headers. Confirm
+direct navigation to `/practice`, `/tests/:id` and `/admin` works after
 deployment.
+
+## Shared-hosting release (one command)
+
+```bash
+npm run deploy:shared          # gate + build + release/*.zip + checklist
+# optional FTP upload + extract on server:
+HOSTINGER_FTP_HOST=... HOSTINGER_FTP_USER=... HOSTINGER_FTP_PASS='...' \
+  HOSTINGER_FTP_DIR=/public_html bash scripts/deploy-shared-hosting.sh --upload
+```
+
+Manual hPanel path: upload the newest `release/practicekoro-dist-*.zip` to
+`public_html`, extract (overwrite), keep one previous zip for rollback, and
+confirm `.htaccess` landed in `public_html`. Then run the post-deploy
+checklist printed by the script (migrations → verify-data-layer → smoke URLs).
+
+Critical: `VITE_*` values are baked into the bundle at build time — `.env`
+must hold the real `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` before
+building, otherwise the deployed site white-screens.
 
 ## Release checklist
 

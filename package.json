@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "deploy:shared": "bash scripts/deploy-shared-hosting.sh",
     "check": "npm run typecheck && npm run lint && npm test && npm run format:check && npm run build"
   },
   "dependencies": {
