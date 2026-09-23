@@ -42,14 +42,21 @@ This directory contains the canonical historical Supabase migration files for Pr
 | `031_admin_payment_gateway_management.sql`        | Secure RPCs for Razorpay gateway credentials & zero-leak preview     |    **PENDING**    |
 | `032_app_settings_grants_and_admin_rpc.sql`       | Full grants on app_settings, atomic admin RPC, avatar storage policy |    **PENDING**    |
 | `033_strictly_reset_student_roles_and_fix_admin.sql` | Drop super_admin default from profiles, reset student accounts to student, guarantee admin@practicekoro.online is sole Super Admin |    **PENDING**    |
+| `034_fix_payment_gateway_and_order_creation.sql` | Authoritative Razorpay order RPC + gateway credential hardening      |    **PENDING**    |
+| `035_auto_revoke_subscription_on_refund.sql`     | Auto-revoke Pro subscription on refund webhook                       |    **PENDING**    |
+| `036_test_level_negative_marking.sql`           | Test-level optional negative marking (Full Mock / PYQ only) in `submit_test_attempt` | **PENDING** |
+| `037_create_hero_banners_table.sql`             | `hero_banners` table for student dashboard carousel                  |    **PENDING**    |
+| `038_submit_attempt_covering_indexes.sql`       | Covering indexes for `submit_test_attempt` rank/count hot paths       |    **PENDING**    |
 
 ---
 
 ## 2. Safety Rules
 
-1. **Do not rename or delete historical migration files:** Supabase records migrations by filename. Duplicate numbers (`011`, `015`, `027`) and gaps (`012`, `023`) are preserved intentionally.
-2. **Lexicographical execution order:** Migrations must always run in alphabetical/lexicographical order as listed in `scripts/apply-migrations-prod.sh`.
-3. **Idempotency:** Every migration uses `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `ON CONFLICT DO NOTHING/UPDATE`, and `DROP POLICY IF EXISTS` guards to prevent corruption on re-run.
+1. **Do not rename or delete historical migration files:** Supabase records migrations by filename. Duplicate numbers (`011`, `015`, `027`, `037`) and gaps (`012`, `023`) are preserved intentionally.
+2. **New migrations must use the next free sequential number** (currently `039+`) and never reuse an existing prefix — this keeps filenames unique going forward without rewriting history.
+3. **Deleted:** `CONSOLIDATED_PENDING_018_TO_031.sql` (removed; it was an unreferenced partial bundle missing 010–017 and risked divergent applies — the individual files above are canonical).
+4. **Lexicographical execution order:** Migrations must always run in alphabetical/lexicographical order as listed in `scripts/apply-migrations-prod.sh`.
+5. **Idempotency:** Every migration uses `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `ON CONFLICT DO NOTHING/UPDATE`, and `DROP POLICY IF EXISTS` guards to prevent corruption on re-run.
 
 ---
 

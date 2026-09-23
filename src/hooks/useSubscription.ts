@@ -31,6 +31,8 @@ export function useSubscription() {
     loadData();
   }, [loadData, user]);
 
+  // UI hint only — never the access gate. The server enforces Pro via
+  // has_test_access() (start_test_attempt / get_student_exam_questions).
   const activePro = isPro || subscriptionDetails?.isActive || user?.role === 'admin';
 
   const hasAccessToTest = (isPremiumTest: boolean): boolean => {

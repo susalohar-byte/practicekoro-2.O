@@ -7,20 +7,23 @@ interface CreateOrderPayload {
 }
 
 Deno.serve(async (req: Request) => {
-  // 1. CORS headers
+  // 1. CORS headers — restricted to ALLOWED_ORIGINS; when unset, defaults
+  // to the production domains (never the permissive '*' fallback).
   const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
+  const effectiveOrigins =
+    allowedOrigins.length > 0
+      ? allowedOrigins
+      : ['https://practicekoro.online', 'https://www.practicekoro.online'];
   const requestOrigin = req.headers.get('Origin');
   const corsHeaders: Record<string, string> = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     Vary: 'Origin',
   };
-  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+  if (requestOrigin && effectiveOrigins.includes(requestOrigin)) {
     corsHeaders['Access-Control-Allow-Origin'] = requestOrigin;
-  } else if (allowedOrigins.length === 0) {
-    corsHeaders['Access-Control-Allow-Origin'] = '*';
   }
 
   if (req.method === 'OPTIONS') {
@@ -120,34 +123,42 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // 5. Retrieve Razorpay credentials from payment_gateways or environment
-  let keyId = Deno.env.get('RAZORPAY_KEY_ID');
-  let keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+  // 5. Retrieve Razorpay credentials. The key SECRET comes from Supabase
+  // secrets ONLY (never the database). The key ID is publishable (it is
+  // returned to the browser for checkout), so it may come from env or the
+  // payment_gateways table.
+  const keyId = Deno.env.get('RAZORPAY_KEY_ID');
+  const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
 
-  if (!keyId || !keySecret) {
+  let resolvedKeyId = keyId;
+  if (!resolvedKeyId) {
     try {
       const { data: gwData } = await serviceClient
         .from('payment_gateways')
-        .select('key_id, key_secret, is_active')
+        .select('key_id')
         .eq('gateway', 'razorpay')
         .eq('is_active', true)
         .maybeSingle();
 
-      if (gwData) {
-        keyId = keyId || gwData.key_id;
-        keySecret = keySecret || gwData.key_secret;
+      if (gwData?.key_id) {
+        resolvedKeyId = gwData.key_id;
       }
     } catch (gwErr) {
-      console.warn('Error reading gateway configuration from database:', gwErr);
+      console.warn('Error reading gateway key ID from database:', gwErr);
     }
   }
 
-  if (!keyId || !keySecret || keyId === 'rzp_test_practicekoro_key' || !keySecret.trim()) {
+  if (
+    !resolvedKeyId ||
+    !keySecret ||
+    resolvedKeyId === 'rzp_test_practicekoro_key' ||
+    !keySecret.trim()
+  ) {
     console.error('Razorpay gateway credentials not properly configured');
     return new Response(
       JSON.stringify({
         error:
-          'Payment gateway not configured. Please enter your valid Razorpay Key ID and Key Secret in Admin Settings.',
+          'Payment gateway not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Supabase Edge Function secrets.',
       }),
       {
         status: 503,
@@ -158,7 +169,7 @@ Deno.serve(async (req: Request) => {
 
   // 6. Call Razorpay Orders API to create an authoritative order
   const amountInPaise = Math.round(priceNum * 100);
-  const authHeaderBasic = 'Basic ' + btoa(`${keyId.trim()}:${keySecret.trim()}`);
+  const authHeaderBasic = 'Basic ' + btoa(`${resolvedKeyId.trim()}:${keySecret.trim()}`);
   const receiptId = `pk_${user.id.slice(0, 8)}_${Date.now()}`.slice(0, 40);
 
   let rzpOrder: { id: string; amount: number; currency: string };
@@ -234,7 +245,7 @@ Deno.serve(async (req: Request) => {
       amount: plan.price,
       currency: plan.currency || 'INR',
       duration_days: plan.duration_days,
-      key_id: keyId.trim(),
+      key_id: resolvedKeyId.trim(),
     }),
     {
       status: 200,

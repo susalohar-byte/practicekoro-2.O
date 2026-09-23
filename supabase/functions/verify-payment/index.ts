@@ -11,22 +11,23 @@ interface PaymentVerificationPayload {
 }
 
 Deno.serve(async (req: Request) => {
-  // 1. CORS headers — restrict to configured origins when ALLOWED_ORIGINS is set
-  // (comma-separated list, e.g. "https://practicekoro.online,https://www.practicekoro.online").
-  // With no allow-list configured this keeps the previous permissive behavior.
+  // 1. CORS headers — restricted to ALLOWED_ORIGINS; when unset, defaults
+  // to the production domains (never the permissive '*' fallback).
   const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
+  const effectiveOrigins =
+    allowedOrigins.length > 0
+      ? allowedOrigins
+      : ['https://practicekoro.online', 'https://www.practicekoro.online'];
   const requestOrigin = req.headers.get('Origin');
   const corsHeaders: Record<string, string> = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     Vary: 'Origin',
   };
-  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+  if (requestOrigin && effectiveOrigins.includes(requestOrigin)) {
     corsHeaders['Access-Control-Allow-Origin'] = requestOrigin;
-  } else if (allowedOrigins.length === 0) {
-    corsHeaders['Access-Control-Allow-Origin'] = '*';
   }
 
   if (req.method === 'OPTIONS') {
@@ -79,27 +80,13 @@ Deno.serve(async (req: Request) => {
 
   const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
-  // 3. Resolve key secret - checks environment variable first, then dynamically from payment_gateways table
-  let keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
-  if (!keySecret) {
-    try {
-      const { data: gwData } = await serviceClient
-        .from('payment_gateways')
-        .select('key_secret')
-        .eq('gateway', 'razorpay')
-        .eq('is_active', true)
-        .maybeSingle();
-      if (gwData?.key_secret) {
-        keySecret = gwData.key_secret;
-      }
-    } catch (dbErr) {
-      console.warn('Could not read gateway secret from database:', dbErr);
-    }
-  }
+  // 3. Resolve key secret — Supabase secrets ONLY. There is intentionally
+  // no database fallback: payment secrets must never live in app tables.
+  const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
 
   if (!keySecret) {
     console.error(
-      'Server misconfiguration: RAZORPAY_KEY_SECRET is not configured in env or database'
+      'Server misconfiguration: RAZORPAY_KEY_SECRET is not set in Supabase secrets'
     );
     return new Response(JSON.stringify({ error: 'Payment gateway secret not configured' }), {
       status: 500,

@@ -72,7 +72,9 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // 4. Resolve webhook secret - checks environment variable first, then dynamically from payment_gateways table
+  // 4. Resolve webhook secret — Supabase secrets ONLY. There is
+  // intentionally no database fallback: payment secrets must never live
+  // in app tables.
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -86,26 +88,11 @@ Deno.serve(async (req: Request) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  let webhookSecret = Deno.env.get('RAZORPAY_WEBHOOK_SECRET');
-  if (!webhookSecret) {
-    try {
-      const { data: gwData } = await supabase
-        .from('payment_gateways')
-        .select('webhook_secret')
-        .eq('gateway', 'razorpay')
-        .eq('is_active', true)
-        .maybeSingle();
-      if (gwData?.webhook_secret) {
-        webhookSecret = gwData.webhook_secret;
-      }
-    } catch (err) {
-      console.warn('Could not read webhook secret from database:', err);
-    }
-  }
+  const webhookSecret = Deno.env.get('RAZORPAY_WEBHOOK_SECRET');
 
   if (!webhookSecret) {
     console.error(
-      'Server misconfiguration: RAZORPAY_WEBHOOK_SECRET is not configured in env or database'
+      'Server misconfiguration: RAZORPAY_WEBHOOK_SECRET is not set in Supabase secrets'
     );
     return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
       status: 500,

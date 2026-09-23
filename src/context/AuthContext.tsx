@@ -52,6 +52,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
 
   const refreshProStatus = useCallback(async (): Promise<boolean> => {
+    // UI hint only: this flag (and its localStorage cache) must never gate
+    // paid content by itself — premium access is enforced server-side via
+    // has_test_access() inside start_test_attempt / get_student_exam_questions
+    // (403 without an active subscription). A user editing localStorage only
+    // changes cosmetics, never access.
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.rpc('has_active_subscription');
@@ -76,9 +81,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     /**
-     * Resolve the full UserProfile from Supabase, including authoritative role
-     * from user_roles + profiles tables. If the user's email is in the
-     * ADMIN_EMAILS allow-list, auto-promote via sync_admin_profile RPC.
+     * Resolve the full UserProfile from Supabase. The role is authoritative
+     * from the user_roles + profiles tables ONLY — an allow-listed email
+     * never grants admin by itself. Promotion happens exclusively server-side
+     * via the SECURITY DEFINER sync_admin_profile RPC; the client never
+     * writes admin roles (no user_roles upserts, no profiles role updates).
      */
     const resolveUserProfile = async (supabaseUser: {
       id: string;
@@ -92,35 +99,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ]);
 
         let profile = profileRes.data as ProfileRow | null;
-        const userRoles = (rolesRes.data as { role: string }[] | null) || [];
+        let userRoles = (rolesRes.data as { role: string }[] | null) || [];
         const emailIsAdmin = isAdminEmail(supabaseUser.email);
-        const isAdminUser =
-          userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin' || emailIsAdmin;
-        const effectiveRole: UserRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
-        // Auto-promote admin-listed emails in database (server-side via SECURITY DEFINER RPC)
+        // Server-side promotion only: ask the RPC to promote allow-listed
+        // emails, then re-read the authoritative role from the database.
         if (
           emailIsAdmin &&
           (profile?.role !== 'admin' || !userRoles.some((r) => r.role === 'admin'))
         ) {
           try {
             const rpcResult = await supabase.rpc('sync_admin_profile');
-            if (rpcResult.error) {
-              await Promise.all([
-                supabase
-                  .from('user_roles')
-                  .upsert(
-                    { user_id: supabaseUser.id, role: 'admin' },
-                    { onConflict: 'user_id,role' }
-                  ),
-                supabase.from('profiles').update({ role: 'admin' }).eq('id', supabaseUser.id),
+            if (!rpcResult.error) {
+              const [profileRes2, rolesRes2] = await Promise.all([
+                supabase.from('profiles').select('*').eq('id', supabaseUser.id).maybeSingle(),
+                supabase.from('user_roles').select('role').eq('user_id', supabaseUser.id),
               ]);
+              profile = (profileRes2.data as ProfileRow | null) || profile;
+              userRoles = (rolesRes2.data as { role: string }[] | null) || userRoles;
+            } else {
+              console.warn('Admin promotion RPC returned an error:', rpcResult.error);
             }
-            if (profile) profile.role = 'admin';
           } catch (promoteErr) {
             console.warn('Auto admin promotion sync warning:', promoteErr);
           }
         }
+
+        const isAdminUser =
+          userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
+        const effectiveRole: UserRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
         const meta = supabaseUser.user_metadata || {};
         const metaFullName = ((meta.full_name || meta.name || '') as string).trim();
@@ -183,15 +190,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (err) {
         console.error('Supabase profile resolve error:', err);
         const meta = supabaseUser.user_metadata || {};
-        const fallbackIsAdmin = isAdminEmail(supabaseUser.email);
         return {
           id: supabaseUser.id,
           fullName: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
           email: supabaseUser.email || '',
           avatarUrl: meta.avatar_url || meta.picture || undefined,
-          // Fallback: use isAdminEmail only for the error path to avoid locking admins out
-          role: fallbackIsAdmin ? 'admin' : 'student',
-          adminRole: fallbackIsAdmin ? 'super_admin' : undefined,
+          // Error path defaults to student: admin must come from the
+          // database, never from an email allow-list on the client.
+          role: 'student' as UserRole,
+          adminRole: undefined,
           createdAt: new Date().toISOString(),
         };
       }
@@ -296,30 +303,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           supabase.from('user_roles').select('role').eq('user_id', data.user.id),
         ]);
 
-        const profile = profileRes.data as ProfileRow | null;
-        const userRoles = (rolesRes.data as { role: string }[] | null) || [];
+        let profile = profileRes.data as ProfileRow | null;
+        let userRoles = (rolesRes.data as { role: string }[] | null) || [];
         const emailIsAdmin = isAdminEmail(email) || isAdminEmail(data.user.email);
-        const isAdminUser =
-          userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin' || emailIsAdmin;
-        authenticatedRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
-        // Auto-promote admin-listed emails
+        // Server-side promotion only: ask the RPC to promote allow-listed
+        // emails, then re-read the authoritative role. The client never
+        // writes admin roles itself.
         if (
           emailIsAdmin &&
           (profile?.role !== 'admin' || !userRoles.some((r) => r.role === 'admin'))
         ) {
           try {
-            await Promise.all([
-              supabase
-                .from('user_roles')
-                .upsert({ user_id: data.user.id, role: 'admin' }, { onConflict: 'user_id,role' }),
-              supabase.from('profiles').update({ role: 'admin' }).eq('id', data.user.id),
-            ]);
-            if (profile) profile.role = 'admin';
+            const rpcResult = await supabase.rpc('sync_admin_profile');
+            if (!rpcResult.error) {
+              const [profileRes2, rolesRes2] = await Promise.all([
+                supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle(),
+                supabase.from('user_roles').select('role').eq('user_id', data.user.id),
+              ]);
+              profile = (profileRes2.data as ProfileRow | null) || profile;
+              userRoles = (rolesRes2.data as { role: string }[] | null) || userRoles;
+            } else {
+              console.warn('Admin promotion RPC returned an error:', rpcResult.error);
+            }
           } catch (promoteErr) {
             console.warn('Auto admin promotion sync warning:', promoteErr);
           }
         }
+
+        const isAdminUser =
+          userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
+        authenticatedRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
         const userObj: UserProfile = {
           id: profile?.id || data.user.id,

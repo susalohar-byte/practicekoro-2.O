@@ -21,125 +21,74 @@ export const subscriptionApi = {
         ? MOCK_SUBSCRIPTION_PLANS
         : MOCK_SUBSCRIPTION_PLANS.filter((p) => p.isActive);
     }
-    try {
-      let query = supabase.from('subscription_plans').select('*');
-      if (!includeInactive) {
-        query = query.eq('is_active', true);
-      }
-      const { data, error } = await query.order('order_index', { ascending: true });
-
-      if (error || !data || data.length === 0) {
-        return includeInactive
-          ? MOCK_SUBSCRIPTION_PLANS
-          : MOCK_SUBSCRIPTION_PLANS.filter((p) => p.isActive);
-      }
-      return (data as PlanRow[]).map((d) => ({
-        id: d.id,
-        name: d.title ?? undefined,
-        title: d.title,
-        description: d.description ?? undefined,
-        durationDays: d.duration_days,
-        price: Number(d.price),
-        originalPrice: d.original_price ? Number(d.original_price) : undefined,
-        currency: 'INR',
-        features: Array.isArray(d.features) ? (d.features as string[]) : [],
-        isActive: d.is_active,
-        orderIndex: d.order_index,
-      }));
-    } catch {
-      return includeInactive
-        ? MOCK_SUBSCRIPTION_PLANS
-        : MOCK_SUBSCRIPTION_PLANS.filter((p) => p.isActive);
+    let query = supabase.from('subscription_plans').select('*');
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
     }
+    const { data, error } = await query.order('order_index', { ascending: true });
+
+    // Never fall back to mock prices in production: surface DB errors and
+    // return [] when no plans exist so the UI shows an empty/error state.
+    if (error) {
+      throw new Error(error.message || 'Failed to load subscription plans');
+    }
+    if (!data || data.length === 0) {
+      return [];
+    }
+    return (data as PlanRow[]).map((d) => ({
+      id: d.id,
+      name: d.title ?? undefined,
+      title: d.title,
+      description: d.description ?? undefined,
+      durationDays: d.duration_days,
+      price: Number(d.price),
+      originalPrice: d.original_price ? Number(d.original_price) : undefined,
+      currency: 'INR',
+      features: Array.isArray(d.features) ? (d.features as string[]) : [],
+      isActive: d.is_active,
+      orderIndex: d.order_index,
+    }));
   },
 
   async createRazorpayOrder(planId: string): Promise<RazorpayOrderResponse> {
     if (isSupabaseConfigured) {
-      // 1. Primary path: authoritative order creation via Razorpay Orders API Edge Function
-      try {
-        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
-          'create-razorpay-order',
-          {
-            body: { planId },
-          }
-        );
-
-        if (!edgeError && edgeData && edgeData.order_id) {
-          return {
-            orderId: edgeData.order_id,
-            paymentId: edgeData.payment_id,
-            planId: edgeData.plan_id,
-            planTitle: edgeData.plan_title,
-            amount: Number(edgeData.amount),
-            currency: edgeData.currency || 'INR',
-            durationDays: Number(edgeData.duration_days),
-            keyId: edgeData.key_id,
-            isRealRazorpayOrder: true,
-          };
+      // Authoritative order creation via Razorpay Orders API Edge Function.
+      // Edge-returned errors are surfaced directly — there is intentionally
+      // no silent database fallback that could hide a gateway outage.
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+        'create-razorpay-order',
+        {
+          body: { planId },
         }
+      );
 
-        if (edgeError) {
-          let detail = edgeError.message;
-          try {
-            if ((edgeError as any)?.context && typeof (edgeError as any).context.json === 'function') {
-              const body = await (edgeError as any).context.json();
-              if (body?.error) detail = body.error;
-            }
-          } catch {
-            // ignore
-          }
-          console.warn('Edge function order creation returned error, falling back to database RPC:', detail);
-        }
-      } catch (err: any) {
-        console.warn('Edge function order creation failed, falling back to database RPC:', err);
-      }
-
-      // 2. Fallback: database stored procedure
-      const { data, error } = await supabase.rpc('create_razorpay_order', {
-        p_plan_id: planId,
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to create payment order on server');
-      }
-
-      // Resolve public Razorpay key: 1. DB RPC -> 2. app_settings -> 3. env var
-      let resolvedKeyId = (data.key_id || '').trim();
-      if (!resolvedKeyId) {
+      if (edgeError) {
+        let detail = edgeError.message || 'Payment gateway error';
         try {
-          const { data: settingRow } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('id', 'payment_gateway_razorpay_key_id')
-            .maybeSingle();
-          if (settingRow?.value) {
-            resolvedKeyId =
-              typeof settingRow.value === 'string'
-                ? settingRow.value.replace(/^"|"$/g, '').trim()
-                : String(settingRow.value).trim();
+          if ((edgeError as any)?.context && typeof (edgeError as any).context.json === 'function') {
+            const body = await (edgeError as any).context.json();
+            if (body?.error) detail = body.error;
           }
         } catch {
           // ignore
         }
+        throw new Error(detail);
       }
 
-      if (!resolvedKeyId) {
-        resolvedKeyId =
-          (import.meta.env.VITE_RAZORPAY_KEY as string) ||
-          (import.meta.env.VITE_RAZORPAY_KEY_ID as string) ||
-          '';
+      if (!edgeData || !edgeData.order_id) {
+        throw new Error('Payment gateway did not return an order. Please try again.');
       }
 
       return {
-        orderId: data.order_id,
-        paymentId: data.payment_id,
-        planId: data.plan_id,
-        planTitle: data.plan_title,
-        amount: Number(data.amount),
-        currency: data.currency || 'INR',
-        durationDays: Number(data.duration_days),
-        keyId: resolvedKeyId,
-        isRealRazorpayOrder: Boolean(data.is_real_razorpay_order ?? false),
+        orderId: edgeData.order_id,
+        paymentId: edgeData.payment_id,
+        planId: edgeData.plan_id,
+        planTitle: edgeData.plan_title,
+        amount: Number(edgeData.amount),
+        currency: edgeData.currency || 'INR',
+        durationDays: Number(edgeData.duration_days),
+        keyId: edgeData.key_id,
+        isRealRazorpayOrder: true,
       };
     }
 
