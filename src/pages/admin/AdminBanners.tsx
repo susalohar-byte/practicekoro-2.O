@@ -32,24 +32,6 @@ const THEME_OPTIONS: { id: BannerThemeColor; label: string; bgClass: string; tex
   { id: 'cyan', label: 'Electric Cyan', bgClass: 'from-cyan-50 to-cyan-100 border-cyan-200', textClass: 'text-cyan-600' },
 ];
 
-const SYSTEM_BANNER_PRESETS = [
-  {
-    label: 'WBPSC & WBP Exam Series Banner',
-    url: '/images/exam_hero_banner.png',
-    target: '/exams',
-  },
-  {
-    label: 'PracticeKoro Pro Pass Banner',
-    url: '/images/student_hero_banner.jpg',
-    target: '/subscription',
-  },
-  {
-    label: 'Daily 10 Rapid Challenge Banner',
-    url: '/images/daily_10_banner_exact.png',
-    target: '/practice',
-  },
-];
-
 const QUICK_TARGET_LINKS = [
   { label: 'Exams (/exams)', url: '/exams' },
   { label: 'Pro Pass (/subscription)', url: '/subscription' },
@@ -903,34 +885,10 @@ export const AdminBanners: React.FC = () => {
                   </div>
                 )}
 
-                {/* Built-in Presets */}
-                <div className="pt-1">
-                  <span className="text-[11px] font-semibold text-slate-500">Or pick an existing template:</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1.5">
-                    {SYSTEM_BANNER_PRESETS.map((preset, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setImageUrl(preset.url);
-                          if (!primaryCtaLink) setPrimaryCtaLink(preset.target);
-                        }}
-                        className={`p-1.5 rounded-xl border text-left flex items-center gap-2 transition-all cursor-pointer ${
-                          imageUrl === preset.url
-                            ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20'
-                            : 'border-slate-200 hover:bg-white bg-white/70'
-                        }`}
-                      >
-                        <img
-                          src={preset.url}
-                          alt={preset.label}
-                          className="w-12 h-7 object-cover rounded-md border border-slate-200 shrink-0"
-                        />
-                        <span className="text-[10px] font-bold text-slate-700 line-clamp-1">{preset.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <p className="text-[11px] text-slate-500 flex items-center gap-1.5 pt-0.5">
+                  <span className="font-semibold text-slate-700">💡 Recommended banner size:</span>
+                  <span>1200 × 360 px (approx. 3:1 aspect ratio). PNG, JPG, WebP, SVG (Max 5MB).</span>
+                </p>
 
                 {/* Selected Banner Image Preview */}
                 {imageUrl && (
