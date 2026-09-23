@@ -6,6 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ExamProvider } from '@/context/ExamContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { MaintenanceProvider } from '@/context/MaintenanceContext';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { App } from './App';
 import './index.css';
 
@@ -20,19 +21,21 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider>
-          <AuthProvider>
-            <ExamProvider>
-              <MaintenanceProvider>
-                <App />
-              </MaintenanceProvider>
-            </ExamProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary area="PracticeKoro">
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ThemeProvider>
+            <AuthProvider>
+              <ExamProvider>
+                <MaintenanceProvider>
+                  <App />
+                </MaintenanceProvider>
+              </ExamProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
