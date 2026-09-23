@@ -94,6 +94,7 @@ export interface Exam {
   testsCount?: number;
   subjectsCount?: number;
   totalVacancies?: number;
+  questionsCount?: number;
 }
 
 export interface ExamCategory {

@@ -53,13 +53,50 @@ export const catalogApi = {
   async getExams(): Promise<Exam[]> {
     if (!isSupabaseConfigured) return MOCK_EXAMS;
     try {
-      const { data, error } = await supabase
-        .from('exams')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
+      const [examsRes, testsRes, testExamsRes] = await Promise.all([
+        supabase
+          .from('exams')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true }),
+        supabase
+          .from('tests')
+          .select('id, exam_id, total_questions')
+          .eq('is_active', true)
+          .eq('status', 'published'),
+        supabase
+          .from('test_exams')
+          .select('test_id, exam_id'),
+      ]);
 
-      if (error || !data || data.length === 0) return MOCK_EXAMS;
+      const data = examsRes.data;
+      if (examsRes.error || !data || data.length === 0) return MOCK_EXAMS;
+
+      const statsMap: Record<string, { testsCount: number; questionsCount: number }> = {};
+      data.forEach((e: ExamRow) => {
+        statsMap[e.id] = { testsCount: 0, questionsCount: 0 };
+      });
+
+      if (testsRes.data) {
+        testsRes.data.forEach(
+          (t: { id: string; exam_id?: string | null; total_questions?: number | null }) => {
+            const targetExamIds = new Set<string>();
+            if (t.exam_id && statsMap[t.exam_id]) targetExamIds.add(t.exam_id);
+            if (testExamsRes.data) {
+              testExamsRes.data
+                .filter((te: { test_id: string; exam_id: string }) => te.test_id === t.id)
+                .forEach((te: { test_id: string; exam_id: string }) => {
+                  if (statsMap[te.exam_id]) targetExamIds.add(te.exam_id);
+                });
+            }
+            targetExamIds.forEach((examId) => {
+              statsMap[examId].testsCount += 1;
+              statsMap[examId].questionsCount += t.total_questions || 0;
+            });
+          }
+        );
+      }
+
       return (data as ExamRow[]).map((item) => ({
         id: item.id,
         title: item.title,
@@ -70,6 +107,8 @@ export const catalogApi = {
         bannerUrl: item.banner_url ?? undefined,
         orderIndex: item.order_index,
         isActive: item.is_active,
+        testsCount: statsMap[item.id]?.testsCount ?? 0,
+        questionsCount: statsMap[item.id]?.questionsCount ?? 0,
       }));
     } catch {
       return MOCK_EXAMS;
