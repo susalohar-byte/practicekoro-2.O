@@ -100,7 +100,7 @@ check "idx_test_results_attempt exists" "1" \
 
 echo " [4] RLS enabled on exam/scoring tables ..."
 for t in tests test_questions questions test_attempts attempt_answers test_results mistakes; do
-  check "RLS on $t" "t" \
+  check "RLS on $t" "true" \
     "SELECT relrowsecurity::text FROM pg_class WHERE relnamespace='public'::regnamespace AND relname='$t';"
 done
 
