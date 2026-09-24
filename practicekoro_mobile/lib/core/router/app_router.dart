@@ -5,6 +5,7 @@ import '../../features/onboarding/splash_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/exams/exam_selection_screen.dart';
 import '../../features/exams/primary_exam_selection_screen.dart';
+import '../../features/exams/exam_tests_screen.dart';
 import '../../features/practice/topic_screen.dart';
 import '../../features/test_runner/test_runner_screen.dart';
 import '../../features/result_analytics/result_screen.dart';
@@ -55,6 +56,15 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/exams',
       builder: (context, state) => const MainScaffold(initialIndex: 1),
+    ),
+
+    // Test List Within Exam Series
+    GoRoute(
+      path: '/exams/:examId',
+      builder: (context, state) {
+        final examId = state.pathParameters['examId'] ?? 'wbp-constable';
+        return ExamTestsScreen(examId: examId);
+      },
     ),
 
     // 8. Practice Screen (via MainScaffold tab 2)

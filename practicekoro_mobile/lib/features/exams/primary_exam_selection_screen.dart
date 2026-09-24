@@ -36,6 +36,7 @@ class _PrimaryExamSelectionScreenState extends State<PrimaryExamSelectionScreen>
 
   void _onContinue() {
     LocalStorageService.saveTargetExam(_selectedExam);
+    LocalStorageService.setOnboardingCompleted(true);
     context.go('/home');
   }
 

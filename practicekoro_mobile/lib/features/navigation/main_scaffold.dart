@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
 import '../home/home_screen.dart';
 import '../exams/exams_catalog_screen.dart';
 import '../practice/practice_screen.dart';
@@ -18,7 +17,6 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   late int _currentIndex;
 
-
   @override
   void initState() {
     super.initState();
@@ -28,6 +26,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -44,54 +43,69 @@ class _MainScaffoldState extends State<MainScaffold> {
           const ProfileScreen(),
         ],
       ),
-      bottomNavigationBar: _currentIndex == 0
-          ? null
-          : Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            top: BorderSide(color: AppColors.border, width: 1),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          height: 64,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.10),
+                blurRadius: 20,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
+              _buildNavItem(1, Icons.layers_rounded, Icons.layers_outlined, 'Exams'),
+              _buildNavItem(2, Icons.menu_book_rounded, Icons.menu_book_outlined, 'Practice'),
+              _buildNavItem(3, Icons.bar_chart_rounded, Icons.bar_chart_outlined, 'Results'),
+              _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded, 'Profile'),
+            ],
           ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textMuted,
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, size: 22),
-              activeIcon: Icon(Icons.home_rounded, size: 22),
-              label: 'Home',
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
+    final bool isSelected = _currentIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _currentIndex = index),
+        borderRadius: BorderRadius.circular(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 44,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                isSelected ? activeIcon : inactiveIcon,
+                size: 20,
+                color: isSelected ? const Color(0xFF0158FC) : const Color(0xFF64748B),
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.assignment_outlined, size: 22),
-              activeIcon: Icon(Icons.assignment_rounded, size: 22),
-              label: 'Exams',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book_outlined, size: 22),
-              activeIcon: Icon(Icons.menu_book_rounded, size: 22),
-              label: 'Practice',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.leaderboard_outlined, size: 22),
-              activeIcon: Icon(Icons.leaderboard_rounded, size: 22),
-              label: 'Results',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded, size: 22),
-              activeIcon: Icon(Icons.person_rounded, size: 22),
-              label: 'Profile',
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? const Color(0xFF0158FC) : const Color(0xFF64748B),
+                letterSpacing: -0.2,
+              ),
             ),
           ],
         ),

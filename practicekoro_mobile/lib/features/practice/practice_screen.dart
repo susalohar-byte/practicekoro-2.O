@@ -1,74 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/widgets/pk_pill_tabs.dart';
 
-class PracticeScreen extends StatefulWidget {
+class PracticeScreen extends StatelessWidget {
   const PracticeScreen({super.key});
 
   @override
-  State<PracticeScreen> createState() => _PracticeScreenState();
-}
-
-class _PracticeScreenState extends State<PracticeScreen> {
-  int _selectedTabIndex = 0; // 0: Subjects, 1: Topics
-
-  final List<Map<String, dynamic>> _subjects = [
-    {
-      'id': 'math',
-      'title': 'Mathematics',
-      'questions': '1,240 Questions',
-      'icon': Icons.calculate_rounded,
-      'color': AppColors.primary,
-      'bgColor': AppColors.primaryLight,
-    },
-    {
-      'id': 'reasoning',
-      'title': 'Reasoning',
-      'questions': '960 Questions',
-      'icon': Icons.psychology_rounded,
-      'color': AppColors.error,
-      'bgColor': AppColors.errorLight,
-    },
-    {
-      'id': 'gk',
-      'title': 'General Knowledge',
-      'questions': '1,520 Questions',
-      'icon': Icons.public_rounded,
-      'color': AppColors.success,
-      'bgColor': AppColors.successLight,
-    },
-    {
-      'id': 'english',
-      'title': 'English',
-      'questions': '1,010 Questions',
-      'icon': Icons.translate_rounded,
-      'color': AppColors.purple,
-      'bgColor': AppColors.purpleLight,
-    },
-    {
-      'id': 'bengali',
-      'title': 'Bengali',
-      'questions': '820 Questions',
-      'icon': Icons.menu_book_rounded,
-      'color': AppColors.orange,
-      'bgColor': AppColors.orangeLight,
-    },
-    {
-      'id': 'computer',
-      'title': 'Computer',
-      'questions': '640 Questions',
-      'icon': Icons.computer_rounded,
-      'color': AppColors.cyan,
-      'bgColor': AppColors.cyanLight,
-    },
-  ];
-
-  @override
   Widget build(BuildContext context) {
+    final modes = [
+      {
+        'title': 'Subject Practice',
+        'subtitle': 'Topic-wise questions from all syllabus subjects',
+        'icon': Icons.menu_book_rounded,
+        'color': const Color(0xFF2563EB),
+        'bgColor': const Color(0xFFEFF6FF),
+        'onTap': () => context.push('/practice/topics/math'),
+      },
+      {
+        'title': 'Topic Practice',
+        'subtitle': 'Drill down into specific chapters & sub-topics',
+        'icon': Icons.category_rounded,
+        'color': const Color(0xFF10B981),
+        'bgColor': const Color(0xFFECFDF5),
+        'onTap': () => context.push('/practice/topics/gk'),
+      },
+      {
+        'title': 'Chapter PYQs',
+        'subtitle': 'Previous years question papers solved chapter-wise',
+        'icon': Icons.history_edu_rounded,
+        'color': const Color(0xFFF59E0B),
+        'bgColor': const Color(0xFFFEF3C7),
+        'onTap': () => context.push('/practice/topics/reasoning'),
+      },
+      {
+        'title': 'Weak Topic Practice',
+        'subtitle': 'Special questions on areas where your accuracy is low',
+        'icon': Icons.trending_down_rounded,
+        'color': const Color(0xFFEF4444),
+        'bgColor': const Color(0xFFFEF2F2),
+        'badge': 'Needs Focus',
+        'badgeColor': const Color(0xFFEF4444),
+        'onTap': () => context.push('/live-test/test-wbp-001'),
+      },
+      {
+        'title': 'Incorrect Questions',
+        'subtitle': 'Re-attempt all questions you previously answered wrong',
+        'icon': Icons.cancel_outlined,
+        'color': const Color(0xFFDC2626),
+        'bgColor': const Color(0xFFFEE2E2),
+        'badge': '36 Questions',
+        'badgeColor': const Color(0xFFDC2626),
+        'onTap': () => context.push('/saved-questions'),
+      },
+      {
+        'title': 'Saved Questions',
+        'subtitle': 'Access all important questions you bookmarked',
+        'icon': Icons.bookmark_rounded,
+        'color': const Color(0xFF8B5CF6),
+        'bgColor': const Color(0xFFF5F3FF),
+        'badge': '24 Questions',
+        'badgeColor': const Color(0xFF8B5CF6),
+        'onTap': () => context.push('/saved-questions'),
+      },
+      {
+        'title': 'Random Practice',
+        'subtitle': 'Quick mixed speed challenge of 10-20 questions',
+        'icon': Icons.shuffle_rounded,
+        'color': const Color(0xFF06B6D4),
+        'bgColor': const Color(0xFFECFEFF),
+        'onTap': () => context.push('/live-test/test-wbp-001'),
+      },
+    ];
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text(
           'Practice',
           style: TextStyle(
@@ -79,223 +88,138 @@ class _PracticeScreenState extends State<PracticeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded, color: AppColors.navy),
+            icon: const Icon(Icons.search_rounded, color: AppColors.navy),
             onPressed: () {},
           ),
+          const SizedBox(width: 8),
         ],
-        backgroundColor: AppColors.background,
-        elevation: 0,
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
             const Text(
-              'Choose a subject to start practicing',
+              'Select Practice Mode',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.navy,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Boost your weak topics and master previous questions',
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
 
-            // Segmented Switcher (Subjects | Topics)
-            PKPillTabs(
-              tabs: const ['Subjects', 'Topics'],
-              selectedIndex: _selectedTabIndex,
-              isFullWidth: true,
-              padding: EdgeInsets.zero,
-              onTabSelected: (idx) {
-                setState(() => _selectedTabIndex = idx);
-                if (idx == 1) {
-                  context.push('/practice/topics/math');
-                }
-              },
-            ),
+            // 7 Modes List
+            ...modes.map((mode) {
+              final color = mode['color'] as Color;
+              final bgColor = mode['bgColor'] as Color;
+              final badge = mode['badge'] as String?;
+              final badgeColor = mode['badgeColor'] as Color?;
 
-            const SizedBox(height: 18),
-
-            // 6 Subject Cards Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.25,
-              ),
-              itemCount: _subjects.length,
-              itemBuilder: (context, index) {
-                final sub = _subjects[index];
-                return InkWell(
-                  onTap: () {
-                    context.push('/practice/topics/${sub['id']}');
-                  },
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: InkWell(
+                  onTap: mode['onTap'] as VoidCallback,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withAlpha(4),
-                          blurRadius: 8,
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Row(
                       children: [
+                        // Colored squircle icon
                         Container(
-                          width: 38,
-                          height: 38,
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
-                            color: sub['bgColor'] as Color,
-                            borderRadius: BorderRadius.circular(10),
+                            color: bgColor,
+                            borderRadius: BorderRadius.circular(14),
                           ),
+                          alignment: Alignment.center,
                           child: Icon(
-                            sub['icon'] as IconData,
-                            color: sub['color'] as Color,
-                            size: 20,
+                            mode['icon'] as IconData,
+                            color: color,
+                            size: 24,
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              sub['title'] as String,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.navy,
+                        const SizedBox(width: 14),
+
+                        // Title & Subtitle
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    mode['title'] as String,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.navy,
+                                    ),
+                                  ),
+                                  if (badge != null && badgeColor != null) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: badgeColor.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        badge,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: badgeColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              sub['questions'] as String,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
+                              const SizedBox(height: 3),
+                              Text(
+                                mode['subtitle'] as String,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  height: 1.3,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Color(0xFF94A3B8),
+                          size: 22,
                         ),
                       ],
                     ),
                   ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // Quick Practice Section
-            const Text(
-              'Quick Practice',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.navy,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => context.push('/live-test/test-wbp-001'),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.successLight,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.flash_on_rounded, color: AppColors.success, size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Daily Practice',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.navy),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '10 Q • 5 Min',
-                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => context.push('/live-test/test-wbp-002'),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.errorLight,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Weak Topics',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.navy),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'Focus Now',
-                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              );
+            }),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
           ],
         ),
       ),

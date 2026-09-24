@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/widgets/pk_pill_tabs.dart';
+import '../../data/datasources/local_storage.dart';
 
 class ExamSelectionScreen extends StatefulWidget {
   const ExamSelectionScreen({super.key});
@@ -13,66 +13,79 @@ class ExamSelectionScreen extends StatefulWidget {
 class _ExamSelectionScreenState extends State<ExamSelectionScreen> {
   int _selectedCategoryIndex = 0;
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _categories = ['West Bengal', 'SSC', 'Railway', 'All'];
+  final List<String> _categories = ['All', 'West Bengal', 'SSC', 'Railway', 'Central'];
 
-  final List<Map<String, dynamic>> _allExams = [
-    {
-      'id': 'wbssc-group-d',
-      'title': 'WBSSC Group D',
-      'category': 'West Bengal',
-      'subtitle': 'State Government',
-      'icon': Icons.account_balance_rounded,
-      'color': AppColors.orange,
-    },
+  String _selectedExamId = 'wbp-constable';
+
+  final List<Map<String, dynamic>> _exams = [
     {
       'id': 'wbp-constable',
       'title': 'WBP Constable',
+      'subtitle': 'West Bengal Police',
       'category': 'West Bengal',
-      'subtitle': 'State Government',
-      'icon': Icons.shield_rounded,
-      'color': AppColors.error,
+      'emblem': 'assets/images/exams/emblem_wbp.png',
+      'fallbackIcon': Icons.shield_rounded,
+      'color': const Color(0xFFEF4444),
+    },
+    {
+      'id': 'wbssc',
+      'title': 'WBSSC',
+      'subtitle': 'School Service Commission',
+      'category': 'West Bengal',
+      'emblem': 'assets/images/exams/emblem_wbssc.png',
+      'fallbackIcon': Icons.account_balance_rounded,
+      'color': const Color(0xFFF97316),
     },
     {
       'id': 'wbpsc',
       'title': 'WBPSC',
+      'subtitle': 'Public Service Commission',
       'category': 'West Bengal',
-      'subtitle': 'State Government',
-      'icon': Icons.stars_rounded,
-      'color': AppColors.gold,
+      'emblem': 'assets/images/exams/emblem_wbpsc.png',
+      'fallbackIcon': Icons.stars_rounded,
+      'color': const Color(0xFFF59E0B),
     },
     {
-      'id': 'primary-tet',
-      'title': 'Primary TET',
-      'category': 'West Bengal',
-      'subtitle': 'Teaching Eligibility',
-      'icon': Icons.menu_book_rounded,
-      'color': AppColors.purple,
+      'id': 'railway-group-d',
+      'title': 'Railway Group D',
+      'subtitle': 'Indian Railways',
+      'category': 'Railway',
+      'emblem': 'assets/images/exams/emblem_railway.png',
+      'fallbackIcon': Icons.train_rounded,
+      'color': const Color(0xFF0F172A),
     },
     {
       'id': 'ssc-gd',
       'title': 'SSC GD',
+      'subtitle': 'Staff Selection Commission',
       'category': 'SSC',
-      'subtitle': 'Central Government',
-      'icon': Icons.military_tech_rounded,
-      'color': AppColors.navy,
-    },
-    {
-      'id': 'railway-ntpc',
-      'title': 'Railway (NTPC)',
-      'category': 'Railway',
-      'subtitle': 'Central Government',
-      'icon': Icons.train_rounded,
-      'color': AppColors.cyan,
-    },
-    {
-      'id': 'ssc-cgl',
-      'title': 'SSC CGL',
-      'category': 'SSC',
-      'subtitle': 'Central Government',
-      'icon': Icons.badge_rounded,
+      'emblem': 'assets/images/exams/emblem_ssc.png',
+      'fallbackIcon': Icons.military_tech_rounded,
       'color': AppColors.primary,
     },
+    {
+      'id': 'primary-tet',
+      'title': 'Primary TET',
+      'subtitle': 'Primary Education Board',
+      'category': 'West Bengal',
+      'emblem': 'assets/images/exams/emblem_tet.png',
+      'fallbackIcon': Icons.menu_book_rounded,
+      'color': const Color(0xFF8B5CF6),
+    },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = LocalStorageService.getTargetExam();
+    if (saved != null && saved.isNotEmpty) {
+      final match = _exams.firstWhere(
+        (e) => e['title'] == saved || e['id'] == saved,
+        orElse: () => _exams[0],
+      );
+      _selectedExamId = match['id'] as String;
+    }
+  }
 
   @override
   void dispose() {
@@ -80,12 +93,24 @@ class _ExamSelectionScreenState extends State<ExamSelectionScreen> {
     super.dispose();
   }
 
+  void _onContinue() {
+    final selected = _exams.firstWhere((e) => e['id'] == _selectedExamId);
+    LocalStorageService.saveTargetExam(selected['title'] as String);
+    LocalStorageService.setOnboardingCompleted(true);
+    context.go('/home');
+  }
+
+  void _onSkip() {
+    LocalStorageService.setOnboardingCompleted(true);
+    context.go('/home');
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedCat = _categories[_selectedCategoryIndex];
-    final query = _searchController.text.toLowerCase();
+    final query = _searchController.text.trim().toLowerCase();
 
-    final filteredExams = _allExams.where((exam) {
+    final filteredExams = _exams.where((exam) {
       final matchesCategory = selectedCat == 'All' || exam['category'] == selectedCat;
       final matchesQuery = query.isEmpty ||
           (exam['title'] as String).toLowerCase().contains(query) ||
@@ -95,57 +120,42 @@ class _ExamSelectionScreenState extends State<ExamSelectionScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title Header
+            // Top Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
                 children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   const Text(
-                    'Choose Your Exam',
+                    'PracticeKoro',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 16,
                       fontWeight: FontWeight.w900,
                       color: AppColors.navy,
-                      letterSpacing: -0.5,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Select the exam you want to prepare for',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Search Bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceMuted,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) => setState(() {}),
-                      decoration: const InputDecoration(
-                        hintText: 'Search exams...',
-                        hintStyle: TextStyle(fontSize: 14, color: AppColors.textMuted),
-                        prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted, size: 22),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _onSkip,
+                    child: const Text(
+                      'Skip',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF64748B),
                       ),
                     ),
                   ),
@@ -153,81 +163,220 @@ class _ExamSelectionScreenState extends State<ExamSelectionScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
-
-            // Category Filter Tabs
-            PKPillTabs(
-              tabs: _categories,
-              selectedIndex: _selectedCategoryIndex,
-              onTabSelected: (idx) => setState(() => _selectedCategoryIndex = idx),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Exams List
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                itemCount: filteredExams.length,
-                separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.borderSubtle),
-                itemBuilder: (context, index) {
-                  final exam = filteredExams[index];
-                  return InkWell(
-                    onTap: () {
-                      context.push('/primary-exam', extra: exam['id']);
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: (exam['color'] as Color).withAlpha(25),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              exam['icon'] as IconData,
-                              color: exam['color'] as Color,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  exam['title'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.navy,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  exam['subtitle'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            color: AppColors.textMuted,
-                            size: 22,
-                          ),
-                        ],
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  const SizedBox(height: 8),
+
+                  // Heading
+                  const Text(
+                    'Select Your\nTarget Exam',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.navy,
+                      letterSpacing: -0.5,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Choose your exam to get personalized\ncontent and test series.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF64748B),
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Search Bar
+                  Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) => setState(() {}),
+                      decoration: const InputDecoration(
+                        hintText: 'Search exams...',
+                        hintStyle: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: Color(0xFF94A3B8),
+                          size: 20,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Category Pills
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: List.generate(_categories.length, (idx) {
+                        final isSel = _selectedCategoryIndex == idx;
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedCategoryIndex = idx),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: isSel ? AppColors.primary : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _categories[idx],
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSel ? FontWeight.w700 : FontWeight.w600,
+                                color: isSel ? Colors.white : const Color(0xFF475569),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Exam List Cards
+                  ...filteredExams.map((exam) {
+                    final isSelected = exam['id'] == _selectedExamId;
+
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedExamId = exam['id'] as String),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFFF0F6FF) : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+                            width: isSelected ? 1.8 : 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            // Emblem
+                            Container(
+                              width: 44,
+                              height: 44,
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFF1F5F9)),
+                              ),
+                              child: Image.asset(
+                                exam['emblem'] as String,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => Icon(
+                                  exam['fallbackIcon'] as IconData,
+                                  color: exam['color'] as Color,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+
+                            // Title & Subtitle
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    exam['title'] as String,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                                      color: isSelected ? AppColors.primary : AppColors.navy,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    exam['subtitle'] as String,
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Selection Radio Indicator
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isSelected ? AppColors.primary : Colors.transparent,
+                                border: Border.all(
+                                  color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: isSelected
+                                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+
+            // Fixed Bottom Continue Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _onContinue,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

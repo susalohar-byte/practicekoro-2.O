@@ -18,6 +18,16 @@ class LocalStorageService {
     return _prefs?.getString(AppConstants.prefsTargetExamKey);
   }
 
+  static const String _onboardingCompleteKey = 'pk_onboarding_completed';
+
+  static bool isOnboardingCompleted() {
+    return _prefs?.getBool(_onboardingCompleteKey) ?? false;
+  }
+
+  static Future<void> setOnboardingCompleted([bool completed = true]) async {
+    await _prefs?.setBool(_onboardingCompleteKey, completed);
+  }
+
   static Future<void> saveLanguagePreference(bool preferBengali) async {
     await _prefs?.setBool('pk_prefer_bengali', preferBengali);
   }
@@ -60,5 +70,26 @@ class LocalStorageService {
 
   static bool isBookmarked(String questionId) {
     return getBookmarks().contains(questionId);
+  }
+
+  static bool isProUser() {
+    return _prefs?.getBool(AppConstants.prefsIsProUserKey) ?? false;
+  }
+
+  static Future<void> setProUser(bool isPro, {DateTime? expiresAt}) async {
+    await _prefs?.setBool(AppConstants.prefsIsProUserKey, isPro);
+    if (expiresAt != null) {
+      await _prefs?.setString(AppConstants.prefsProExpiresAtKey, expiresAt.toIso8601String());
+    }
+  }
+
+  static DateTime? getProExpiryDate() {
+    final raw = _prefs?.getString(AppConstants.prefsProExpiresAtKey);
+    if (raw != null) {
+      try {
+        return DateTime.parse(raw);
+      } catch (_) {}
+    }
+    return null;
   }
 }

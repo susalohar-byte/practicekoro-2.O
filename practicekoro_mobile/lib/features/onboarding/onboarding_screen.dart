@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/datasources/local_storage.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,18 +14,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  void _onNext() {
-    if (_currentPage < 2) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      context.go('/exam-selection');
-    }
-  }
+  final List<Map<String, String>> _slides = [
+    {
+      'title': 'Practice Today\nPerform Tomorrow',
+      'subtitle': 'Mock Tests • Practice • PYQ\nfor Your Success',
+      'image': 'assets/images/student.png',
+    },
+    {
+      'title': 'Real Exam Experience\nBefore The Real Day',
+      'subtitle': 'Curated by WB toppers & experts\nwith detailed solutions',
+      'image': 'assets/images/student.png',
+    },
+    {
+      'title': 'Track Your State Rank\n& Progress Faster',
+      'subtitle': 'Know where you stand among\nthousands of Bengal aspirants',
+      'image': 'assets/images/student.png',
+    },
+  ];
 
-  void _onSkip() {
+  void _onGetStarted() {
+    LocalStorageService.setOnboardingCompleted(true);
     context.go('/exam-selection');
   }
 
@@ -39,442 +48,179 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar with Skip
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Column(
+            children: [
+              // Top Brand Header with Skip
+              Stack(
+                alignment: Alignment.center,
                 children: [
-                  TextButton(
-                    onPressed: _onSkip,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      backgroundColor: AppColors.primaryLight,
-                    ),
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Page View
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-                },
-                children: [
-                  _buildPage1(),
-                  _buildPage2(),
-                  _buildPage3(),
-                ],
-              ),
-            ),
-
-            // Bottom Navigation (Dots + Next Button)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Indicator dots
-                  Row(
-                    children: List.generate(3, (index) {
-                      final isSelected = index == _currentPage;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        margin: const EdgeInsets.only(right: 6),
-                        width: isSelected ? 22 : 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : AppColors.border,
-                          borderRadius: BorderRadius.circular(4),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(11),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.contain,
                         ),
-                      );
-                    }),
-                  ),
-
-                  // Circular Forward Button
-                  GestureDetector(
-                    onTap: _onNext,
-                    child: Container(
-                      width: 54,
-                      height: 54,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withAlpha(80),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 24,
+                      const SizedBox(height: 4),
+                      const Text(
+                        'PracticeKoro',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.navy,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: TextButton(
+                      onPressed: _onGetStarted,
+                      child: const Text(
+                        'Skip',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildPage1() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          const Text(
-            'Your Dream\nStarts with Practice',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: AppColors.navy,
-              height: 1.2,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'High-quality mock tests, PYQ and topic practice for all major exams in West Bengal and beyond.',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          const Spacer(),
-          // Student Illustration representation
-          Center(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 260,
-                  height: 260,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withAlpha(120),
-                    shape: BoxShape.circle,
+              const SizedBox(height: 12),
+
+              // Swipable Slides
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (idx) => setState(() => _currentPage = idx),
+                  itemCount: _slides.length,
+                  itemBuilder: (context, index) {
+                    final slide = _slides[index];
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Title
+                        Text(
+                          slide['title']!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.navy,
+                            letterSpacing: -0.5,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Subtitle
+                        Text(
+                          slide['subtitle']!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // 3D Student Illustration (Responsive)
+                        Expanded(
+                          child: Center(
+                            child: Image.asset(
+                              slide['image']!,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 180,
+                                height: 180,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primaryLight,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.school_rounded,
+                                  size: 80,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+              // Carousel Indicators (Active capsule, inactive dots)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_slides.length, (idx) {
+                  final isCurrent = idx == _currentPage;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: isCurrent ? 24 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: isCurrent ? AppColors.primary : const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 24),
+
+              // Full Width Get Started Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _onGetStarted,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Get Started',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, size: 20),
+                    ],
                   ),
                 ),
-                Container(
-                  width: 220,
-                  height: 220,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withAlpha(60),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        size: 70,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(10),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.tablet_mac_rounded, color: AppColors.primary, size: 18),
-                          SizedBox(width: 8),
-                          Text(
-                            'Digital Smart Learning',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.navy),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Spacer(flex: 2),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPage2() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          const Text(
-            'Learn Smarter\nNot Harder',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: AppColors.navy,
-              height: 1.2,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Practice with detailed solutions, performance analysis and personalized recommendations.',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          const Spacer(),
-          // 4 Feature Cards
-          Column(
-            children: [
-              _buildFeatureTile(
-                icon: Icons.checklist_rounded,
-                title: 'Mock Tests',
-                bgColor: AppColors.primaryLight,
-                iconColor: AppColors.primary,
               ),
-              const SizedBox(height: 12),
-              _buildFeatureTile(
-                icon: Icons.grid_view_rounded,
-                title: 'Topic Practice',
-                bgColor: AppColors.cyanLight,
-                iconColor: AppColors.cyan,
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureTile(
-                icon: Icons.history_edu_rounded,
-                title: 'PYQ',
-                bgColor: AppColors.purpleLight,
-                iconColor: AppColors.purple,
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureTile(
-                icon: Icons.trending_up_rounded,
-                title: 'Performance',
-                bgColor: AppColors.pinkLight,
-                iconColor: AppColors.pink,
-              ),
+              const SizedBox(height: 8),
             ],
           ),
-          const Spacer(flex: 2),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeatureTile({
-    required IconData icon,
-    required String title,
-    required Color bgColor,
-    required Color iconColor,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(6),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 22),
-          ),
-          const SizedBox(width: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.navy,
-            ),
-          ),
-          const Spacer(),
-          const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPage3() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          const Text(
-            'Be Exam Ready\nWith PracticeKoro',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: AppColors.navy,
-              height: 1.2,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Join thousands of aspirants who are building a brighter future.',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          const Spacer(),
-          // Golden Trophy
-          Center(
-            child: Column(
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: AppColors.goldLight.withAlpha(140),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.goldGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.gold.withAlpha(80),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.emoji_events_rounded,
-                        size: 70,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.navy,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'DISCIPLINE TODAY • SUCCESS TOMORROW',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          // Trust Badges Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildTrustBadge(Icons.people_alt_rounded, '10K+', 'Students'),
-              _buildTrustBadge(Icons.verified_user_rounded, 'Expert', 'Content'),
-              _buildTrustBadge(Icons.rocket_launch_rounded, 'Higher', 'Success Rate'),
-            ],
-          ),
-          const Spacer(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrustBadge(IconData icon, String top, String bottom) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.primaryLight,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
         ),
-        const SizedBox(height: 6),
-        Text(
-          top,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.navy),
-        ),
-        Text(
-          bottom,
-          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-        ),
-      ],
+      ),
     );
   }
 }

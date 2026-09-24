@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 
 /// PracticeKoro Mockup Design System Colors
 class AppColors {
-  // Vibrant Primary Blue
-  static const Color primary = Color(0xFF1E6FFB);
-  static const Color primaryLight = Color(0xFFE8F1FF);
-  static const Color primaryBright = Color(0xFF0091FF);
-  static const Color primaryInteractive = Color(0xFF1E6FFB);
-  static const Color blueLight = Color(0xFFE8F1FF);
-  static const Color blueSoft = Color(0xFFD9E7FD);
+  // Vibrant Primary Blue (matches website #0158FC)
+  static const Color primary = Color(0xFF0158FC);
+  static const Color primaryLight = Color(0xFFEFF6FF);
+  static const Color primaryBright = Color(0xFF0158FC);
+  static const Color primaryInteractive = Color(0xFF0158FC);
+  static const Color blueLight = Color(0xFFEFF6FF);
+  static const Color blueSoft = Color(0xFFDBEAFE);
 
-  // Splash & Dark Header Navy
-  static const Color navyDark = Color(0xFF0D234A);
-  static const Color navy = Color(0xFF102A54);
+  // Website Midnight Navy & Headers
+  static const Color navyDark = Color(0xFF0C1B3D);
+  static const Color navy = Color(0xFF0F172A);
   static const Color navyLight = Color(0xFF1E3A8A);
 
   // Dark Theme Mappings
