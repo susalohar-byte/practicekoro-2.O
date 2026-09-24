@@ -407,12 +407,8 @@ export const MyTests: React.FC = () => {
   /* ═══════════════════════ RENDER ═══════════════════════ */
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 pb-20 font-sans transition-colors">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-        {/* ─── 2-col grid ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_350px] gap-6 items-start">
-          {/* ═══════════════ LEFT COLUMN ═══════════════ */}
-          <div className="space-y-5">
-            {/* ── 0. BREADCRUMB + TITLE ── */}
+      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-6">
+        {/* ── 0. BREADCRUMB + TITLE ── */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500">
                 <Link
@@ -849,32 +845,26 @@ export const MyTests: React.FC = () => {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
+
+        {/* ── 5. PERFORMANCE ANALYTICS & INSIGHTS (Moved below main content) ── */}
+        <div className="space-y-5 pt-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                Performance Analytics
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+                Detailed breakdown of your accuracy, subject mastery, and state-wide rank standing.
+              </p>
+            </div>
           </div>
 
-          {/* ═══════════════ RIGHT COLUMN ═══════════════ */}
-          <div className="space-y-4">
-            {/* ── 1. QUOTE CARD ── */}
-            <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-blue-50/80 to-sky-50 dark:from-blue-950/40 dark:via-slate-900/50 dark:to-blue-950/30 border border-blue-100/80 dark:border-blue-800/30 p-5 relative overflow-hidden shadow-sm">
-              <div className="relative z-10 pr-20">
-                <Sparkles className="w-5 h-5 text-[#0158FC] dark:text-blue-400 mb-2" />
-                <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 italic leading-relaxed">
-                  &ldquo;Progress, not perfection, leads to success.&rdquo;
-                </p>
-                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-2.5">
-                  — PracticeKoro
-                </p>
-              </div>
-              <img
-                src="/images/streak_mountain_summit.jpg"
-                alt="Mountain Summit"
-                className="absolute right-0 bottom-0 w-28 h-24 object-cover object-bottom pointer-events-none opacity-80 dark:opacity-40 select-none rounded-tl-2xl"
-              />
-            </div>
-
-            {/* ── 2. PERFORMANCE OVERVIEW ── */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
+          {/* Row 1: Performance Overview & Subject Performance (2 columns on lg) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+            {/* ── PERFORMANCE OVERVIEW ── */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6 space-y-4">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                   Performance Overview
                 </h3>
                 <select
@@ -890,8 +880,8 @@ export const MyTests: React.FC = () => {
               </div>
 
               {/* Donut + Legend */}
-              <div className="flex items-center justify-between gap-4 pt-1">
-                <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row items-center justify-around gap-6 pt-2">
+                <div className="relative w-32 h-32 shrink-0 flex items-center justify-center">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                     <circle
                       cx="50"
@@ -930,10 +920,10 @@ export const MyTests: React.FC = () => {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
+                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">
                       {metrics.avgAccuracy}%
                     </span>
-                    <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-tight">
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-tight">
                       Overall
                       <br />
                       Accuracy
@@ -941,15 +931,15 @@ export const MyTests: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2.5 text-xs font-semibold flex-1">
+                <div className="space-y-3 text-xs sm:text-sm font-semibold w-full sm:w-auto sm:min-w-[190px]">
                   {[
                     { label: 'Correct', value: '3,370', dot: 'bg-emerald-500' },
                     { label: 'Incorrect', value: '720', dot: 'bg-rose-500' },
                     { label: 'Unattempted', value: '230', dot: 'bg-slate-400 dark:bg-slate-600' },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                        <span className={`w-2 h-2 rounded-full ${item.dot}`} />
+                    <div key={item.label} className="flex items-center justify-between gap-6">
+                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                        <span className={`w-2.5 h-2.5 rounded-full ${item.dot}`} />
                         <span>{item.label}</span>
                       </div>
                       <span className="font-bold text-slate-900 dark:text-white">
@@ -961,10 +951,10 @@ export const MyTests: React.FC = () => {
               </div>
             </div>
 
-            {/* ── 3. SUBJECT PERFORMANCE ── */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-3.5">
+            {/* ── SUBJECT PERFORMANCE ── */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                   Subject Performance
                 </h3>
                 <Link
@@ -997,12 +987,12 @@ export const MyTests: React.FC = () => {
               <div className="space-y-3 pt-1">
                 {SUBJECTS.map((subj) => (
                   <div key={subj.name} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-5 h-5 rounded-md ${subj.color} text-white flex items-center justify-center shrink-0`}
+                          className={`w-6 h-6 rounded-md ${subj.color} text-white flex items-center justify-center shrink-0`}
                         >
-                          <subj.Icon className="w-3 h-3" />
+                          <subj.Icon className="w-3.5 h-3.5" />
                         </div>
                         <span className="font-bold text-slate-900 dark:text-white">
                           {subj.name}
@@ -1010,7 +1000,7 @@ export const MyTests: React.FC = () => {
                       </div>
                       <span className={`font-extrabold ${subj.textColor}`}>{subj.pct}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                       <div
                         className={`h-full ${subj.color} rounded-full transition-all duration-700 ease-out`}
                         style={{ width: `${subj.pct}%` }}
@@ -1020,12 +1010,15 @@ export const MyTests: React.FC = () => {
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* ── 4. YOUR RANK ── */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-3.5">
+          {/* Row 2: Your Rank, Keep Going, and Motivational Quote (3 columns on md/lg) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+            {/* ── YOUR RANK CARD ── */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6 flex flex-col justify-between space-y-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Your Rank</h3>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">Your Rank</h3>
                   <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
                     WBP Constable - Mock 03
                   </p>
@@ -1038,39 +1031,39 @@ export const MyTests: React.FC = () => {
                 </Link>
               </div>
 
-              <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="flex items-center justify-between gap-3 pt-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <Trophy className="w-5 h-5" />
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Trophy className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-lg font-black text-slate-900 dark:text-white leading-none">
+                    <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">
                       # 147
                     </p>
-                    <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">
+                    <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-1">
                       out of 2,843 students
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100/80 dark:border-emerald-700/40 rounded-xl px-3 py-2 text-right shrink-0">
+                <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100/80 dark:border-emerald-700/40 rounded-xl px-3.5 py-2 text-right shrink-0">
                   <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-extrabold text-xs">
-                    <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                    <ShieldCheck className="w-4 h-4 shrink-0" />
                     <span>Top 6%</span>
                   </div>
-                  <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                  <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
                     You&apos;re doing great!
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* ── 5. KEEP GOING ── */}
-            <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-blue-50/80 to-sky-50 dark:from-blue-950/40 dark:via-slate-900/50 dark:to-blue-950/30 border border-blue-100/80 dark:border-blue-800/30 p-5 relative overflow-hidden shadow-sm">
-              <div className="relative z-10 pr-24">
-                <div className="flex items-center gap-1.5 mb-1">
+            {/* ── KEEP GOING CARD ── */}
+            <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-blue-50/80 to-sky-50 dark:from-blue-950/40 dark:via-slate-900/50 dark:to-blue-950/30 border border-blue-100/80 dark:border-blue-800/30 p-5 sm:p-6 relative overflow-hidden shadow-sm flex flex-col justify-between space-y-4">
+              <div className="relative z-10 pr-20">
+                <div className="flex items-center gap-1.5 mb-1.5">
                   <TrendingUp className="w-4 h-4 text-[#0158FC] dark:text-blue-400" />
-                  <h3 className="text-sm font-black text-[#0158FC] dark:text-blue-400">
+                  <h3 className="text-sm sm:text-base font-black text-[#0158FC] dark:text-blue-400">
                     Keep Going!
                   </h3>
                 </div>
@@ -1090,6 +1083,24 @@ export const MyTests: React.FC = () => {
                 src="/images/results_growth_chart.png"
                 alt="Growth chart"
                 className="absolute right-2 bottom-2 w-24 h-20 object-contain pointer-events-none select-none drop-shadow-sm dark:opacity-60"
+              />
+            </div>
+
+            {/* ── MOTIVATIONAL QUOTE CARD ── */}
+            <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-blue-50/80 to-sky-50 dark:from-blue-950/40 dark:via-slate-900/50 dark:to-blue-950/30 border border-blue-100/80 dark:border-blue-800/30 p-5 sm:p-6 relative overflow-hidden shadow-sm flex flex-col justify-between space-y-4">
+              <div className="relative z-10 pr-20">
+                <Sparkles className="w-5 h-5 text-[#0158FC] dark:text-blue-400 mb-2" />
+                <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 italic leading-relaxed">
+                  &ldquo;Progress, not perfection, leads to success.&rdquo;
+                </p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-2.5">
+                  — PracticeKoro
+                </p>
+              </div>
+              <img
+                src="/images/streak_mountain_summit.jpg"
+                alt="Mountain Summit"
+                className="absolute right-0 bottom-0 w-28 h-24 object-cover object-bottom pointer-events-none opacity-80 dark:opacity-40 select-none rounded-tl-2xl"
               />
             </div>
           </div>
