@@ -12,6 +12,7 @@ export default tseslint.config(
       'test-results',
       'public',
       'supabase/functions',
+      'practicekoro_mobile/**',
     ],
   },
   js.configs.recommended,

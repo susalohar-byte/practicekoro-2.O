@@ -1,12 +1,15 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
-// Supabase credentials come ONLY from environment variables. There are
-// intentionally no hardcoded defaults: a misconfigured build must fail fast
-// with a clear message (rendered by the root ErrorBoundary) instead of
-// silently talking to the live database from a fork or bad build.
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
+import { DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY } from '@/utils/envGate';
+
+// PracticeKoro Production Supabase credentials
+// Supabase anon key is the public client key intended for browsers.
+const supabaseUrl =
+  (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || DEFAULT_SUPABASE_URL;
+const supabaseAnonKey =
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() ||
+  DEFAULT_SUPABASE_ANON_KEY;
 
 if (
   !supabaseUrl ||
