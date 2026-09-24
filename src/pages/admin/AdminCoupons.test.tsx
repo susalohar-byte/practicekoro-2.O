@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { AdminCoupons } from './AdminCoupons';
 import { api } from '@/services/api';
 
@@ -66,11 +67,18 @@ describe('AdminCoupons Page', () => {
     vi.mocked(api.getAdminCoupons).mockResolvedValue(mockCoupons);
   });
 
+  const renderCoupons = () =>
+    render(
+      <MemoryRouter>
+        <AdminCoupons />
+      </MemoryRouter>
+    );
+
   it('renders metrics and coupon list', async () => {
-    render(<AdminCoupons />);
+    renderCoupons();
 
     await waitFor(() => {
-      expect(screen.getByText('Coupons & Discounts')).toBeInTheDocument();
+      expect(screen.getAllByText('Coupons & Discounts')[0]).toBeInTheDocument();
       expect(screen.getByText('WELCOME50')).toBeInTheDocument();
       expect(screen.getByText('FESTIVE20')).toBeInTheDocument();
       expect(screen.getByText('FLAT ₹50 OFF')).toBeInTheDocument();
@@ -79,7 +87,7 @@ describe('AdminCoupons Page', () => {
   });
 
   it('filters coupons by search term', async () => {
-    render(<AdminCoupons />);
+    renderCoupons();
 
     await waitFor(() => {
       expect(screen.getByText('WELCOME50')).toBeInTheDocument();
@@ -112,7 +120,7 @@ describe('AdminCoupons Page', () => {
       },
     });
 
-    render(<AdminCoupons />);
+    renderCoupons();
 
     await waitFor(() => {
       expect(screen.getByText('Create Coupon')).toBeInTheDocument();
@@ -149,7 +157,7 @@ describe('AdminCoupons Page', () => {
   it('toggles coupon active status', async () => {
     vi.mocked(api.updateAdminCoupon).mockResolvedValueOnce({ success: true });
 
-    render(<AdminCoupons />);
+    renderCoupons();
 
     await waitFor(() => {
       expect(screen.getByText('WELCOME50')).toBeInTheDocument();

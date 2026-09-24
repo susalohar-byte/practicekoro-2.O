@@ -820,20 +820,14 @@ export const AdminTests: React.FC = () => {
           </span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('structure')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'structure'
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'
-          }`}
+        <Link
+          to="/admin/test-series"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-indigo-600 dark:text-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-800/60 ml-auto"
         >
-          <FolderTree className="w-4 h-4" />
-          Topic Structure
-          <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-black/20 dark:bg-white/10">
-            {subjects.length} Subjects
-          </span>
-        </button>
+          <ListOrdered className="w-4 h-4" />
+          <span>Test Series Packages</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
       {/* TAB 1: TOPIC TESTS */}

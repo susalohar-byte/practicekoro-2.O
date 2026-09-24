@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import {
   TrendingUp,
   DollarSign,
   CreditCard,
+  Tag,
   Users,
   Calendar,
   Download,
@@ -262,6 +264,31 @@ export const AdminRevenueAnalytics: React.FC = () => {
             <span>Student Leaderboard</span>
           </button>
         </div>
+      </div>
+
+      {/* Sub-Navigation Tabs across Subscriptions, Coupons, Revenue */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+        <Link
+          to="/admin/subscriptions"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <CreditCard className="w-4 h-4 text-indigo-500" />
+          <span>Subscriptions & Aspirants</span>
+        </Link>
+        <Link
+          to="/admin/coupons"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <Tag className="w-4 h-4 text-amber-500" />
+          <span>Coupons & Discounts</span>
+        </Link>
+        <Link
+          to="/admin/revenue-analytics"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-xs"
+        >
+          <TrendingUp className="w-4 h-4 text-emerald-300" />
+          <span>Revenue Analytics & Ledger</span>
+        </Link>
       </div>
 
       {/* ─── Date Range Selector Bar ────────────────────────────── */}

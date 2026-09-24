@@ -17,14 +17,7 @@ import {
   X,
   Sparkles,
   FolderTree,
-  ListOrdered,
-  Tag,
   AlertTriangle,
-  Network,
-  Users,
-  History,
-  Activity,
-  BarChart3,
 } from 'lucide-react';
 import { useMaintenance } from '@/context/MaintenanceContext';
 import { cn } from '@/lib/utils';
@@ -65,37 +58,27 @@ export const AdminLayout: React.FC = () => {
       ],
     },
     {
-      title: 'Content Management',
+      title: 'Content & Curriculum',
       items: [
         {
           label: 'Question Bank',
-          path: '/admin/questions',
-          altPaths: ['/admin/question-bank'],
+          path: '/admin/question-bank',
+          altPaths: ['/admin/questions', '/admin/item-analysis'],
           icon: BookOpen,
           permission: 'canManageQuestions',
         },
         {
           label: 'Manage Exams',
           path: '/admin/exams',
+          altPaths: ['/admin/exam-topics'],
           icon: Shield,
           permission: 'canManageExams',
         },
         {
-          label: 'Exam-Topic Mapping',
-          path: '/admin/exam-topics',
-          icon: Network,
-          permission: 'canManageExams',
-        },
-        {
-          label: 'Mock Test Management',
+          label: 'Mock Tests & Series',
           path: '/admin/tests',
+          altPaths: ['/admin/test-series', '/admin/test-questions'],
           icon: FileText,
-          permission: 'canManageTests',
-        },
-        {
-          label: 'Test Series',
-          path: '/admin/test-series',
-          icon: ListOrdered,
           permission: 'canManageTests',
         },
         {
@@ -105,62 +88,37 @@ export const AdminLayout: React.FC = () => {
           icon: FolderTree,
           permission: 'canManageExams',
         },
-        {
-          label: 'Hero Banners',
-          path: '/admin/banners',
-          icon: Sparkles,
-          permission: 'canManageExams',
-        },
       ],
     },
     {
-      title: 'Analytics & Reports',
+      title: 'Monetization & Students',
       items: [
         {
-          label: 'Analytics & Reports',
-          path: '/admin/revenue-analytics',
-          altPaths: ['/admin/analytics', '/admin/revenue', '/admin/financials'],
-          icon: BarChart3,
-          permission: 'canManageSubscriptions',
-        },
-        {
-          label: 'Question Item Analysis',
-          path: '/admin/item-analysis',
-          icon: Activity,
-          permission: 'canManageQuestions',
-        },
-      ],
-    },
-    {
-      title: 'Administration',
-      items: [
-        {
-          label: 'Subscriptions',
+          label: 'Subscriptions & Billing',
           path: '/admin/subscriptions',
-          altPaths: ['/admin/students', '/admin/pro-users'],
+          altPaths: [
+            '/admin/students',
+            '/admin/pro-users',
+            '/admin/coupons',
+            '/admin/discounts',
+            '/admin/revenue-analytics',
+            '/admin/analytics',
+            '/admin/revenue',
+            '/admin/financials',
+          ],
           icon: CreditCard,
           permission: 'canManageSubscriptions',
         },
+      ],
+    },
+    {
+      title: 'Support & Settings',
+      items: [
         {
-          label: 'Coupons & Discounts',
-          path: '/admin/coupons',
-          altPaths: ['/admin/discounts'],
-          icon: Tag,
-          permission: 'canManageCoupons',
-        },
-        {
-          label: 'Team & Staff',
-          path: '/admin/staff',
-          icon: Users,
-          permission: 'canManageStaff',
-          badge: 'RBAC',
-        },
-        {
-          label: 'Audit Trail Logs',
-          path: '/admin/audit-logs',
-          icon: History,
-          permission: 'canViewAuditLogs',
-          badge: 'Live',
+          label: 'Support & Help',
+          path: '/admin/support',
+          icon: HelpCircle,
+          permission: 'canManageSupport',
         },
         {
           label: 'Notifications',
@@ -169,14 +127,9 @@ export const AdminLayout: React.FC = () => {
           permission: 'canManageNotifications',
         },
         {
-          label: 'Support & Help',
-          path: '/admin/support',
-          icon: HelpCircle,
-          permission: 'canManageSupport',
-        },
-        {
           label: 'Settings',
           path: '/admin/settings',
+          altPaths: ['/admin/banners', '/admin/staff', '/admin/audit-logs'],
           icon: Settings,
           permission: 'canManageSettings',
         },

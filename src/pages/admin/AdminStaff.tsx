@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -14,6 +15,9 @@ import {
   UserMinus,
   RefreshCw,
   X,
+  Settings as SettingsIcon,
+  Sparkles,
+  History,
 } from 'lucide-react';
 import type { AdminRole, AdminStaffMember } from '@/types';
 import { cn } from '@/lib/utils';
@@ -229,6 +233,38 @@ export const AdminStaff: React.FC = () => {
             <span>Add / Assign Staff</span>
           </button>
         </div>
+      </div>
+
+      {/* Sub-Navigation Tabs across Settings, Banners, Staff, Audit Logs */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <Link
+          to="/admin/settings"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <SettingsIcon className="w-4 h-4 text-slate-500" />
+          <span>General & Gateway</span>
+        </Link>
+        <Link
+          to="/admin/banners"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span>Hero Banners</span>
+        </Link>
+        <Link
+          to="/admin/staff"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-pk-primary text-white shadow-xs"
+        >
+          <Users className="w-4 h-4" />
+          <span>Team & Staff</span>
+        </Link>
+        <Link
+          to="/admin/audit-logs"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <History className="w-4 h-4 text-emerald-500" />
+          <span>Audit Logs</span>
+        </Link>
       </div>
 
       {/* Metric Cards */}

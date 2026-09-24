@@ -379,9 +379,9 @@ describe('AdminSettings & Maintenance Mode System', () => {
         </MemoryRouter>
       );
 
-      // Admin should bypass maintenance screen and see student navbar
+      // Admin should bypass maintenance screen and see student sidebar
       await waitFor(() => {
-        expect(screen.getByTestId('student-navbar')).toBeInTheDocument();
+        expect(screen.getByTestId('student-sidebar')).toBeInTheDocument();
       });
       expect(screen.queryByText('প্ল্যাটফর্ম সাময়িক রক্ষণাবেক্ষণে রয়েছে')).not.toBeInTheDocument();
     });

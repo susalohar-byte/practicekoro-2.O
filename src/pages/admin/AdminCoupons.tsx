@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -19,6 +20,8 @@ import {
   Layers,
   X,
   Zap,
+  CreditCard,
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import type { CouponItem } from '@/types';
@@ -320,6 +323,31 @@ export const AdminCoupons: React.FC = () => {
             Create Coupon
           </Button>
         </div>
+      </div>
+
+      {/* Sub-Navigation Tabs across Subscriptions, Coupons, Revenue */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xs">
+        <Link
+          to="/admin/subscriptions"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800"
+        >
+          <CreditCard className="w-4 h-4 text-indigo-400" />
+          <span>Subscriptions & Aspirants</span>
+        </Link>
+        <Link
+          to="/admin/coupons"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-xs"
+        >
+          <Tag className="w-4 h-4 text-amber-300" />
+          <span>Coupons & Discounts</span>
+        </Link>
+        <Link
+          to="/admin/revenue-analytics"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800"
+        >
+          <TrendingUp className="w-4 h-4 text-emerald-400" />
+          <span>Revenue Analytics & Ledger</span>
+        </Link>
       </div>
 
       {/* KPI Cards */}

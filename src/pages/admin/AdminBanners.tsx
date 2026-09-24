@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Sparkles,
   Plus,
@@ -21,6 +22,8 @@ import {
   Calendar,
   MousePointerClick,
   RefreshCw,
+  Settings as SettingsIcon,
+  History,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { bannerService } from '@/services/bannerService';
@@ -402,6 +405,38 @@ export const AdminBanners: React.FC = () => {
             <span>Add New Banner</span>
           </button>
         </div>
+      </div>
+
+      {/* Sub-Navigation Tabs across Settings, Banners, Staff, Audit Logs */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <Link
+          to="/admin/settings"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        >
+          <SettingsIcon className="w-4 h-4 text-slate-500" />
+          <span>General & Gateway</span>
+        </Link>
+        <Link
+          to="/admin/banners"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#0158FC] text-white shadow-xs"
+        >
+          <Sparkles className="w-4 h-4 text-amber-300" />
+          <span>Hero Banners</span>
+        </Link>
+        <Link
+          to="/admin/staff"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        >
+          <Users className="w-4 h-4 text-indigo-500" />
+          <span>Team & Staff</span>
+        </Link>
+        <Link
+          to="/admin/audit-logs"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        >
+          <History className="w-4 h-4 text-emerald-500" />
+          <span>Audit Logs</span>
+        </Link>
       </div>
 
       {/* Stats Cards */}
