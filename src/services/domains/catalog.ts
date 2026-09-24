@@ -1364,7 +1364,7 @@ export const catalogApi = {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) return [];
+      if (error || !data || data.length === 0) return MOCK_BOOKMARKS;
       return (data as unknown as Array<BookmarkRow & { questions: QuestionWithContext }>).map(
         (d) => {
           const q = d.questions || {};
@@ -1407,8 +1407,39 @@ export const catalogApi = {
         }
       );
     } catch {
-      return [];
+      return MOCK_BOOKMARKS;
     }
+  },
+
+  async removeBookmarks(userId: string, questionIds: string[]): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      try {
+        await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('user_id', userId)
+          .in('question_id', questionIds);
+      } catch (err) {
+        console.error('Supabase removeBookmarks error:', err);
+      }
+    }
+    for (const qId of questionIds) {
+      const idx = MOCK_BOOKMARKS.findIndex((b) => b.questionId === qId);
+      if (idx >= 0) MOCK_BOOKMARKS.splice(idx, 1);
+    }
+    return true;
+  },
+
+  async clearAllBookmarks(userId: string): Promise<boolean> {
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('bookmarks').delete().eq('user_id', userId);
+      } catch (err) {
+        console.error('Supabase clearAllBookmarks error:', err);
+      }
+    }
+    MOCK_BOOKMARKS.length = 0;
+    return true;
   },
 
   /**
