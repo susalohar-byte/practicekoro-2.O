@@ -56,8 +56,8 @@ export const bn: Dictionary = {
     subBilingual: 'বাংলা ও English',
     subEnd: '-এ।',
     ctaPrimary: 'ফ্রি প্র্যাকটিস শুরু করো',
-    ctaDashboard: 'ড্যাশবোর্ডে যাও',
-    ctaSecondary: 'এক্সাম ও টেস্ট দেখো',
+    ctaDashboard: 'Go to Dashboard',
+    ctaSecondary: 'Explore Exams & Tests',
   },
 };
 
