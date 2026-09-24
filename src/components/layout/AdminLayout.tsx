@@ -18,6 +18,7 @@ import {
   Sparkles,
   FolderTree,
   AlertTriangle,
+  ListOrdered,
 } from 'lucide-react';
 import { useMaintenance } from '@/context/MaintenanceContext';
 import { cn } from '@/lib/utils';
@@ -75,10 +76,16 @@ export const AdminLayout: React.FC = () => {
           permission: 'canManageExams',
         },
         {
-          label: 'Mock Tests & Series',
+          label: 'Mock Test Management',
           path: '/admin/tests',
-          altPaths: ['/admin/test-series', '/admin/test-questions'],
+          altPaths: ['/admin/test-questions'],
           icon: FileText,
+          permission: 'canManageTests',
+        },
+        {
+          label: 'Test Series',
+          path: '/admin/test-series',
+          icon: ListOrdered,
           permission: 'canManageTests',
         },
         {

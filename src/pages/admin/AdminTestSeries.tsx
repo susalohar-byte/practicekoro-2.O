@@ -427,14 +427,23 @@ export const AdminTestSeries: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          size="sm"
-          className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
-          leftIcon={<Plus className="w-4 h-4" />}
-          onClick={openCreateModal}
-        >
-          Add Test Series
-        </Button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Link
+            to="/admin/tests"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-bold text-slate-300 hover:text-white transition-all shadow-sm"
+          >
+            <FileText className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Mock Test Management</span>
+          </Link>
+          <Button
+            size="sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={openCreateModal}
+          >
+            Add Test Series
+          </Button>
+        </div>
       </div>
 
       {/* Filters Bar */}
