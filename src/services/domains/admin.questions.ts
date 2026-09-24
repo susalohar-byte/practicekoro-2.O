@@ -7,7 +7,7 @@ import type { Question } from '@/types';
 // --------------------------------------------------------------------------
 // QUESTIONS API
 // --------------------------------------------------------------------------
-export async function getAllAdminQuestions(filters?: {
+export type AdminQuestionFilters = {
   subjectId?: string;
   chapterId?: string;
   topicId?: string;
@@ -18,7 +18,9 @@ export async function getAllAdminQuestions(filters?: {
   search?: string;
   status?: string;
   hasImage?: 'all' | 'with_image' | 'without_image';
-}): Promise<Question[]> {
+};
+
+export async function getAllAdminQuestions(filters?: AdminQuestionFilters): Promise<Question[]> {
   if (!isSupabaseConfigured) {
     let questions = [...localQuestions];
     if (filters) {
@@ -144,6 +146,114 @@ export async function getAllAdminQuestions(filters?: {
   }
 
   return data.map((q: any) => mapQuestionRow(q));
+}
+
+/**
+ * Shared Supabase filter builder (single source of truth for every
+ * question-list query). `testId` is resolved by callers into id lists or
+ * counts because it needs a junction pre-query.
+ */
+function applyQuestionListFilters(
+  query: any,
+  filters: AdminQuestionFilters | undefined,
+  testQuestionIds: string[] | null
+): any {
+  if (testQuestionIds && testQuestionIds.length > 0) {
+    query = query.in('id', testQuestionIds);
+  }
+  if (filters?.subjectId) query = query.eq('subject_id', filters.subjectId);
+  const chapId = filters?.topicId || filters?.chapterId;
+  if (chapId) query = query.or(`chapter_id.eq.${chapId},topic_id.eq.${chapId}`);
+  if (filters?.difficulty) query = query.eq('difficulty', filters.difficulty);
+  if (filters?.sourceType) {
+    if (filters.sourceType === 'full_mock' || filters.sourceType === 'other') {
+      query = query.in('source_type', ['other', 'full_mock']);
+    } else {
+      query = query.eq('source_type', filters.sourceType);
+    }
+  }
+  if (filters?.sourceExam) query = query.eq('source_exam', filters.sourceExam);
+  if (filters?.status) query = query.eq('status', filters.status);
+
+  if (filters?.hasImage === 'with_image') {
+    query = query.not('image_url', 'is', null).neq('image_url', '');
+  } else if (filters?.hasImage === 'without_image') {
+    query = query.or('image_url.is.null,image_url.eq.""');
+  }
+
+  if (filters?.search && filters.search.trim()) {
+    const term = filters.search.trim();
+    query = query.or(
+      `question_text.ilike.%${term}%,question_bengali_text.ilike.%${term}%,explanation.ilike.%${term}%,explanation_bengali.ilike.%${term}%`
+    );
+  }
+  return query;
+}
+
+async function resolveTestQuestionIds(testId: string): Promise<string[]> {
+  const { data: tqData, error: tqError } = await supabase
+    .from('test_questions')
+    .select('question_id')
+    .eq('test_id', testId);
+
+  if (tqError) throw new Error(tqError.message);
+  return tqData?.map((r: any) => r.question_id) || [];
+}
+
+/**
+ * Exact total of matching questions WITHOUT loading rows (head count).
+ * Used for honest "Select all N" labels on large banks. Returns null when
+ * the count cannot be determined (callers fall back to loaded length).
+ */
+export async function getAdminQuestionsCount(
+  filters?: AdminQuestionFilters
+): Promise<number | null> {
+  if (!isSupabaseConfigured) {
+    return (await getAllAdminQuestions(filters)).length;
+  }
+  try {
+    if (filters?.testId) {
+      return (await resolveTestQuestionIds(filters.testId)).length;
+    }
+    let query = supabase.from('questions').select('id', { count: 'exact', head: true });
+    query = applyQuestionListFilters(query, filters, null);
+    const { count, error } = await query;
+    if (error) return null;
+    return count ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * ALL matching question IDs, bypassing PostgREST's 1000-row default cap via
+ * chunked range fetches. Powers cap-proof "Select all N questions".
+ */
+export async function getAllAdminQuestionIds(filters?: AdminQuestionFilters): Promise<string[]> {
+  if (!isSupabaseConfigured) {
+    return (await getAllAdminQuestions(filters)).map((q) => q.id);
+  }
+  let testQuestionIds: string[] | null = null;
+  if (filters?.testId) {
+    testQuestionIds = await resolveTestQuestionIds(filters.testId);
+    if (testQuestionIds.length === 0) return [];
+  }
+  const CHUNK = 1000;
+  const ids: string[] = [];
+  for (let from = 0; ; from += CHUNK) {
+    let query = supabase
+      .from('questions')
+      .select('id')
+      .order('created_at', { ascending: false })
+      .range(from, from + CHUNK - 1);
+    query = applyQuestionListFilters(query, filters, testQuestionIds);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    const rows = (data || []) as { id: string }[];
+    ids.push(...rows.map((r) => String(r.id)));
+    if (rows.length < CHUNK) break;
+  }
+  return ids;
 }
 
 /**
@@ -535,6 +645,8 @@ export async function uploadUserAvatar(file: File, userId: string): Promise<stri
 
 export const adminQuestionsApi = {
   getAllAdminQuestions,
+  getAllAdminQuestionIds,
+  getAdminQuestionsCount,
   getAdminQuestionsPaged,
   getQuestionById,
   createQuestion,
