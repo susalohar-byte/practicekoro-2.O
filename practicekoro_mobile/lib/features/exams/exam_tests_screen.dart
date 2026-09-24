@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/components/pk_card.dart';
+import '../../core/components/pk_chip.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_typography.dart';
 
 class ExamTestsScreen extends StatefulWidget {
   final String examId;
@@ -39,9 +43,9 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
       'subtitle': '85 Questions • 60 Minutes',
       'category': 'Full Mock',
       'isLocked': false,
-      'tag': null,
-      'iconColor': const Color(0xFF8B5CF6),
-      'iconBg': const Color(0xFFF3E8FF),
+      'tag': 'Free',
+      'iconColor': AppColors.primary,
+      'iconBg': AppColors.veryLightBlue,
     },
     {
       'id': 'test-wbp-002',
@@ -49,9 +53,9 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
       'subtitle': '85 Questions • 60 Minutes',
       'category': 'Full Mock',
       'isLocked': true,
-      'tag': null,
-      'iconColor': const Color(0xFF8B5CF6),
-      'iconBg': const Color(0xFFF3E8FF),
+      'tag': 'Pro',
+      'iconColor': AppColors.warning,
+      'iconBg': AppColors.warningLight,
     },
     {
       'id': 'test-topic-gk-01',
@@ -60,10 +64,8 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
       'category': 'Topic Test',
       'isLocked': false,
       'tag': 'Topic',
-      'tagColor': const Color(0xFF10B981),
-      'tagBg': const Color(0xFFECFDF5),
-      'iconColor': const Color(0xFF10B981),
-      'iconBg': const Color(0xFFECFDF5),
+      'iconColor': AppColors.success,
+      'iconBg': AppColors.successLight,
     },
     {
       'id': 'test-topic-gk-02',
@@ -71,11 +73,9 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
       'subtitle': '25 Questions • 20 Minutes',
       'category': 'Topic Test',
       'isLocked': true,
-      'tag': 'Topic',
-      'tagColor': const Color(0xFF10B981),
-      'tagBg': const Color(0xFFECFDF5),
-      'iconColor': const Color(0xFFEF4444),
-      'iconBg': const Color(0xFFFEE2E2),
+      'tag': 'Pro',
+      'iconColor': AppColors.warning,
+      'iconBg': AppColors.warningLight,
     },
     {
       'id': 'test-topic-reas-01',
@@ -84,10 +84,8 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
       'category': 'Topic Test',
       'isLocked': false,
       'tag': 'Topic',
-      'tagColor': const Color(0xFF10B981),
-      'tagBg': const Color(0xFFECFDF5),
-      'iconColor': const Color(0xFF10B981),
-      'iconBg': const Color(0xFFECFDF5),
+      'iconColor': AppColors.purple,
+      'iconBg': AppColors.purpleLight,
     },
     {
       'id': 'test-topic-reas-02',
@@ -95,11 +93,9 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
       'subtitle': '25 Questions • 20 Minutes',
       'category': 'Topic Test',
       'isLocked': true,
-      'tag': 'Topic',
-      'tagColor': const Color(0xFF10B981),
-      'tagBg': const Color(0xFFECFDF5),
-      'iconColor': const Color(0xFFF59E0B),
-      'iconBg': const Color(0xFFFEF3C7),
+      'tag': 'Pro',
+      'iconColor': AppColors.warning,
+      'iconBg': AppColors.warningLight,
     },
     {
       'id': 'pyq-wbp-2021',
@@ -107,11 +103,9 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
       'subtitle': '85 Questions • 60 Minutes',
       'category': 'PYQ',
       'isLocked': false,
-      'tag': 'Pro',
-      'tagColor': AppColors.primary,
-      'tagBg': const Color(0xFFEFF6FF),
-      'iconColor': AppColors.primary,
-      'iconBg': const Color(0xFFEFF6FF),
+      'tag': 'PYQ',
+      'iconColor': AppColors.cyan,
+      'iconBg': AppColors.cyanLight,
     },
   ];
 
@@ -124,99 +118,104 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.navy),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.navy),
           onPressed: () => context.pop(),
         ),
         title: Text(
           _seriesTitle,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: AppColors.navy,
-            letterSpacing: -0.3,
-          ),
+          style: AppTypography.headlineMedium(color: AppColors.navy),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Filter Pills
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: List.generate(_filters.length, (idx) {
-                    final isSel = _selectedFilterIndex == idx;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedFilterIndex = idx),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+            // Series Summary Header
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isSel ? AppColors.primary : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(10),
+                          color: AppColors.veryLightBlue,
+                          borderRadius: AppRadius.rPill,
                         ),
                         child: Text(
-                          _filters[idx],
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSel ? FontWeight.w700 : FontWeight.w600,
-                            color: isSel ? Colors.white : const Color(0xFF64748B),
+                          '${_tests.length} Total Tests Available',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
-                    );
-                  }),
-                ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Filter Chips Row
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _filters.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final filter = _filters[index];
+                        return PKChip(
+                          label: filter,
+                          isSelected: _selectedFilterIndex == index,
+                          onTap: () => setState(() => _selectedFilterIndex = index),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
+
+            const Divider(height: 1, color: AppColors.borderSubtle),
 
             // Tests List
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.all(16),
                 itemCount: filteredTests.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final t = filteredTests[index];
-                  final isLocked = t['isLocked'] == true;
+                  final isLocked = t['isLocked'] as bool;
                   final tag = t['tag'] as String?;
 
-                  return Container(
+                  return PKCard(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
+                    onTap: () {
+                      final titleEncoded = Uri.encodeComponent(t['title'] as String);
+                      context.push('/test-details/${t['id']}?title=$titleEncoded&isPro=$isLocked');
+                    },
                     child: Row(
                       children: [
-                        // Left Soft Colored Squircle Icon
+                        // Left Soft Icon
                         Container(
                           width: 42,
                           height: 42,
                           decoration: BoxDecoration(
                             color: t['iconBg'] as Color,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadius.rMd,
                           ),
                           child: Icon(
                             Icons.description_outlined,
                             color: t['iconColor'] as Color,
-                            size: 22,
+                            size: 20,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -233,11 +232,7 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
                                       t['title'] as String,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.navy,
-                                      ),
+                                      style: AppTypography.titleSmall(color: AppColors.navy),
                                     ),
                                   ),
                                   if (tag != null) ...[
@@ -245,29 +240,25 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: t['tagBg'] as Color,
-                                        borderRadius: BorderRadius.circular(6),
+                                        color: isLocked ? AppColors.warningLight : AppColors.veryLightBlue,
+                                        borderRadius: AppRadius.rPill,
                                       ),
                                       child: Text(
                                         tag,
                                         style: TextStyle(
                                           fontSize: 9.5,
                                           fontWeight: FontWeight.bold,
-                                          color: t['tagColor'] as Color,
+                                          color: isLocked ? AppColors.warning : AppColors.primary,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ],
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 2),
                               Text(
                                 t['subtitle'] as String,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF64748B),
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: AppTypography.bodySmall(color: AppColors.secondaryText),
                               ),
                             ],
                           ),
@@ -277,19 +268,18 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
                         // Action: Blue "Start" button or Lock icon
                         if (isLocked)
                           IconButton(
-                            onPressed: () {
-                              context.push('/subscription');
-                            },
+                            onPressed: () => context.push('/subscription'),
                             icon: const Icon(
                               Icons.lock_outline_rounded,
                               size: 20,
-                              color: Color(0xFF94A3B8),
+                              color: AppColors.warning,
                             ),
                           )
                         else
                           ElevatedButton(
                             onPressed: () {
-                              context.push('/live-test/${t['id']}');
+                              final titleEncoded = Uri.encodeComponent(t['title'] as String);
+                              context.push('/test-details/${t['id']}?title=$titleEncoded&isPro=false');
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
@@ -297,7 +287,7 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: AppRadius.rMd,
                               ),
                             ),
                             child: const Text(

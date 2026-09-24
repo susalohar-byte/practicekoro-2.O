@@ -9,6 +9,7 @@ class PKTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool obscureText;
   final TextInputType keyboardType;
+  final int maxLines;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
 
@@ -21,6 +22,7 @@ class PKTextField extends StatelessWidget {
     this.suffixIcon,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
+    this.maxLines = 1,
     this.validator,
     this.onChanged,
   });
@@ -43,6 +45,7 @@ class PKTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          maxLines: maxLines,
           validator: validator,
           onChanged: onChanged,
           decoration: InputDecoration(

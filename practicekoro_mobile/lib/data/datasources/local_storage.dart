@@ -14,9 +14,13 @@ class LocalStorageService {
     await _prefs?.setString(AppConstants.prefsTargetExamKey, examId);
   }
 
+  static Future<void> setSelectedExam(String examId) => saveTargetExam(examId);
+
   static String? getTargetExam() {
     return _prefs?.getString(AppConstants.prefsTargetExamKey);
   }
+
+  static String? getSelectedExam() => getTargetExam();
 
   static const String _onboardingCompleteKey = 'pk_onboarding_completed';
 

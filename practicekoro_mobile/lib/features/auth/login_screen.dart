@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/widgets/pk_button.dart';
+import '../../core/components/pk_button.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/pk_text_field.dart';
 import '../../data/repositories/auth_repository.dart';
 
@@ -56,48 +58,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Logo & Icon
+                // Official Brand Logo
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  width: 64,
+                  height: 64,
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withAlpha(50),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                    color: AppColors.veryLightBlue,
+                    borderRadius: AppRadius.rXl,
+                    border: Border.all(color: AppColors.softBlue, width: 1.2),
+                  ),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.school_rounded,
+                      color: AppColors.primary,
+                      size: 36,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                RichText(
+                  text: TextSpan(
+                    style: AppTypography.displayLarge(color: AppColors.navy).copyWith(fontSize: 26),
+                    children: const [
+                      TextSpan(text: 'Practice'),
+                      TextSpan(
+                        text: 'Koro',
+                        style: TextStyle(color: AppColors.primary),
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.school_rounded, color: Colors.white, size: 40),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'PracticeKoro',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.navy,
-                    letterSpacing: -0.5,
-                  ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'India\'s Premier Mock Test Platform',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTypography.bodySmall(color: AppColors.secondaryText),
                 ),
 
-                const SizedBox(height: 36),
+                const SizedBox(height: 32),
 
                 // Inputs
                 PKTextField(
                   controller: _emailController,
-                  label: 'Email or Phone Number',
+                  label: 'Email or Mobile Number',
                   hint: 'student@practicekoro.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
@@ -115,38 +120,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 24),
 
-                // Sign in button
-                PKButton(
-                  text: 'Sign In',
+                // Primary Sign in button
+                PKPrimaryButton(
+                  text: 'Sign In to Account',
+                  icon: Icons.arrow_forward_rounded,
                   isLoading: _isLoading,
                   onPressed: _handleLogin,
                 ),
 
                 const SizedBox(height: 12),
 
-                // Demo / Guest mode button
-                PKButton(
+                // Continue as Guest button
+                PKSecondaryButton(
                   text: 'Continue as Guest',
-                  type: PKButtonType.secondary,
-                  icon: Icons.flash_on_rounded,
-                  onPressed: () {
-                    context.go('/home');
-                  },
+                  icon: Icons.bolt_rounded,
+                  onPressed: () => context.go('/home'),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Don\'t have an account? ', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    Text(
+                      'Don\'t have an account? ',
+                      style: AppTypography.bodySmall(color: AppColors.secondaryText),
+                    ),
                     InkWell(
-                      onTap: () {
-                        context.go('/home');
-                      },
-                      child: const Text(
-                        'Sign Up Now',
-                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                      onTap: () => context.go('/home'),
+                      child: Text(
+                        'Explore Free Tests',
+                        style: AppTypography.bodySmall(color: AppColors.primary).copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
