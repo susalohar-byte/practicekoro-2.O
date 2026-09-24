@@ -238,6 +238,84 @@ export async function optimizeBannerImage(
   });
 }
 
+const APP_SETTINGS_BANNER_ID = 'banners_hero_list';
+const APP_SETTINGS_BANNER_KEY = 'hero_banners_list';
+
+function mapSupabaseRowToBanner(row: any): HeroBanner {
+  return {
+    id: String(row.id),
+    badgeText: row.badge_text || '',
+    title: row.title || '',
+    highlightWord: row.highlight_word || '',
+    subtitle: row.subtitle || '',
+    primaryCtaText: row.primary_cta_text || 'Start Now',
+    primaryCtaLink: row.primary_cta_link || '/exams',
+    secondaryCtaText: row.secondary_cta_text || '',
+    secondaryCtaLink: row.secondary_cta_link || '',
+    featurePills: Array.isArray(row.feature_pills)
+      ? row.feature_pills
+      : typeof row.feature_pills === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(row.feature_pills);
+          } catch {
+            return [];
+          }
+        })()
+      : [],
+    imageUrl: row.image_url || '/images/exam_hero_banner.png',
+    mobileImageUrl: row.mobile_image_url || undefined,
+    bannerType: row.banner_type || 'full_image',
+    themeGradient: (row.theme_gradient as BannerThemeColor) || 'blue',
+    targetAudience: (row.target_audience as BannerAudience) || 'all',
+    placement: (row.placement as BannerPlacement) || 'home_hero',
+    startsAt: row.starts_at || undefined,
+    expiresAt: row.expires_at || undefined,
+    clickCount: Number(row.click_count) || 0,
+    isActive: Boolean(row.is_active),
+    displayOrder: Number(row.display_order) || 1,
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || undefined,
+  };
+}
+
+function sanitizeBanner(item: any, index: number): HeroBanner {
+  return {
+    id: String(item.id || `banner-${Date.now()}-${index}`),
+    badgeText: typeof item.badgeText === 'string' ? item.badgeText : (item.badge_text || ''),
+    title: typeof item.title === 'string' ? item.title : '',
+    highlightWord: typeof item.highlightWord === 'string' ? item.highlightWord : (item.highlight_word || ''),
+    subtitle: typeof item.subtitle === 'string' ? item.subtitle : (item.subtitle || ''),
+    primaryCtaText: item.primaryCtaText || item.primary_cta_text || 'Start Now',
+    primaryCtaLink: item.primaryCtaLink || item.primary_cta_link || '/exams',
+    secondaryCtaText: item.secondaryCtaText || item.secondary_cta_text || '',
+    secondaryCtaLink: item.secondaryCtaLink || item.secondary_cta_link || '',
+    featurePills: Array.isArray(item.featurePills)
+      ? item.featurePills
+      : Array.isArray(item.feature_pills)
+      ? item.feature_pills
+      : [],
+    imageUrl: item.imageUrl || item.image_url || '/images/exam_hero_banner.png',
+    mobileImageUrl: item.mobileImageUrl || item.mobile_image_url || undefined,
+    bannerType: item.bannerType || item.banner_type || 'full_image',
+    themeGradient: (item.themeGradient || item.theme_gradient || 'blue') as BannerThemeColor,
+    targetAudience: (item.targetAudience || item.target_audience || 'all') as BannerAudience,
+    placement: (item.placement || 'home_hero') as BannerPlacement,
+    startsAt: item.startsAt || item.starts_at || undefined,
+    expiresAt: item.expiresAt || item.expires_at || undefined,
+    clickCount: Number(item.clickCount ?? item.click_count ?? 0),
+    isActive:
+      item.isActive !== undefined
+        ? Boolean(item.isActive)
+        : item.is_active !== undefined
+        ? Boolean(item.is_active)
+        : true,
+    displayOrder: Number(item.displayOrder ?? item.display_order ?? (index + 1)),
+    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+    updatedAt: item.updatedAt || item.updated_at || undefined,
+  };
+}
+
 function getStoredBanners(): HeroBanner[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -247,7 +325,7 @@ function getStoredBanners(): HeroBanner[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      return parsed.map(sanitizeBanner);
     }
     saveStoredBanners(DEFAULT_HERO_BANNERS);
     return DEFAULT_HERO_BANNERS;
@@ -267,10 +345,101 @@ function saveStoredBanners(banners: HeroBanner[]): void {
   }
 }
 
+async function syncBannersToRemote(banners: HeroBanner[]): Promise<void> {
+  // 1. Immediately update localStorage and notify all window listeners
+  saveStoredBanners(banners);
+
+  if (!isSupabaseConfigured) return;
+
+  // 2. Sync to public.app_settings (universally readable by students & guests)
+  try {
+    const settingRow = {
+      id: APP_SETTINGS_BANNER_ID,
+      category: 'banners',
+      key: APP_SETTINGS_BANNER_KEY,
+      value: banners,
+      description: 'Dynamic Hero Banners for Student Home and Portals',
+      updated_at: new Date().toISOString(),
+    };
+
+    let rpcSuccess = false;
+    try {
+      const { data: rpcData, error: rpcError } = await supabaseRuntime.rpc('admin_update_app_settings', {
+        p_settings: [settingRow],
+      });
+      if (!rpcError && (rpcData?.success || rpcData?.updated_count !== undefined)) {
+        rpcSuccess = true;
+      }
+    } catch {
+      // Continue to direct upsert
+    }
+
+    if (!rpcSuccess) {
+      await supabaseRuntime
+        .from('app_settings')
+        .upsert(settingRow, { onConflict: 'id' });
+    }
+  } catch (appErr) {
+    console.warn('Could not sync hero banners to app_settings:', appErr);
+  }
+
+  // 3. Sync to public.hero_banners table (if table exists)
+  try {
+    for (const b of banners) {
+      await supabaseRuntime.from('hero_banners').upsert(
+        {
+          id: b.id,
+          badge_text: b.badgeText,
+          title: b.title,
+          highlight_word: b.highlightWord,
+          subtitle: b.subtitle,
+          primary_cta_text: b.primaryCtaText,
+          primary_cta_link: b.primaryCtaLink,
+          secondary_cta_text: b.secondaryCtaText,
+          secondary_cta_link: b.secondaryCtaLink,
+          feature_pills: b.featurePills,
+          image_url: b.imageUrl,
+          mobile_image_url: b.mobileImageUrl,
+          banner_type: b.bannerType || 'full_image',
+          theme_gradient: b.themeGradient,
+          target_audience: b.targetAudience,
+          placement: b.placement,
+          starts_at: b.startsAt,
+          expires_at: b.expiresAt,
+          click_count: b.clickCount,
+          is_active: b.isActive,
+          display_order: b.displayOrder,
+          created_at: b.createdAt,
+          updated_at: b.updatedAt,
+        },
+        { onConflict: 'id' }
+      );
+    }
+  } catch {
+    // hero_banners table might not exist in database yet
+  }
+
+  // 4. Send Supabase Realtime broadcast message for immediate sync across active student sessions
+  try {
+    const channel = supabaseRuntime.channel('banners_sync_channel');
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        channel.send({
+          type: 'broadcast',
+          event: 'banners_updated',
+          payload: { timestamp: Date.now() },
+        });
+      }
+    });
+  } catch {
+    // Ignore channel broadcast errors
+  }
+}
+
 export const bannerService = {
   /**
    * Optimizes and uploads a banner image file (PNG/JPG/WebP/SVG).
-   * Tries Supabase Storage bucket 'banners', falls back to 'question-images',
+   * Tries Supabase Storage buckets ('banners', 'question-images', 'avatars'),
    * and if neither is available, safely falls back to a clean compressed Data URL.
    */
   async uploadBannerImage(file: File): Promise<{ url: string; optimization: OptimizedImageResult }> {
@@ -303,58 +472,73 @@ export const bannerService = {
           const { data: qUrl } = supabaseRuntime.storage.from('question-images').getPublicUrl(qData.path);
           if (qUrl?.publicUrl) return { url: qUrl.publicUrl, optimization: opt };
         }
+
+        // Attempt 3: 'avatars' bucket (active in production)
+        const { data: aData, error: aError } = await supabaseRuntime.storage
+          .from('avatars')
+          .upload(filePath, fileToUpload, { cacheControl: '3600', upsert: true });
+
+        if (!aError && aData?.path) {
+          const { data: aUrl } = supabaseRuntime.storage.from('avatars').getPublicUrl(aData.path);
+          if (aUrl?.publicUrl) return { url: aUrl.publicUrl, optimization: opt };
+        }
       } catch (err) {
         console.warn('Storage upload error, falling back to compressed data URL:', err);
       }
     }
 
-    // Attempt 3: Safe compressed Data URL
+    // Attempt 4: Safe compressed Data URL
     return { url: opt.dataUrl, optimization: opt };
   },
 
   /**
-   * Fetch all banners for Admin panel management
+   * Fetch all banners for Admin panel and Student Home.
+   * Priority:
+   * 1. Supabase public.hero_banners table (if available)
+   * 2. Supabase public.app_settings table (universal fallback readable by all visitors)
+   * 3. localStorage cache ('pk_hero_banners')
+   * 4. DEFAULT_HERO_BANNERS
    */
   async getBanners(): Promise<HeroBanner[]> {
     if (isSupabaseConfigured) {
+      // 1. Try public.hero_banners table
       try {
         const { data, error } = await supabaseRuntime
           .from('hero_banners')
           .select('*')
           .order('display_order', { ascending: true });
 
-        if (!error && data && data.length > 0) {
-          const mapped: HeroBanner[] = data.map((row: any) => ({
-            id: String(row.id),
-            badgeText: row.badge_text || '',
-            title: row.title || '',
-            highlightWord: row.highlight_word || '',
-            subtitle: row.subtitle || '',
-            primaryCtaText: row.primary_cta_text || 'Start Now',
-            primaryCtaLink: row.primary_cta_link || '/exams',
-            secondaryCtaText: row.secondary_cta_text || '',
-            secondaryCtaLink: row.secondary_cta_link || '',
-            featurePills: Array.isArray(row.feature_pills)
-              ? row.feature_pills
-              : typeof row.feature_pills === 'string'
-              ? JSON.parse(row.feature_pills)
-              : [],
-            imageUrl: row.image_url || '/images/exam_hero_banner.png',
-            mobileImageUrl: row.mobile_image_url || undefined,
-            bannerType: row.banner_type || 'full_image',
-            themeGradient: (row.theme_gradient as BannerThemeColor) || 'blue',
-            targetAudience: (row.target_audience as BannerAudience) || 'all',
-            placement: (row.placement as BannerPlacement) || 'home_hero',
-            startsAt: row.starts_at || undefined,
-            expiresAt: row.expires_at || undefined,
-            clickCount: Number(row.click_count) || 0,
-            isActive: Boolean(row.is_active),
-            displayOrder: Number(row.display_order) || 1,
-            createdAt: row.created_at || new Date().toISOString(),
-            updatedAt: row.updated_at || undefined,
-          }));
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const mapped: HeroBanner[] = data.map(mapSupabaseRowToBanner);
           saveStoredBanners(mapped);
           return mapped;
+        }
+      } catch {
+        // Fallback to app_settings seamlessly
+      }
+
+      // 2. Try public.app_settings table (universal fallback)
+      try {
+        const { data, error } = await supabaseRuntime
+          .from('app_settings')
+          .select('value')
+          .eq('id', APP_SETTINGS_BANNER_ID)
+          .maybeSingle();
+
+        if (!error && data?.value) {
+          let rawVal = data.value;
+          if (typeof rawVal === 'string') {
+            try {
+              rawVal = JSON.parse(rawVal);
+            } catch {
+              // Not valid JSON string
+            }
+          }
+          if (Array.isArray(rawVal) && rawVal.length > 0) {
+            const parsed = rawVal.map(sanitizeBanner).sort((a, b) => a.displayOrder - b.displayOrder);
+            saveStoredBanners(parsed);
+            return parsed;
+          }
         }
       } catch {
         // Fallback to localStorage seamlessly
@@ -367,6 +551,7 @@ export const bannerService = {
   /**
    * Fetch only active banners sorted by displayOrder for Student Home
    * Supports target audience filtering (e.g. Free vs Pro Pass) and schedule verification.
+   * Resilient fallback guarantees that admin-configured banners are shown.
    */
   async getActiveBanners(options?: {
     audience?: BannerAudience;
@@ -379,16 +564,20 @@ export const bannerService = {
       .filter((b) => {
         if (!b.isActive) return false;
 
-        // Target audience filtering
+        // Target audience filtering:
+        // 'all' banners are visible to everyone. If targeted to 'free' or 'pro', check match.
         if (options?.audience && options.audience !== 'all') {
-          if (b.targetAudience && b.targetAudience !== 'all' && b.targetAudience !== options.audience) {
+          const bannerAudience = b.targetAudience || 'all';
+          if (bannerAudience !== 'all' && bannerAudience !== options.audience) {
             return false;
           }
         }
 
-        // Placement filtering
+        // Placement filtering:
+        // Default to 'home_hero'. 'all' placement matches every location.
         if (options?.placement && options.placement !== 'all') {
-          if (b.placement && b.placement !== 'all' && b.placement !== options.placement) {
+          const bannerPlacement = b.placement || 'home_hero';
+          if (bannerPlacement !== 'all' && bannerPlacement !== options.placement) {
             return false;
           }
         }
@@ -409,11 +598,25 @@ export const bannerService = {
       })
       .sort((a, b) => a.displayOrder - b.displayOrder);
 
-    return active.length > 0 ? active : [DEFAULT_HERO_BANNERS[0]];
+    if (active.length > 0) {
+      return active;
+    }
+
+    // Resilient fallback: if audience or schedule eliminated everything,
+    // show any active banner configured by admin so the Home page reflects admin changes
+    const fallbackActive = all
+      .filter((b) => b.isActive)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+
+    if (fallbackActive.length > 0) {
+      return fallbackActive;
+    }
+
+    return [DEFAULT_HERO_BANNERS[0]];
   },
 
   /**
-   * Create a new hero banner
+   * Create a new hero banner and immediately sync to remote stores
    */
   async createBanner(
     input: Omit<HeroBanner, 'id' | 'createdAt' | 'updatedAt'>
@@ -431,85 +634,20 @@ export const bannerService = {
       updatedAt: now,
     };
 
-    if (isSupabaseConfigured) {
-      try {
-        await supabaseRuntime.from('hero_banners').insert([
-          {
-            id: newBanner.id,
-            badge_text: newBanner.badgeText,
-            title: newBanner.title,
-            highlight_word: newBanner.highlightWord,
-            subtitle: newBanner.subtitle,
-            primary_cta_text: newBanner.primaryCtaText,
-            primary_cta_link: newBanner.primaryCtaLink,
-            secondary_cta_text: newBanner.secondaryCtaText,
-            secondary_cta_link: newBanner.secondaryCtaLink,
-            feature_pills: newBanner.featurePills,
-            image_url: newBanner.imageUrl,
-            mobile_image_url: newBanner.mobileImageUrl,
-            banner_type: newBanner.bannerType || 'full_image',
-            theme_gradient: newBanner.themeGradient,
-            target_audience: newBanner.targetAudience,
-            placement: newBanner.placement,
-            starts_at: newBanner.startsAt,
-            expires_at: newBanner.expiresAt,
-            click_count: newBanner.clickCount,
-            is_active: newBanner.isActive,
-            display_order: newBanner.displayOrder,
-            created_at: newBanner.createdAt,
-            updated_at: newBanner.updatedAt,
-          },
-        ]);
-      } catch {
-        // Handled locally
-      }
-    }
-
     const current = getStoredBanners();
     const updated = [...current, newBanner].sort((a, b) => a.displayOrder - b.displayOrder);
-    saveStoredBanners(updated);
+    await syncBannersToRemote(updated);
     return newBanner;
   },
 
   /**
-   * Update an existing banner
+   * Update an existing banner and immediately sync to remote stores
    */
   async updateBanner(id: string, updates: Partial<HeroBanner>): Promise<HeroBanner> {
     const now = new Date().toISOString();
-
-    if (isSupabaseConfigured) {
-      try {
-        const payload: Record<string, any> = { updated_at: now };
-        if (updates.badgeText !== undefined) payload.badge_text = updates.badgeText;
-        if (updates.title !== undefined) payload.title = updates.title;
-        if (updates.highlightWord !== undefined) payload.highlight_word = updates.highlightWord;
-        if (updates.subtitle !== undefined) payload.subtitle = updates.subtitle;
-        if (updates.primaryCtaText !== undefined) payload.primary_cta_text = updates.primaryCtaText;
-        if (updates.primaryCtaLink !== undefined) payload.primary_cta_link = updates.primaryCtaLink;
-        if (updates.secondaryCtaText !== undefined)
-          payload.secondary_cta_text = updates.secondaryCtaText;
-        if (updates.secondaryCtaLink !== undefined)
-          payload.secondary_cta_link = updates.secondaryCtaLink;
-        if (updates.featurePills !== undefined) payload.feature_pills = updates.featurePills;
-        if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
-        if (updates.mobileImageUrl !== undefined) payload.mobile_image_url = updates.mobileImageUrl;
-        if (updates.bannerType !== undefined) payload.banner_type = updates.bannerType;
-        if (updates.themeGradient !== undefined) payload.theme_gradient = updates.themeGradient;
-        if (updates.targetAudience !== undefined) payload.target_audience = updates.targetAudience;
-        if (updates.placement !== undefined) payload.placement = updates.placement;
-        if (updates.startsAt !== undefined) payload.starts_at = updates.startsAt;
-        if (updates.expiresAt !== undefined) payload.expires_at = updates.expiresAt;
-        if (updates.isActive !== undefined) payload.is_active = updates.isActive;
-        if (updates.displayOrder !== undefined) payload.display_order = updates.displayOrder;
-
-        await supabaseRuntime.from('hero_banners').update(payload).eq('id', id);
-      } catch {
-        // Handled locally
-      }
-    }
-
     const current = getStoredBanners();
     let updatedBanner: HeroBanner | null = null;
+
     const updated = current.map((b) => {
       if (b.id === id) {
         updatedBanner = {
@@ -526,25 +664,26 @@ export const bannerService = {
       throw new Error(`Banner with ID ${id} not found.`);
     }
 
-    saveStoredBanners(updated.sort((a, b) => a.displayOrder - b.displayOrder));
+    await syncBannersToRemote(updated.sort((a, b) => a.displayOrder - b.displayOrder));
     return updatedBanner;
   },
 
   /**
-   * Delete a banner
+   * Delete a banner and sync removal to remote stores
    */
   async deleteBanner(id: string): Promise<boolean> {
+    const current = getStoredBanners();
+    const filtered = current.filter((b) => b.id !== id);
+    await syncBannersToRemote(filtered);
+
     if (isSupabaseConfigured) {
       try {
         await supabaseRuntime.from('hero_banners').delete().eq('id', id);
       } catch {
-        // Handled locally
+        // Handled via app_settings
       }
     }
 
-    const current = getStoredBanners();
-    const filtered = current.filter((b) => b.id !== id);
-    saveStoredBanners(filtered);
     return true;
   },
 
@@ -575,7 +714,7 @@ export const bannerService = {
   },
 
   /**
-   * Reorder banners
+   * Reorder banners and persist order remotely
    */
   async reorderBanners(orderedIds: string[]): Promise<void> {
     const current = getStoredBanners();
@@ -588,32 +727,29 @@ export const bannerService = {
     });
 
     updated.sort((a, b) => a.displayOrder - b.displayOrder);
-    saveStoredBanners(updated);
-
-    if (isSupabaseConfigured) {
-      try {
-        for (const b of updated) {
-          await supabaseRuntime
-            .from('hero_banners')
-            .update({ display_order: b.displayOrder })
-            .eq('id', b.id);
-        }
-      } catch {
-        // Handled locally
-      }
-    }
+    await syncBannersToRemote(updated);
   },
 
   /**
    * Reset to default initial banners
    */
   async resetToDefaults(): Promise<HeroBanner[]> {
-    saveStoredBanners(DEFAULT_HERO_BANNERS);
+    await syncBannersToRemote(DEFAULT_HERO_BANNERS);
     return DEFAULT_HERO_BANNERS;
   },
 
   /**
-   * Subscribes to real-time banner updates across all browser tabs and Supabase channels.
+   * Explicitly publish/sync all current banners to remote Supabase stores
+   */
+  async syncToRemote(): Promise<{ success: boolean; count: number }> {
+    const current = await this.getBanners();
+    await syncBannersToRemote(current);
+    return { success: true, count: current.length };
+  },
+
+  /**
+   * Subscribes to real-time banner updates across all browser tabs, storage events,
+   * Supabase broadcast channels, and Supabase Postgres CDC changes.
    * Returns an unsubscribe teardown function.
    */
   subscribeToBannerUpdates(callback: (banners: HeroBanner[]) => void): () => void {
@@ -624,15 +760,41 @@ export const bannerService = {
       }
     };
 
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            callback(parsed.map(sanitizeBanner));
+          }
+        } catch {
+          // ignore parsing error
+        }
+      }
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('pk_hero_banners_updated', handleLocal);
+      window.addEventListener('storage', handleStorage);
     }
 
-    let channel: any = null;
+    let broadcastChannel: any = null;
+    let postgresChannel: any = null;
+
     if (isSupabaseConfigured) {
       try {
-        channel = supabaseRuntime
-          .channel('realtime:hero_banners')
+        // 1. Supabase Broadcast channel for instant multi-client notifications
+        broadcastChannel = supabaseRuntime
+          .channel('banners_sync_channel')
+          .on('broadcast', { event: 'banners_updated' }, async () => {
+            const latest = await bannerService.getBanners();
+            callback(latest);
+          })
+          .subscribe();
+
+        // 2. Postgres realtime changes on app_settings and hero_banners
+        postgresChannel = supabaseRuntime
+          .channel('realtime:hero_banners_changes')
           .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'hero_banners' },
@@ -641,19 +803,40 @@ export const bannerService = {
               callback(latest);
             }
           )
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'app_settings',
+              filter: `id=eq.${APP_SETTINGS_BANNER_ID}`,
+            },
+            async () => {
+              const latest = await bannerService.getBanners();
+              callback(latest);
+            }
+          )
           .subscribe();
       } catch (err) {
-        console.warn('Realtime channel error for hero_banners:', err);
+        console.warn('Realtime channel error for banners:', err);
       }
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('pk_hero_banners_updated', handleLocal);
+        window.removeEventListener('storage', handleStorage);
       }
-      if (channel && isSupabaseConfigured) {
+      if (broadcastChannel && isSupabaseConfigured) {
         try {
-          supabaseRuntime.removeChannel(channel);
+          supabaseRuntime.removeChannel(broadcastChannel);
+        } catch {
+          // ignore
+        }
+      }
+      if (postgresChannel && isSupabaseConfigured) {
+        try {
+          supabaseRuntime.removeChannel(postgresChannel);
         } catch {
           // ignore
         }

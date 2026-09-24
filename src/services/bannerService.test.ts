@@ -165,5 +165,44 @@ describe('bannerService Enterprise Architecture', () => {
       expect(reordered[1].id).toBe(firstId);
       expect(reordered[1].displayOrder).toBe(2);
     });
+
+    it('supports syncToRemote explicitly', async () => {
+      const res = await bannerService.syncToRemote();
+      expect(res.success).toBe(true);
+      expect(res.count).toBeGreaterThanOrEqual(3);
+    });
+
+    it('filters by placement properly and falls back to home_hero', async () => {
+      await bannerService.createBanner({
+        title: 'Catalog Only Banner',
+        primaryCtaLink: '/exams',
+        imageUrl: '/images/cat.png',
+        placement: 'catalog',
+        isActive: true,
+        displayOrder: 50,
+      });
+
+      const homeBanners = await bannerService.getActiveBanners({ placement: 'home_hero' });
+      const titles = homeBanners.map((b) => b.title);
+      expect(titles).not.toContain('Catalog Only Banner');
+    });
+
+    it('guarantees admin active banners are shown as resilient fallback if audience filter yields empty', async () => {
+      localStorage.clear();
+      // Only 1 active banner with 'pro' audience
+      await bannerService.createBanner({
+        title: 'Exclusive Pro Marathon',
+        primaryCtaLink: '/exams',
+        imageUrl: '/images/pro.png',
+        targetAudience: 'pro',
+        isActive: true,
+        displayOrder: 1,
+      });
+
+      // Free user query: normally would filter out 'pro' banner, but fallback ensures active banner is displayed
+      const bannersForFree = await bannerService.getActiveBanners({ audience: 'free' });
+      expect(bannersForFree.length).toBeGreaterThan(0);
+      expect(bannersForFree[0].title).toBe('Exclusive Pro Marathon');
+    });
   });
 });

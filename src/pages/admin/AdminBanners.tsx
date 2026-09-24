@@ -21,7 +21,9 @@ import {
   Users,
   Calendar,
   MousePointerClick,
+  RefreshCw,
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
 import type { HeroBanner, BannerThemeColor, BannerAudience, BannerPlacement } from '@/types';
 import { getBannerTheme } from '@/utils/bannerTheme';
@@ -44,8 +46,10 @@ const QUICK_TARGET_LINKS = [
 ];
 
 export const AdminBanners: React.FC = () => {
+  const queryClient = useQueryClient();
   const [banners, setBanners] = useState<HeroBanner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [previewBannerId, setPreviewBannerId] = useState<string | null>(null);
 
   // Modal state
@@ -94,12 +98,13 @@ export const AdminBanners: React.FC = () => {
       if (data.length > 0) {
         setPreviewBannerId((prev) => prev || data[0].id);
       }
+      queryClient.invalidateQueries({ queryKey: ['hero-banners'] });
     } catch {
       setFeedbackMsg({ type: 'error', text: 'Failed to load banners.' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     fetchBanners();
@@ -108,6 +113,20 @@ export const AdminBanners: React.FC = () => {
   const showToast = (type: 'success' | 'error', text: string) => {
     setFeedbackMsg({ type, text });
     setTimeout(() => setFeedbackMsg(null), 3500);
+  };
+
+  const handleSyncLive = async () => {
+    try {
+      setIsSyncing(true);
+      const res = await bannerService.syncToRemote();
+      queryClient.invalidateQueries({ queryKey: ['hero-banners'] });
+      queryClient.refetchQueries({ queryKey: ['hero-banners'] });
+      showToast('success', `Live Sync Successful! ${res.count} banners are active on Student Home.`);
+    } catch {
+      showToast('error', 'Failed to sync banners to live server.');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Process image file for upload with client-side canvas compression
@@ -352,9 +371,15 @@ export const AdminBanners: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-bold mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Promotional Banners</span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Promotional Banners</span>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live Synced with Student Home</span>
+            </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hero Banners</h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -362,7 +387,21 @@ export const AdminBanners: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleSyncLive}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+            title="Publish and sync all banners to live student homepage"
+          >
+            {isSyncing ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
+            )}
+            <span>{isSyncing ? 'Syncing...' : 'Sync to Student Home'}</span>
+          </button>
           <button
             type="button"
             onClick={handleResetDefaults}

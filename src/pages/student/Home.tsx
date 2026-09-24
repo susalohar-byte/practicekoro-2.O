@@ -42,12 +42,20 @@ export const Home: React.FC = () => {
     queryFn: () => bannerService.getActiveBanners({ audience, placement: 'home_hero' }),
     select: (active) => (active && active.length > 0 ? active : DEFAULT_HERO_BANNERS),
     placeholderData: DEFAULT_HERO_BANNERS,
-    staleTime: 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     retry: 1,
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Keep slide index within valid bounds whenever active banners change
+  useEffect(() => {
+    if (banners.length > 0 && currentSlide >= banners.length) {
+      setCurrentSlide(0);
+    }
+  }, [banners.length, currentSlide]);
 
   // Mobile Touch Swipe Handling
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -86,12 +94,12 @@ export const Home: React.FC = () => {
 
   // Real-time synchronization for banner changes
   useEffect(() => {
-    const unsubscribe = bannerService.subscribeToBannerUpdates((updatedBanners) => {
-      queryClient.setQueryData(['hero-banners', audience], updatedBanners);
+    const unsubscribe = bannerService.subscribeToBannerUpdates(() => {
       queryClient.invalidateQueries({ queryKey: ['hero-banners'] });
+      queryClient.refetchQueries({ queryKey: ['hero-banners'] });
     });
     return () => unsubscribe();
-  }, [queryClient, audience]);
+  }, [queryClient]);
 
   // Auto rotation every 5s when not hovered or touched
   useEffect(() => {
