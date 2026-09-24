@@ -154,6 +154,7 @@ export interface TestSeries {
   isActive: boolean;
   createdAt?: string;
   examTitle?: string;
+  examCategory?: string;
   testCount?: number;
   testsCount?: number;
   fullMockCount?: number;

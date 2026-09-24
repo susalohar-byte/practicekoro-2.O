@@ -5,7 +5,7 @@ import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 import { cn } from '@/lib/utils';
 import {
   Home,
-  Compass,
+  Layers,
   Zap,
   BarChart3,
   Bookmark,
@@ -47,7 +47,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
 
   const navItems = [
     { label: 'Home', path: '/dashboard', icon: Home },
-    { label: 'Exams', path: '/exams', icon: Compass },
+    { label: 'Test Series', path: '/test-series', icon: Layers },
     { label: 'Practice', path: '/practice', icon: Zap },
     { label: 'Results', path: '/results', icon: BarChart3 },
     { label: 'Saved Questions', path: '/saved-questions', icon: Bookmark },
@@ -58,6 +58,13 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
   const isItemActive = (path: string) => {
     if (path === '/dashboard') {
       return location.pathname === '/' || location.pathname === '/dashboard';
+    }
+    if (path === '/test-series') {
+      return (
+        location.pathname.startsWith('/test-series') ||
+        location.pathname.startsWith('/exams') ||
+        location.pathname.startsWith('/tests')
+      );
     }
     if (path === '/saved-questions') {
       return location.pathname === '/saved-questions' || (location.pathname.startsWith('/practice') && location.search.includes('tab=bookmarks'));

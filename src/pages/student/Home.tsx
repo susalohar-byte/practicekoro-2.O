@@ -723,7 +723,7 @@ export const Home: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">Popular Exams</h3>
           <Link
-            to="/exams"
+            to="/test-series"
             className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
           >
             See All <ChevronRight className="w-4 h-4" />
@@ -818,7 +818,7 @@ export const Home: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recommended for You</h3>
           <Link
-            to="/exams"
+            to="/test-series"
             className="text-xs font-bold text-[#0158FC] dark:text-blue-400 hover:underline flex items-center gap-1"
           >
             See All <ChevronRight className="w-4 h-4" />

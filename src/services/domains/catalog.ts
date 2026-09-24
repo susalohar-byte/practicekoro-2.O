@@ -14,6 +14,7 @@ import type {
   Subject,
   Chapter,
   MockTest,
+  TestSeries,
   Question,
   StudentTestQuestion,
   AttemptAnswerState,
@@ -25,7 +26,7 @@ import type {
 } from '@/types';
 import { calculateScore } from '@/utils/scoring';
 import { resolveTestNegativeMarking } from '@/utils/negativeMarking';
-import { localAttemptsStore, localTests, localTestSeries } from '@/services/domains/localStore';
+import { localAttemptsStore, localTests, localTestSeries, localExams } from '@/services/domains/localStore';
 import type {
   AttemptRow,
   BookmarkRow,
@@ -1407,6 +1408,207 @@ export const catalogApi = {
       );
     } catch {
       return [];
+    }
+  },
+
+  /**
+   * Fetch active test series for the student Test Series catalog.
+   * Returns test series created in Admin Panel with accurate test counts:
+   * fullMockCount, topicTestCount, pyqTestCount, and total testCount.
+   */
+  async getStudentTestSeries(examId?: string): Promise<TestSeries[]> {
+    if (!isSupabaseConfigured) {
+      return localTestSeries
+        .filter((s) => s.isActive && (!examId || s.examId === examId))
+        .map((s) => {
+          const exam = localExams.find((e) => e.id === s.examId);
+          const sTests = localTests.filter(
+            (t) =>
+              t.testSeriesId === s.id &&
+              t.isActive &&
+              (t.status === 'published' || !t.status)
+          );
+          const count = sTests.length;
+          const fullMockCount = sTests.filter((t) => t.testType === 'full_mock').length;
+          const pyqTestCount = sTests.filter((t) => t.testType === 'pyq').length;
+          const topicTestCount = sTests.filter(
+            (t) =>
+              t.testType === 'topic' ||
+              t.testType === 'chapter_mock' ||
+              t.testType === 'subject_mock'
+          ).length;
+          return {
+            ...s,
+            examTitle: exam?.title,
+            testCount: count,
+            testsCount: count,
+            fullMockCount,
+            topicTestCount,
+            pyqTestCount,
+          };
+        });
+    }
+
+    try {
+      let query = supabase
+        .from('test_series')
+        .select(
+          `
+          *,
+          exams:exam_id (id, title, category, slug),
+          tests (id, test_type, is_active, status)
+        `
+        )
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+      if (examId) query = query.eq('exam_id', examId);
+
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) {
+        return localTestSeries
+          .filter((s) => s.isActive && (!examId || s.examId === examId))
+          .map((s) => {
+            const exam = localExams.find((e) => e.id === s.examId);
+            const sTests = localTests.filter(
+              (t) =>
+                t.testSeriesId === s.id &&
+                t.isActive &&
+                (t.status === 'published' || !t.status)
+            );
+            return {
+              ...s,
+              examTitle: exam?.title,
+              testCount: sTests.length,
+              testsCount: sTests.length,
+              fullMockCount: sTests.filter((t) => t.testType === 'full_mock').length,
+              pyqTestCount: sTests.filter((t) => t.testType === 'pyq').length,
+              topicTestCount: sTests.filter(
+                (t) =>
+                  t.testType === 'topic' ||
+                  t.testType === 'chapter_mock' ||
+                  t.testType === 'subject_mock'
+              ).length,
+            };
+          });
+      }
+
+      return data.map((item: any) => {
+        const rawTests = Array.isArray(item.tests) ? item.tests : [];
+        const activeTests = rawTests.filter(
+          (t: any) => t.is_active !== false && (t.status === 'published' || !t.status)
+        );
+        const count = activeTests.length;
+        const fullMockCount = activeTests.filter((t: any) => t.test_type === 'full_mock').length;
+        const pyqTestCount = activeTests.filter((t: any) => t.test_type === 'pyq').length;
+        const topicTestCount = activeTests.filter(
+          (t: any) =>
+            t.test_type === 'topic' ||
+            t.test_type === 'chapter_mock' ||
+            t.test_type === 'subject_mock'
+        ).length;
+
+        return {
+          id: item.id,
+          examId: item.exam_id,
+          title: item.title,
+          slug: item.slug,
+          description: item.description ?? undefined,
+          isPremium: Boolean(item.is_premium),
+          orderIndex: Number(item.order_index || 0),
+          isActive: Boolean(item.is_active),
+          createdAt: item.created_at,
+          examTitle: item.exams?.title || undefined,
+          examCategory: item.exams?.category || undefined,
+          testCount: count,
+          testsCount: count,
+          fullMockCount,
+          topicTestCount,
+          pyqTestCount,
+        };
+      });
+    } catch {
+      return localTestSeries.filter((s) => s.isActive && (!examId || s.examId === examId));
+    }
+  },
+
+  /**
+   * Fetch active & published tests assigned to a specific test series for students.
+   */
+  async getSeriesTestsForStudent(seriesId: string): Promise<MockTest[]> {
+    if (!isSupabaseConfigured) {
+      return localTests.filter(
+        (t) =>
+          t.testSeriesId === seriesId &&
+          t.isActive &&
+          (t.status === 'published' || !t.status)
+      );
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tests')
+        .select(
+          `
+          *,
+          exams:exam_id (title),
+          subjects:subject_id (name),
+          chapters:chapter_id (name),
+          test_series:test_series_id (title)
+        `
+        )
+        .eq('test_series_id', seriesId)
+        .eq('is_active', true)
+        .eq('status', 'published')
+        .order('order_index', { ascending: true });
+
+      if (error || !data || data.length === 0) {
+        return localTests.filter(
+          (t) =>
+            t.testSeriesId === seriesId &&
+            t.isActive &&
+            (t.status === 'published' || !t.status)
+        );
+      }
+
+      return data.map((item: any) => ({
+        id: item.id,
+        examId: item.exam_id,
+        subjectId: item.subject_id ?? undefined,
+        chapterId: item.chapter_id ?? undefined,
+        topicId: item.chapter_id ?? undefined,
+        testSeriesId: item.test_series_id ?? undefined,
+        title: item.title,
+        slug: item.slug,
+        description: item.description ?? undefined,
+        testType: item.test_type,
+        year: item.year ? Number(item.year) : undefined,
+        paperName: item.paper_name ?? undefined,
+        shift: item.shift ?? undefined,
+        setName: item.set_name ?? undefined,
+        examDate: item.exam_date ?? undefined,
+        durationMinutes: Number(item.duration_minutes || 60),
+        totalQuestions: Number(item.total_questions || 0),
+        totalMarks: Number(item.total_marks || 0),
+        passingMarks: Number(item.passing_marks || 0),
+        negativeMarking: Number(item.negative_marking || 0),
+        isPremium: Boolean(item.is_premium),
+        orderIndex: Number(item.order_index || 0),
+        isActive: Boolean(item.is_active),
+        status: (item.status as 'draft' | 'published' | 'archived') || 'published',
+        examTitle: item.exams?.title,
+        subjectName: item.subjects?.name,
+        chapterName: item.chapters?.name,
+        topicName: item.chapters?.name,
+        testSeriesTitle: item.test_series?.title,
+      }));
+    } catch {
+      return localTests.filter(
+        (t) =>
+          t.testSeriesId === seriesId &&
+          t.isActive &&
+          (t.status === 'published' || !t.status)
+      );
     }
   },
 };

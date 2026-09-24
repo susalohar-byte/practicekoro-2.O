@@ -8,7 +8,7 @@ export const BottomNav: React.FC = () => {
 
   const tabs = [
     { label: 'Home', path: '/dashboard', icon: Home },
-    { label: 'Exams', path: '/exams', icon: Layers },
+    { label: 'Test Series', path: '/test-series', icon: Layers },
     { label: 'Practice', path: '/practice', icon: BookOpen },
     { label: 'Results', path: '/results', icon: BarChart3 },
     { label: 'Profile', path: '/profile', icon: User },

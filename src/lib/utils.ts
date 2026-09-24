@@ -39,9 +39,9 @@ export function isStudentNavActive(pathname: string, label: string): boolean {
     return p.startsWith('/results') || p.startsWith('/my-tests') || p.includes('/results/');
   }
 
-  if (label === 'Exams') {
+  if (label === 'Exams' || label === 'Test Series') {
     if (p.includes('/results/')) return false;
-    return p.startsWith('/exams') || p.startsWith('/tests');
+    return p.startsWith('/test-series') || p.startsWith('/exams') || p.startsWith('/tests');
   }
 
   if (label === 'Practice') {

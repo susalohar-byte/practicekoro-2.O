@@ -11,8 +11,15 @@ const Landing = lazyWithRetry(() =>
 const Home = lazyWithRetry(() =>
   import('@/pages/student/Home').then((module) => ({ default: module.Home }))
 );
-const ExamsCatalog = lazyWithRetry(() =>
-  import('@/pages/student/ExamsCatalog').then((module) => ({ default: module.ExamsCatalog }))
+const TestSeriesCatalog = lazyWithRetry(() =>
+  import('@/pages/student/TestSeriesCatalog').then((module) => ({
+    default: module.TestSeriesCatalog,
+  }))
+);
+const TestSeriesDetail = lazyWithRetry(() =>
+  import('@/pages/student/TestSeriesDetail').then((module) => ({
+    default: module.TestSeriesDetail,
+  }))
 );
 const ExamDetail = lazyWithRetry(() =>
   import('@/pages/student/ExamDetail').then((module) => ({ default: module.ExamDetail }))
@@ -212,16 +219,20 @@ export const App: React.FC = () => {
           <Route path="home" element={<Navigate to="/dashboard" replace />} />
           <Route path="app" element={<Navigate to="/dashboard" replace />} />
 
-          {/* Exams Hub & Catalog */}
-          <Route path="exams" element={<ExamsCatalog />} />
+          {/* Test Series Hub & Catalog */}
+          <Route path="test-series" element={<TestSeriesCatalog />} />
+          <Route path="test-series/:seriesId" element={<TestSeriesDetail />} />
+
+          {/* Exams Hub & Catalog (Redirected to Test Series & backwards-compatible) */}
+          <Route path="exams" element={<Navigate to="/test-series" replace />} />
           <Route path="exams/:id" element={<ExamOrTestDispatcher />} />
           <Route path="exams/:examId/full-mock" element={<ExamDetail />} />
           <Route path="exams/:examId/pyq" element={<ExamDetail />} />
           <Route path="exams/:examId/topic-tests" element={<ExamDetail />} />
 
           {/* Legacy redirects */}
-          <Route path="tests" element={<Navigate to="/exams" replace />} />
-          <Route path="tests/*" element={<Navigate to="/exams" replace />} />
+          <Route path="tests" element={<Navigate to="/test-series" replace />} />
+          <Route path="tests/*" element={<Navigate to="/test-series" replace />} />
           <Route path="my-tests" element={<Navigate to="/results" replace />} />
           <Route path="my-tests/*" element={<Navigate to="/results" replace />} />
 
