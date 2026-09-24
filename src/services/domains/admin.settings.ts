@@ -356,38 +356,24 @@ export async function getPaymentGatewayConfig(gateway = 'razorpay'): Promise<Pay
 }
 
 /**
- * Updates payment gateway configuration with zero-leakage security.
- * If secret is empty or masked, preserves existing secret.
+ * Updates payment gateway configuration (Key ID + active flag only).
+ * Secrets are NEVER persisted here: payload.keySecret / webhookSecret are
+ * accepted for type-compat but always dropped — they live exclusively in
+ * Supabase Edge Function Secrets.
  */
 export async function updatePaymentGatewayConfig(
   payload: PaymentGatewayUpdatePayload
 ): Promise<{ success: boolean; error?: string }> {
   const targetGateway = (payload.gateway || 'razorpay').toLowerCase().trim();
   const cleanKeyId = payload.keyId.trim();
-  const cleanSecret = (payload.keySecret || '').trim();
-  const cleanWebhook = (payload.webhookSecret || '').trim();
   const isActive = payload.isActive ?? true;
 
-  // Update local cache
-  const existingLocal = localPaymentGateways[targetGateway] || {
-    gateway: targetGateway,
-    key_id: '',
-    key_secret: '',
-    webhook_secret: '',
-    is_active: true,
-    updated_at: new Date().toISOString(),
-  };
-
-  const updatedSecret =
-    cleanSecret && !cleanSecret.startsWith('••••') ? cleanSecret : existingLocal.key_secret;
-  const updatedWebhook =
-    cleanWebhook && !cleanWebhook.startsWith('••••') ? cleanWebhook : existingLocal.webhook_secret;
-
+  // Update local cache (Key ID + active flag only — secrets never stored)
   localPaymentGateways[targetGateway] = {
     gateway: targetGateway,
     key_id: cleanKeyId,
-    key_secret: updatedSecret,
-    webhook_secret: updatedWebhook,
+    key_secret: '',
+    webhook_secret: '',
     is_active: isActive,
     updated_at: new Date().toISOString(),
   };
@@ -409,13 +395,14 @@ export async function updatePaymentGatewayConfig(
       console.warn('Could not sync payment key to app_settings:', appErr);
     }
 
-    // 2. Authoritative payment_gateways RPC
+    // 2. Authoritative payment_gateways RPC (Key ID + active flag only;
+    // secrets are never written — they live in Edge Function Secrets)
     try {
       const { data, error } = await supabase.rpc('admin_update_payment_gateway', {
         p_gateway: targetGateway,
         p_key_id: cleanKeyId,
-        p_key_secret: cleanSecret || null,
-        p_webhook_secret: cleanWebhook || null,
+        p_key_secret: null,
+        p_webhook_secret: null,
         p_is_active: isActive,
       });
 

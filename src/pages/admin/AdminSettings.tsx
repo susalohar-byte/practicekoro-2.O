@@ -14,8 +14,6 @@ import {
   Server,
   Key,
   ShieldCheck,
-  Eye,
-  EyeOff,
   ExternalLink,
   HelpCircle,
   ChevronDown,
@@ -106,15 +104,10 @@ export const AdminSettings: React.FC = () => {
   // Razorpay Gateway State
   // --------------------------------------------------------------------------
   const [rzpKeyId, setRzpKeyId] = useState('');
-  const [rzpKeySecret, setRzpKeySecret] = useState('');
-  const [rzpWebhookSecret, setRzpWebhookSecret] = useState('');
+  // NOTE: Key Secret / Webhook Secret are NEVER entered or stored here.
+  // They live only in Supabase Edge Function Secrets. This panel manages
+  // the publishable Key ID + active flag; secrets are set server-side.
   const [rzpIsActive, setRzpIsActive] = useState(true);
-  const [rzpHasSecret, setRzpHasSecret] = useState(false);
-  const [rzpSecretPreview, setRzpSecretPreview] = useState<string | null>(null);
-  const [rzpHasWebhook, setRzpHasWebhook] = useState(false);
-  const [rzpWebhookPreview, setRzpWebhookPreview] = useState<string | null>(null);
-  const [showSecret, setShowSecret] = useState(false);
-  const [showWebhook, setShowWebhook] = useState(false);
   const [showSetupGuide, setShowSetupGuide] = useState(false);
   const [isSavingGateway, setIsSavingGateway] = useState(false);
 
@@ -181,12 +174,6 @@ export const AdminSettings: React.FC = () => {
           setRzpKeyId(gatewayConfig.keyId);
         }
         setRzpIsActive(gatewayConfig.isActive);
-        setRzpHasSecret(gatewayConfig.hasSecret);
-        setRzpSecretPreview(gatewayConfig.secretPreview || null);
-        setRzpHasWebhook(gatewayConfig.hasWebhookSecret);
-        setRzpWebhookPreview(gatewayConfig.webhookPreview || null);
-        setRzpKeySecret('');
-        setRzpWebhookSecret('');
       }
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -357,30 +344,16 @@ export const AdminSettings: React.FC = () => {
         { id: 'sub_expiry_warning_days', value: expiryWarningDays },
       ]);
 
-      // 2. Authoritative database RPC
+      // 2. Authoritative database RPC (Key ID + active flag only — secrets
+      // are never sent here; they live in Supabase Edge Function Secrets)
       const gwRes = await api.updatePaymentGatewayConfig({
         gateway: 'razorpay',
         keyId: cleanKey,
-        keySecret: rzpKeySecret,
-        webhookSecret: rzpWebhookSecret,
         isActive: rzpIsActive,
       });
 
       if (!gwRes.success && !appSettingsRes.success) {
         throw new Error(gwRes.error || appSettingsRes.error || 'Failed to update payment gateway');
-      }
-
-      if (rzpKeySecret.trim()) {
-        setRzpHasSecret(true);
-        const trimmed = rzpKeySecret.trim();
-        setRzpSecretPreview(trimmed.length >= 4 ? `••••••••${trimmed.slice(-4)}` : '••••••••');
-        setRzpKeySecret('');
-      }
-      if (rzpWebhookSecret.trim()) {
-        setRzpHasWebhook(true);
-        const trimmed = rzpWebhookSecret.trim();
-        setRzpWebhookPreview(trimmed.length >= 4 ? `••••••••${trimmed.slice(-4)}` : '••••••••');
-        setRzpWebhookSecret('');
       }
 
       setSaveSuccess(true);
@@ -431,8 +404,6 @@ export const AdminSettings: React.FC = () => {
         api.updatePaymentGatewayConfig({
           gateway: 'razorpay',
           keyId: rzpKeyId,
-          keySecret: rzpKeySecret,
-          webhookSecret: rzpWebhookSecret,
           isActive: rzpIsActive,
         }),
         currentAdmin
@@ -450,20 +421,6 @@ export const AdminSettings: React.FC = () => {
 
       if (!gwRes.success) {
         throw new Error(gwRes.error || 'Failed to save Razorpay payment gateway settings');
-      }
-
-      // Update secret previews if new secret was supplied
-      if (rzpKeySecret.trim()) {
-        setRzpHasSecret(true);
-        const trimmed = rzpKeySecret.trim();
-        setRzpSecretPreview(trimmed.length >= 4 ? `••••••••${trimmed.slice(-4)}` : '••••••••');
-        setRzpKeySecret('');
-      }
-      if (rzpWebhookSecret.trim()) {
-        setRzpHasWebhook(true);
-        const trimmed = rzpWebhookSecret.trim();
-        setRzpWebhookPreview(trimmed.length >= 4 ? `••••••••${trimmed.slice(-4)}` : '••••••••');
-        setRzpWebhookSecret('');
       }
 
       await api.logAdminActivity({
@@ -484,8 +441,6 @@ export const AdminSettings: React.FC = () => {
           appVersion,
           razorpayKeyId: rzpKeyId,
           razorpayActive: rzpIsActive,
-          secretUpdated: Boolean(rzpKeySecret.trim()),
-          webhookUpdated: Boolean(rzpWebhookSecret.trim()),
         },
         adminUser: currentAdmin,
       });
@@ -1139,17 +1094,16 @@ export const AdminSettings: React.FC = () => {
                   অপশনে যান।
                 </li>
                 <li>
-                  <strong>Generate Key</strong> বাটনে ক্লিক করে <strong>Key ID</strong> এবং{' '}
-                  <strong>Key Secret</strong> কপি করুন।
+                  <strong>Generate Key</strong> বাটনে ক্লিক করে <strong>Key ID</strong> কপি করুন।
+                  (Key Secret এই প্যানেলে নয় — নিচে দেখুন।)
                 </li>
                 <li>
-                  নিচে Key ID এবং Key Secret পেস্ট করে <strong>Save All Settings</strong> বাটনে
-                  ক্লিক করুন।
+                  নিচে Key ID পেস্ট করে <strong>Save All Settings</strong> বাটনে ক্লিক করুন।
                 </li>
               </ol>
               <p className="text-[11px] text-amber-700 dark:text-amber-300 pt-1 font-medium">
-                ⚠️ সিক্রেট কী সার্ভার-সাইড ভেরিফিকেশনের জন্য ডাটাবেসে সুরক্ষিত থাকে এবং কোনো সাধারণ
-                ইউজার বা ব্রাউজারে কখনো দৃশ্যমান হয় না।
+                ⚠️ Key Secret / Webhook Secret কখনো এখানে বা ডাটাবেসে রাখবেন না — এগুলো শুধু
+                Supabase Dashboard ➔ Edge Functions ➔ Secrets-এ সেট করুন।
               </p>
             </div>
           )}
@@ -1162,8 +1116,8 @@ export const AdminSettings: React.FC = () => {
                 জিরো-লিক সিকিউরিটি এনফোর্সড:{' '}
               </span>
               <span className="text-slate-500 dark:text-slate-400 text-[11px]">
-                Key Secret সার্ভার-সাইড HMAC-SHA256 পেমেন্ট ভেরিফিকেশনের জন্য সরাসরি ডাটাবেসে
-                সংরক্ষিত হয়। ক্লায়েন্ট ব্রাউজারে এটি কখনোই উন্মুক্ত হয় না।
+                Key Secret / Webhook Secret শুধু Supabase Edge Function Secrets-এ থাকে — ডাটাবেসে
+                কখনো সংরক্ষিত হয় না। ক্লায়েন্ট ব্রাউজারে এগুলো কখনোই উন্মুক্ত হয় না।
               </span>
             </div>
           </div>
@@ -1191,83 +1145,19 @@ export const AdminSettings: React.FC = () => {
               </p>
             </div>
 
-            {/* Key Secret Field */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Razorpay Key Secret
-                </label>
-                {rzpHasSecret && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800/80">
-                    <ShieldCheck className="w-3 h-3" />
-                    সেভ করা আছে ({rzpSecretPreview || '••••••••'})
-                  </span>
-                )}
+            {/* Secrets live in Supabase — never entered or stored here */}
+            <div className="md:col-span-2 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5">
+              <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                <span className="font-bold">Secrets are managed server-side. </span>
+                <span>
+                  <strong>Key Secret</strong> ও <strong>Webhook Secret</strong> এখানে পেস্ট করবেন
+                  না — এগুলো শুধু Supabase Dashboard ➔ Edge Functions ➔ Secrets-এ (
+                  <span className="font-mono">RAZORPAY_KEY_SECRET</span>,{' '}
+                  <span className="font-mono">RAZORPAY_WEBHOOK_SECRET</span>) সেট করুন, তারপর
+                  ফাংশনগুলো Redeploy করুন।
+                </span>
               </div>
-              <div className="relative">
-                <input
-                  type={showSecret ? 'text' : 'password'}
-                  value={rzpKeySecret}
-                  onChange={(e) => setRzpKeySecret(e.target.value)}
-                  placeholder={
-                    rzpHasSecret
-                      ? 'পূর্বে সংরক্ষিত কী রাখতে ফাঁকা রাখুন (Leave blank to keep existing)'
-                      : 'Razorpay Key Secret এখানে পেস্ট করুন'
-                  }
-                  className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pk-primary/20 focus:border-pk-primary transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSecret(!showSecret)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
-                >
-                  {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1">
-                {rzpHasSecret
-                  ? 'পূর্ববর্তী সিক্রেট কী নিরাপদে ডাটাবেসে সংরক্ষিত রয়েছে। নতুন কী দিতে চাইলে টাইপ করুন।'
-                  : 'অত্যন্ত গোপনীয়। পেমেন্ট ভ্যালিডেশন এবং সিগনেচার যাচাই করতে ব্যবহৃত হয়।'}
-              </p>
-            </div>
-
-            {/* Optional Webhook Secret */}
-            <div className="md:col-span-2">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Razorpay Webhook Secret (ঐচ্ছিক / Optional)
-                </label>
-                {rzpHasWebhook && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800/80">
-                    <ShieldCheck className="w-3 h-3" />
-                    কনফিগার করা আছে ({rzpWebhookPreview || '••••••••'})
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <input
-                  type={showWebhook ? 'text' : 'password'}
-                  value={rzpWebhookSecret}
-                  onChange={(e) => setRzpWebhookSecret(e.target.value)}
-                  placeholder={
-                    rzpHasWebhook
-                      ? 'পূর্বে সংরক্ষিত Webhook Secret রাখতে ফাঁকা রাখুন'
-                      : 'whsec_xxxxxxxxxx (যদি Webhook ব্যবহার করেন)'
-                  }
-                  className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pk-primary/20 focus:border-pk-primary transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowWebhook(!showWebhook)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
-                >
-                  {showWebhook ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1">
-                Razorpay Webhook ইন্টিগ্রেশনের মাধ্যমে ব্যাকগ্রাউন্ড নোটিফিকেশন ভেরিফাই করতে ব্যবহৃত
-                হয়।
-              </p>
             </div>
 
             {/* Currency & Renewal Notice */}
