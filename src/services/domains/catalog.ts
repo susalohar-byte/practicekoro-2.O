@@ -1338,7 +1338,7 @@ export const catalogApi = {
 
   async getBookmarks(userId: string): Promise<BookmarkItem[]> {
     if (!isSupabaseConfigured)
-      return MOCK_BOOKMARKS.filter((b) => b.userId === userId || !b.userId);
+      return [];
     try {
       const { data, error } = await supabase
         .from('bookmarks')
@@ -1364,7 +1364,7 @@ export const catalogApi = {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) return MOCK_BOOKMARKS;
+      if (error || !data || data.length === 0) return [];
       return (data as unknown as Array<BookmarkRow & { questions: QuestionWithContext }>).map(
         (d) => {
           const q = d.questions || {};
@@ -1407,7 +1407,7 @@ export const catalogApi = {
         }
       );
     } catch {
-      return MOCK_BOOKMARKS;
+      return [];
     }
   },
 

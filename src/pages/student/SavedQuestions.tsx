@@ -21,15 +21,16 @@ import {
   LayoutGrid,
   X,
   Copy,
-  HelpCircle,
   Sparkles,
   ArrowRight,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { QuestionImage } from '@/components/common/QuestionImage';
 import { StudentNavbar } from '@/components/layout/StudentNavbar';
 import type { BookmarkItem } from '@/types';
+
 
 // Subject theme mapper for icon, color, and border
 function getSubjectTheme(subjectName?: string) {
@@ -77,235 +78,12 @@ function getSubjectTheme(subjectName?: string) {
   return {
     icon: HelpCircle,
     iconBox: 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-800',
-    badgeText: subjectName || 'General',
+    badgeText: 'General',
     examDefault: 'Competitive Exam',
   };
 }
 
-// Helper to create fully typed benchmark question objects
-function makeBenchmarkQuestion(params: {
-  id: string;
-  questionText: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  correctOption: 'A' | 'B' | 'C' | 'D';
-  explanation?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
-  sourceExam?: string;
-  createdAt: string;
-}) {
-  return {
-    ...params,
-    defaultMarks: 1,
-    defaultNegativeMarks: 0,
-    isActive: true,
-    status: 'active' as const,
-    updatedAt: params.createdAt,
-  };
-}
-
-// Sample benchmark questions to guarantee exact count & content matching the reference screenshot
-const BENCHMARK_ITEMS: BookmarkItem[] = [
-  {
-    id: 'bm-1',
-    userId: 'user-1',
-    questionId: 'q-1',
-    subjectName: 'General Knowledge',
-    createdAt: '2026-09-12T10:00:00Z',
-    question: makeBenchmarkQuestion({
-      id: 'q-1',
-      questionText: 'Who was the first woman to win a Nobel Prize?',
-      optionA: 'Marie Curie',
-      optionB: 'Mother Teresa',
-      optionC: 'Indira Gandhi',
-      optionD: 'Kalpana Chawla',
-      correctOption: 'A',
-      explanation: 'Marie Curie was the first woman to win a Nobel Prize in Physics (1903) and later in Chemistry (1911).',
-      difficulty: 'medium',
-      sourceExam: 'WBP Constable',
-      createdAt: '2026-09-12T10:00:00Z',
-    }),
-  },
-  {
-    id: 'bm-2',
-    userId: 'user-1',
-    questionId: 'q-2',
-    subjectName: 'Mathematics',
-    createdAt: '2026-09-10T10:00:00Z',
-    question: makeBenchmarkQuestion({
-      id: 'q-2',
-      questionText: 'If the sum of interior angles of a polygon is 1440°, then the number of sides is:',
-      optionA: '8',
-      optionB: '9',
-      optionC: '10',
-      optionD: '12',
-      correctOption: 'C',
-      explanation: 'Sum of interior angles = (n - 2) × 180° => 1440 = (n - 2) × 180 => n - 2 = 8 => n = 10.',
-      difficulty: 'easy',
-      sourceExam: 'SSC GD',
-      createdAt: '2026-09-10T10:00:00Z',
-    }),
-  },
-  {
-    id: 'bm-3',
-    userId: 'user-1',
-    questionId: 'q-3',
-    subjectName: 'Reasoning',
-    createdAt: '2026-09-08T10:00:00Z',
-    question: makeBenchmarkQuestion({
-      id: 'q-3',
-      questionText: 'Find the odd one out:',
-      optionA: 'Apple',
-      optionB: 'Orange',
-      optionC: 'Carrot',
-      optionD: 'Banana',
-      correctOption: 'C',
-      explanation: 'Carrot is a root vegetable, whereas Apple, Orange, and Banana are fruits.',
-      difficulty: 'medium',
-      sourceExam: 'WBP Constable',
-      createdAt: '2026-09-08T10:00:00Z',
-    }),
-  },
-  {
-    id: 'bm-4',
-    userId: 'user-1',
-    questionId: 'q-4',
-    subjectName: 'Bengali',
-    createdAt: '2026-09-05T10:00:00Z',
-    question: makeBenchmarkQuestion({
-      id: 'q-4',
-      questionText: '“আকাশ” শব্দের অর্থ কী?',
-      optionA: 'আকাশ',
-      optionB: 'মেঘ',
-      optionC: 'বাতাস',
-      optionD: 'তারা',
-      correctOption: 'B',
-      explanation: 'এখানে সমার্থক হিসেবে মেঘ/গগন ব্যবহৃত হয়।',
-      difficulty: 'easy',
-      sourceExam: 'Primary TET',
-      createdAt: '2026-09-05T10:00:00Z',
-    }),
-  },
-  {
-    id: 'bm-5',
-    userId: 'user-1',
-    questionId: 'q-5',
-    subjectName: 'English',
-    createdAt: '2026-09-01T10:00:00Z',
-    question: makeBenchmarkQuestion({
-      id: 'q-5',
-      questionText: 'Choose the correct form: She ____ to school every day.',
-      optionA: 'go',
-      optionB: 'goes',
-      optionC: 'going',
-      optionD: 'gone',
-      correctOption: 'B',
-      explanation: 'Third person singular takes "goes" in simple present tense.',
-      difficulty: 'easy',
-      sourceExam: 'WBSSC',
-      createdAt: '2026-09-01T10:00:00Z',
-    }),
-  },
-  // Additional items ensuring subject counts match (GK: 8, Math: 5, Reasoning: 4, Bengali: 4, English: 3 = Total 24)
-  ...Array.from({ length: 7 }, (_, i) => ({
-    id: `bm-gk-${i + 6}`,
-    userId: 'user-1',
-    questionId: `q-gk-${i + 6}`,
-    subjectName: 'General Knowledge',
-    createdAt: `2026-08-${25 - i}T10:00:00Z`,
-    question: makeBenchmarkQuestion({
-      id: `q-gk-${i + 6}`,
-      questionText: `ভারতের সংবিধানের কোন ধারায় মৌলিক অধিকার বর্ণিত হয়েছে? (Part ${i + 1})`,
-      optionA: '১২-৩৫ ধারা',
-      optionB: '৩৬-৫১ ধারা',
-      optionC: '৫১A ধারা',
-      optionD: '৩০০A ধারা',
-      correctOption: 'A' as const,
-      difficulty: 'medium',
-      sourceExam: 'WBP Constable',
-      createdAt: `2026-08-${25 - i}T10:00:00Z`,
-    }),
-  })),
-  ...Array.from({ length: 4 }, (_, i) => ({
-    id: `bm-math-${i + 6}`,
-    userId: 'user-1',
-    questionId: `q-math-${i + 6}`,
-    subjectName: 'Mathematics',
-    createdAt: `2026-08-${20 - i}T10:00:00Z`,
-    question: makeBenchmarkQuestion({
-      id: `q-math-${i + 6}`,
-      questionText: `একটি কাজ A ১০ দিনে এবং B ১৫ দিনে করতে পারলে, তারা একত্রে কাজটি কত দিনে শেষ করবে?`,
-      optionA: '৫ দিন',
-      optionB: '৬ দিন',
-      optionC: '৭ দিন',
-      optionD: '৮ দিন',
-      correctOption: 'B' as const,
-      difficulty: 'easy',
-      sourceExam: 'SSC GD',
-      createdAt: `2026-08-${20 - i}T10:00:00Z`,
-    }),
-  })),
-  ...Array.from({ length: 3 }, (_, i) => ({
-    id: `bm-reason-${i + 6}`,
-    userId: 'user-1',
-    questionId: `q-reason-${i + 6}`,
-    subjectName: 'Reasoning',
-    createdAt: `2026-08-${15 - i}T10:00:00Z`,
-    question: makeBenchmarkQuestion({
-      id: `q-reason-${i + 6}`,
-      questionText: `Complete the number series: 2, 6, 12, 20, 30, ?`,
-      optionA: '40',
-      optionB: '42',
-      optionC: '44',
-      optionD: '46',
-      correctOption: 'B' as const,
-      difficulty: 'medium',
-      sourceExam: 'WBP Constable',
-      createdAt: `2026-08-${15 - i}T10:00:00Z`,
-    }),
-  })),
-  ...Array.from({ length: 3 }, (_, i) => ({
-    id: `bm-bengali-${i + 6}`,
-    userId: 'user-1',
-    questionId: `q-bengali-${i + 6}`,
-    subjectName: 'Bengali',
-    createdAt: `2026-08-${10 - i}T10:00:00Z`,
-    question: makeBenchmarkQuestion({
-      id: `q-bengali-${i + 6}`,
-      questionText: `সন্ধি বিচ্ছেদ করুন: 'বিদ্যালয়'`,
-      optionA: 'বিদ্যা + লয়',
-      optionB: 'বিদ্যা + আলয়',
-      optionC: 'বিদ্য + আলয়',
-      optionD: 'বিদ + আলয়',
-      correctOption: 'B' as const,
-      difficulty: 'easy',
-      sourceExam: 'Primary TET',
-      createdAt: `2026-08-${10 - i}T10:00:00Z`,
-    }),
-  })),
-  ...Array.from({ length: 2 }, (_, i) => ({
-    id: `bm-english-${i + 6}`,
-    userId: 'user-1',
-    questionId: `q-english-${i + 6}`,
-    subjectName: 'English',
-    createdAt: `2026-08-${5 - i}T10:00:00Z`,
-    question: makeBenchmarkQuestion({
-      id: `q-english-${i + 6}`,
-      questionText: `Find the antonym of the word: "Optimistic"`,
-      optionA: 'Hopeful',
-      optionB: 'Pessimistic',
-      optionC: 'Positive',
-      optionD: 'Cheerful',
-      correctOption: 'B' as const,
-      difficulty: 'easy',
-      sourceExam: 'WBSSC',
-      createdAt: `2026-08-${5 - i}T10:00:00Z`,
-    }),
-  })),
-];
-
+// Date formatter
 function formatDate(dateStr?: string): string {
   if (!dateStr) return 'Saved recently';
   try {
@@ -320,8 +98,7 @@ export const SavedQuestions: React.FC = () => {
   const { user } = useAuth();
   const { onToggleMobileSidebar } = useOutletContext<{ onToggleMobileSidebar?: () => void }>() || {};
 
-  const [items, setItems] = useState<BookmarkItem[]>(BENCHMARK_ITEMS);
-  const [, setLoading] = useState(true);
+  const [items, setItems] = useState<BookmarkItem[]>([]);
 
   // Filters & State
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -347,22 +124,13 @@ export const SavedQuestions: React.FC = () => {
   // Load user bookmarks from DB
   const loadBookmarks = useCallback(async () => {
     if (!user) {
-      setLoading(false);
       return;
     }
-    setLoading(true);
     try {
       const data = await api.getBookmarks(user.id);
-      if (data && data.length > 0) {
-        setItems(data);
-      } else {
-        setItems(BENCHMARK_ITEMS);
-      }
+      setItems(data);
     } catch (err) {
       console.error('Failed to load bookmarks:', err);
-      setItems(BENCHMARK_ITEMS);
-    } finally {
-      setLoading(false);
     }
   }, [user]);
 
