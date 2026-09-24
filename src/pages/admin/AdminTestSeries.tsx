@@ -1,5 +1,6 @@
 import { getErrorMessage } from '@/lib/errors';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -16,8 +17,24 @@ import {
   X,
   FileText,
   AlertTriangle,
+  Award,
+  BookOpen,
+  History,
+  Clock,
+  Layers,
+  AlertCircle,
+  FolderPlus,
+  HelpCircle,
 } from 'lucide-react';
 import type { TestSeries, Exam, MockTest } from '@/types';
+
+export type SeriesCategoryType = 'all' | 'full_mock' | 'topic' | 'pyq';
+
+export function getTestCategory(test: MockTest): 'full_mock' | 'topic' | 'pyq' {
+  if (test.testType === 'full_mock') return 'full_mock';
+  if (test.testType === 'pyq') return 'pyq';
+  return 'topic';
+}
 
 export const AdminTestSeries: React.FC = () => {
   const [seriesList, setSeriesList] = useState<TestSeries[]>([]);
@@ -46,7 +63,13 @@ export const AdminTestSeries: React.FC = () => {
   const [seriesTests, setSeriesTests] = useState<MockTest[]>([]);
   const [availableTests, setAvailableTests] = useState<MockTest[]>([]);
   const [isManagingTests, setIsManagingTests] = useState(false);
+  const [isLoadingSeriesTests, setIsLoadingSeriesTests] = useState(false);
   const [testSearchTerm, setTestSearchTerm] = useState('');
+  const [activeCategoryTab, setActiveCategoryTab] = useState<SeriesCategoryType>('all');
+  const [availableCategoryFilter, setAvailableCategoryFilter] = useState<SeriesCategoryType>('all');
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [unassigningId, setUnassigningId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -174,69 +197,208 @@ export const AdminTestSeries: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (notice) {
+      const timer = setTimeout(() => setNotice(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [notice]);
+
   const openManageTests = async (series: TestSeries) => {
     setManageSeriesTests(series);
     setIsManagingTests(true);
+    setIsLoadingSeriesTests(true);
     setTestSearchTerm('');
+    setActiveCategoryTab('all');
+    setAvailableCategoryFilter('all');
+    setNotice(null);
     try {
-      const sTests = await api.getSeriesTests(series.id);
-      const allTests = await api.getAllAdminTests({ examId: series.examId });
+      const [sTests, allTests] = await Promise.all([
+        api.getSeriesTests(series.id),
+        api.getAllAdminTests({ examId: series.examId }),
+      ]);
       setSeriesTests(sTests);
       setAvailableTests(allTests.filter((t) => !t.testSeriesId || t.testSeriesId !== series.id));
     } catch (err) {
       console.error('Failed to load series tests', err);
+      setNotice({ message: 'Failed to load series tests', type: 'error' });
+    } finally {
+      setIsLoadingSeriesTests(false);
     }
   };
 
   const handleAssignTest = async (testId: string) => {
     if (!manageSeriesTests) return;
     try {
+      setAssigningId(testId);
       await api.assignTestToSeries(testId, manageSeriesTests.id);
       const t = availableTests.find((x) => x.id === testId);
       if (t) {
+        const assignedTest: MockTest = {
+          ...t,
+          testSeriesId: manageSeriesTests.id,
+          testSeriesTitle: manageSeriesTests.title,
+        };
         setAvailableTests((prev) => prev.filter((x) => x.id !== testId));
-        setSeriesTests((prev) => [...prev, { ...t, testSeriesId: manageSeriesTests.id }]);
+        setSeriesTests((prev) => [...prev, assignedTest]);
+
+        const cat = getTestCategory(t);
         setSeriesList((prev) =>
-          prev.map((s) =>
-            s.id === manageSeriesTests.id
-              ? {
-                  ...s,
-                  testCount: (s.testCount || 0) + 1,
-                  testsCount: (s.testsCount || 0) + 1,
-                }
-              : s
-          )
+          prev.map((s) => {
+            if (s.id !== manageSeriesTests.id) return s;
+            const full = (s.fullMockCount || 0) + (cat === 'full_mock' ? 1 : 0);
+            const topic = (s.topicTestCount || 0) + (cat === 'topic' ? 1 : 0);
+            const pyq = (s.pyqTestCount || 0) + (cat === 'pyq' ? 1 : 0);
+            const total = (s.testCount || 0) + 1;
+            return {
+              ...s,
+              testCount: total,
+              testsCount: total,
+              fullMockCount: full,
+              topicTestCount: topic,
+              pyqTestCount: pyq,
+            };
+          })
         );
+        setNotice({
+          message: `Added "${t.title}" to ${manageSeriesTests.title}`,
+          type: 'success',
+        });
       }
     } catch (err) {
       console.error('Failed to assign test', err);
+      setNotice({ message: getErrorMessage(err, 'Failed to assign test'), type: 'error' });
+    } finally {
+      setAssigningId(null);
     }
   };
 
   const handleUnassignTest = async (testId: string) => {
     if (!manageSeriesTests) return;
     try {
+      setUnassigningId(testId);
       await api.assignTestToSeries(testId, null);
       const t = seriesTests.find((x) => x.id === testId);
       if (t) {
         setSeriesTests((prev) => prev.filter((x) => x.id !== testId));
-        setAvailableTests((prev) => [...prev, { ...t, testSeriesId: undefined }]);
+        setAvailableTests((prev) => [...prev, { ...t, testSeriesId: undefined, testSeriesTitle: undefined }]);
+
+        const cat = getTestCategory(t);
         setSeriesList((prev) =>
-          prev.map((s) =>
-            s.id === manageSeriesTests.id
-              ? {
-                  ...s,
-                  testCount: Math.max(0, (s.testCount || 0) - 1),
-                  testsCount: Math.max(0, (s.testsCount || 0) - 1),
-                }
-              : s
-          )
+          prev.map((s) => {
+            if (s.id !== manageSeriesTests.id) return s;
+            const full = Math.max(0, (s.fullMockCount || 0) - (cat === 'full_mock' ? 1 : 0));
+            const topic = Math.max(0, (s.topicTestCount || 0) - (cat === 'topic' ? 1 : 0));
+            const pyq = Math.max(0, (s.pyqTestCount || 0) - (cat === 'pyq' ? 1 : 0));
+            const total = Math.max(0, (s.testCount || 0) - 1);
+            return {
+              ...s,
+              testCount: total,
+              testsCount: total,
+              fullMockCount: full,
+              topicTestCount: topic,
+              pyqTestCount: pyq,
+            };
+          })
         );
+        setNotice({
+          message: `Removed "${t.title}" from series`,
+          type: 'success',
+        });
       }
     } catch (err) {
       console.error('Failed to unassign test', err);
+      setNotice({ message: getErrorMessage(err, 'Failed to remove test'), type: 'error' });
+    } finally {
+      setUnassigningId(null);
     }
   };
+
+  const handleAssignAllFiltered = async () => {
+    if (!manageSeriesTests || filteredAvailableTests.length === 0) return;
+    try {
+      setIsLoadingSeriesTests(true);
+      for (const t of filteredAvailableTests) {
+        await api.assignTestToSeries(t.id, manageSeriesTests.id);
+      }
+      const assignedIds = new Set(filteredAvailableTests.map((t) => t.id));
+      const newlyAssigned = filteredAvailableTests.map((t) => ({
+        ...t,
+        testSeriesId: manageSeriesTests.id,
+        testSeriesTitle: manageSeriesTests.title,
+      }));
+      setAvailableTests((prev) => prev.filter((x) => !assignedIds.has(x.id)));
+      setSeriesTests((prev) => [...prev, ...newlyAssigned]);
+      await loadData();
+      setNotice({
+        message: `Successfully added ${filteredAvailableTests.length} tests to ${manageSeriesTests.title}`,
+        type: 'success',
+      });
+    } catch (err) {
+      console.error('Failed to batch assign tests', err);
+      setNotice({ message: 'Failed to assign tests', type: 'error' });
+    } finally {
+      setIsLoadingSeriesTests(false);
+    }
+  };
+
+  // Categories in Assigned Tests
+  const assignedFullMocks = useMemo(
+    () => seriesTests.filter((t) => t.testType === 'full_mock'),
+    [seriesTests]
+  );
+  const assignedTopicTests = useMemo(
+    () =>
+      seriesTests.filter(
+        (t) =>
+          t.testType === 'topic' ||
+          t.testType === 'chapter_mock' ||
+          t.testType === 'subject_mock'
+      ),
+    [seriesTests]
+  );
+  const assignedPyqTests = useMemo(
+    () => seriesTests.filter((t) => t.testType === 'pyq'),
+    [seriesTests]
+  );
+
+  // Categories in Available Tests
+  const availableFullMocks = useMemo(
+    () => availableTests.filter((t) => t.testType === 'full_mock'),
+    [availableTests]
+  );
+  const availableTopicTests = useMemo(
+    () =>
+      availableTests.filter(
+        (t) =>
+          t.testType === 'topic' ||
+          t.testType === 'chapter_mock' ||
+          t.testType === 'subject_mock'
+      ),
+    [availableTests]
+  );
+  const availablePyqTests = useMemo(
+    () => availableTests.filter((t) => t.testType === 'pyq'),
+    [availableTests]
+  );
+
+  const filteredAvailableTests = useMemo(() => {
+    return availableTests.filter((t) => {
+      const term = testSearchTerm.toLowerCase().trim();
+      if (term) {
+        const match =
+          t.title.toLowerCase().includes(term) ||
+          t.subjectName?.toLowerCase().includes(term) ||
+          t.chapterName?.toLowerCase().includes(term) ||
+          t.paperName?.toLowerCase().includes(term) ||
+          String(t.year || '').includes(term);
+        if (!match) return false;
+      }
+      const cat = getTestCategory(t);
+      if (availableCategoryFilter !== 'all' && cat !== availableCategoryFilter) return false;
+      return true;
+    });
+  }, [availableTests, testSearchTerm, availableCategoryFilter]);
 
   const filteredSeries = seriesList.filter(
     (s) =>
@@ -369,11 +531,24 @@ export const AdminTestSeries: React.FC = () => {
                       <td className="p-4">
                         <button
                           onClick={() => openManageTests(series)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 font-medium text-[11px] transition-colors"
-                          title="Click to view & assign tests"
+                          className="inline-flex flex-col items-start gap-1 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/40 transition-all group text-left"
+                          title="Click to manage tests organized by category"
                         >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>{count} Tests</span>
+                          <div className="flex items-center gap-1.5 font-bold text-xs text-cyan-400 group-hover:text-cyan-300">
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>{count} Total Tests</span>
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap text-[10px]">
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                              🎯 {series.fullMockCount || 0} Mock
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 font-medium">
+                              📚 {series.topicTestCount || 0} Topic
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                              📜 {series.pyqTestCount || 0} PYQ
+                            </span>
+                          </div>
                         </button>
                       </td>
                       <td className="p-4 font-bold text-indigo-400">#{series.orderIndex}</td>
@@ -436,113 +611,710 @@ export const AdminTestSeries: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* MANAGE TESTS MODAL */}
       {isManagingTests && manageSeriesTests && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between p-6 border-b border-slate-800 shrink-0">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-cyan-400" />
-                Manage Tests: {manageSeriesTests.title}
-              </h3>
-              <button
-                onClick={() => setIsManagingTests(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-6xl max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 border-b border-slate-800 bg-slate-950/80 shrink-0 gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    <Layers className="w-3.5 h-3.5" />
+                    Manage Series Tests
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    {exams.find((e) => e.id === manageSeriesTests.examId)?.title || manageSeriesTests.examId}
+                  </span>
+                  {manageSeriesTests.isPremium ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <Lock className="w-3 h-3" /> PRO PASS
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      FREE
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {manageSeriesTests.title}
+                </h3>
+              </div>
+
+              {/* Category Metrics Summary Counter Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                  <div className="text-right">
+                    <div className="text-xs font-bold text-white">{seriesTests.length} Total</div>
+                    <div className="text-[10px] text-slate-400">Assigned</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-emerald-300">
+                  <Award className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <div>
+                    <div className="text-xs font-bold">{assignedFullMocks.length} Full Mock</div>
+                    <div className="text-[10px] text-emerald-400/80">Simulations</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 bg-sky-950/40 border border-sky-500/30 px-3 py-1.5 rounded-xl text-sky-300">
+                  <BookOpen className="w-4 h-4 text-sky-400 shrink-0" />
+                  <div>
+                    <div className="text-xs font-bold">{assignedTopicTests.length} Topic</div>
+                    <div className="text-[10px] text-sky-400/80">Drills</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 bg-amber-950/40 border border-amber-500/30 px-3 py-1.5 rounded-xl text-amber-300">
+                  <History className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div>
+                    <div className="text-xs font-bold">{assignedPyqTests.length} PYQ</div>
+                    <div className="text-[10px] text-amber-400/80">Papers</div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsManagingTests(false)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-2"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2">
-              <div className="p-6 border-r border-slate-800 flex flex-col h-full">
-                <h4 className="text-sm font-bold text-slate-300 mb-4 flex items-center justify-between">
-                  <span>Available Tests in Exam</span>
-                  <span className="px-2 py-0.5 rounded-md bg-slate-800 text-xs text-slate-400">
-                    {availableTests.length}
-                  </span>
-                </h4>
-                <div className="relative mb-4 shrink-0">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                  <input
-                    type="text"
-                    placeholder="Search available tests..."
-                    value={testSearchTerm}
-                    onChange={(e) => setTestSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  />
+            {/* Notification / Toast Banner */}
+            {notice && (
+              <div
+                className={`px-6 py-2.5 text-xs font-bold flex items-center justify-between transition-all ${
+                  notice.type === 'success'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-b border-emerald-500/20'
+                    : 'bg-rose-500/10 text-rose-400 border-b border-rose-500/20'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {notice.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  )}
+                  <span>{notice.message}</span>
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-                  {availableTests
-                    .filter((t) => t.title.toLowerCase().includes(testSearchTerm.toLowerCase()))
-                    .map((t) => (
+                <button
+                  onClick={() => setNotice(null)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Category Navigation Bar for Assigned View */}
+            <div className="px-6 py-3 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 hidden sm:inline">
+                  View Category:
+                </span>
+                <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                  <button
+                    onClick={() => setActiveCategoryTab('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      activeCategoryTab === 'all'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    }`}
+                  >
+                    All Sections ({seriesTests.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveCategoryTab('full_mock')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      activeCategoryTab === 'full_mock'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-emerald-400 hover:bg-slate-900'
+                    }`}
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Full Mocks ({assignedFullMocks.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveCategoryTab('topic')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      activeCategoryTab === 'topic'
+                        ? 'bg-sky-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-sky-400 hover:bg-slate-900'
+                    }`}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Topic Tests ({assignedTopicTests.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveCategoryTab('pyq')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      activeCategoryTab === 'pyq'
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-amber-400 hover:bg-slate-900'
+                    }`}
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    <span>PYQ Tests ({assignedPyqTests.length})</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick links to Create New Test of each type */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-slate-400 hidden md:inline">
+                  Create new:
+                </span>
+                <Link
+                  to={`/admin/tests?tab=full_mock&examId=${manageSeriesTests.examId}&seriesId=${manageSeriesTests.id}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                >
+                  <Plus className="w-3 h-3" /> Full Mock
+                </Link>
+                <Link
+                  to={`/admin/tests?tab=topic&examId=${manageSeriesTests.examId}&seriesId=${manageSeriesTests.id}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
+                >
+                  <Plus className="w-3 h-3" /> Topic Test
+                </Link>
+                <Link
+                  to={`/admin/tests?tab=pyq&examId=${manageSeriesTests.examId}&seriesId=${manageSeriesTests.id}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                >
+                  <Plus className="w-3 h-3" /> PYQ Paper
+                </Link>
+              </div>
+            </div>
+
+            {/* Main Two-Column Layout */}
+            <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-800">
+              {/* LEFT COLUMN: Available Tests in Exam */}
+              <div className="p-5 sm:p-6 flex flex-col h-full bg-slate-950/40 overflow-hidden">
+                <div className="flex items-center justify-between pb-3 shrink-0">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <FolderPlus className="w-4 h-4 text-indigo-400" />
+                      <span>Available Tests in Exam</span>
+                      <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-bold text-slate-300">
+                        {filteredAvailableTests.length}
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Unassigned tests created under this exam ready to attach
+                    </p>
+                  </div>
+                  {filteredAvailableTests.length > 1 && (
+                    <button
+                      onClick={handleAssignAllFiltered}
+                      disabled={isLoadingSeriesTests}
+                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 px-2.5 py-1 rounded-lg transition-colors"
+                    >
+                      + Add All Filtered ({filteredAvailableTests.length})
+                    </button>
+                  )}
+                </div>
+
+                {/* Search & Filter pills */}
+                <div className="space-y-2 mb-4 shrink-0">
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Search available by title, subject, year..."
+                      value={testSearchTerm}
+                      onChange={(e) => setTestSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    />
+                    {testSearchTerm && (
+                      <button
+                        onClick={() => setTestSearchTerm('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills for Available Tests */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => setAvailableCategoryFilter('all')}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                        availableCategoryFilter === 'all'
+                          ? 'bg-slate-800 text-white'
+                          : 'bg-slate-900/60 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      All ({availableTests.length})
+                    </button>
+                    <button
+                      onClick={() => setAvailableCategoryFilter('full_mock')}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                        availableCategoryFilter === 'full_mock'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400'
+                      }`}
+                    >
+                      🎯 Full Mock ({availableFullMocks.length})
+                    </button>
+                    <button
+                      onClick={() => setAvailableCategoryFilter('topic')}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                        availableCategoryFilter === 'topic'
+                          ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                          : 'bg-slate-900/60 text-slate-400 hover:text-sky-400'
+                      }`}
+                    >
+                      📚 Topic ({availableTopicTests.length})
+                    </button>
+                    <button
+                      onClick={() => setAvailableCategoryFilter('pyq')}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                        availableCategoryFilter === 'pyq'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : 'bg-slate-900/60 text-slate-400 hover:text-amber-400'
+                      }`}
+                    >
+                      📜 PYQ ({availablePyqTests.length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Available Tests List */}
+                <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                  {filteredAvailableTests.map((t) => {
+                    const cat = getTestCategory(t);
+                    const isAssigning = assigningId === t.id;
+
+                    return (
                       <div
                         key={t.id}
-                        className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between group"
+                        className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all flex items-start justify-between gap-3 group"
                       >
-                        <div>
-                          <p className="text-sm font-bold text-white">{t.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {t.durationMinutes} mins • {t.totalMarks} marks
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {cat === 'full_mock' && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                🎯 Full Mock
+                              </span>
+                            )}
+                            {cat === 'topic' && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                                📚 Topic Test
+                              </span>
+                            )}
+                            {cat === 'pyq' && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                📜 PYQ Paper
+                              </span>
+                            )}
+                            {t.isPremium && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                PRO
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs sm:text-sm font-bold text-white truncate" title={t.title}>
+                            {t.title}
                           </p>
+
+                          {/* Extra Context based on test type */}
+                          {cat === 'topic' && (t.subjectName || t.chapterName) && (
+                            <p className="text-[11px] text-slate-400 truncate">
+                              {t.subjectName} {t.chapterName ? `• ${t.chapterName}` : ''}
+                            </p>
+                          )}
+                          {cat === 'pyq' && (t.year || t.paperName) && (
+                            <p className="text-[11px] text-slate-400 truncate">
+                              {t.year ? `Year ${t.year}` : ''} {t.paperName ? `• ${t.paperName}` : ''}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-slate-500" />
+                              {t.durationMinutes}m
+                            </span>
+                            <span>•</span>
+                            <span>{t.totalMarks} marks</span>
+                            <span>•</span>
+                            <span>{t.totalQuestions || 0} questions</span>
+                            {t.negativeMarking > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="text-rose-400">-{t.negativeMarking} neg</span>
+                              </>
+                            )}
+                          </div>
                         </div>
+
                         <button
                           onClick={() => handleAssignTest(t.id)}
-                          className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-colors"
+                          disabled={isAssigning}
+                          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm hover:shadow-indigo-500/25 active:scale-95 transition-all disabled:opacity-50"
                           title="Add to Series"
                         >
-                          <Plus className="w-4 h-4" />
+                          {isAssigning ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4" />
+                              <span>Add</span>
+                            </>
+                          )}
                         </button>
                       </div>
-                    ))}
-                  {availableTests.length === 0 && (
-                    <p className="text-center text-xs text-slate-500 mt-8">
-                      No available tests for this exam.
-                    </p>
+                    );
+                  })}
+
+                  {filteredAvailableTests.length === 0 && (
+                    <div className="py-12 px-4 text-center text-slate-500 space-y-3">
+                      <FolderPlus className="w-8 h-8 opacity-40 mx-auto" />
+                      <p className="text-xs">
+                        {testSearchTerm || availableCategoryFilter !== 'all'
+                          ? 'No available tests match the current filter/search.'
+                          : 'All tests for this exam are already assigned to this series.'}
+                      </p>
+                      {(testSearchTerm || availableCategoryFilter !== 'all') && (
+                        <button
+                          onClick={() => {
+                            setTestSearchTerm('');
+                            setAvailableCategoryFilter('all');
+                          }}
+                          className="text-xs text-indigo-400 hover:underline"
+                        >
+                          Clear Filters
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
 
-              <div className="p-6 flex flex-col h-full">
-                <h4 className="text-sm font-bold text-slate-300 mb-4 flex items-center justify-between">
-                  <span>Assigned to Series</span>
-                  <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs">
-                    {seriesTests.length}
-                  </span>
-                </h4>
-                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-                  {seriesTests.map((t) => (
-                    <div
-                      key={t.id}
-                      className="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/20 flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-white">{t.title}</p>
-                        <p className="text-xs text-slate-400">
-                          {t.durationMinutes} mins • {t.totalMarks} marks
-                        </p>
+              {/* RIGHT COLUMN: Assigned to Series (Clearly Organized by Category Sections) */}
+              <div className="p-5 sm:p-6 flex flex-col h-full bg-slate-900/40 overflow-hidden">
+                <div className="flex items-center justify-between pb-3 shrink-0">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <ListOrdered className="w-4 h-4 text-cyan-400" />
+                      <span>Assigned Tests in Series</span>
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-bold">
+                        {seriesTests.length}
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Organized sections for Full Mocks, Topic Drills, and PYQ Papers
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-[11px]">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                      {assignedFullMocks.length} Mock
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
+                      {assignedTopicTests.length} Topic
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
+                      {assignedPyqTests.length} PYQ
+                    </span>
+                  </div>
+                </div>
+
+                {/* Organized Sections Container */}
+                <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+                  {/* SECTION 1: FULL MOCK TESTS */}
+                  {(activeCategoryTab === 'all' || activeCategoryTab === 'full_mock') && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between bg-emerald-950/20 border border-emerald-500/20 p-2.5 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold">
+                            <Award className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h5 className="text-xs font-bold text-emerald-300">
+                              Full Mock Tests ({assignedFullMocks.length})
+                            </h5>
+                            <p className="text-[10px] text-emerald-400/70">
+                              Full exam simulations matching official marks pattern
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                          {assignedFullMocks.length} Tests
+                        </span>
                       </div>
-                      <button
-                        onClick={() => handleUnassignTest(t.id)}
-                        className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
-                        title="Remove from Series"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                      {assignedFullMocks.length > 0 ? (
+                        <div className="space-y-2 pl-1">
+                          {assignedFullMocks.map((t) => (
+                            <div
+                              key={t.id}
+                              className="p-3 rounded-xl bg-slate-950 border border-emerald-500/20 flex items-center justify-between gap-3 group hover:border-emerald-500/40 transition-all"
+                            >
+                              <div className="space-y-1 flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-emerald-500/10 text-emerald-400">
+                                    🎯 FULL MOCK
+                                  </span>
+                                  <p className="text-xs sm:text-sm font-bold text-white truncate">
+                                    {t.title}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                                  <span>{t.durationMinutes} mins</span>
+                                  <span>•</span>
+                                  <span>{t.totalMarks} marks</span>
+                                  <span>•</span>
+                                  <span>{t.totalQuestions || 0} questions</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Link
+                                  to={`/admin/tests/${t.id}/questions`}
+                                  target="_blank"
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-[11px] inline-flex items-center gap-1"
+                                  title="View Questions"
+                                >
+                                  <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                                </Link>
+                                <button
+                                  onClick={() => handleUnassignTest(t.id)}
+                                  disabled={unassigningId === t.id}
+                                  className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
+                                  title="Remove from Series"
+                                >
+                                  {unassigningId === t.id ? (
+                                    <div className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl border border-dashed border-emerald-500/20 bg-emerald-500/5 text-center space-y-2">
+                          <p className="text-xs text-slate-400">No Full Mock tests assigned to this series yet.</p>
+                          <button
+                            onClick={() => setAvailableCategoryFilter('full_mock')}
+                            className="text-xs font-bold text-emerald-400 hover:underline"
+                          >
+                            + Browse Available Full Mocks
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )}
+
+                  {/* SECTION 2: TOPIC TESTS */}
+                  {(activeCategoryTab === 'all' || activeCategoryTab === 'topic') && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between bg-sky-950/20 border border-sky-500/20 p-2.5 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400 font-bold">
+                            <BookOpen className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h5 className="text-xs font-bold text-sky-300">
+                              Topic Tests ({assignedTopicTests.length})
+                            </h5>
+                            <p className="text-[10px] text-sky-400/70">
+                              Chapter drills and subject mastery practice sets
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
+                          {assignedTopicTests.length} Tests
+                        </span>
+                      </div>
+
+                      {assignedTopicTests.length > 0 ? (
+                        <div className="space-y-2 pl-1">
+                          {assignedTopicTests.map((t) => (
+                            <div
+                              key={t.id}
+                              className="p-3 rounded-xl bg-slate-950 border border-sky-500/20 flex items-center justify-between gap-3 group hover:border-sky-500/40 transition-all"
+                            >
+                              <div className="space-y-1 flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-sky-500/10 text-sky-400">
+                                    📚 TOPIC
+                                  </span>
+                                  <p className="text-xs sm:text-sm font-bold text-white truncate">
+                                    {t.title}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                                  {t.subjectName && (
+                                    <span className="text-sky-300">{t.subjectName}</span>
+                                  )}
+                                  {t.chapterName && <span>↳ {t.chapterName}</span>}
+                                  <span>•</span>
+                                  <span>{t.durationMinutes}m</span>
+                                  <span>•</span>
+                                  <span>{t.totalMarks} marks</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Link
+                                  to={`/admin/tests/${t.id}/questions`}
+                                  target="_blank"
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-[11px] inline-flex items-center gap-1"
+                                  title="View Questions"
+                                >
+                                  <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                                </Link>
+                                <button
+                                  onClick={() => handleUnassignTest(t.id)}
+                                  disabled={unassigningId === t.id}
+                                  className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
+                                  title="Remove from Series"
+                                >
+                                  {unassigningId === t.id ? (
+                                    <div className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl border border-dashed border-sky-500/20 bg-sky-500/5 text-center space-y-2">
+                          <p className="text-xs text-slate-400">No Topic tests assigned to this series yet.</p>
+                          <button
+                            onClick={() => setAvailableCategoryFilter('topic')}
+                            className="text-xs font-bold text-sky-400 hover:underline"
+                          >
+                            + Browse Available Topic Tests
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* SECTION 3: PYQ TESTS */}
+                  {(activeCategoryTab === 'all' || activeCategoryTab === 'pyq') && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold">
+                            <History className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h5 className="text-xs font-bold text-amber-300">
+                              Previous Year Papers (PYQ) ({assignedPyqTests.length})
+                            </h5>
+                            <p className="text-[10px] text-amber-400/70">
+                              Official historical examination question papers
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                          {assignedPyqTests.length} Tests
+                        </span>
+                      </div>
+
+                      {assignedPyqTests.length > 0 ? (
+                        <div className="space-y-2 pl-1">
+                          {assignedPyqTests.map((t) => (
+                            <div
+                              key={t.id}
+                              className="p-3 rounded-xl bg-slate-950 border border-amber-500/20 flex items-center justify-between gap-3 group hover:border-amber-500/40 transition-all"
+                            >
+                              <div className="space-y-1 flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-amber-500/10 text-amber-400">
+                                    📜 PYQ
+                                  </span>
+                                  <p className="text-xs sm:text-sm font-bold text-white truncate">
+                                    {t.title}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                                  {t.year && (
+                                    <span className="text-amber-300 font-bold">Year {t.year}</span>
+                                  )}
+                                  {t.paperName && <span>• {t.paperName}</span>}
+                                  <span>•</span>
+                                  <span>{t.durationMinutes}m</span>
+                                  <span>•</span>
+                                  <span>{t.totalMarks} marks</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Link
+                                  to={`/admin/tests/${t.id}/questions`}
+                                  target="_blank"
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-[11px] inline-flex items-center gap-1"
+                                  title="View Questions"
+                                >
+                                  <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                                </Link>
+                                <button
+                                  onClick={() => handleUnassignTest(t.id)}
+                                  disabled={unassigningId === t.id}
+                                  className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
+                                  title="Remove from Series"
+                                >
+                                  {unassigningId === t.id ? (
+                                    <div className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl border border-dashed border-amber-500/20 bg-amber-500/5 text-center space-y-2">
+                          <p className="text-xs text-slate-400">No PYQ papers assigned to this series yet.</p>
+                          <button
+                            onClick={() => setAvailableCategoryFilter('pyq')}
+                            className="text-xs font-bold text-amber-400 hover:underline"
+                          >
+                            + Browse Available PYQs
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {seriesTests.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-3">
-                      <ListOrdered className="w-8 h-8 opacity-50" />
-                      <p className="text-sm">No tests assigned to this series yet.</p>
+                    <div className="py-12 text-center text-slate-500 space-y-3">
+                      <ListOrdered className="w-10 h-10 opacity-30 mx-auto" />
+                      <p className="text-sm font-semibold">No tests assigned to this series yet.</p>
+                      <p className="text-xs max-w-sm mx-auto text-slate-400">
+                        Pick tests from the Available Tests list on the left to organize Full Mocks,
+                        Topic Drills, and PYQ Papers inside this Test Series.
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-end shrink-0">
-              <Button onClick={() => setIsManagingTests(false)} size="sm">
-                Done
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+              <div className="text-xs text-slate-400 flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-white">{seriesTests.length} Total Tests in Series:</span>
+                <span className="text-emerald-400 font-semibold">{assignedFullMocks.length} Full Mock</span>
+                <span>•</span>
+                <span className="text-sky-400 font-semibold">{assignedTopicTests.length} Topic</span>
+                <span>•</span>
+                <span className="text-amber-400 font-semibold">{assignedPyqTests.length} PYQ</span>
+              </div>
+              <Button onClick={() => setIsManagingTests(false)} size="sm" className="font-bold">
+                Done Managing
               </Button>
             </div>
           </div>

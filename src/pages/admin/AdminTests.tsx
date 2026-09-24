@@ -33,7 +33,7 @@ import {
   Download,
   FileSpreadsheet,
 } from 'lucide-react';
-import type { MockTest, Exam, Subject, Chapter, PublishValidationResult } from '@/types';
+import type { MockTest, Exam, Subject, Chapter, PublishValidationResult, TestSeries } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
 
 type MockTab = 'topic' | 'full_mock' | 'pyq' | 'structure';
@@ -127,6 +127,8 @@ export const AdminTests: React.FC = () => {
   const [formYear, setFormYear] = useState<number>(new Date().getFullYear());
   const [formPaperName, setFormPaperName] = useState('Preliminary');
   const [formShift, setFormShift] = useState('');
+  const [testSeriesList, setTestSeriesList] = useState<TestSeries[]>([]);
+  const [formTestSeriesId, setFormTestSeriesId] = useState('');
   const [formError, setFormError] = useState('');
   const [isSavingTest, setIsSavingTest] = useState(false);
 
@@ -169,16 +171,18 @@ export const AdminTests: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [allExams, allSubjects, allChapters, allTests] = await Promise.all([
+      const [allExams, allSubjects, allChapters, allTests, allSeries] = await Promise.all([
         api.getAllAdminExams(),
         api.getAllAdminSubjects(),
         api.getAllAdminChapters(),
         api.getAllAdminTests(),
+        api.getTestSeries(),
       ]);
       setExams(allExams);
       setSubjects(allSubjects);
       setChapters(allChapters);
       setTests(allTests);
+      setTestSeriesList(allSeries);
 
       // Fetch global settings defaults for tests
       try {
@@ -311,6 +315,8 @@ export const AdminTests: React.FC = () => {
     setFormYear(new Date().getFullYear());
     setFormPaperName('Preliminary');
     setFormShift('');
+    const seriesParam = searchParams.get('seriesId');
+    setFormTestSeriesId(seriesParam || '');
     setIsTestModalOpen(true);
   };
 
@@ -324,6 +330,7 @@ export const AdminTests: React.FC = () => {
     setFormExamId(test.examId || '');
     setFormSubjectId(test.subjectId || subjects[0]?.id || '');
     setFormTopicId(test.topicId || test.chapterId || '');
+    setFormTestSeriesId(test.testSeriesId || '');
     setFormTitle(test.title);
     setFormDescription(test.description || '');
     setFormDuration(test.durationMinutes);
@@ -383,6 +390,7 @@ export const AdminTests: React.FC = () => {
           subjectId: modalType === 'topic' ? formSubjectId : undefined,
           chapterId: modalType === 'topic' ? formTopicId : undefined,
           topicId: modalType === 'topic' ? formTopicId : undefined,
+          testSeriesId: formTestSeriesId || undefined,
           durationMinutes: Number(formDuration),
           totalMarks: Number(formTotalMarks),
           passingMarks: Number(formPassingMarks),
@@ -415,6 +423,7 @@ export const AdminTests: React.FC = () => {
           subjectId: modalType === 'topic' ? formSubjectId : undefined,
           chapterId: modalType === 'topic' ? formTopicId : undefined,
           topicId: modalType === 'topic' ? formTopicId : undefined,
+          testSeriesId: formTestSeriesId || undefined,
           durationMinutes: Number(formDuration),
           totalQuestions: 0,
           totalMarks: Number(formTotalMarks),
@@ -1402,6 +1411,31 @@ export const AdminTests: React.FC = () => {
                 </div>
               )}
 
+              {/* Assign to Test Series (Optional for Full Mock, Topic, and PYQ tests) */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Assign to Test Series (Optional)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Full Mock, Topic, or PYQ</span>
+                </label>
+                <select
+                  value={formTestSeriesId}
+                  onChange={(e) => setFormTestSeriesId(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                >
+                  <option value="">None (Independent / Standalone Test)</option>
+                  {testSeriesList
+                    .filter((s) => !formExamId || s.examId === formExamId)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.title} ({s.examTitle || exams.find((e) => e.id === s.examId)?.title || 'Series'})
+                      </option>
+                    ))}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Attaches this test to a curated Test Series category (Full Mock, Topic Test, or PYQ).
+                </p>
+              </div>
+
               {/* Test Name */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -2103,6 +2137,12 @@ const TestTable: React.FC<TestTableProps> = ({
                       <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
                         <Target className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                         <span className="truncate">{test.examTitle || 'Full Mock Exam'}</span>
+                      </div>
+                    )}
+                    {test.testSeriesTitle && (
+                      <div className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 px-1.5 py-0.5 rounded border border-cyan-200 dark:border-cyan-800/60 w-fit">
+                        <Layers className="w-3 h-3 shrink-0" />
+                        <span className="truncate max-w-[180px]">{test.testSeriesTitle}</span>
                       </div>
                     )}
                   </td>

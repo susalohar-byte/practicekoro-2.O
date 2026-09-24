@@ -12,14 +12,31 @@ export async function getTestSeries(examId?: string): Promise<TestSeries[]> {
       .filter((s) => !examId || s.examId === examId)
       .map((s) => {
         const exam = localExams.find((e) => e.id === s.examId);
-        const count = localTests.filter((t) => t.testSeriesId === s.id).length;
-        return { ...s, examTitle: exam?.title, testCount: count, testsCount: count };
+        const sTests = localTests.filter((t) => t.testSeriesId === s.id);
+        const count = sTests.length;
+        const fullMockCount = sTests.filter((t) => t.testType === 'full_mock').length;
+        const pyqTestCount = sTests.filter((t) => t.testType === 'pyq').length;
+        const topicTestCount = sTests.filter(
+          (t) =>
+            t.testType === 'topic' ||
+            t.testType === 'chapter_mock' ||
+            t.testType === 'subject_mock'
+        ).length;
+        return {
+          ...s,
+          examTitle: exam?.title,
+          testCount: count,
+          testsCount: count,
+          fullMockCount,
+          topicTestCount,
+          pyqTestCount,
+        };
       });
   }
 
   let query = supabase
     .from('test_series')
-    .select('*, exams:exam_id(title), tests(count)')
+    .select('*, exams:exam_id(title), tests(id, test_type)')
     .order('order_index', { ascending: true });
   if (examId) query = query.eq('exam_id', examId);
 
@@ -33,8 +50,16 @@ export async function getTestSeries(examId?: string): Promise<TestSeries[]> {
   }
 
   return data.map((item: any) => {
-    const count =
-      Array.isArray(item.tests) && item.tests[0]?.count != null ? Number(item.tests[0].count) : 0;
+    const testsList = Array.isArray(item.tests) ? item.tests : [];
+    const count = testsList.length;
+    const fullMockCount = testsList.filter((t: any) => t.test_type === 'full_mock').length;
+    const pyqTestCount = testsList.filter((t: any) => t.test_type === 'pyq').length;
+    const topicTestCount = testsList.filter(
+      (t: any) =>
+        t.test_type === 'topic' ||
+        t.test_type === 'chapter_mock' ||
+        t.test_type === 'subject_mock'
+    ).length;
     return {
       id: item.id,
       examId: item.exam_id,
@@ -48,6 +73,9 @@ export async function getTestSeries(examId?: string): Promise<TestSeries[]> {
       examTitle: item.exams?.title || undefined,
       testCount: count,
       testsCount: count,
+      fullMockCount,
+      topicTestCount,
+      pyqTestCount,
     };
   });
 }

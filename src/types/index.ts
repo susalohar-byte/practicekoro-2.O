@@ -156,6 +156,9 @@ export interface TestSeries {
   examTitle?: string;
   testCount?: number;
   testsCount?: number;
+  fullMockCount?: number;
+  topicTestCount?: number;
+  pyqTestCount?: number;
 }
 
 export interface MockTest {

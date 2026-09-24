@@ -25,7 +25,7 @@ import type {
 } from '@/types';
 import { calculateScore } from '@/utils/scoring';
 import { resolveTestNegativeMarking } from '@/utils/negativeMarking';
-import { localAttemptsStore, localTests } from '@/services/domains/localStore';
+import { localAttemptsStore, localTests, localTestSeries } from '@/services/domains/localStore';
 import type {
   AttemptRow,
   BookmarkRow,
@@ -33,7 +33,6 @@ import type {
   ExamRow,
   MistakeRow,
   SubjectRow,
-  TestRow,
   QuestionRow,
 } from '@/services/domains/localStore';
 
@@ -510,16 +509,30 @@ export const catalogApi = {
 
   async getTestById(testId: string): Promise<MockTest | null> {
     const mockFound = localTests.find((t) => t.id === testId);
-    if (!isSupabaseConfigured) return mockFound || null;
+    if (!isSupabaseConfigured) {
+      if (mockFound && mockFound.testSeriesId && !mockFound.testSeriesTitle) {
+        const foundSeries = localTestSeries.find((s) => s.id === mockFound.testSeriesId);
+        if (foundSeries) {
+          return { ...mockFound, testSeriesTitle: foundSeries.title };
+        }
+      }
+      return mockFound || null;
+    }
 
     try {
       const { data, error } = await supabase
         .from('tests')
-        .select('*')
+        .select(`
+          *,
+          exams:exam_id (title),
+          subjects:subject_id (name),
+          chapters:chapter_id (name),
+          test_series:test_series_id (title)
+        `)
         .eq('id', testId)
         .maybeSingle();
       if (error || !data) return mockFound || null;
-      const row = data as TestRow;
+      const row = data as any;
       return {
         id: row.id,
         examId: row.exam_id ?? undefined,
@@ -531,6 +544,10 @@ export const catalogApi = {
         description: row.description ?? undefined,
         testType: row.test_type,
         year: 'year' in row && row.year ? Number(row.year) : undefined,
+        paperName: row.paper_name ?? undefined,
+        shift: row.shift ?? undefined,
+        setName: row.set_name ?? undefined,
+        examDate: row.exam_date ?? undefined,
         durationMinutes: row.duration_minutes,
         totalQuestions: row.total_questions,
         totalMarks: Number(row.total_marks),
@@ -540,6 +557,11 @@ export const catalogApi = {
         orderIndex: row.order_index,
         isActive: row.is_active,
         status: row.status || 'published',
+        examTitle: row.exams?.title || undefined,
+        subjectName: row.subjects?.name || undefined,
+        chapterName: row.chapters?.name || undefined,
+        topicName: row.chapters?.name || undefined,
+        testSeriesTitle: row.test_series?.title || undefined,
       };
     } catch {
       return mockFound || null;

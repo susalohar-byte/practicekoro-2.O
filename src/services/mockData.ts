@@ -502,6 +502,7 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
     {
       id: 'test-wbp-mock-01',
       examId: 'wbp-constable',
+      testSeriesId: 'wbp-prelims-2025',
       title: 'WBP Preliminary Mock Test 01',
       slug: 'wbp-preliminary-mock-test-01',
       description: 'Comprehensive Full Mock Test based on latest WBPRB syllabus and marks pattern.',
@@ -516,6 +517,7 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
       isActive: true,
       status: 'published',
       examTitle: 'WBP Constable',
+      testSeriesTitle: 'WBP Constable 2025 Prelims Test Series',
     },
     {
       id: 'test-wbp-mock-02',
@@ -541,6 +543,7 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
     {
       id: 'test-wbp-pyq-2024',
       examId: 'wbp-constable',
+      testSeriesId: 'wbp-prelims-2025',
       title: 'WBP Preliminary Question Paper 2024',
       paperName: 'WBP Preliminary Question Paper 2024',
       slug: 'wbp-preliminary-question-paper-2024',
@@ -557,6 +560,7 @@ export const MOCK_TESTS: Record<string, MockTest[]> = {
       isActive: true,
       status: 'published',
       examTitle: 'WBP Constable',
+      testSeriesTitle: 'WBP Constable 2025 Prelims Test Series',
     },
     {
       id: 'test-wbp-pyq-2023',

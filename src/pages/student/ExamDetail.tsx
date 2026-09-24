@@ -19,8 +19,9 @@ import {
   Crown,
   FileCheck2,
   Calendar,
+  Layers,
 } from 'lucide-react';
-import type { MockTest, Subject, Chapter } from '@/types';
+import type { MockTest, Subject, Chapter, TestSeries } from '@/types';
 
 type ExamTab = 'full-mock' | 'pyq' | 'topic-tests';
 
@@ -59,7 +60,9 @@ export const ExamDetail: React.FC = () => {
 
   const handleTabChange = (tab: ExamTab) => {
     setActiveTab(tab);
-    setSearchParams({ tab });
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('tab', tab);
+    setSearchParams(newParams);
   };
 
   // Tests & Content state
@@ -67,6 +70,7 @@ export const ExamDetail: React.FC = () => {
   const [fullMockTests, setFullMockTests] = useState<MockTest[]>([]);
   const [pyqTests, setPyqTests] = useState<MockTest[]>([]);
   const [topicTests, setTopicTests] = useState<MockTest[]>([]);
+  const [testSeriesList, setTestSeriesList] = useState<TestSeries[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [examSubjectsWithTopics, setExamSubjectsWithTopics] = useState<
     { subject: Subject; topics: Chapter[] }[]
@@ -74,23 +78,47 @@ export const ExamDetail: React.FC = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
 
+  // Series Selection state
+  const seriesParam = searchParams.get('seriesId');
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string>(seriesParam || 'all');
+
+  useEffect(() => {
+    if (seriesParam) {
+      setSelectedSeriesId(seriesParam);
+    } else {
+      setSelectedSeriesId('all');
+    }
+  }, [seriesParam]);
+
+  const handleSeriesSelect = (seriesId: string) => {
+    setSelectedSeriesId(seriesId);
+    const newParams = new URLSearchParams(searchParams);
+    if (seriesId === 'all') {
+      newParams.delete('seriesId');
+    } else {
+      newParams.set('seriesId', seriesId);
+    }
+    setSearchParams(newParams);
+  };
+
   // Locked test modal state
   const [selectedLockedTest, setSelectedLockedTest] = useState<MockTest | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [startingTestId, setStartingTestId] = useState<string | null>(null);
 
-  // Load all tests and mapped topics for this exam
+  // Load all tests, test series, and mapped topics for this exam
   useEffect(() => {
     async function loadExamData() {
       if (!currentExam) return;
       setLoading(true);
       try {
-        const [fullMocks, pyqs, topics, subList, mappedSubjects] = await Promise.all([
+        const [fullMocks, pyqs, topics, subList, mappedSubjects, series] = await Promise.all([
           api.getTestsForExam(currentExam.id, 'full_mock'),
           api.getTestsForExam(currentExam.id, 'pyq'),
           api.getTestsForExam(currentExam.id, 'topic'),
           api.getSubjects(currentExam.id),
           api.getExamSubjectsWithTopics(currentExam.id),
+          api.getTestSeries(currentExam.id).catch(() => []),
         ]);
 
         setFullMockTests(fullMocks);
@@ -98,6 +126,7 @@ export const ExamDetail: React.FC = () => {
         setTopicTests(topics);
         setSubjects(mappedSubjects.length > 0 ? mappedSubjects.map((m) => m.subject) : subList);
         setExamSubjectsWithTopics(mappedSubjects);
+        setTestSeriesList(series || []);
       } catch (err) {
         console.error('Failed to load tests for exam:', err);
       } finally {
@@ -108,6 +137,19 @@ export const ExamDetail: React.FC = () => {
     loadExamData();
   }, [currentExam]);
 
+  // Lookup helper for active series
+  const activeSeries = useMemo(() => {
+    if (selectedSeriesId === 'all') return null;
+    return testSeriesList.find((s) => s.id === selectedSeriesId) || null;
+  }, [testSeriesList, selectedSeriesId]);
+
+  // Lookup map of testSeriesId -> TestSeries
+  const seriesMap = useMemo(() => {
+    const map = new Map<string, TestSeries>();
+    testSeriesList.forEach((s) => map.set(s.id, s));
+    return map;
+  }, [testSeriesList]);
+
   // Extract available years for PYQ tab
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -117,17 +159,35 @@ export const ExamDetail: React.FC = () => {
     return Array.from(years).sort((a, b) => b - a);
   }, [pyqTests]);
 
-  // Filtered PYQ tests
-  const filteredPyqTests = useMemo(() => {
-    if (selectedYear === 'all') return pyqTests;
-    return pyqTests.filter((t) => t.year?.toString() === selectedYear);
-  }, [pyqTests, selectedYear]);
+  // Filtered Full Mock tests (scoped to selected series if active)
+  const displayedFullMockTests = useMemo(() => {
+    if (selectedSeriesId === 'all') return fullMockTests;
+    return fullMockTests.filter((t) => t.testSeriesId === selectedSeriesId);
+  }, [fullMockTests, selectedSeriesId]);
 
-  // Filtered Topic tests by subject
-  const filteredTopicTests = useMemo(() => {
-    if (selectedSubjectId === 'all') return topicTests;
-    return topicTests.filter((t) => t.subjectId === selectedSubjectId);
-  }, [topicTests, selectedSubjectId]);
+  // Filtered PYQ tests (scoped to selected year & series if active)
+  const displayedPyqTests = useMemo(() => {
+    let list = pyqTests;
+    if (selectedYear !== 'all') {
+      list = list.filter((t) => t.year?.toString() === selectedYear);
+    }
+    if (selectedSeriesId !== 'all') {
+      list = list.filter((t) => t.testSeriesId === selectedSeriesId);
+    }
+    return list;
+  }, [pyqTests, selectedYear, selectedSeriesId]);
+
+  // Filtered Topic tests (scoped to selected subject & series if active)
+  const displayedTopicTests = useMemo(() => {
+    let list = topicTests;
+    if (selectedSubjectId !== 'all') {
+      list = list.filter((t) => t.subjectId === selectedSubjectId);
+    }
+    if (selectedSeriesId !== 'all') {
+      list = list.filter((t) => t.testSeriesId === selectedSeriesId);
+    }
+    return list;
+  }, [topicTests, selectedSubjectId, selectedSeriesId]);
 
   const visibleSubjectGroups = useMemo(() => {
     if (selectedSubjectId === 'all') return examSubjectsWithTopics;
@@ -245,6 +305,230 @@ export const ExamDetail: React.FC = () => {
           </div>
         </div>
 
+        {/* Curated Test Series Switcher */}
+        {testSeriesList.length > 0 && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-700 shrink-0">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                    Curated Test Series
+                    <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">
+                      {testSeriesList.length} Available
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Filter by curated package: each series neatly combines Full Mocks, Topic Tests & PYQ papers.
+                  </p>
+                </div>
+              </div>
+
+              {selectedSeriesId !== 'all' && (
+                <button
+                  onClick={() => handleSeriesSelect('all')}
+                  className="text-xs font-bold text-brand-600 hover:text-brand-800 hover:underline self-start sm:self-auto inline-flex items-center gap-1"
+                >
+                  ✕ Show All Exam Tests
+                </button>
+              )}
+            </div>
+
+            {/* Series Filter Selector Buttons */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5">
+              <button
+                onClick={() => handleSeriesSelect('all')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                  selectedSeriesId === 'all'
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span>All Exam Tests</span>
+                <span
+                  className={`text-[10px] py-0.2 px-1.5 rounded-full font-extrabold ${
+                    selectedSeriesId === 'all'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}
+                >
+                  {fullMockTests.length + pyqTests.length + topicTests.length}
+                </span>
+              </button>
+
+              {testSeriesList.map((series) => {
+                const isSelected = selectedSeriesId === series.id;
+                const totalInSeries =
+                  (series.fullMockCount || 0) +
+                  (series.topicTestCount || 0) +
+                  (series.pyqTestCount || 0);
+
+                return (
+                  <button
+                    key={series.id}
+                    onClick={() => handleSeriesSelect(series.id)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 border ${
+                      isSelected
+                        ? 'bg-brand-50 border-brand-300 text-brand-900 shadow-sm ring-1 ring-brand-400'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{series.title}</span>
+                    {series.isPremium ? (
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                        PRO
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        FREE
+                      </span>
+                    )}
+                    <span
+                      className={`text-[10px] py-0.2 px-1.5 rounded-full font-extrabold ${
+                        isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {totalInSeries} Tests
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Active Series Organized Breakdown Showcase Banner */}
+        {activeSeries && (
+          <div className="bg-gradient-to-br from-brand-900 via-slate-900 to-slate-950 rounded-3xl p-6 sm:p-7 text-white shadow-xl border border-brand-800/50 relative overflow-hidden">
+            <div className="relative z-10 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-brand-500/25 text-brand-300 border border-brand-400/30">
+                      Curated Test Series
+                    </span>
+                    {activeSeries.isPremium ? (
+                      <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-400/30 inline-flex items-center gap-1">
+                        <Crown className="w-3 h-3 text-amber-400" />
+                        Pro Pass Required
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-400/30">
+                        Free Access
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {activeSeries.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    {activeSeries.description ||
+                      'Complete curated series structured into Full Mock simulations, chapter-wise Topic Tests, and official Previous Year Question papers.'}
+                  </p>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleSeriesSelect('all')}
+                  className="border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white text-xs shrink-0 self-start"
+                >
+                  View All Exam Tests
+                </Button>
+              </div>
+
+              {/* 3 Organized Sections inside the Test Series */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                {/* Section 1: Full Mock Tests */}
+                <button
+                  onClick={() => handleTabChange('full-mock')}
+                  className={`p-4 rounded-2xl border text-left transition-all group ${
+                    activeTab === 'full-mock'
+                      ? 'bg-emerald-500/15 border-emerald-500/60 shadow-inner ring-1 ring-emerald-400/40'
+                      : 'bg-slate-800/60 border-slate-700/60 hover:bg-slate-800 hover:border-emerald-500/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg">🎯</span>
+                    <span className="text-xl font-black text-emerald-400">
+                      {activeSeries.fullMockCount || 0}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs font-bold text-white group-hover:text-emerald-300 transition-colors flex items-center justify-between">
+                    <span>Full Mock Tests</span>
+                    {activeTab === 'full-mock' && (
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200">
+                        Viewing
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                    Full syllabus exam simulations
+                  </div>
+                </button>
+
+                {/* Section 2: Topic Tests */}
+                <button
+                  onClick={() => handleTabChange('topic-tests')}
+                  className={`p-4 rounded-2xl border text-left transition-all group ${
+                    activeTab === 'topic-tests'
+                      ? 'bg-sky-500/15 border-sky-500/60 shadow-inner ring-1 ring-sky-400/40'
+                      : 'bg-slate-800/60 border-slate-700/60 hover:bg-slate-800 hover:border-sky-500/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg">📚</span>
+                    <span className="text-xl font-black text-sky-400">
+                      {activeSeries.topicTestCount || 0}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs font-bold text-white group-hover:text-sky-300 transition-colors flex items-center justify-between">
+                    <span>Topic Tests</span>
+                    {activeTab === 'topic-tests' && (
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-sky-500/30 text-sky-200">
+                        Viewing
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                    Subject & chapter concept drills
+                  </div>
+                </button>
+
+                {/* Section 3: PYQ Tests */}
+                <button
+                  onClick={() => handleTabChange('pyq')}
+                  className={`p-4 rounded-2xl border text-left transition-all group ${
+                    activeTab === 'pyq'
+                      ? 'bg-amber-500/15 border-amber-500/60 shadow-inner ring-1 ring-amber-400/40'
+                      : 'bg-slate-800/60 border-slate-700/60 hover:bg-slate-800 hover:border-amber-500/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg">📜</span>
+                    <span className="text-xl font-black text-amber-400">
+                      {activeSeries.pyqTestCount || 0}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs font-bold text-white group-hover:text-amber-300 transition-colors flex items-center justify-between">
+                    <span>PYQ Papers</span>
+                    {activeTab === 'pyq' && (
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200">
+                        Viewing
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                    Official previous year papers
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 3 Core Architecture Tabs */}
         <div className="bg-white rounded-2xl border border-slate-200 p-1.5 shadow-sm">
           <div className="grid grid-cols-3 gap-1">
@@ -265,7 +549,7 @@ export const ExamDetail: React.FC = () => {
                     : 'bg-slate-100 text-slate-600'
                 }`}
               >
-                {fullMockTests.length}
+                {displayedFullMockTests.length}
               </span>
             </button>
 
@@ -284,7 +568,7 @@ export const ExamDetail: React.FC = () => {
                   activeTab === 'pyq' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
                 }`}
               >
-                {pyqTests.length}
+                {displayedPyqTests.length}
               </span>
             </button>
 
@@ -305,7 +589,7 @@ export const ExamDetail: React.FC = () => {
                     : 'bg-slate-100 text-slate-600'
                 }`}
               >
-                {topicTests.length}
+                {displayedTopicTests.length}
               </span>
             </button>
           </div>
@@ -326,7 +610,7 @@ export const ExamDetail: React.FC = () => {
                 </p>
               </div>
               <span className="text-xs font-semibold text-slate-500">
-                {fullMockTests.length} Tests Available
+                {displayedFullMockTests.length} Tests Available
               </span>
             </div>
 
@@ -336,15 +620,28 @@ export const ExamDetail: React.FC = () => {
                   <div key={n} className="h-28 bg-slate-200 animate-pulse rounded-2xl" />
                 ))}
               </div>
-            ) : fullMockTests.length === 0 ? (
+            ) : displayedFullMockTests.length === 0 ? (
               <EmptyState
-                title="No Full Mock tests available yet"
-                description="Our academic content team is formulating standard full-length simulation tests for this examination."
+                title={
+                  activeSeries
+                    ? `No Full Mocks in ${activeSeries.title}`
+                    : 'No Full Mock tests available yet'
+                }
+                description={
+                  activeSeries
+                    ? `This series currently includes ${activeSeries.topicTestCount || 0} Topic Tests and ${activeSeries.pyqTestCount || 0} PYQ Papers.`
+                    : 'Our academic content team is formulating standard full-length simulation tests for this examination.'
+                }
+                actionLabel={activeSeries ? 'View All Exam Tests' : undefined}
+                onAction={activeSeries ? () => handleSeriesSelect('all') : undefined}
               />
             ) : (
               <div className="space-y-3">
-                {fullMockTests.map((test) => {
+                {displayedFullMockTests.map((test) => {
                   const isLocked = test.isPremium && !isPro && user?.role !== 'admin';
+                  const seriesTitle =
+                    test.testSeriesTitle ||
+                    (test.testSeriesId ? seriesMap.get(test.testSeriesId)?.title : undefined);
 
                   return (
                     <Card
@@ -363,6 +660,12 @@ export const ExamDetail: React.FC = () => {
                             <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200">
                               🎯 FULL MOCK
                             </span>
+                            {seriesTitle && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-violet-700 bg-violet-50 px-2 py-0.5 rounded border border-violet-200">
+                                <Layers className="w-2.5 h-2.5 text-violet-600" />
+                                {seriesTitle}
+                              </span>
+                            )}
                             {test.isPremium ? (
                               <Badge variant="premium" className="text-[10px] py-0 px-2">
                                 <Crown className="w-2.5 h-2.5 inline mr-1" />
@@ -487,15 +790,28 @@ export const ExamDetail: React.FC = () => {
                   <div key={n} className="h-28 bg-slate-200 animate-pulse rounded-2xl" />
                 ))}
               </div>
-            ) : filteredPyqTests.length === 0 ? (
+            ) : displayedPyqTests.length === 0 ? (
               <EmptyState
-                title="No Previous Year Question papers available"
-                description="Past examination papers are being digitized with detailed explanations for this exam."
+                title={
+                  activeSeries
+                    ? `No PYQ papers in ${activeSeries.title}`
+                    : 'No Previous Year Question papers available'
+                }
+                description={
+                  activeSeries
+                    ? `This series currently includes ${activeSeries.fullMockCount || 0} Full Mocks and ${activeSeries.topicTestCount || 0} Topic Tests.`
+                    : 'Past examination papers are being digitized with detailed explanations for this exam.'
+                }
+                actionLabel={activeSeries ? 'View All Exam Tests' : undefined}
+                onAction={activeSeries ? () => handleSeriesSelect('all') : undefined}
               />
             ) : (
               <div className="space-y-3">
-                {filteredPyqTests.map((test) => {
+                {displayedPyqTests.map((test) => {
                   const isLocked = test.isPremium && !isPro && user?.role !== 'admin';
+                  const seriesTitle =
+                    test.testSeriesTitle ||
+                    (test.testSeriesId ? seriesMap.get(test.testSeriesId)?.title : undefined);
 
                   return (
                     <Card
@@ -514,6 +830,12 @@ export const ExamDetail: React.FC = () => {
                             <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
                               📜 PYQ {test.year ? `• ${test.year}` : ''}
                             </span>
+                            {seriesTitle && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                <Layers className="w-2.5 h-2.5 text-amber-600" />
+                                {seriesTitle}
+                              </span>
+                            )}
                             {test.isPremium ? (
                               <Badge variant="premium" className="text-[10px] py-0 px-2">
                                 <Crown className="w-2.5 h-2.5 inline mr-1" />
@@ -636,21 +958,35 @@ export const ExamDetail: React.FC = () => {
                   <div key={n} className="h-28 bg-slate-200 animate-pulse rounded-2xl" />
                 ))}
               </div>
-            ) : filteredTopicTests.length === 0 && visibleSubjectGroups.length === 0 ? (
+            ) : displayedTopicTests.length === 0 &&
+              (selectedSeriesId !== 'all' || visibleSubjectGroups.length === 0) ? (
               <EmptyState
-                title="No topic tests available for this selection"
-                description="No topic tests currently published for this selection."
+                title={
+                  activeSeries
+                    ? `No Topic Tests in ${activeSeries.title}`
+                    : 'No topic tests available for this selection'
+                }
+                description={
+                  activeSeries
+                    ? `This series currently includes ${activeSeries.fullMockCount || 0} Full Mocks and ${activeSeries.pyqTestCount || 0} PYQ Papers.`
+                    : 'No topic tests currently published for this selection.'
+                }
+                actionLabel={activeSeries ? 'View All Exam Tests' : undefined}
+                onAction={activeSeries ? () => handleSeriesSelect('all') : undefined}
               />
             ) : (
               <div className="space-y-6">
                 {/* Configured Topic Tests */}
-                {filteredTopicTests.length > 0 && (
+                {displayedTopicTests.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Standardized Topic Mock Tests ({filteredTopicTests.length})
+                      Standardized Topic Mock Tests ({displayedTopicTests.length})
                     </h3>
-                    {filteredTopicTests.map((test) => {
+                    {displayedTopicTests.map((test) => {
                       const isLocked = test.isPremium && !isPro && user?.role !== 'admin';
+                      const seriesTitle =
+                        test.testSeriesTitle ||
+                        (test.testSeriesId ? seriesMap.get(test.testSeriesId)?.title : undefined);
 
                       return (
                         <Card
@@ -669,6 +1005,12 @@ export const ExamDetail: React.FC = () => {
                                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
                                   📚 TOPIC TEST
                                 </span>
+                                {seriesTitle && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                    <Layers className="w-2.5 h-2.5 text-blue-600" />
+                                    {seriesTitle}
+                                  </span>
+                                )}
                                 {test.subjectName && (
                                   <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                                     {test.subjectName}

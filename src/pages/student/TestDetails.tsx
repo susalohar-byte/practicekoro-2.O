@@ -104,12 +104,43 @@ export const TestDetails: React.FC = () => {
               <Badge variant={test.isPremium ? 'premium' : 'free'}>
                 {test.isPremium ? 'PRO PASS TEST' : 'FREE MOCK TEST'}
               </Badge>
-              <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-100">
-                {test.examTitle || 'WBP Constable'}
-              </span>
-              <span className="text-xs text-slate-500 font-medium">
-                {test.chapterName || 'Indus Valley Civilization'}
-              </span>
+              {test.testType === 'full_mock' && (
+                <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  🎯 Full Mock
+                </span>
+              )}
+              {test.testType === 'pyq' && (
+                <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                  📜 PYQ Paper {test.year ? `• ${test.year}` : ''}
+                </span>
+              )}
+              {(test.testType === 'topic' ||
+                test.testType === 'chapter_mock' ||
+                test.testType === 'subject_mock') && (
+                <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                  📚 Topic Test
+                </span>
+              )}
+              {test.testSeriesTitle && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200">
+                  ✨ Series: {test.testSeriesTitle}
+                </span>
+              )}
+              {test.examTitle && (
+                <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                  {test.examTitle}
+                </span>
+              )}
+              {test.subjectName && (
+                <span className="text-xs text-slate-600 font-medium bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-200">
+                  {test.subjectName}
+                </span>
+              )}
+              {test.chapterName && (
+                <span className="text-xs text-slate-500 font-medium">
+                  {test.chapterName}
+                </span>
+              )}
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
