@@ -93,22 +93,23 @@ export const Hero: React.FC = () => {
 
             {/* Main Headline */}
             <h1
-              aria-label="Crack Your Dream Govt Exam."
-              className="mt-5 text-4xl sm:text-5xl lg:text-[3.5rem] font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]"
+              aria-label="আত্মবিশ্বাসের সাথে জয় করো স্বপ্নের সরকারি চাকরি।"
+              className="mt-5 text-4xl sm:text-5xl lg:text-[3.5rem] font-black text-slate-900 dark:text-white tracking-tight leading-[1.25]"
             >
-              Crack Your{' '}
+              আত্মবিশ্বাসের সাথে জয় করো{' '}
               <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">
-                Dream Govt Exam
+                স্বপ্নের সরকারি চাকরি
               </span>
-              <br className="hidden sm:inline" />
-              {' '}with Confidence.
+              ।
             </h1>
 
             {/* Subheadline */}
             <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-              Real exam-pattern mock tests, 10+ years solved PYQs &amp; topic-wise practice
-              for <span className="font-semibold text-slate-900 dark:text-white">WBP, WBPSC, WBSSC, Primary TET &amp; Railways</span> —
-              in <span className="font-semibold text-blue-600 dark:text-blue-400">Bengali &amp; English</span>.
+              আসল পরীক্ষার ধাঁচে মক টেস্ট, ১০+ বছরের সমাধানসহ PYQ ও টপিক-ভিত্তিক
+              প্র্যাকটিস{' '}
+              <span className="font-semibold text-slate-900 dark:text-white">WBP, WBPSC, WBSSC, Primary TET ও Railways</span>-এর
+              জন্য —{' '}
+              <span className="font-semibold text-blue-600 dark:text-blue-400">বাংলা ও English</span>-এ।
             </p>
 
             {/* Action Buttons */}
