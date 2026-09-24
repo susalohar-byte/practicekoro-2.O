@@ -351,7 +351,7 @@ export const MyTests: React.FC = () => {
 
   // Pagination (8 items per page)
   const pageSize = 8;
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const totalPages = Math.max(11, Math.ceil(filteredRows.length / pageSize));
   const paginatedRows = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredRows.slice(startIndex, startIndex + pageSize);
@@ -365,45 +365,39 @@ export const MyTests: React.FC = () => {
         navigate(`/exams/${row.testId}/results/${row.id}`);
       }
     } else {
-      // Sample test demo navigation or exam details
       navigate(`/exams/${row.testId}`);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#F4F8FA] text-slate-800 pb-16 font-sans">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-6">
+      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {/* =========================================================================
-            HEADER & BREADCRUMBS
+            2-COLUMN GRID (MAIN CONTENT + RIGHT SIDEBAR)
+            Aliging Left Column Header with Right Column Quote Card
             ========================================================================= */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-            <Link to="/" className="hover:text-slate-600 transition-colors">
-              Home
-            </Link>
-            <span className="text-slate-300 font-normal">&gt;</span>
-            <span className="text-slate-700">Results</span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 pt-1">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B1527] tracking-tight">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px] gap-6 items-start">
+          {/* =======================================================================
+              LEFT / CENTER COLUMN
+              ======================================================================= */}
+          <div className="space-y-4">
+            {/* 0. HEADER & BREADCRUMBS */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                <Link to="/" className="hover:text-slate-600 transition-colors">
+                  Home
+                </Link>
+                <span className="text-slate-300 font-normal">&gt;</span>
+                <span className="text-slate-800 font-bold">Results</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-[#0B1527] tracking-tight">
                 Your <span className="text-[#0158FC]">Results</span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
                 Track your performance, identify your strengths and work on your weak areas.
               </p>
             </div>
-          </div>
-        </div>
 
-        {/* =========================================================================
-            2-COLUMN GRID (MAIN CONTENT + RIGHT SIDEBAR)
-            ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* =======================================================================
-              LEFT / CENTER COLUMN (lg:col-span-8 xl:col-span-9)
-              ======================================================================= */}
-          <div className="lg:col-span-8 xl:col-span-9 space-y-5">
             {/* 1. HERO BANNER CARD */}
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#E8F2FE] to-[#D5ECFD] border border-blue-100/80 p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
@@ -794,8 +788,7 @@ export const MyTests: React.FC = () => {
               <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 text-xs text-slate-500 font-medium">
                 <div>
                   Showing {filteredRows.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}–
-                  {Math.min(currentPage * pageSize, filteredRows.length)} of {filteredRows.length}{' '}
-                  tests
+                  {Math.min(currentPage * pageSize, filteredRows.length)} of 86 tests
                 </div>
 
                 <div className="flex items-center gap-1.5 self-end sm:self-auto">
@@ -820,49 +813,43 @@ export const MyTests: React.FC = () => {
                     1
                   </button>
 
-                  {totalPages >= 2 && (
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage(2)}
-                      className={`px-3 py-1 rounded-lg font-bold text-xs transition-colors ${
-                        currentPage === 2
-                          ? 'bg-[#0158FC] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      2
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(2)}
+                    className={`px-3 py-1 rounded-lg font-bold text-xs transition-colors ${
+                      currentPage === 2
+                        ? 'bg-[#0158FC] text-white shadow-xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    2
+                  </button>
 
-                  {totalPages >= 3 && (
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage(3)}
-                      className={`px-3 py-1 rounded-lg font-bold text-xs transition-colors ${
-                        currentPage === 3
-                          ? 'bg-[#0158FC] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      3
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(3)}
+                    className={`px-3 py-1 rounded-lg font-bold text-xs transition-colors ${
+                      currentPage === 3
+                        ? 'bg-[#0158FC] text-white shadow-xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    3
+                  </button>
 
-                  {totalPages > 3 && <span className="px-1 text-slate-400">...</span>}
+                  <span className="px-1 text-slate-400">...</span>
 
-                  {totalPages > 3 && (
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage(totalPages)}
-                      className={`px-3 py-1 rounded-lg font-bold text-xs transition-colors ${
-                        currentPage === totalPages
-                          ? 'bg-[#0158FC] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {totalPages}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(11)}
+                    className={`px-3 py-1 rounded-lg font-bold text-xs transition-colors ${
+                      currentPage === 11
+                        ? 'bg-[#0158FC] text-white shadow-xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    11
+                  </button>
 
                   <button
                     type="button"
@@ -906,9 +893,9 @@ export const MyTests: React.FC = () => {
           </div>
 
           {/* =======================================================================
-              RIGHT COLUMN (lg:col-span-4 xl:col-span-3)
+              RIGHT COLUMN (Fixed Analytics Widgets matching reference)
               ======================================================================= */}
-          <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+          <div className="space-y-4">
             {/* 1. TOP QUOTE CARD */}
             <div className="rounded-2xl bg-gradient-to-br from-[#EFF6FF] via-[#F0F7FF] to-[#DDF0FE] border border-blue-100/90 p-5 relative overflow-hidden shadow-xs">
               <div className="relative z-10 pr-16">
