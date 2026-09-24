@@ -17,6 +17,7 @@ import {
   Flag,
 } from 'lucide-react';
 import { StudentSupportModal } from '@/components/student/StudentSupportModal';
+import { QuestionImage } from '@/components/common/QuestionImage';
 import type { QuestionSolution, MockTest } from '@/types';
 
 export const TestSolutions: React.FC = () => {
@@ -256,20 +257,11 @@ export const TestSolutions: React.FC = () => {
                   </p>
                 )}
 
-                {/* Question Diagram / Image (hidden entirely when absent or broken) */}
-                {sol.imageUrl && (
-                  <div className="my-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-2 max-w-lg mx-auto shadow-xs">
-                    <img
-                      src={sol.imageUrl}
-                      alt={`Question ${sol.questionOrder} Diagram`}
-                      className="max-h-72 w-auto object-contain mx-auto rounded-lg"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.parentElement?.remove();
-                      }}
-                    />
-                  </div>
-                )}
+                {/* Question Diagram / Image (Universal) */}
+                <QuestionImage
+                  src={sol.imageUrl}
+                  alt={`Question ${sol.questionOrder} Diagram`}
+                />
               </div>
 
               {/* Options Breakdown */}

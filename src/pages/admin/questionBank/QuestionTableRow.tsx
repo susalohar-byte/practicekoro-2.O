@@ -1,5 +1,5 @@
 import React from 'react';
-import { Archive, Edit2, Eye, ImageIcon, Trash2 } from 'lucide-react';
+import { Archive, Edit2, Eye, Trash2 } from 'lucide-react';
 import type { Question } from '@/types';
 
 export interface QuestionTableRowProps {
@@ -51,9 +51,19 @@ export const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
               {q.difficulty || 'medium'}
             </span>
             {q.imageUrl && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                <ImageIcon className="w-2.5 h-2.5" /> Diagram
-              </span>
+              <button
+                type="button"
+                onClick={onPreview}
+                title="Question has figure/diagram. Click to preview."
+                className="inline-flex items-center gap-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer"
+              >
+                <img
+                  src={q.imageUrl}
+                  alt=""
+                  className="w-3.5 h-3.5 object-contain rounded shrink-0 bg-white border border-indigo-100"
+                />
+                <span>Figure</span>
+              </button>
             )}
           </div>
         </div>

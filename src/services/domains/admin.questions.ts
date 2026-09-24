@@ -17,10 +17,16 @@ export async function getAllAdminQuestions(filters?: {
   testId?: string;
   search?: string;
   status?: string;
+  hasImage?: 'all' | 'with_image' | 'without_image';
 }): Promise<Question[]> {
   if (!isSupabaseConfigured) {
     let questions = [...localQuestions];
     if (filters) {
+      if (filters.hasImage === 'with_image') {
+        questions = questions.filter((q) => Boolean(q.imageUrl && q.imageUrl.trim()));
+      } else if (filters.hasImage === 'without_image') {
+        questions = questions.filter((q) => !q.imageUrl || !q.imageUrl.trim());
+      }
       if (filters.subjectId) questions = questions.filter((q) => q.subjectId === filters.subjectId);
       if (filters.chapterId)
         questions = questions.filter(
@@ -115,6 +121,12 @@ export async function getAllAdminQuestions(filters?: {
   if (filters?.sourceExam) query = query.eq('source_exam', filters.sourceExam);
   if (filters?.status) query = query.eq('status', filters.status);
 
+  if (filters?.hasImage === 'with_image') {
+    query = query.not('image_url', 'is', null).neq('image_url', '');
+  } else if (filters?.hasImage === 'without_image') {
+    query = query.or('image_url.is.null,image_url.eq.""');
+  }
+
   if (filters?.search && filters.search.trim()) {
     const term = filters.search.trim();
     query = query.or(
@@ -149,6 +161,7 @@ export async function getAdminQuestionsPaged(
         sourceType?: string;
         search?: string;
         status?: string;
+        hasImage?: 'all' | 'with_image' | 'without_image';
       }
     | undefined,
   page: number,
@@ -190,6 +203,11 @@ export async function getAdminQuestionsPaged(
     }
   }
   if (filters?.status) query = query.eq('status', filters.status);
+  if (filters?.hasImage === 'with_image') {
+    query = query.not('image_url', 'is', null).neq('image_url', '');
+  } else if (filters?.hasImage === 'without_image') {
+    query = query.or('image_url.is.null,image_url.eq.""');
+  }
   if (filters?.search && filters.search.trim()) {
     const term = filters.search.trim();
     query = query.or(
@@ -436,7 +454,11 @@ export async function archiveQuestion(id: string): Promise<boolean> {
 
 export async function uploadQuestionImage(file: File): Promise<string> {
   if (!isSupabaseConfigured) {
-    return URL.createObjectURL(file);
+    return new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
+    });
   }
   const ext = file.name.split('.').pop() || 'png';
   const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;

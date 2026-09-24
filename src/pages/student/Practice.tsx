@@ -11,6 +11,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { QuestionImage } from '@/components/common/QuestionImage';
 import { isMathematicsQuestion } from '@/utils/shortNotes';
 import { TopicTests } from '@/pages/student/TopicTests';
 import {
@@ -473,6 +474,13 @@ export const Practice: React.FC = () => {
                   </p>
                 )}
             </div>
+
+            {/* Question Diagram / Image */}
+            <QuestionImage
+              src={currentQuestion.imageUrl}
+              alt="Practice Question Diagram"
+              priority={true}
+            />
 
             {/* Answer Options */}
             <div className="space-y-2.5 pt-2">
@@ -1578,6 +1586,13 @@ export const Practice: React.FC = () => {
                                 {q.questionBengaliText}
                               </p>
                             )}
+
+                            <QuestionImage
+                              src={q.imageUrl}
+                              alt="Mistake Question Diagram"
+                              maxHeightClass="max-h-44"
+                              className="!my-2 !justify-start"
+                            />
                           </div>
 
                           <button
@@ -1777,6 +1792,13 @@ export const Practice: React.FC = () => {
                                 {q.questionBengaliText}
                               </p>
                             )}
+
+                            <QuestionImage
+                              src={q.imageUrl}
+                              alt="Bookmark Question Diagram"
+                              maxHeightClass="max-h-44"
+                              className="!my-2 !justify-start"
+                            />
 
                             {bm.note && (
                               <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 rounded-lg text-xs text-amber-900 dark:text-amber-200 mt-2">

@@ -2,6 +2,7 @@ import React from 'react';
 import { Eye, X } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { QuestionImage } from '@/components/common/QuestionImage';
 import { isMathematicsQuestion } from '@/utils/shortNotes';
 import type { Question } from '@/types';
 
@@ -35,15 +36,11 @@ export const PreviewQuestionModal: React.FC<PreviewQuestionModalProps> = ({
             {question.questionBengaliText || question.questionText}
           </p>
 
-          {question.imageUrl && (
-            <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center">
-              <img
-                src={question.imageUrl}
-                alt="Question diagram"
-                className="max-h-56 max-w-full rounded-lg object-contain bg-white dark:bg-black"
-              />
-            </div>
-          )}
+          <QuestionImage
+            src={question.imageUrl}
+            maxHeightClass="max-h-56"
+            className="my-1 !justify-start"
+          />
 
           <div className="space-y-1.5 pt-1">
             {[

@@ -78,7 +78,22 @@ Explanation:
 • মানবদেহের বৃহত্তম অভ্যন্তরীণ অঙ্গ ও বৃহত্তম গ্রন্থি হলো যকৃৎ (Liver)।
 • ত্বকের প্রধান কাজ হলো শরীরকে বাইরের আঘাত, জীবাণু সংক্রমণ এবং অতিবেগুনি রশ্মি থেকে রক্ষা করা।
 • মানবদেহের তাপমাত্রা নিয়ন্ত্রণ এবং ঘামের মাধ্যমে বর্জ্য নিষ্কাশনে ত্বক মুখ্য ভূমিকা পালন করে।
-• ত্বকের এপিডার্মিসে অবস্থিত মেলানিন রঞ্জক আমাদের ত্বকের বর্ণ নির্ধারণ করে।`;
+• ত্বকের এপিডার্মিসে অবস্থিত মেলানিন রঞ্জক আমাদের ত্বকের বর্ণ নির্ধারণ করে।
+
+3. প্রদত্ত চিত্রটিতে মোট কয়টি ত্রিভুজ আছে? (চিত্রভিত্তিক প্রশ্ন নমুনা)
+[Image: https://practicekoro.online/images/triangle_reasoning_sample.png]
+(a) ১২টি
+(b) ১৬টি
+(c) ১৮টি
+(d) ২০টি
+
+সঠিক উত্তর: (b) ১৬টি
+
+Explanation:
+• এই ধরণের প্রতিসম ত্রিভুজে অভ্যন্তরীণ খণ্ডের সূত্রের সাহায্যে দ্রুত গণনা করা যায়।
+• কেন্দ্রীয় বিন্দু থেকে বিভক্ত প্রতিটি অংশে ৪টি করে ছোট ত্রিভুজ গঠিত হয়।
+• সর্বমোট ত্রিভুজ সংখ্যা = ৪ × ৪ = ১৬টি।
+• সময় বাঁচাতে পরীক্ষার ক্ষেত্রে এই শর্টকাট কৌশলটি অত্যন্ত কার্যকর।`;
 
 /**
  * Helper to trigger browser download of sample TXT template.
@@ -203,14 +218,23 @@ export function parseQuestionsTxt(
     const explanationRegex =
       /^\s*(?:Explanation|ব্যাখ্যা|Short\s*Notes|শর্ট\s*নোটস|Note|Notes)\s*[:\-–—]?\s*(.*)$/i;
 
-    // Image/Diagram pattern:
-    // "[Image: https://...]" or "Image: https://..." or "ছবি: https://..." or "[ছবি: https://...]"
+    // Image/Diagram/Figure pattern:
+    // "[Image: https://...]" or "Image: https://..." or "Figure: https://..." or "Diagram: https://..." or "ছবি: https://..." or "চিত্র: https://..."
     const imageRegex =
-      /^\s*(?:\[?\s*(?:Image|ছবি|Diagram|চিত্র)\s*[:\-–—]\s*(https?:\/\/[^\s\]]+)\s*\]?)\s*$/i;
+      /^\s*(?:\[?\s*(?:Image|ছবি|Diagram|চিত্র|Figure|Fig|Photo)\s*[:\-–—]\s*(https?:\/\/[^\s\]]+)\s*\]?)\s*$/i;
 
     let imageUrl: string | undefined = undefined;
 
-    // Check if the question first line itself contains an image tag
+    // Check if the question first line itself contains an inline image tag e.g. [image: https://...]
+    const inlineTagInFirstLine = questionFirstLine.match(
+      /\[(?:Image|ছবি|Diagram|চিত্র|Figure|Fig|Photo)\s*[:\-–—]\s*(https?:\/\/[^\]\s]+)\]/i
+    );
+    if (inlineTagInFirstLine) {
+      imageUrl = inlineTagInFirstLine[1];
+      questionFirstLine = questionFirstLine.replace(inlineTagInFirstLine[0], '').trim();
+    }
+
+    // Check if the question first line itself is a standalone image tag
     const firstLineImgMatch = questionFirstLine.match(imageRegex);
     let initialQuestionLines: string[] = [];
     if (firstLineImgMatch) {
@@ -284,7 +308,18 @@ export function parseQuestionsTxt(
       }
     }
 
-    const fullQuestionText = questionLines.join('\n').trim();
+    let fullQuestionText = questionLines.join('\n').trim();
+
+    // Secondary search for inline image tag in question text if not detected earlier
+    if (!imageUrl) {
+      const inlineTagMatch = fullQuestionText.match(
+        /\[(?:Image|ছবি|Diagram|চিত্র|Figure|Fig|Photo)\s*[:\-–—]\s*(https?:\/\/[^\]\s]+)\]/i
+      );
+      if (inlineTagMatch) {
+        imageUrl = inlineTagMatch[1];
+        fullQuestionText = fullQuestionText.replace(inlineTagMatch[0], '').trim();
+      }
+    }
 
     // Secondary search for Answer if not caught by line-start regex
     if (!correctOption) {

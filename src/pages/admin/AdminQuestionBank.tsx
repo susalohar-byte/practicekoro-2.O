@@ -43,6 +43,7 @@ import { downloadSampleCsvFile, parseQuestionsCsv } from '@/utils/csvParser';
 import { QuestionCard } from './questionBank/QuestionCard';
 import { QuestionTableRow } from './questionBank/QuestionTableRow';
 import { PreviewQuestionModal } from './questionBank/PreviewQuestionModal';
+import { QuestionImageField } from '@/components/admin/QuestionImageField';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
 import { getErrorMessage } from '@/lib/errors';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -94,6 +95,9 @@ export const AdminQuestionBank: React.FC = () => {
   // Difficulty Filter (Universal across all categories)
   const [filterDifficulty, setFilterDifficulty] = useState<'' | 'easy' | 'medium' | 'hard'>('');
 
+  // Figure / Image Filter (Universal across all categories)
+  const [filterHasImage, setFilterHasImage] = useState<'all' | 'with_image' | 'without_image'>('all');
+
   // Search filter
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -141,7 +145,6 @@ export const AdminQuestionBank: React.FC = () => {
   const [singleExamTestId, setSingleExamTestId] = useState('');
   const [singleQuestionText, setSingleQuestionText] = useState('');
   const [singleImageUrl, setSingleImageUrl] = useState('');
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [singleOptA, setSingleOptA] = useState('');
   const [singleOptB, setSingleOptB] = useState('');
   const [singleOptC, setSingleOptC] = useState('');
@@ -184,7 +187,6 @@ export const AdminQuestionBank: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [editQText, setEditQText] = useState('');
   const [editQImageUrl, setEditQImageUrl] = useState('');
-  const [isEditUploadingImage, setIsEditUploadingImage] = useState(false);
   const [editQOptA, setEditQOptA] = useState('');
   const [editQOptB, setEditQOptB] = useState('');
   const [editQOptC, setEditQOptC] = useState('');
@@ -284,6 +286,10 @@ export const AdminQuestionBank: React.FC = () => {
         filterParams.difficulty = filterDifficulty;
       }
 
+      if (filterHasImage !== 'all') {
+        filterParams.hasImage = filterHasImage;
+      }
+
       if (searchTerm.trim()) {
         filterParams.search = searchTerm.trim();
       }
@@ -297,6 +303,7 @@ export const AdminQuestionBank: React.FC = () => {
         !filterExamId &&
         !filterSubjectId &&
         !filterDifficulty &&
+        filterHasImage === 'all' &&
         !searchTerm.trim()
       ) {
         setTotalUploadedCount(matching.length);
@@ -315,6 +322,7 @@ export const AdminQuestionBank: React.FC = () => {
     filterExamId,
     filterExamTestId,
     filterDifficulty,
+    filterHasImage,
     searchTerm,
   ]);
 
@@ -357,6 +365,7 @@ export const AdminQuestionBank: React.FC = () => {
     filterExamId,
     filterExamTestId,
     filterDifficulty,
+    filterHasImage,
     searchTerm,
   ]);
 
@@ -406,7 +415,8 @@ export const AdminQuestionBank: React.FC = () => {
     filterTopicTestId ||
     filterExamId ||
     filterExamTestId ||
-    filterDifficulty
+    filterDifficulty ||
+    filterHasImage !== 'all'
   );
 
   const handleResetFilters = () => {
@@ -418,6 +428,7 @@ export const AdminQuestionBank: React.FC = () => {
     setFilterExamId('');
     setFilterExamTestId('');
     setFilterDifficulty('');
+    setFilterHasImage('all');
   };
 
   const handleSelectCategory = (cat: QuestionCategory) => {
@@ -547,25 +558,6 @@ export const AdminQuestionBank: React.FC = () => {
     setSingleMarks(1.0);
     setSingleError('');
     setIsAddModalOpen(true);
-  };
-
-  // Upload question diagram / image
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      if (isEdit) setIsEditUploadingImage(true);
-      else setIsUploadingImage(true);
-      const url = await api.uploadQuestionImage(file);
-      if (isEdit) setEditQImageUrl(url);
-      else setSingleImageUrl(url);
-    } catch (err) {
-      if (isEdit) setEditQError(getErrorMessage(err, 'Failed to upload image'));
-      else setSingleError(getErrorMessage(err, 'Failed to upload image'));
-    } finally {
-      if (isEdit) setIsEditUploadingImage(false);
-      else setIsUploadingImage(false);
-    }
   };
 
   // Submit Single Question (Section 6A)
@@ -1510,7 +1502,7 @@ export const AdminQuestionBank: React.FC = () => {
 
         {/* Row 3: Cascading Sub-Filters Matching Active Category */}
         {selectedCategory === 'topic' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             {/* 1. Subject */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -1597,11 +1589,28 @@ export const AdminQuestionBank: React.FC = () => {
                 <option value="hard">Hard</option>
               </select>
             </div>
+
+            {/* 5. Figure / Diagram */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                5. Figure / Diagram
+              </label>
+              <select
+                value={filterHasImage}
+                onChange={(e) => setFilterHasImage(e.target.value as any)}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="all">All Questions</option>
+                <option value="with_image">With Diagram</option>
+                <option value="without_image">Text Only</option>
+              </select>
+            </div>
           </div>
         )}
 
         {selectedCategory === 'full_mock' && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             {/* 1. Target Exam */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -1662,11 +1671,28 @@ export const AdminQuestionBank: React.FC = () => {
                 <option value="hard">Hard</option>
               </select>
             </div>
+
+            {/* 4. Figure / Diagram */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                4. Figure / Diagram
+              </label>
+              <select
+                value={filterHasImage}
+                onChange={(e) => setFilterHasImage(e.target.value as any)}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="all">All Questions</option>
+                <option value="with_image">With Diagram</option>
+                <option value="without_image">Text Only</option>
+              </select>
+            </div>
           </div>
         )}
 
         {selectedCategory === 'pyq' && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             {/* 1. Target Exam */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -1727,11 +1753,28 @@ export const AdminQuestionBank: React.FC = () => {
                 <option value="hard">Hard</option>
               </select>
             </div>
+
+            {/* 4. Figure / Image */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                4. Figure / Diagram
+              </label>
+              <select
+                value={filterHasImage}
+                onChange={(e) => setFilterHasImage(e.target.value as any)}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="all">All Questions</option>
+                <option value="with_image">With Diagram</option>
+                <option value="without_image">Text Only</option>
+              </select>
+            </div>
           </div>
         )}
 
         {selectedCategory === 'all' && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             {/* Target Exam Filter */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -1787,6 +1830,23 @@ export const AdminQuestionBank: React.FC = () => {
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
+              </select>
+            </div>
+
+            {/* Figure / Image Filter */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-pk-primary shrink-0" />
+                Figure / Diagram
+              </label>
+              <select
+                value={filterHasImage}
+                onChange={(e) => setFilterHasImage(e.target.value as any)}
+                className="w-full h-10 px-3 py-2 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-pk-primary transition-colors shadow-2xs cursor-pointer truncate"
+              >
+                <option value="all">All Questions</option>
+                <option value="with_image">With Diagram</option>
+                <option value="without_image">Text Only</option>
               </select>
             </div>
           </div>
@@ -1930,6 +1990,20 @@ export const AdminQuestionBank: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setFilterDifficulty('')}
+                  className="hover:text-rose-500 ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {filterHasImage !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-medium text-[11px] border border-indigo-200 dark:border-indigo-800/60">
+                <ImageIcon className="w-3 h-3 text-indigo-500" />
+                <span>{filterHasImage === 'with_image' ? 'With Diagram' : 'Text Only'}</span>
+                <button
+                  type="button"
+                  onClick={() => setFilterHasImage('all')}
                   className="hover:text-rose-500 ml-0.5 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
@@ -2443,62 +2517,11 @@ export const AdminQuestionBank: React.FC = () => {
                 />
               </div>
 
-              {/* Question Diagram / Image (Optional) */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    Question Diagram / Image (Optional)
-                  </label>
-                  <span className="text-[10px] text-slate-400">
-                    For Reasoning Venn, Geometry, Maps
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="url"
-                    placeholder="Image URL (https://...) or click Upload"
-                    value={singleImageUrl}
-                    onChange={(e) => setSingleImageUrl(e.target.value)}
-                    className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
-                  />
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold transition-all shrink-0 border border-indigo-200 dark:border-indigo-800">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{isUploadingImage ? 'Uploading...' : 'Upload Image'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={isUploadingImage}
-                      onChange={(e) => handleImageUpload(e, false)}
-                      className="hidden"
-                    />
-                  </label>
-                  {singleImageUrl && (
-                    <button
-                      type="button"
-                      onClick={() => setSingleImageUrl('')}
-                      className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
-                      title="Remove diagram"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                {singleImageUrl && (
-                  <div className="mt-2 p-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-3">
-                    <img
-                      src={singleImageUrl}
-                      alt="Question diagram preview"
-                      className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
-                    />
-                    <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
-                      <span className="font-bold text-slate-900 dark:text-white block">
-                        Diagram Attached
-                      </span>
-                      <span className="truncate block text-slate-400">{singleImageUrl}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Question Diagram / Image (Universal) */}
+              <QuestionImageField
+                value={singleImageUrl}
+                onChange={setSingleImageUrl}
+              />
 
               {/* 4 Options */}
               <div className="grid grid-cols-2 gap-3">
@@ -3303,62 +3326,11 @@ export const AdminQuestionBank: React.FC = () => {
                 />
               </div>
 
-              {/* Edit Question Diagram / Image (Optional) */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    Question Diagram / Image (Optional)
-                  </label>
-                  <span className="text-[10px] text-slate-400">
-                    For Reasoning Venn, Geometry, Maps
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="url"
-                    placeholder="Image URL (https://...) or click Upload"
-                    value={editQImageUrl}
-                    onChange={(e) => setEditQImageUrl(e.target.value)}
-                    className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
-                  />
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold transition-all shrink-0 border border-indigo-200 dark:border-indigo-800">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{isEditUploadingImage ? 'Uploading...' : 'Upload Image'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={isEditUploadingImage}
-                      onChange={(e) => handleImageUpload(e, true)}
-                      className="hidden"
-                    />
-                  </label>
-                  {editQImageUrl && (
-                    <button
-                      type="button"
-                      onClick={() => setEditQImageUrl('')}
-                      className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
-                      title="Remove diagram"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                {editQImageUrl && (
-                  <div className="mt-2 p-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-3">
-                    <img
-                      src={editQImageUrl}
-                      alt="Question diagram preview"
-                      className="w-16 h-16 object-contain rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700"
-                    />
-                    <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate flex-1">
-                      <span className="font-bold text-slate-900 dark:text-white block">
-                        Diagram Attached
-                      </span>
-                      <span className="truncate block text-slate-400">{editQImageUrl}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Edit Question Diagram / Image (Universal) */}
+              <QuestionImageField
+                value={editQImageUrl}
+                onChange={setEditQImageUrl}
+              />
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div>

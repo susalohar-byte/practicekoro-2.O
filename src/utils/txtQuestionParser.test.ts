@@ -13,9 +13,9 @@ describe('txtQuestionParser', () => {
 
   it('parses the sample Bengali TXT content with 100% validity', () => {
     const result = parseQuestionsTxt(SAMPLE_TXT_CONTENT);
-    expect(result.totalDetected).toBe(2);
+    expect(result.totalDetected).toBe(3);
     expect(result.errors).toHaveLength(0);
-    expect(result.valid).toHaveLength(2);
+    expect(result.valid).toHaveLength(3);
 
     const q1 = result.valid[0];
     expect(q1.questionNumber).toBe(1);
@@ -32,6 +32,13 @@ describe('txtQuestionParser', () => {
     expect(q2.questionText).toContain('মানবদেহের বৃহত্তম অঙ্গ কোনটি?');
     expect(q2.optionB).toBe('ত্বক (Skin)');
     expect(q2.correctOption).toBe('B');
+
+    const q3 = result.valid[2];
+    expect(q3.questionNumber).toBe(3);
+    expect(q3.questionText).toContain('প্রদত্ত চিত্রটিতে মোট কয়টি ত্রিভুজ আছে?');
+    expect(q3.imageUrl).toBe('https://practicekoro.online/images/triangle_reasoning_sample.png');
+    expect(q3.optionB).toBe('১৬টি');
+    expect(q3.correctOption).toBe('B');
   });
 
   it('parses English questions with bullet point explanations', () => {
@@ -115,5 +122,29 @@ Some explanation`;
     expect(result.totalDetected).toBe(0);
     expect(result.valid).toHaveLength(0);
     expect(result.errors).toHaveLength(0);
+  });
+
+  it('correctly extracts figure and image URLs from standalone and inline tags', () => {
+    const textWithImages = `1. Look at the circuit diagram below and find the equivalent resistance:
+Figure: https://example.com/circuits/q1.png
+(a) 10 Ohm
+(b) 20 Ohm
+(c) 30 Ohm
+(d) 40 Ohm
+Answer: (b) 20 Ohm
+
+2. নিচের জ্যামিতিক চিত্রটি লক্ষ্য করুন: [চিত্র: https://example.com/geometry/angle.webp]
+(a) 45°
+(b) 60°
+(c) 90°
+(d) 120°
+সঠিক উত্তর: (c) 90°`;
+
+    const result = parseQuestionsTxt(textWithImages);
+    expect(result.totalDetected).toBe(2);
+    expect(result.valid).toHaveLength(2);
+    expect(result.valid[0].imageUrl).toBe('https://example.com/circuits/q1.png');
+    expect(result.valid[1].imageUrl).toBe('https://example.com/geometry/angle.webp');
+    expect(result.valid[1].questionText).toBe('নিচের জ্যামিতিক চিত্রটি লক্ষ্য করুন:');
   });
 });

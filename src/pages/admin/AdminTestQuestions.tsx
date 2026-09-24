@@ -37,6 +37,8 @@ import { resolveTestNegativeMarking } from '@/utils/negativeMarking';
 import { getErrorMessage } from '@/lib/errors';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
 import { isMathematicsQuestion, isMathematicsSubject } from '@/utils/shortNotes';
+import { QuestionImageField } from '@/components/admin/QuestionImageField';
+import { QuestionImage } from '@/components/common/QuestionImage';
 
 export const AdminTestQuestions: React.FC = () => {
   const { testId: routeTestId } = useParams<{ testId: string }>();
@@ -100,8 +102,7 @@ export const AdminTestQuestions: React.FC = () => {
   const [newCorrectOption, setNewCorrectOption] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const [newExplanation, setNewExplanation] = useState('');
   const [newMarks, setNewMarks] = useState(1.0);
-  // PYQ-only: diagram image URL for image-based PYQ questions. Shown only
-  // when the target test is a PYQ paper; never required.
+  // Global question figure / diagram image URL (optional, supported across all test & question types)
   const [newImageUrl, setNewImageUrl] = useState('');
   // NOTE: questions never carry negative marks (test-level policy), so there
   // is intentionally no per-question negative-marks field anywhere here.
@@ -690,7 +691,7 @@ export const AdminTestQuestions: React.FC = () => {
         explanation: newExplanation.trim() || undefined,
         difficulty: 'medium',
         defaultMarks: newMarks,
-        // PYQ diagram image (optional; only set from the PYQ-gated field below).
+        // Optional diagram/figure image (global support for all tests & questions)
         imageUrl: newImageUrl.trim() || undefined,
         // Questions never carry negative marks — scoring uses the test-level scheme.
         defaultNegativeMarks: 0,
@@ -1567,16 +1568,12 @@ export const AdminTestQuestions: React.FC = () => {
                         )}
 
                         {/* Question Diagram (if provided) */}
-                        {q.imageUrl && (
-                          <div className="my-2 max-w-xs rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1">
-                            <img
-                              src={q.imageUrl}
-                              alt="Question Diagram"
-                              className="max-h-36 w-auto object-contain mx-auto rounded-lg"
-                              loading="lazy"
-                            />
-                          </div>
-                        )}
+                        <QuestionImage
+                          src={q.imageUrl}
+                          alt="Question Diagram"
+                          maxHeightClass="max-h-36"
+                          className="my-2 !justify-start"
+                        />
 
                         {/* Options Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
@@ -1846,16 +1843,12 @@ export const AdminTestQuestions: React.FC = () => {
                     )}
 
                     {/* Question Diagram (if provided) */}
-                    {q.imageUrl && (
-                      <div className="my-2 max-w-sm rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1.5 shadow-xs">
-                        <img
-                          src={q.imageUrl}
-                          alt={`Question ${idx + 1} Diagram`}
-                          className="max-h-48 w-auto object-contain mx-auto rounded-lg"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
+                    <QuestionImage
+                      src={q.imageUrl}
+                      alt={`Question ${idx + 1} Diagram`}
+                      maxHeightClass="max-h-48"
+                      className="my-2 !justify-start"
+                    />
 
                     {/* Options List */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
@@ -2273,24 +2266,13 @@ export const AdminTestQuestions: React.FC = () => {
                 </div>
               </div>
 
-              {/* PYQ-only: diagram image URL (optional, never required) */}
-              {test?.testType === 'pyq' && (
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                    Diagram Image URL <span className="font-medium normal-case">(PYQ only, optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    placeholder="https://.../diagram.png"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-slate-900 dark:text-white focus:outline-none focus:border-[#0075FF] font-mono text-xs"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Shown below the question text in the student test. Leave empty for text-only questions.
-                  </p>
-                </div>
-              )}
+              {/* Question Diagram / Figure (Optional for all question types) */}
+              <div className="pt-1">
+                <QuestionImageField
+                  value={newImageUrl}
+                  onChange={setNewImageUrl}
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-[#152347]">

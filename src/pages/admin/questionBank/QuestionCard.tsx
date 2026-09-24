@@ -1,6 +1,7 @@
 import React from 'react';
-import { BookOpen, Edit2, Lock, Trash2 } from 'lucide-react';
+import { BookOpen, Edit2, Lock, Trash2, Image as ImageIcon } from 'lucide-react';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
+import { QuestionImage } from '@/components/common/QuestionImage';
 import { isMathematicsQuestion } from '@/utils/shortNotes';
 import type { Question } from '@/types';
 
@@ -68,18 +69,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                   {q.questionText}
                 </p>
               )}
-            {q.imageUrl && (
-              <div className="pt-2 max-w-sm">
-                <div className="p-1.5 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 inline-block">
-                  <img
-                    src={q.imageUrl}
-                    alt="Question diagram"
-                    className="max-h-44 max-w-full rounded-lg object-contain bg-white dark:bg-black"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-            )}
+            <QuestionImage
+              src={q.imageUrl}
+              alt="Question figure"
+              maxHeightClass="max-h-48"
+              className="!my-1.5 !justify-start"
+            />
           </div>
         </div>
 
@@ -274,6 +269,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             <BookOpen className="w-3.5 h-3.5 text-slate-400" />
             <span>{subjectTitle}</span>
           </div>
+          {q.imageUrl && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60">
+              <ImageIcon className="w-3 h-3" />
+              Diagram
+            </span>
+          )}
           <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">bn</span>
           <Lock className="w-3.5 h-3.5 text-slate-400" />
         </div>

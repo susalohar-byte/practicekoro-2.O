@@ -26,9 +26,11 @@ import {
   HelpCircle,
   Sparkles,
   ArrowRight,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
+import { QuestionImage } from '@/components/common/QuestionImage';
 import type { BookmarkItem } from '@/types';
 
 // Subject badge color and icon mapper matching the reference design
@@ -634,12 +636,31 @@ export const SavedQuestions: React.FC = () => {
                                 {item.examTitle}
                               </span>
                             )}
+                            {item.question.imageUrl && (
+                              <span className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                                <ImageIcon className="w-3 h-3" />
+                                Diagram
+                              </span>
+                            )}
                           </div>
 
                           {/* Question Text */}
                           <h3 className="mt-2 text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
                             {item.question.questionText}
                           </h3>
+                          {item.question.questionBengaliText && (
+                            <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium font-sans">
+                              {item.question.questionBengaliText}
+                            </p>
+                          )}
+
+                          {/* Question Diagram / Image */}
+                          <QuestionImage
+                            src={item.question.imageUrl}
+                            alt="Saved Question Diagram"
+                            maxHeightClass="max-h-44"
+                            className="!my-2 !justify-start"
+                          />
 
                           {/* Options Preview */}
                           <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
@@ -977,11 +998,17 @@ export const SavedQuestions: React.FC = () => {
                 {practiceItem.question.questionText}
               </p>
               {practiceItem.question.questionBengaliText && (
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 font-medium font-sans">
                   {practiceItem.question.questionBengaliText}
                 </p>
               )}
             </div>
+
+            {/* Question Diagram / Image */}
+            <QuestionImage
+              src={practiceItem.question.imageUrl}
+              alt="Practice Question Diagram"
+            />
 
             {/* Options List */}
             <div className="space-y-2.5">

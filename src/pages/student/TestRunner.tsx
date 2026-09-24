@@ -19,6 +19,7 @@ import { formatSeconds } from '@/lib/utils';
 import type { MockTest, StudentTestQuestion, AttemptAnswerState } from '@/types';
 import { MaintenanceScreen } from '@/components/common/MaintenanceScreen';
 import { StudentSupportModal } from '@/components/student/StudentSupportModal';
+import { QuestionImage } from '@/components/common/QuestionImage';
 
 export const TestRunner: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -430,20 +431,12 @@ export const TestRunner: React.FC = () => {
                 {displayedQuestionText}
               </h2>
 
-              {/* Diagram / Image (PYQ diagrams; hidden entirely when absent or broken) */}
-              {currentQ.imageUrl && (
-                <div className="my-3 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-2 max-w-lg mx-auto">
-                  <img
-                    src={currentQ.imageUrl}
-                    alt={`Question ${currentIndex + 1} Diagram`}
-                    className="max-h-64 w-auto object-contain mx-auto rounded-xl"
-                    loading="eager"
-                    onError={(e) => {
-                      e.currentTarget.parentElement?.remove();
-                    }}
-                  />
-                </div>
-              )}
+              {/* Question Figure / Diagram (Global Question Feature) */}
+              <QuestionImage
+                src={currentQ.imageUrl}
+                alt={`Question ${currentIndex + 1} Diagram`}
+                priority={true}
+              />
 
               {/* Secondary language reference */}
               {language === 'bn' && currentQ.questionBengaliText && currentQ.questionText && (
