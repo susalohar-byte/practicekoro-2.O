@@ -22,7 +22,14 @@
   RewriteCond %{REQUEST_FILENAME} -l
   RewriteRule ^ - [L]
 
-  # 4. Fallback all SPA routes to /index.html
+  # 4. Never rewrite missing static assets (scripts, stylesheets, fonts, media) to index.html
+  # Returning index.html (200 OK) for missing JS chunks causes dynamic import MIME-type errors.
+  # Returning 404 allows Vite preload error listeners to detect stale chunks and auto-reload immediately.
+  RewriteCond %{REQUEST_URI} ^/assets/ [OR]
+  RewriteCond %{REQUEST_URI} \.(js|mjs|css|png|jpg|jpeg|gif|svg|webp|woff2?|ttf|eot|ico|json|map)$ [NC]
+  RewriteRule ^ - [R=404,L]
+
+  # 5. Fallback all SPA routes to /index.html
   # Handles: /, /login, /tests, /tests/:id, /tests/:id/runner, /subscription, /admin, etc.
   RewriteRule ^ index.html [QSA,L]
 </IfModule>

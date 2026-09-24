@@ -54,7 +54,7 @@ vi.mock('@/services/api', () => ({
         marksAwarded: 1,
         subjectId: 'hist',
         subjectName: 'History',
-      },
+      } as const,
       // Strong section: Math 3/3 correct (100%) — must NOT appear as weak
       ...[1, 2, 3].map((i) => ({
         id: `m-right-${i}`,

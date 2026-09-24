@@ -1,5 +1,5 @@
-// Practice Koro Service Worker v2.0 - Auto Update Support
-const CACHE_VERSION = 'v2';
+// Practice Koro Service Worker v3.0 - Auto Update Support
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `practice-koro-${CACHE_VERSION}`;
 const OFFLINE_URL = '/';
 

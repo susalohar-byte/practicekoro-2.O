@@ -1,5 +1,45 @@
 import './index.css';
 import { isSupabaseEnvValid } from '@/utils/envGate';
+import { isChunkLoadError, clearChunkReloadGuard, CHUNK_RELOAD_KEY } from '@/utils/lazyWithRetry';
+
+/**
+ * Handle Vite chunk preload and dynamic import errors globally.
+ * When a deployment replaces chunks on production, any in-flight or subsequent
+ * chunk fetch throws. Intercepting these events allows the app to self-heal
+ * by refreshing index.html with the fresh chunk manifest.
+ */
+if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    try {
+      if (sessionStorage.getItem(CHUNK_RELOAD_KEY) !== 'true') {
+        sessionStorage.setItem(CHUNK_RELOAD_KEY, 'true');
+        console.warn('[PracticeKoro] vite:preloadError caught. Auto-reloading for fresh assets...');
+        window.location.reload();
+      }
+    } catch {
+      window.location.reload();
+    }
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason;
+    if (isChunkLoadError(reason)) {
+      try {
+        if (sessionStorage.getItem(CHUNK_RELOAD_KEY) !== 'true') {
+          sessionStorage.setItem(CHUNK_RELOAD_KEY, 'true');
+          console.warn(
+            '[PracticeKoro] Dynamic import error caught. Auto-reloading for fresh assets...'
+          );
+          event.preventDefault();
+          window.location.reload();
+        }
+      } catch {
+        window.location.reload();
+      }
+    }
+  });
+}
 
 /**
  * Environment gate: runs BEFORE any app module (in particular
@@ -33,58 +73,76 @@ async function bootstrap(): Promise<void> {
     return;
   }
 
-  const [
-    { default: React },
-    { createRoot },
-    { BrowserRouter },
-    { QueryClient, QueryClientProvider },
-    { AuthProvider },
-    { ExamProvider },
-    { ThemeProvider },
-    { MaintenanceProvider },
-    { ErrorBoundary },
-    { App },
-  ] = await Promise.all([
-    import('react'),
-    import('react-dom/client'),
-    import('react-router-dom'),
-    import('@tanstack/react-query'),
-    import('@/context/AuthContext'),
-    import('@/context/ExamContext'),
-    import('@/context/ThemeContext'),
-    import('@/context/MaintenanceContext'),
-    import('@/components/common/ErrorBoundary'),
-    import('./App'),
-  ]);
+  try {
+    const [
+      { default: React },
+      { createRoot },
+      { BrowserRouter },
+      { QueryClient, QueryClientProvider },
+      { AuthProvider },
+      { ExamProvider },
+      { ThemeProvider },
+      { MaintenanceProvider },
+      { ErrorBoundary },
+      { App },
+    ] = await Promise.all([
+      import('react'),
+      import('react-dom/client'),
+      import('react-router-dom'),
+      import('@tanstack/react-query'),
+      import('@/context/AuthContext'),
+      import('@/context/ExamContext'),
+      import('@/context/ThemeContext'),
+      import('@/context/MaintenanceContext'),
+      import('@/components/common/ErrorBoundary'),
+      import('./App'),
+    ]);
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        refetchOnWindowFocus: false,
+    clearChunkReloadGuard();
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 1000 * 60 * 5, // 5 minutes
+          refetchOnWindowFocus: false,
+        },
       },
-    },
-  });
+    });
 
-  createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-      <ErrorBoundary area="PracticeKoro">
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <ThemeProvider>
-              <AuthProvider>
-                <ExamProvider>
-                  <MaintenanceProvider>
-                    <App />
-                  </MaintenanceProvider>
-                </ExamProvider>
-              </AuthProvider>
-            </ThemeProvider>
-          </BrowserRouter>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
+    createRoot(document.getElementById('root')!).render(
+      <React.StrictMode>
+        <ErrorBoundary area="PracticeKoro">
+          <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+              <ThemeProvider>
+                <AuthProvider>
+                  <ExamProvider>
+                    <MaintenanceProvider>
+                      <App />
+                    </MaintenanceProvider>
+                  </ExamProvider>
+                </AuthProvider>
+              </ThemeProvider>
+            </BrowserRouter>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </React.StrictMode>
+    );
+  } catch (error) {
+    if (isChunkLoadError(error) && typeof window !== 'undefined') {
+      try {
+        if (sessionStorage.getItem(CHUNK_RELOAD_KEY) !== 'true') {
+          sessionStorage.setItem(CHUNK_RELOAD_KEY, 'true');
+          window.location.reload();
+          return;
+        }
+      } catch {
+        window.location.reload();
+        return;
+      }
+    }
+    console.error('[PracticeKoro] Fatal bootstrap error:', error);
+  }
 }
 
 void bootstrap();

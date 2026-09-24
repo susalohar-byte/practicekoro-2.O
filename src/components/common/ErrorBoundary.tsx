@@ -1,28 +1,13 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import {
+  isChunkLoadError,
+  clearChunkReloadGuard,
+  CHUNK_RELOAD_KEY as RELOAD_GUARD_KEY,
+} from '@/utils/lazyWithRetry';
 
-/**
- * Detects the class of errors that happen when a lazily-loaded route chunk is
- * no longer available (typically after a new deployment replaced the hashed
- * asset filenames). These are recoverable with a single reload, unlike real
- * render errors.
- */
-const CHUNK_ERROR_PATTERNS = [
-  /failed to fetch dynamically imported module/i,
-  /error loading dynamically imported module/i,
-  /importing a module script failed/i,
-  /loading chunk \d+ failed/i,
-  /loading css chunk \d+ failed/i,
-];
-
-export const isChunkLoadError = (error: unknown): boolean => {
-  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
-  if (!message) return false;
-  return CHUNK_ERROR_PATTERNS.some((pattern) => pattern.test(message));
-};
-
-const RELOAD_GUARD_KEY = 'practicekoro_chunk_reload_attempted';
+export { isChunkLoadError };
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -50,6 +35,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return { error };
   }
 
+  componentDidMount() {
+    if (!this.state.error) {
+      clearChunkReloadGuard();
+    }
+  }
+
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('Unhandled UI error:', error, info.componentStack);
 
@@ -66,6 +57,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   handleRetry = () => {
+    clearChunkReloadGuard();
     this.setState({ error: null });
     this.props.onReset?.();
   };
@@ -84,11 +76,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
           <div className="space-y-1">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              Something went wrong
+              {isChunkLoadError(error) ? 'New Update Available' : 'Something went wrong'}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              An unexpected error occurred{this.props.area ? ` in the ${this.props.area}` : ''}. Your saved
-              progress and attempts are safe.
+              {isChunkLoadError(error)
+                ? 'PracticeKoro was recently updated or your network connection was interrupted. Please reload to fetch the latest version.'
+                : `An unexpected error occurred${this.props.area ? ` in the ${this.props.area}` : ''}. Your saved progress and attempts are safe.`}
             </p>
           </div>
 

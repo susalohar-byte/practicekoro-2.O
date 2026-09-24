@@ -3,165 +3,166 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from '@/components/layout/ProtectedRoute';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
 
-const Landing = React.lazy(() =>
+const Landing = lazyWithRetry(() =>
   import('@/pages/Landing').then((module) => ({ default: module.Landing }))
 );
-const Home = React.lazy(() =>
+const Home = lazyWithRetry(() =>
   import('@/pages/student/Home').then((module) => ({ default: module.Home }))
 );
-const ExamsCatalog = React.lazy(() =>
+const ExamsCatalog = lazyWithRetry(() =>
   import('@/pages/student/ExamsCatalog').then((module) => ({ default: module.ExamsCatalog }))
 );
-const ExamDetail = React.lazy(() =>
+const ExamDetail = lazyWithRetry(() =>
   import('@/pages/student/ExamDetail').then((module) => ({ default: module.ExamDetail }))
 );
-const ExamOrTestDispatcher = React.lazy(() =>
+const ExamOrTestDispatcher = lazyWithRetry(() =>
   import('@/pages/student/ExamOrTestDispatcher').then((module) => ({
     default: module.ExamOrTestDispatcher,
   }))
 );
-const TestRunner = React.lazy(() =>
+const TestRunner = lazyWithRetry(() =>
   import('@/pages/student/TestRunner').then((module) => ({ default: module.TestRunner }))
 );
-const TestResult = React.lazy(() =>
+const TestResult = lazyWithRetry(() =>
   import('@/pages/student/TestResult').then((module) => ({ default: module.TestResult }))
 );
-const TestSolutions = React.lazy(() =>
+const TestSolutions = lazyWithRetry(() =>
   import('@/pages/student/TestSolutions').then((module) => ({ default: module.TestSolutions }))
 );
-const Practice = React.lazy(() =>
+const Practice = lazyWithRetry(() =>
   import('@/pages/student/Practice').then((module) => ({ default: module.Practice }))
 );
-const MyTests = React.lazy(() =>
+const MyTests = lazyWithRetry(() =>
   import('@/pages/student/MyTests').then((module) => ({ default: module.MyTests }))
 );
-const Profile = React.lazy(() =>
+const Profile = lazyWithRetry(() =>
   import('@/pages/student/Profile').then((module) => ({ default: module.Profile }))
 );
-const Settings = React.lazy(() =>
+const Settings = lazyWithRetry(() =>
   import('@/pages/student/Settings').then((module) => ({ default: module.Settings }))
 );
-const Subscription = React.lazy(() =>
+const Subscription = lazyWithRetry(() =>
   import('@/pages/student/Subscription').then((module) => ({ default: module.Subscription }))
 );
-const Support = React.lazy(() =>
+const Support = lazyWithRetry(() =>
   import('@/pages/student/Support').then((module) => ({ default: module.Support }))
 );
-const SavedQuestions = React.lazy(() =>
+const SavedQuestions = lazyWithRetry(() =>
   import('@/pages/student/SavedQuestions').then((module) => ({ default: module.SavedQuestions }))
 );
-const Rank = React.lazy(() =>
+const Rank = lazyWithRetry(() =>
   import('@/pages/student/Rank').then((module) => ({ default: module.Rank }))
 );
-const Onboarding = React.lazy(() =>
+const Onboarding = lazyWithRetry(() =>
   import('@/pages/student/Onboarding').then((module) => ({ default: module.Onboarding }))
 );
-const Login = React.lazy(() =>
+const Login = lazyWithRetry(() =>
   import('@/pages/auth/Login').then((module) => ({ default: module.Login }))
 );
-const Register = React.lazy(() =>
+const Register = lazyWithRetry(() =>
   import('@/pages/auth/Register').then((module) => ({ default: module.Register }))
 );
-const ForgotPassword = React.lazy(() =>
+const ForgotPassword = lazyWithRetry(() =>
   import('@/pages/auth/ForgotPassword').then((module) => ({ default: module.ForgotPassword }))
 );
-const ResetPassword = React.lazy(() =>
+const ResetPassword = lazyWithRetry(() =>
   import('@/pages/auth/ResetPassword').then((module) => ({ default: module.ResetPassword }))
 );
-const TermsAndConditions = React.lazy(() =>
+const TermsAndConditions = lazyWithRetry(() =>
   import('@/pages/legal/TermsAndConditions').then((module) => ({
     default: module.TermsAndConditions,
   }))
 );
-const PrivacyPolicy = React.lazy(() =>
+const PrivacyPolicy = lazyWithRetry(() =>
   import('@/pages/legal/PrivacyPolicy').then((module) => ({
     default: module.PrivacyPolicy,
   }))
 );
-const RefundPolicy = React.lazy(() =>
+const RefundPolicy = lazyWithRetry(() =>
   import('@/pages/legal/RefundPolicy').then((module) => ({
     default: module.RefundPolicy,
   }))
 );
-const ContactUs = React.lazy(() =>
+const ContactUs = lazyWithRetry(() =>
   import('@/pages/legal/ContactUs').then((module) => ({
     default: module.ContactUs,
   }))
 );
-const AdminDashboard = React.lazy(() =>
+const AdminDashboard = lazyWithRetry(() =>
   import('@/pages/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
 );
-const AdminExams = React.lazy(() =>
+const AdminExams = lazyWithRetry(() =>
   import('@/pages/admin/AdminExams').then((module) => ({ default: module.AdminExams }))
 );
-const AdminBanners = React.lazy(() =>
+const AdminBanners = lazyWithRetry(() =>
   import('@/pages/admin/AdminBanners').then((module) => ({ default: module.AdminBanners }))
 );
-const AdminTopicManage = React.lazy(() =>
+const AdminTopicManage = lazyWithRetry(() =>
   import('@/pages/admin/AdminTopicManage').then((module) => ({ default: module.AdminTopicManage }))
 );
-const AdminExamTopics = React.lazy(() =>
+const AdminExamTopics = lazyWithRetry(() =>
   import('@/pages/admin/AdminExamTopics').then((module) => ({ default: module.AdminExamTopics }))
 );
-const AdminTestSeries = React.lazy(() =>
+const AdminTestSeries = lazyWithRetry(() =>
   import('@/pages/admin/AdminTestSeries').then((module) => ({ default: module.AdminTestSeries }))
 );
-const AdminTests = React.lazy(() =>
+const AdminTests = lazyWithRetry(() =>
   import('@/pages/admin/AdminTests').then((module) => ({ default: module.AdminTests }))
 );
-const AdminTestQuestions = React.lazy(() =>
+const AdminTestQuestions = lazyWithRetry(() =>
   import('@/pages/admin/AdminTestQuestions').then((module) => ({
     default: module.AdminTestQuestions,
   }))
 );
-const AdminSubscriptions = React.lazy(() =>
+const AdminSubscriptions = lazyWithRetry(() =>
   import('@/pages/admin/AdminSubscriptions').then((module) => ({
     default: module.AdminSubscriptions,
   }))
 );
 
-const AdminQuestionBank = React.lazy(() =>
+const AdminQuestionBank = lazyWithRetry(() =>
   import('@/pages/admin/AdminQuestionBank').then((module) => ({
     default: module.AdminQuestionBank,
   }))
 );
-const AdminItemAnalysis = React.lazy(() =>
+const AdminItemAnalysis = lazyWithRetry(() =>
   import('@/pages/admin/AdminItemAnalysis').then((module) => ({
     default: module.AdminItemAnalysis,
   }))
 );
-const AdminRevenueAnalytics = React.lazy(() =>
+const AdminRevenueAnalytics = lazyWithRetry(() =>
   import('@/pages/admin/AdminRevenueAnalytics').then((module) => ({
     default: module.AdminRevenueAnalytics,
   }))
 );
-const AdminNotifications = React.lazy(() =>
+const AdminNotifications = lazyWithRetry(() =>
   import('@/pages/admin/AdminNotifications').then((module) => ({
     default: module.AdminNotifications,
   }))
 );
-const AdminSupport = React.lazy(() =>
+const AdminSupport = lazyWithRetry(() =>
   import('@/pages/admin/AdminSupport').then((module) => ({
     default: module.AdminSupport,
   }))
 );
-const AdminSettings = React.lazy(() =>
+const AdminSettings = lazyWithRetry(() =>
   import('@/pages/admin/AdminSettings').then((module) => ({
     default: module.AdminSettings,
   }))
 );
-const AdminCoupons = React.lazy(() =>
+const AdminCoupons = lazyWithRetry(() =>
   import('@/pages/admin/AdminCoupons').then((module) => ({
     default: module.AdminCoupons,
   }))
 );
-const AdminStaff = React.lazy(() =>
+const AdminStaff = lazyWithRetry(() =>
   import('@/pages/admin/AdminStaff').then((module) => ({
     default: module.AdminStaff,
   }))
 );
-const AdminAuditLogs = React.lazy(() =>
+const AdminAuditLogs = lazyWithRetry(() =>
   import('@/pages/admin/AdminAuditLogs').then((module) => ({
     default: module.AdminAuditLogs,
   }))
@@ -299,10 +300,7 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="leaderboard"
-            element={<Navigate to="/rank" replace />}
-          />
+          <Route path="leaderboard" element={<Navigate to="/rank" replace />} />
         </Route>
 
         {/* Standalone Fullscreen Test Runner (Distraction-free, dedicated exam header) */}

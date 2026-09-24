@@ -6,3 +6,6 @@ test-results
 package-lock.json
 public
 .stitch
+practicekoro_mobile
+release
+*.apk
