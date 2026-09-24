@@ -853,7 +853,7 @@ export const AdminRevenueAnalytics: React.FC = () => {
 
       {/* ─── INTERACTIVE RANK / STUDENT LEADERBOARD MODAL ──────────── */}
       {isRankModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-3 sm:p-5">
           <div
             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}

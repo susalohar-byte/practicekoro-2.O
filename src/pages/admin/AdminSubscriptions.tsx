@@ -1399,7 +1399,7 @@ export const AdminSubscriptions: React.FC = () => {
           BULK STUDENT ACTION MODAL
       ======================================================= */}
       {bulkAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
           <div className="w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div>
@@ -1588,7 +1588,7 @@ export const AdminSubscriptions: React.FC = () => {
           REFUND TRACKING MODAL
       ======================================================= */}
       {refundPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
           <div className="w-full max-w-md space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-start justify-between">
               <div>
@@ -1696,7 +1696,7 @@ export const AdminSubscriptions: React.FC = () => {
           GRANT PRO ACCESS MODAL
       ======================================================= */}
       {grantModalStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35">
           <div
             className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl space-y-5"
             onClick={(e) => e.stopPropagation()}
@@ -1793,7 +1793,7 @@ export const AdminSubscriptions: React.FC = () => {
           PLAN EDIT / CREATE MODAL
       ======================================================= */}
       {isPlanModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35">
           <div
             className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl space-y-5"
             onClick={(e) => e.stopPropagation()}
@@ -1972,7 +1972,7 @@ export const AdminSubscriptions: React.FC = () => {
           DELETE PLAN CONFIRMATION MODAL
       ======================================================= */}
       {deletePlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35">
           <div
             className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl space-y-5"
             onClick={(e) => e.stopPropagation()}

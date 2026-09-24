@@ -1978,7 +1978,7 @@ export const AdminTestQuestions: React.FC = () => {
       {/* 5. MODAL: BULK ADD QUESTIONS VIA TXT                                  */}
       {/* ===================================================================== */}
       {isBulkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 animate-fade-in">
           <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-[#172852] p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#152347]">
               <div className="flex items-center gap-3">
@@ -2090,7 +2090,7 @@ export const AdminTestQuestions: React.FC = () => {
       {/* 6. MODAL: CREATE SINGLE QUESTION DIRECTLY                             */}
       {/* ===================================================================== */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 animate-fade-in">
           <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-[#172852] p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#152347]">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">

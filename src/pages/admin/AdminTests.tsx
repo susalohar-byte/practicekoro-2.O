@@ -1244,7 +1244,7 @@ export const AdminTests: React.FC = () => {
 
       {/* CREATE / EDIT TEST MODAL */}
       {isTestModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1593,7 +1593,7 @@ export const AdminTests: React.FC = () => {
 
       {/* CREATE SUBJECT MODAL */}
       {isSubjectModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-indigo-500" /> Add Academic Subject
@@ -1657,7 +1657,7 @@ export const AdminTests: React.FC = () => {
 
       {/* CREATE TOPIC MODAL */}
       {isTopicModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <FolderTree className="w-4 h-4 text-cyan-500" />
@@ -1722,7 +1722,7 @@ export const AdminTests: React.FC = () => {
 
       {/* PUBLISH VALIDATION MODAL */}
       {isPublishModalOpen && testToPublish && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1805,7 +1805,7 @@ export const AdminTests: React.FC = () => {
 
       {/* ARCHIVE MODAL */}
       {isArchiveModalOpen && testToArchive && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Archive className="w-4 h-4 text-amber-500" /> Archive Test?
@@ -1836,7 +1836,7 @@ export const AdminTests: React.FC = () => {
 
       {/* DELETE MODAL */}
       {isDeleteModalOpen && testToDelete && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-950 border border-rose-200 dark:border-rose-900/50 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Trash2 className="w-4 h-4 text-rose-500" /> Delete Test?
@@ -1873,7 +1873,7 @@ export const AdminTests: React.FC = () => {
 
       {/* Student Attempts & Leaderboard Modal */}
       {viewingAttemptsTest && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
