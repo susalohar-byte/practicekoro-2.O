@@ -100,6 +100,9 @@ export const AdminTestQuestions: React.FC = () => {
   const [newCorrectOption, setNewCorrectOption] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const [newExplanation, setNewExplanation] = useState('');
   const [newMarks, setNewMarks] = useState(1.0);
+  // PYQ-only: diagram image URL for image-based PYQ questions. Shown only
+  // when the target test is a PYQ paper; never required.
+  const [newImageUrl, setNewImageUrl] = useState('');
   // NOTE: questions never carry negative marks (test-level policy), so there
   // is intentionally no per-question negative-marks field anywhere here.
 
@@ -687,6 +690,8 @@ export const AdminTestQuestions: React.FC = () => {
         explanation: newExplanation.trim() || undefined,
         difficulty: 'medium',
         defaultMarks: newMarks,
+        // PYQ diagram image (optional; only set from the PYQ-gated field below).
+        imageUrl: newImageUrl.trim() || undefined,
         // Questions never carry negative marks — scoring uses the test-level scheme.
         defaultNegativeMarks: 0,
         isActive: true,
@@ -698,6 +703,7 @@ export const AdminTestQuestions: React.FC = () => {
         return;
       }
 
+      setNewImageUrl('');
       setIsCreateModalOpen(false);
       await loadData();
       setSaveSuccess(true);
@@ -975,6 +981,7 @@ export const AdminTestQuestions: React.FC = () => {
                 setNewOptionC('');
                 setNewOptionD('');
                 setNewExplanation('');
+                setNewImageUrl('');
                 setCreateError('');
                 setIsCreateModalOpen(true);
               }}
@@ -2265,6 +2272,25 @@ export const AdminTestQuestions: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* PYQ-only: diagram image URL (optional, never required) */}
+              {test?.testType === 'pyq' && (
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
+                    Diagram Image URL <span className="font-medium normal-case">(PYQ only, optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    placeholder="https://.../diagram.png"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070d1d] border border-slate-200 dark:border-[#192b57] text-slate-900 dark:text-white focus:outline-none focus:border-[#0075FF] font-mono text-xs"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Shown below the question text in the student test. Leave empty for text-only questions.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-[#152347]">

@@ -48,6 +48,7 @@ This directory contains the canonical historical Supabase migration files for Pr
 | `037_create_hero_banners_table.sql`             | `hero_banners` table for student dashboard carousel                  |    **PENDING**    |
 | `038_submit_attempt_covering_indexes.sql`       | Covering indexes for `submit_test_attempt` rank/count hot paths       |    **PENDING**    |
 | `039_verify_payment_require_signature.sql`      | `verify_razorpay_payment` rejects empty signatures (no-proof activation hole closed) | **PENDING** |
+| `040_pyq_question_images_in_rpcs.sql`           | Expose `image_url` in runner + solutions RPCs for PYQ diagrams       |    **PENDING**    |
 
 ---
 

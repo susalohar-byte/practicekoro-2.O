@@ -430,7 +430,7 @@ export const TestRunner: React.FC = () => {
                 {displayedQuestionText}
               </h2>
 
-              {/* Diagram / Image */}
+              {/* Diagram / Image (PYQ diagrams; hidden entirely when absent or broken) */}
               {currentQ.imageUrl && (
                 <div className="my-3 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-2 max-w-lg mx-auto">
                   <img
@@ -438,6 +438,9 @@ export const TestRunner: React.FC = () => {
                     alt={`Question ${currentIndex + 1} Diagram`}
                     className="max-h-64 w-auto object-contain mx-auto rounded-xl"
                     loading="eager"
+                    onError={(e) => {
+                      e.currentTarget.parentElement?.remove();
+                    }}
                   />
                 </div>
               )}

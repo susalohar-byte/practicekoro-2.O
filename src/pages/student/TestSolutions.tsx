@@ -256,7 +256,7 @@ export const TestSolutions: React.FC = () => {
                   </p>
                 )}
 
-                {/* Question Diagram / Image */}
+                {/* Question Diagram / Image (hidden entirely when absent or broken) */}
                 {sol.imageUrl && (
                   <div className="my-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-2 max-w-lg mx-auto shadow-xs">
                     <img
@@ -264,6 +264,9 @@ export const TestSolutions: React.FC = () => {
                       alt={`Question ${sol.questionOrder} Diagram`}
                       className="max-h-72 w-auto object-contain mx-auto rounded-lg"
                       loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.parentElement?.remove();
+                      }}
                     />
                   </div>
                 )}
