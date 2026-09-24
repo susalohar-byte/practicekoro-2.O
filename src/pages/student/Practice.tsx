@@ -102,9 +102,12 @@ export const Practice: React.FC = () => {
   const [languageMode, setLanguageMode] = useState<'bilingual' | 'english' | 'bengali'>('bilingual');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
-  // Sync active tab with URL (?tab=mistakes|bookmarks|topics)
+  // Sync active tab with URL (?tab=mistakes|bookmarks|topics) and optional
+  // deep-link subject filter (?subject=Name) e.g. from a test result's
+  // "weak areas" card.
   useEffect(() => {
     const tabParam = searchParams.get('tab');
+    const subjectParam = searchParams.get('subject');
     const pathSuffix = location.pathname.split('/').pop() || '';
 
     let nextTab: PracticeTab = 'dashboard';
@@ -120,10 +123,12 @@ export const Practice: React.FC = () => {
 
     setActiveTab((prev) => {
       if (prev !== nextTab) {
-        setSelectedSubjectFilter('all');
+        setSelectedSubjectFilter(subjectParam || 'all');
         setExpandedId(null);
         setIsPracticing(false);
         setIsSessionComplete(false);
+      } else if (subjectParam) {
+        setSelectedSubjectFilter(subjectParam);
       }
       return nextTab;
     });
@@ -691,15 +696,54 @@ export const Practice: React.FC = () => {
 
           {/* Sub-view Navigation Bar (When on dedicated tabs) */}
           {activeTab !== 'dashboard' && (
-            <div className="flex items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => handleTabChange('dashboard')}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
-              >
-                <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-                <span>Back to Practice Hub</span>
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('dashboard')}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
+                >
+                  <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                  <span>Practice Hub</span>
+                </button>
+
+                {/* Sub-view switcher pills */}
+                <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('topics')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      activeTab === 'topics'
+                        ? 'bg-[#0158FC] text-white shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Topic Tests
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('mistakes')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      activeTab === 'mistakes'
+                        ? 'bg-[#0158FC] text-white shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Mistakes {pendingMistakes.length > 0 ? `(${pendingMistakes.length})` : ''}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('bookmarks')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      activeTab === 'bookmarks'
+                        ? 'bg-[#0158FC] text-white shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Saved {bookmarks.length > 0 ? `(${bookmarks.length})` : ''}
+                  </button>
+                </div>
+              </div>
 
               {activeTab === 'mistakes' && pendingMistakes.length > 0 && (
                 <Button

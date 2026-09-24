@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   ChevronRight,
   Layers,
+  Target,
+  Zap,
 } from 'lucide-react';
 import { formatSeconds } from '@/lib/utils';
 import type { GradedResult, QuestionSolution } from '@/types';
@@ -95,6 +97,20 @@ export const TestResult: React.FC = () => {
 
     return Array.from(map.values());
   }, [solutions]);
+
+  // Weakest sections first: attempted + accuracy below 70%. These drive the
+  // "practice loop" cards below (Result -> targeted Practice -> Re-test).
+  const weakSections = useMemo(() => {
+    return sectionBreakdown
+      .filter((sec) => sec.attempted > 0)
+      .map((sec) => ({
+        ...sec,
+        accuracy: Math.round((sec.correct / sec.attempted) * 100),
+      }))
+      .filter((sec) => sec.accuracy < 70)
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 3);
+  }, [sectionBreakdown]);
 
   if (loading) {
     return (
@@ -285,6 +301,64 @@ export const TestResult: React.FC = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Improve Weak Areas: close the Mock -> Practice -> Re-test loop */}
+      {weakSections.length > 0 && (
+        <Card className="p-5 sm:p-6 border-indigo-200/80 dark:border-indigo-800/60 bg-gradient-to-br from-indigo-50/70 via-white to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 rounded-3xl space-y-4 shadow-xs">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs">
+              <Target className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Focus on Your Weak Areas
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Practice these sections, then re-test to track improvement
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {weakSections.map((sec) => (
+              <div
+                key={sec.id}
+                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col gap-2.5"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {sec.name}
+                  </p>
+                  <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 shrink-0">
+                    {sec.accuracy}%
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all"
+                    style={{ width: `${sec.accuracy}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {sec.wrong} wrong · {sec.skipped} skipped of {sec.totalQs}
+                </p>
+                <Link
+                  to={`/practice?tab=mistakes&subject=${encodeURIComponent(sec.name)}`}
+                  className="mt-auto"
+                >
+                  <Button
+                    size="sm"
+                    className="w-full text-xs font-bold"
+                    leftIcon={<Zap className="w-3.5 h-3.5" />}
+                  >
+                    Practice Mistakes
+                  </Button>
+                </Link>
+              </div>
+            ))}
           </div>
         </Card>
       )}
