@@ -37,6 +37,12 @@ interface StudentNavbarProps {
   onToggleCollapse?: () => void;
   isSidebarCollapsed?: boolean;
   embedded?: boolean;
+  /**
+   * Global search is Home-only. AppLayout renders the navbar with
+   * showSearch={false}; the Home page uses the default (true) and keeps
+   * the exact existing search UI/behavior.
+   */
+  showSearch?: boolean;
 }
 
 interface SearchItem {
@@ -82,6 +88,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
   onToggleCollapse,
   isSidebarCollapsed = false,
   embedded = false,
+  showSearch = true,
 }) => {
   const { user, isPro, isAdmin, logout } = useAuth();
   const { selectedExam } = useExam();
@@ -177,10 +184,12 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
     localStorage.setItem('pk_read_notifications', JSON.stringify(merged));
   };
 
-  // Keyboard shortcut: Cmd + K or Ctrl + K focuses search
+  // Keyboard shortcut: Cmd + K or Ctrl + K focuses search (Home only —
+  // the search bar is not rendered on other pages)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        if (!showSearch) return;
         e.preventDefault();
         searchInputRef.current?.focus();
         setIsSearchOpen(true);
@@ -194,7 +203,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [showSearch]);
 
   // Click outside listener
   useEffect(() => {
@@ -288,7 +297,8 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
               </Link>
             </div>
 
-            {/* Center: Live Interactive Search Bar */}
+            {/* Center: Live Interactive Search Bar (Home page only) */}
+            {showSearch && (
             <div ref={searchContainerRef} className="flex-1 max-w-2xl mx-1 sm:mx-2 relative">
               <form onSubmit={handleSearchSubmit} className="relative w-full">
                 <div className="relative flex items-center w-full">
@@ -431,6 +441,7 @@ export const StudentNavbar: React.FC<StudentNavbarProps> = ({
                 </div>
               )}
             </div>
+            )}
 
             {/* Right: Actions (Theme, Bell) + Candidate Profile */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">

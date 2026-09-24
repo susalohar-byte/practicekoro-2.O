@@ -4,7 +4,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
 import { api } from '@/services/api';
 import {
-  Search,
   Filter,
   CheckCircle2,
   Trophy,
@@ -195,7 +194,6 @@ export const MyTests: React.FC = () => {
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
   const [, setLoading] = useState<boolean>(true);
   const [testTypeFilter, setTestTypeFilter] = useState<TestTypeFilter>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [timeframe, setTimeframe] = useState<string>('This Year');
   const [subjectTab, setSubjectTab] = useState<SubjectTab>('subject');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -320,7 +318,7 @@ export const MyTests: React.FC = () => {
     };
   }, [attempts]);
 
-  // Filter test rows
+  // Filter test rows (type filter only — search lives on Home)
   const filteredRows = useMemo(() => {
     let result = allTestRows;
 
@@ -335,19 +333,8 @@ export const MyTests: React.FC = () => {
       result = result.filter((r) => r.type === 'Custom Practice');
     }
 
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (r) =>
-          r.testName.toLowerCase().includes(q) ||
-          r.exam.toLowerCase().includes(q) ||
-          r.type.toLowerCase().includes(q)
-      );
-    }
-
     return result;
-  }, [allTestRows, testTypeFilter, searchQuery]);
+  }, [allTestRows, testTypeFilter]);
 
   // Pagination (8 items per page)
   const pageSize = 8;
@@ -566,32 +553,17 @@ export const MyTests: React.FC = () => {
 
             {/* 3. YOUR TEST HISTORY TABLE */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-              {/* Header with Title and Search/Filter */}
+              {/* Header with Title and Filter */}
               <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100">
                 <h2 className="text-base sm:text-lg font-black text-[#0B1527]">
                   Your Test History
                 </h2>
 
                 <div className="flex items-center gap-2.5">
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Search your tests..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="w-48 sm:w-64 pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0158FC] focus:bg-white transition-all"
-                    />
-                  </div>
-
                   <button
                     type="button"
                     onClick={() => {
                       setTestTypeFilter('all');
-                      setSearchQuery('');
                     }}
                     title="Reset filters"
                     className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"

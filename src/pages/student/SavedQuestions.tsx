@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bookmark, CheckCircle2, Play, Search, Trash2, BookOpen, Target, RefreshCw } from 'lucide-react';
+import { Bookmark, CheckCircle2, Play, Trash2, BookOpen, Target, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import type { BookmarkItem } from '@/types';
@@ -7,7 +7,6 @@ import type { BookmarkItem } from '@/types';
 export const SavedQuestions: React.FC = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<BookmarkItem[]>([]);
-  const [query, setQuery] = useState('');
   const [subject, setSubject] = useState('all');
   const [loading, setLoading] = useState(true);
 
@@ -29,13 +28,8 @@ export const SavedQuestions: React.FC = () => {
   }, [items]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return items.filter((item) => {
-      const matchesSubject = subject === 'all' || item.subjectName === subject;
-      const text = item.question.questionText.toLowerCase();
-      return matchesSubject && (!q || text.includes(q) || (item.examTitle || '').toLowerCase().includes(q));
-    });
-  }, [items, query, subject]);
+    return items.filter((item) => subject === 'all' || item.subjectName === subject);
+  }, [items, subject]);
 
   const remove = async (item: BookmarkItem) => {
     if (!user) return;
@@ -84,15 +78,6 @@ export const SavedQuestions: React.FC = () => {
 
         <section className="pk-panel p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="pk-search flex min-w-0 items-center gap-2 rounded-2xl px-4 py-3 lg:max-w-md lg:flex-1">
-              <Search className="h-4 w-4 shrink-0 text-slate-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search saved questions..."
-                className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-slate-400"
-              />
-            </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {subjects.map((value) => (
                 <button

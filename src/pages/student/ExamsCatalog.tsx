@@ -2,10 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useExam } from '@/context/ExamContext';
 import {
-  Search,
   ChevronRight,
   Layers,
-  X,
   ArrowRight,
   GraduationCap,
   Train,
@@ -230,7 +228,6 @@ export const ExamsCatalog: React.FC = () => {
   const { exams, setSelectedExam, loading } = useExam();
   const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortKey>('popularity');
 
@@ -294,21 +291,12 @@ export const ExamsCatalog: React.FC = () => {
     return list;
   }, [enrichedExams, sections]);
 
-  // Filtered & sorted exams list (for active search or specific category filter)
+  // Filtered & sorted exams list (category filter only — search lives on Home)
   const filteredAndSortedExams = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-
-    const matches = enrichedExams.filter(({ exam, meta }) => {
-      const matchesSearch =
-        !q ||
-        exam.title.toLowerCase().includes(q) ||
-        (exam.description && exam.description.toLowerCase().includes(q)) ||
-        meta.category.toLowerCase().includes(q) ||
-        (exam.slug && exam.slug.toLowerCase().includes(q));
-
+    const matches = enrichedExams.filter(({ meta }) => {
       const matchesFilter = selectedFilter === 'all' || meta.category === selectedFilter;
 
-      return matchesSearch && matchesFilter;
+      return matchesFilter;
     });
 
     matches.sort((a, b) => {
@@ -334,7 +322,7 @@ export const ExamsCatalog: React.FC = () => {
     });
 
     return matches;
-  }, [enrichedExams, searchQuery, selectedFilter, sortBy]);
+  }, [enrichedExams, selectedFilter, sortBy]);
 
   // Helper to render an individual exam card with full readability and zero truncation
   const renderExamCard = (item: EnrichedExam) => {
@@ -434,7 +422,7 @@ export const ExamsCatalog: React.FC = () => {
     );
   };
 
-  const isCategorizedView = selectedFilter === 'all' && !searchQuery.trim();
+  const isCategorizedView = selectedFilter === 'all';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 py-5 sm:py-7 px-4 sm:px-6 lg:px-8 transition-colors">
@@ -463,29 +451,6 @@ export const ExamsCatalog: React.FC = () => {
                 Choose your exam and start your preparation journey with mock tests, topic practice,
                 PYQ and detailed solutions.
               </p>
-
-              {/* In-hero Search Input */}
-              <div className="pt-1 w-full max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search exams (e.g. WBCS, SSC, Railway...)"
-                    className="w-full pl-11 pr-10 py-3 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-full text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0158FC] shadow-2xs transition-all"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                      title="Clear search"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Right Side Book Stack Illustration */}
@@ -567,11 +532,10 @@ export const ExamsCatalog: React.FC = () => {
               No examinations found
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-              We couldn't find any exams matching your search or category filter.
+              We couldn't find any exams for the selected category filter.
             </p>
             <button
               onClick={() => {
-                setSearchQuery('');
                 setSelectedFilter('all');
               }}
               className="mt-4 px-4 py-2 bg-[#0158FC] text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors cursor-pointer"
@@ -667,12 +631,6 @@ export const ExamsCatalog: React.FC = () => {
                   {filteredAndSortedExams.length}
                 </span>{' '}
                 examinations
-                {searchQuery && (
-                  <span>
-                    {' '}
-                    matching &ldquo;<span className="text-[#0158FC]">{searchQuery}</span>&rdquo;
-                  </span>
-                )}
                 {selectedFilter !== 'all' && (
                   <span>
                     {' '}
@@ -681,11 +639,10 @@ export const ExamsCatalog: React.FC = () => {
                 )}
               </div>
 
-              {(selectedFilter !== 'all' || searchQuery) && (
+              {(selectedFilter !== 'all') && (
                 <button
                   onClick={() => {
                     setSelectedFilter('all');
-                    setSearchQuery('');
                   }}
                   className="text-xs font-semibold text-[#0158FC] hover:underline cursor-pointer"
                 >

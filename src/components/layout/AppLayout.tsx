@@ -56,6 +56,7 @@ export const AppLayout: React.FC = () => {
             onToggleMobileSidebar={() => setMobileSidebarOpen((prev) => !prev)}
             onToggleCollapse={toggleCollapse}
             isSidebarCollapsed={isCollapsed}
+            showSearch={false}
           />
         )}
         <main className="flex-1 pb-20 lg:pb-12">
