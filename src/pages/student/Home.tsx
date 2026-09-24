@@ -3,7 +3,7 @@ import { useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { StudentNavbar } from '@/components/layout/StudentNavbar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
-import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
+import { bannerService } from '@/services/bannerService';
 import { getBannerTheme as getSharedBannerTheme } from '@/utils/bannerTheme';
 import {
   ArrowRight,
@@ -37,11 +37,9 @@ export const Home: React.FC = () => {
   // Dynamic Banners (cached query with audience targeting and static fallback)
   const queryClient = useQueryClient();
   const audience = isPro ? 'pro' : 'free';
-  const { data: banners = DEFAULT_HERO_BANNERS } = useQuery({
+  const { data: banners = [] } = useQuery({
     queryKey: ['hero-banners', audience],
     queryFn: () => bannerService.getActiveBanners({ audience, placement: 'home_hero' }),
-    select: (active) => (active && active.length > 0 ? active : DEFAULT_HERO_BANNERS),
-    placeholderData: DEFAULT_HERO_BANNERS,
     staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
@@ -357,8 +355,8 @@ export const Home: React.FC = () => {
       <StudentNavbar embedded onToggleMobileSidebar={onToggleMobileSidebar} />
 
       {/* 1. DYNAMIC HERO BANNER CAROUSEL */}
-      {(() => {
-        const activeBanners = banners.length > 0 ? banners : DEFAULT_HERO_BANNERS;
+      {banners.length > 0 && (() => {
+        const activeBanners = banners;
         const banner = activeBanners[currentSlide] || activeBanners[0];
         const theme = getBannerTheme(banner.themeGradient);
         const formattedBadge = (banner.badgeText || '')

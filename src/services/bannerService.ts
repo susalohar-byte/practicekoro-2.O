@@ -320,17 +320,15 @@ function getStoredBanners(): HeroBanner[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      saveStoredBanners(DEFAULT_HERO_BANNERS);
-      return DEFAULT_HERO_BANNERS;
+      return [];
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed.map(sanitizeBanner);
     }
-    saveStoredBanners(DEFAULT_HERO_BANNERS);
-    return DEFAULT_HERO_BANNERS;
+    return [];
   } catch {
-    return DEFAULT_HERO_BANNERS;
+    return [];
   }
 }
 
@@ -608,11 +606,7 @@ export const bannerService = {
       .filter((b) => b.isActive)
       .sort((a, b) => a.displayOrder - b.displayOrder);
 
-    if (fallbackActive.length > 0) {
-      return fallbackActive;
-    }
-
-    return [DEFAULT_HERO_BANNERS[0]];
+    return fallbackActive;
   },
 
   /**
