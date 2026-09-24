@@ -252,11 +252,11 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
           >
             <div className="relative shrink-0">
               <img
-                src="/images/student_avatar.png"
+                src={user?.avatarUrl || '/images/student_avatar.png'}
                 alt={user?.fullName || 'Candidate'}
                 className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-2xs"
                 onError={(e) => {
-                  e.currentTarget.src = '/logo-icon-transparent.png';
+                  e.currentTarget.src = '/images/student_avatar.png';
                 }}
               />
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
@@ -296,23 +296,38 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
             >
               {/* User Header */}
               <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {user?.fullName || 'Candidate'}
-                  </p>
-                  {isPro ? (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                      PRO
-                    </span>
-                  ) : (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      FREE
-                    </span>
-                  )}
+                <div className="flex items-center gap-2.5">
+                  <div className="relative shrink-0">
+                    <img
+                      src={user?.avatarUrl || '/images/student_avatar.png'}
+                      alt={user?.fullName || 'Candidate'}
+                      className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-2xs"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/student_avatar.png';
+                      }}
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white dark:ring-slate-900" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {user?.fullName || 'Candidate'}
+                      </p>
+                      {isPro ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shrink-0">
+                          PRO
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0">
+                          FREE
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                      {user?.email || ''}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                  {user?.email || ''}
-                </p>
               </div>
 
               {/* Menu items matching screenshot */}

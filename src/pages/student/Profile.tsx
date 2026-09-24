@@ -174,9 +174,20 @@ export const Profile: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative z-10">
           <div className="flex items-center gap-4 sm:gap-5">
             <div className="relative group">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md ring-4 ring-white shrink-0">
-                {user?.fullName?.charAt(0) || 'U'}
-              </div>
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user?.fullName || 'Candidate'}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shadow-md ring-4 ring-white shrink-0 border border-slate-200"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/student_avatar.png';
+                  }}
+                />
+              ) : (
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md ring-4 ring-white shrink-0">
+                  {user?.fullName?.charAt(0) || 'U'}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={openNameEditor}

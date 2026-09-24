@@ -1183,11 +1183,11 @@ export const Home: React.FC = () => {
               <span className="w-8 font-black text-blue-700 dark:text-blue-400">#147</span>
               <div className="flex items-center gap-2 flex-1">
                 <img
-                  src="/images/student_avatar.png"
+                  src={user?.avatarUrl || '/images/student_avatar.png'}
                   alt="You"
                   className="w-7 h-7 rounded-full object-cover border border-blue-300 dark:border-blue-700"
                   onError={(e) => {
-                    e.currentTarget.src = '/logo-icon-transparent.png';
+                    e.currentTarget.src = '/images/student_avatar.png';
                   }}
                 />
                 <span className="font-black text-blue-900 dark:text-blue-200">
