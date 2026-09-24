@@ -219,7 +219,7 @@ export const AdminNotifications: React.FC = () => {
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-12 text-center text-slate-500 bg-slate-950 rounded-2xl border border-slate-850">
-            <Bell className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+            <Bell className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
             No broadcast notifications found in this category.
           </div>
         ) : (

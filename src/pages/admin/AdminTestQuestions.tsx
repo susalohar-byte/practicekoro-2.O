@@ -893,7 +893,7 @@ export const AdminTestQuestions: React.FC = () => {
                     {test.durationMinutes}m
                   </strong>
                 </div>
-                <span className="text-slate-600">•</span>
+                <span className="text-slate-600 dark:text-slate-500">•</span>
                 <div className="flex items-center gap-1.5">
                   <Award className="w-3.5 h-3.5 text-amber-400" />
                   <span>Target Marks:</span>
@@ -908,7 +908,7 @@ export const AdminTestQuestions: React.FC = () => {
                     )
                   </span>
                 </div>
-                <span className="text-slate-600">•</span>
+                <span className="text-slate-600 dark:text-slate-500">•</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-rose-400 font-bold">Negative:</span>
                   <strong className="text-white font-mono" style={{ color: '#ffffff' }}>

@@ -886,7 +886,7 @@ export const AdminBanners: React.FC = () => {
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         imageInputMode === 'upload'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <Upload className="w-3 h-3 inline mr-1" />
@@ -898,7 +898,7 @@ export const AdminBanners: React.FC = () => {
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         imageInputMode === 'url'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <Link2 className="w-3 h-3 inline mr-1" />
@@ -1012,7 +1012,7 @@ export const AdminBanners: React.FC = () => {
 
               {/* 2. Banner Name / Title */}
               <div>
-                <label className="text-xs font-bold text-slate-700">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
                   Banner Name / Title *
                 </label>
                 <input
@@ -1030,7 +1030,7 @@ export const AdminBanners: React.FC = () => {
 
               {/* 3. Target Destination Link */}
               <div>
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
                   <Link2 className="w-3.5 h-3.5 text-blue-600" />
                   <span>Click Destination Link (URL) *</span>
                 </label>
@@ -1060,7 +1060,7 @@ export const AdminBanners: React.FC = () => {
               {/* 4. Display Order & Active Toggle */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="text-xs font-bold text-slate-700">Display Order</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Display Order</label>
                   <input
                     type="number"
                     min={1}
@@ -1082,7 +1082,7 @@ export const AdminBanners: React.FC = () => {
                     />
                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                   </label>
-                  <span className="text-xs font-bold text-slate-700">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                     {isActive ? 'Active on Student Dashboard' : 'Draft / Inactive'}
                   </span>
                 </div>
@@ -1092,7 +1092,7 @@ export const AdminBanners: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-200">
                 {/* Target Audience */}
                 <div>
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1.5">
                     <Users className="w-3.5 h-3.5 text-blue-600" />
                     <span>Target Candidate Audience</span>
                   </label>
@@ -1103,7 +1103,7 @@ export const AdminBanners: React.FC = () => {
                       className={`py-1.5 rounded-lg transition-all cursor-pointer ${
                         targetAudience === 'all'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       All
@@ -1114,7 +1114,7 @@ export const AdminBanners: React.FC = () => {
                       className={`py-1.5 rounded-lg transition-all cursor-pointer ${
                         targetAudience === 'free'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Free Only
@@ -1125,7 +1125,7 @@ export const AdminBanners: React.FC = () => {
                       className={`py-1.5 rounded-lg transition-all cursor-pointer ${
                         targetAudience === 'pro'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Pro Pass
@@ -1142,7 +1142,7 @@ export const AdminBanners: React.FC = () => {
 
                 {/* Campaign Scheduling (Expires At) */}
                 <div>
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1.5">
                     <Calendar className="w-3.5 h-3.5 text-blue-600" />
                     <span>Auto-Expire At (Optional)</span>
                   </label>
@@ -1162,7 +1162,7 @@ export const AdminBanners: React.FC = () => {
 
               {/* 6. Banner Texts & Call-to-Action Buttons (always visible) */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden mt-2">
-                <div className="px-4 py-2.5 bg-slate-50 flex items-center gap-2 text-xs font-bold text-slate-700">
+                <div className="px-4 py-2.5 bg-slate-50 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                   <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
                   <span>Banner Texts & Call-to-Action Buttons</span>
                 </div>
@@ -1171,7 +1171,7 @@ export const AdminBanners: React.FC = () => {
                     {/* Display Mode Selection */}
                     <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                       <div>
-                        <span className="text-xs font-bold text-slate-700">Display Mode</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Display Mode</span>
                         <p className="text-[11px] text-slate-400">Choose how the banner is rendered</p>
                       </div>
                       <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
@@ -1202,7 +1202,7 @@ export const AdminBanners: React.FC = () => {
 
                     {/* Top Badge */}
                     <div>
-                      <label className="text-xs font-bold text-slate-700">Badge Text</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Badge Text</label>
                       <input
                         type="text"
                         value={badgeText}
@@ -1215,7 +1215,7 @@ export const AdminBanners: React.FC = () => {
                     {/* Highlight text & Subtitle */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-bold text-slate-700">Highlight Text (Colored)</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Highlight Text (Colored)</label>
                         <input
                           type="text"
                           value={highlightWord}
@@ -1225,7 +1225,7 @@ export const AdminBanners: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-700">Subtitle</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Subtitle</label>
                         <input
                           type="text"
                           value={subtitle}
@@ -1317,7 +1317,7 @@ export const AdminBanners: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
