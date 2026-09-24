@@ -285,17 +285,17 @@ export const AdminCoupons: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Tag className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                 <span>Coupons & Discounts</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
                   Commerce Engine
                 </span>
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Create promotional discount codes and manage student subscription incentives
               </p>
             </div>
@@ -308,7 +308,7 @@ export const AdminCoupons: React.FC = () => {
             variant="outline"
             onClick={loadCoupons}
             disabled={isLoading}
-            className="text-xs font-bold border-slate-800 text-slate-300 hover:text-white hover:bg-slate-850"
+            className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
@@ -317,7 +317,7 @@ export const AdminCoupons: React.FC = () => {
           <Button
             type="button"
             onClick={handleOpenCreate}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-indigo-600/20"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-indigo-600/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Create Coupon
@@ -326,12 +326,12 @@ export const AdminCoupons: React.FC = () => {
       </div>
 
       {/* Sub-Navigation Tabs across Subscriptions, Coupons, Revenue */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xs">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
         <Link
           to="/admin/subscriptions"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-          <CreditCard className="w-4 h-4 text-indigo-400" />
+          <CreditCard className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
           <span>Subscriptions & Aspirants</span>
         </Link>
         <Link
@@ -343,57 +343,57 @@ export const AdminCoupons: React.FC = () => {
         </Link>
         <Link
           to="/admin/revenue-analytics"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-          <TrendingUp className="w-4 h-4 text-emerald-400" />
+          <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
           <span>Revenue Analytics & Ledger</span>
         </Link>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>Total Coupons</span>
-            <Tag className="w-4 h-4 text-indigo-400" />
+            <Tag className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
           </div>
-          <p className="text-2xl font-black text-white">{metrics.total}</p>
-          <p className="text-[10px] text-slate-500">Registered discount codes</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white">{metrics.total}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">Registered discount codes</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>Active & Live</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
           </div>
-          <p className="text-2xl font-black text-emerald-400">{metrics.active}</p>
-          <p className="text-[10px] text-slate-500">Currently redeemable</p>
+          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{metrics.active}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">Currently redeemable</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>Redemptions</span>
-            <Zap className="w-4 h-4 text-amber-400" />
+            <Zap className="w-4 h-4 text-amber-500 dark:text-amber-400" />
           </div>
-          <p className="text-2xl font-black text-amber-300">{metrics.totalRedemptions}</p>
-          <p className="text-[10px] text-slate-500">Times applied by candidates</p>
+          <p className="text-2xl font-black text-amber-600 dark:text-amber-300">{metrics.totalRedemptions}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">Times applied by candidates</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>Total Benefits Granted</span>
-            <IndianRupee className="w-4 h-4 text-purple-400" />
+            <IndianRupee className="w-4 h-4 text-purple-500 dark:text-purple-400" />
           </div>
-          <p className="text-2xl font-black text-purple-300">
+          <p className="text-2xl font-black text-purple-600 dark:text-purple-300">
             ₹{metrics.estimatedDiscountGranted.toLocaleString('en-IN')}
           </p>
-          <p className="text-[10px] text-slate-500">Estimated value saved</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">Estimated value saved</p>
         </div>
       </div>
 
       {/* Control Bar: Search & Status Tabs */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-slate-950 border border-slate-850">
-        <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-850 w-full md:w-auto">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/60 w-full md:w-auto">
           {[
             { id: 'all', label: `All (${coupons.length})` },
             { id: 'active', label: `Active (${metrics.active})` },
@@ -406,7 +406,7 @@ export const AdminCoupons: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                 statusFilter === tab.id
                   ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {tab.label}
@@ -415,28 +415,28 @@ export const AdminCoupons: React.FC = () => {
         </div>
 
         <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search code or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500"
           />
         </div>
       </div>
 
       {/* Coupons List */}
       {isLoading ? (
-        <div className="py-16 text-center text-slate-400 bg-slate-950 rounded-2xl border border-slate-850">
-          <RefreshCw className="w-6 h-6 animate-spin text-indigo-400 mx-auto mb-2" />
+        <div className="py-16 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+          <RefreshCw className="w-6 h-6 animate-spin text-indigo-500 mx-auto mb-2" />
           Loading promotional coupons...
         </div>
       ) : filteredCoupons.length === 0 ? (
-        <div className="py-16 text-center space-y-3 bg-slate-950 rounded-2xl border border-slate-850 p-6">
-          <Tag className="w-10 h-10 text-slate-600 mx-auto" />
-          <h3 className="text-sm font-bold text-white">No Coupons Found</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+        <div className="py-16 text-center space-y-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-2xs">
+          <Tag className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto" />
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">No Coupons Found</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
             {searchTerm
               ? 'No coupons match your search criteria.'
               : 'Create your first coupon code to start running campaigns and special discounts.'}
@@ -444,10 +444,10 @@ export const AdminCoupons: React.FC = () => {
           <Button
             type="button"
             onClick={handleOpenCreate}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold mt-2"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold mt-2 cursor-pointer shadow-sm"
           >
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            Create First Coupon
+            <Plus className="w-3.5 h-3.5 mr-1 text-white" />
+            <span className="text-white">Create First Coupon</span>
           </Button>
         </div>
       ) : (
@@ -463,27 +463,27 @@ export const AdminCoupons: React.FC = () => {
             return (
               <div
                 key={c.id}
-                className={`p-4 rounded-2xl bg-slate-950 border transition-all space-y-3 relative overflow-hidden flex flex-col justify-between ${
+                className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all space-y-3 relative overflow-hidden flex flex-col justify-between shadow-2xs ${
                   isLive
-                    ? 'border-slate-850 hover:border-indigo-500/40 shadow-lg shadow-black/20'
-                    : 'border-slate-850/60 opacity-75'
+                    ? 'border-slate-200/80 dark:border-slate-800 hover:border-indigo-500/40 shadow-lg shadow-black/5 dark:shadow-black/20'
+                    : 'border-slate-200/50 dark:border-slate-800/60 opacity-75'
                 }`}
               >
                 <div className="space-y-3">
                   {/* Top Row: Code Pill + Status */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-black text-sm text-indigo-300 tracking-wider bg-indigo-500/10 border border-indigo-500/25 px-2.5 py-1 rounded-xl">
+                      <span className="font-mono font-black text-sm text-indigo-700 dark:text-indigo-300 tracking-wider bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/25 px-2.5 py-1 rounded-xl">
                         {c.code}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleCopyCode(c.code)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-850 transition-colors"
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                         title="Copy Coupon Code"
                       >
                         {copiedCode === c.code ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                         ) : (
                           <Copy className="w-3.5 h-3.5" />
                         )}
@@ -495,10 +495,10 @@ export const AdminCoupons: React.FC = () => {
                       <span
                         className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
                           isLive
-                            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                             : isExpired
-                              ? 'bg-rose-950/80 text-rose-300 border-rose-800'
-                              : 'bg-slate-900 text-slate-400 border-slate-800'
+                              ? 'bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {isExpired ? 'EXPIRED' : c.isActive ? 'ACTIVE' : 'INACTIVE'}
@@ -508,15 +508,15 @@ export const AdminCoupons: React.FC = () => {
 
                   {/* Description */}
                   {c.description && (
-                    <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                       {c.description}
                     </p>
                   )}
 
                   {/* Discount Value Badge Card */}
-                  <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-850 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-black">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black">
                         {c.discountType === 'percentage' ? (
                           <Percent className="w-4 h-4" />
                         ) : (
@@ -524,13 +524,13 @@ export const AdminCoupons: React.FC = () => {
                         )}
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white">
+                        <p className="text-xs font-black text-slate-900 dark:text-white">
                           {c.discountType === 'percentage'
                             ? `${c.discountValue}% OFF`
                             : `FLAT ₹${c.discountValue} OFF`}
                         </p>
                         {c.maxDiscountAmount && c.discountType === 'percentage' && (
-                          <p className="text-[10px] text-slate-400">
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
                             Capped at ₹{c.maxDiscountAmount}
                           </p>
                         )}
@@ -538,8 +538,8 @@ export const AdminCoupons: React.FC = () => {
                     </div>
 
                     <div className="text-right">
-                      <p className="text-[10px] text-slate-400">Min Order</p>
-                      <p className="text-xs font-bold text-slate-200">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Min Order</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         {c.minOrderAmount > 0 ? `₹${c.minOrderAmount}` : 'No Min'}
                       </p>
                     </div>
@@ -548,13 +548,13 @@ export const AdminCoupons: React.FC = () => {
                   {/* Usage Progress & Limits */}
                   <div className="space-y-1.5 pt-1">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Usage Progress</span>
-                      <span className="font-bold text-slate-300">
+                      <span className="text-slate-500 dark:text-slate-400">Usage Progress</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
                         {c.usedCount} / {c.maxUses ? `${c.maxUses} uses` : '∞ unlimited'}
                       </span>
                     </div>
                     {usagePercent !== null && (
-                      <div className="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden">
+                      <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
                             usagePercent >= 90
@@ -570,24 +570,24 @@ export const AdminCoupons: React.FC = () => {
                   </div>
 
                   {/* Target & Validity Details */}
-                  <div className="pt-2 border-t border-slate-900 text-[11px] space-y-1 text-slate-400">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] space-y-1 text-slate-500 dark:text-slate-400">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <Layers className="w-3 h-3 text-slate-500" />
+                        <Layers className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                         Plan:
                       </span>
-                      <span className="font-bold text-slate-300 truncate max-w-[150px]">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[150px]">
                         {c.applicablePlanId ? c.applicablePlanId : 'All Pro Plans'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-slate-500" />
+                        <Calendar className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                         Expires:
                       </span>
                       <span
                         className={`font-semibold ${
-                          isExpired ? 'text-rose-400 font-bold' : 'text-slate-300'
+                          isExpired ? 'text-rose-500 dark:text-rose-400 font-bold' : 'text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {c.validUntil
@@ -603,14 +603,14 @@ export const AdminCoupons: React.FC = () => {
                 </div>
 
                 {/* Card Action Buttons */}
-                <div className="pt-3 mt-3 border-t border-slate-900 flex items-center justify-between gap-2">
+                <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                   <button
                     type="button"
                     onClick={() => handleToggleActive(c)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                       c.isActive
-                        ? 'border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/60'
-                        : 'border-emerald-800/60 text-emerald-400 hover:bg-emerald-950/40'
+                        ? 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-900/60'
+                        : 'border-emerald-300 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
                     }`}
                   >
                     {c.isActive ? 'Deactivate' : 'Activate'}
@@ -620,7 +620,7 @@ export const AdminCoupons: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(c)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                       title="Edit Coupon"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -628,7 +628,7 @@ export const AdminCoupons: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDelete(c.id, c.code)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                       title="Delete Coupon"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -643,19 +643,19 @@ export const AdminCoupons: React.FC = () => {
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-3 sm:p-4 animate-in fade-in duration-150">
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center overflow-y-auto p-3 sm:p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-850 flex items-center justify-between shrink-0 bg-slate-900/40">
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/80 dark:bg-slate-800/50">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                   <Tag className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-white">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                     {editingCoupon ? 'Edit Coupon' : 'Create New Promotional Coupon'}
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Configure discount rules, usage quotas, and validity
                   </p>
                 </div>
@@ -663,7 +663,7 @@ export const AdminCoupons: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-850 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -672,7 +672,7 @@ export const AdminCoupons: React.FC = () => {
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-4 sm:p-5 overflow-y-auto grow space-y-4">
               {formError && (
-                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -681,8 +681,8 @@ export const AdminCoupons: React.FC = () => {
               {/* Preset Quick Chips (only on create) */}
               {!editingCoupon && (
                 <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                     Quick Preset Templates:
                   </span>
                   <div className="flex flex-wrap gap-2">
@@ -698,7 +698,7 @@ export const AdminCoupons: React.FC = () => {
                           maxUses: '500',
                         })
                       }
-                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors cursor-pointer"
                     >
                       🚀 Flat ₹50 Off
                     </button>
@@ -715,7 +715,7 @@ export const AdminCoupons: React.FC = () => {
                           maxUses: '1000',
                         })
                       }
-                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors cursor-pointer"
                     >
                       🎉 20% Off (Max ₹100)
                     </button>
@@ -732,7 +732,7 @@ export const AdminCoupons: React.FC = () => {
                           maxUses: '100',
                         })
                       }
-                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors cursor-pointer"
                     >
                       ⚡ Early Bird 30% (100 uses)
                     </button>
@@ -742,22 +742,22 @@ export const AdminCoupons: React.FC = () => {
 
               {/* Coupon Code */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Coupon Code <span className="text-rose-400">*</span>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Coupon Code <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="e.g. WBPSPECIAL50"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-white placeholder-slate-500 uppercase tracking-wider focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 uppercase tracking-wider focus:outline-none focus:border-indigo-500"
                   required
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Description / Campaign Name
                 </label>
                 <input
@@ -765,20 +765,20 @@ export const AdminCoupons: React.FC = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Durga Puja Special ₹50 off on 1-Year Pro Pass"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* Discount Type & Value */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Discount Type
                   </label>
                   <select
                     value={discountType}
                     onChange={(e) => setDiscountType(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
                   >
                     <option value="fixed">Flat Fixed Amount (₹)</option>
                     <option value="percentage">Percentage Discount (%)</option>
@@ -786,9 +786,9 @@ export const AdminCoupons: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Discount Value {discountType === 'percentage' ? '(%)' : '(₹)'}{' '}
-                    <span className="text-rose-400">*</span>
+                    <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -796,7 +796,7 @@ export const AdminCoupons: React.FC = () => {
                     max={discountType === 'percentage' ? '100' : '9999'}
                     value={discountValue}
                     onChange={(e) => setDiscountValue(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
                     required
                   />
                 </div>
@@ -805,7 +805,7 @@ export const AdminCoupons: React.FC = () => {
               {/* Percentage Max Cap & Min Order Value */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Max Discount Cap (₹)
                   </label>
                   <input
@@ -815,12 +815,12 @@ export const AdminCoupons: React.FC = () => {
                     value={maxDiscountAmount}
                     onChange={(e) => setMaxDiscountAmount(e.target.value)}
                     disabled={discountType === 'fixed'}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 disabled:opacity-40"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 disabled:opacity-40"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Min Cart Order (₹)
                   </label>
                   <input
@@ -828,7 +828,7 @@ export const AdminCoupons: React.FC = () => {
                     min="0"
                     value={minOrderAmount}
                     onChange={(e) => setMinOrderAmount(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -836,7 +836,7 @@ export const AdminCoupons: React.FC = () => {
               {/* Max Total Uses & Per-User Limit */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Total Quota (Max Uses)
                   </label>
                   <input
@@ -845,12 +845,12 @@ export const AdminCoupons: React.FC = () => {
                     placeholder="Leave empty for unlimited"
                     value={maxUses}
                     onChange={(e) => setMaxUses(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Max Uses Per Student
                   </label>
                   <input
@@ -858,7 +858,7 @@ export const AdminCoupons: React.FC = () => {
                     min="1"
                     value={maxUsesPerUser}
                     onChange={(e) => setMaxUsesPerUser(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -866,11 +866,11 @@ export const AdminCoupons: React.FC = () => {
               {/* Target Plan & Expiry Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Target Plan</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Target Plan</label>
                   <select
                     value={applicablePlanId}
                     onChange={(e) => setApplicablePlanId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
                   >
                     <option value="">Universal (All Plans)</option>
                     <option value="pro_1_year">1-Year All-Access Pro Pass (₹299)</option>
@@ -878,21 +878,21 @@ export const AdminCoupons: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Expiry Date</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Expiry Date</label>
                   <input
                     type="date"
                     value={validUntil}
                     onChange={(e) => setValidUntil(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                   />
                 </div>
               </div>
 
               {/* Active Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-850">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                 <div>
-                  <p className="text-xs font-bold text-white">Active Status</p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">Active Status</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
                     Enable so students can immediately apply this coupon during checkout
                   </p>
                 </div>
@@ -900,24 +900,24 @@ export const AdminCoupons: React.FC = () => {
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-800 border-slate-700 cursor-pointer"
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 cursor-pointer"
                 />
               </div>
 
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-850">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
-                  className="text-xs font-bold border-slate-800 text-slate-300 hover:text-white"
+                  className="text-xs font-bold border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm cursor-pointer"
                 >
                   {isSaving ? 'Saving…' : editingCoupon ? 'Update Coupon' : 'Create Coupon'}
                 </Button>

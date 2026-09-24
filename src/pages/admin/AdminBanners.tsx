@@ -408,12 +408,12 @@ export const AdminBanners: React.FC = () => {
       </div>
 
       {/* Sub-Navigation Tabs across Settings, Banners, Staff, Audit Logs */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
         <Link
           to="/admin/settings"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-          <SettingsIcon className="w-4 h-4 text-slate-500" />
+          <SettingsIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
           <span>General & Gateway</span>
         </Link>
         <Link
@@ -421,84 +421,84 @@ export const AdminBanners: React.FC = () => {
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#0158FC] text-white shadow-xs"
         >
           <Sparkles className="w-4 h-4 text-amber-300" />
-          <span>Hero Banners</span>
+          <span className="text-white">Hero Banners</span>
         </Link>
         <Link
           to="/admin/staff"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-          <Users className="w-4 h-4 text-indigo-500" />
+          <Users className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
           <span>Team & Staff</span>
         </Link>
         <Link
           to="/admin/audit-logs"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-          <History className="w-4 h-4 text-emerald-500" />
+          <History className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
           <span>Audit Logs</span>
         </Link>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Banners</span>
-            <Layers className="w-4 h-4 text-slate-400" />
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Banners</span>
+            <Layers className="w-4 h-4 text-slate-400 dark:text-slate-500" />
           </div>
-          <div className="text-2xl font-black text-slate-900 mt-2">{banners.length}</div>
-          <p className="text-[11px] text-slate-500 mt-1">Configured in system</p>
+          <div className="text-2xl font-black text-slate-900 dark:text-white mt-2">{banners.length}</div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Configured in system</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active on Home</span>
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Active on Home</span>
             <CheckCircle className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="text-2xl font-black text-emerald-600 mt-2">{activeCount}</div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">{activeCount}</div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
             {activeCount > 1 ? `Carousel enabled (${activeCount} slides)` : 'Single banner displayed'}
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hidden / Drafts</span>
-            <XCircle className="w-4 h-4 text-slate-400" />
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Hidden / Drafts</span>
+            <XCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />
           </div>
-          <div className="text-2xl font-black text-slate-400 mt-2">{banners.length - activeCount}</div>
-          <p className="text-[11px] text-slate-500 mt-1">Saved as drafts</p>
+          <div className="text-2xl font-black text-slate-600 dark:text-slate-300 mt-2">{banners.length - activeCount}</div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Saved as drafts</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Clicks</span>
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Clicks</span>
             <MousePointerClick className="w-4 h-4 text-blue-500" />
           </div>
-          <div className="text-2xl font-black text-blue-600 mt-2">{totalClicks}</div>
-          <p className="text-[11px] text-slate-500 mt-1">Candidate engagements</p>
+          <div className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-2">{totalClicks}</div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Candidate engagements</p>
         </div>
       </div>
 
       {/* Live Preview Section */}
       {currentPreviewBanner && (
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs space-y-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-[#0158FC]" />
-              <h2 className="text-sm font-bold text-slate-900">Student Dashboard Live Preview</h2>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Student Dashboard Live Preview</h2>
               <span className="text-[11px] text-slate-400 truncate max-w-xs">({currentPreviewBanner.title})</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10.5px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 flex items-center gap-1 border border-blue-100">
+              <span className="text-[10.5px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center gap-1 border border-blue-100 dark:border-blue-900/50">
                 <Link2 className="w-3 h-3" />
                 <span>Target: <b>{currentPreviewBanner.primaryCtaLink || '/exams'}</b></span>
               </span>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   currentPreviewBanner.isActive
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-slate-100 text-slate-500'
+                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                 }`}
               >
                 {currentPreviewBanner.isActive ? 'Active' : 'Hidden'}
@@ -535,38 +535,38 @@ export const AdminBanners: React.FC = () => {
       )}
 
       {/* Banners List / Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-900">All Hero Banners ({banners.length})</h2>
-          <span className="text-xs text-slate-500">Sorted by display order on student dashboard</span>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">All Hero Banners ({banners.length})</h2>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Sorted by display order on student dashboard</span>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-slate-400">
+          <div className="p-12 text-center text-slate-400 dark:text-slate-500">
             <div className="w-6 h-6 border-2 border-[#0158FC] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            <p className="text-xs font-medium text-slate-500">Loading banners...</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Loading banners...</p>
           </div>
         ) : banners.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
+          <div className="p-12 text-center text-slate-400 dark:text-slate-500">
             <Layers className="w-10 h-10 mx-auto mb-3 opacity-40" />
-            <p className="text-sm font-semibold">No banners created yet.</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No banners created yet.</p>
             <button
               onClick={handleOpenAdd}
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0158FC] text-white text-xs font-bold cursor-pointer"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0158FC] text-white text-xs font-bold cursor-pointer shadow-sm"
             >
-              <Plus className="w-4 h-4" />
-              <span>Upload First Banner</span>
+              <Plus className="w-4 h-4 text-white" />
+              <span className="text-white">Upload First Banner</span>
             </button>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
             {banners.map((banner, index) => {
               const isSelected = previewBannerId === banner.id;
               return (
                 <div
                   key={banner.id}
                   className={`p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors ${
-                    isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    isSelected ? 'bg-blue-50/40 dark:bg-blue-950/20' : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/40'
                   }`}
                 >
                   {/* Left: Order, Banner Image Thumbnail, Details */}
@@ -577,19 +577,19 @@ export const AdminBanners: React.FC = () => {
                         type="button"
                         onClick={() => handleMoveOrder(index, 'up')}
                         disabled={index === 0}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         title="Move Up"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
-                      <span className="text-xs font-black text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                      <span className="text-xs font-black text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                         #{banner.displayOrder}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleMoveOrder(index, 'down')}
                         disabled={index === banners.length - 1}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         title="Move Down"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -597,7 +597,7 @@ export const AdminBanners: React.FC = () => {
                     </div>
 
                     {/* Wide Banner Image Thumbnail */}
-                    <div className="w-32 sm:w-44 h-16 sm:h-20 rounded-xl bg-slate-900 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative shadow-2xs">
+                    <div className="w-32 sm:w-44 h-16 sm:h-20 rounded-xl bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center relative shadow-2xs">
                       {banner.imageUrl ? (
                         <img
                           src={banner.imageUrl}
@@ -618,22 +618,22 @@ export const AdminBanners: React.FC = () => {
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             banner.isActive
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-slate-200 text-slate-600'
+                              ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                           }`}
                         >
                           {banner.isActive ? 'Active' : 'Hidden'}
                         </span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {banner.bannerType === 'text_overlay' ? 'Text Overlay' : 'Full Graphic Banner'}
                         </span>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
                             banner.targetAudience === 'free'
-                              ? 'bg-amber-50 text-amber-700'
+                              ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/50'
                               : banner.targetAudience === 'pro'
-                              ? 'bg-purple-50 text-purple-700'
-                              : 'bg-slate-100 text-slate-600'
+                              ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-100 dark:border-purple-900/50'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                           }`}
                         >
                           <Users className="w-3 h-3" />
@@ -645,7 +645,7 @@ export const AdminBanners: React.FC = () => {
                               : 'All Students'}
                           </span>
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center gap-1">
                           <MousePointerClick className="w-3 h-3" />
                           <span>{banner.clickCount || 0} clicks</span>
                         </span>
@@ -653,8 +653,8 @@ export const AdminBanners: React.FC = () => {
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
                               new Date(banner.expiresAt).getTime() < Date.now()
-                                ? 'bg-rose-50 text-rose-700'
-                                : 'bg-amber-50 text-amber-700'
+                                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300'
+                                : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
                             }`}
                           >
                             <Calendar className="w-3 h-3" />
@@ -667,14 +667,14 @@ export const AdminBanners: React.FC = () => {
                         )}
                       </div>
 
-                      <h3 className="text-sm font-bold text-slate-900 truncate">
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                         {banner.title}
                       </h3>
 
-                      <div className="flex items-center gap-1.5 mt-1 text-xs text-blue-600 font-medium truncate">
+                      <div className="flex items-center gap-1.5 mt-1 text-xs text-blue-600 dark:text-blue-400 font-medium truncate">
                         <Link2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                        <span className="text-slate-500">Redirects to:</span>
-                        <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                        <span className="text-slate-500 dark:text-slate-400">Redirects to:</span>
+                        <span className="font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md">
                           {banner.primaryCtaLink || '/exams'}
                         </span>
                       </div>
@@ -689,13 +689,13 @@ export const AdminBanners: React.FC = () => {
                       onClick={() => handleToggleStatus(banner)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         banner.isActive
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                          : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {banner.isActive ? (
                         <>
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>Active</span>
                         </>
                       ) : (
@@ -710,8 +710,8 @@ export const AdminBanners: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setPreviewBannerId(banner.id)}
-                      className={`p-2 rounded-xl text-slate-600 hover:bg-slate-100 border transition-all cursor-pointer ${
-                        isSelected ? 'border-blue-400 text-[#0158FC] bg-blue-50' : 'border-slate-200'
+                      className={`p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border transition-all cursor-pointer ${
+                        isSelected ? 'border-blue-400 text-[#0158FC] bg-blue-50 dark:bg-blue-950/50' : 'border-slate-200 dark:border-slate-700'
                       }`}
                       title="Preview on top"
                     >
@@ -722,7 +722,7 @@ export const AdminBanners: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(banner)}
-                      className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer"
+                      className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
                       title="Edit banner"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -732,7 +732,7 @@ export const AdminBanners: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDelete(banner)}
-                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all cursor-pointer"
+                      className="p-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
                       title="Delete banner"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -747,22 +747,22 @@ export const AdminBanners: React.FC = () => {
 
       {/* Add / Edit Banner Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl my-8 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs overflow-y-auto animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl my-8 overflow-hidden">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {editingBanner ? 'Edit Promotional Banner' : 'Upload New Hero Banner'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Upload your full promotional banner image or provide a link with click redirect.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

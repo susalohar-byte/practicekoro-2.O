@@ -18,6 +18,15 @@ vi.mock('@/context/AuthContext', () => ({
   }),
 }));
 
+vi.mock('@/context/ThemeContext', () => ({
+  useTheme: () => ({
+    theme: 'light',
+    resolvedTheme: 'light',
+    setTheme: vi.fn(),
+    toggleTheme: vi.fn(),
+  }),
+}));
+
 vi.mock('@/context/ExamContext', () => ({
   useExam: () => ({
     exams: [{ id: 'wbcs_2026', title: 'WBCS Prelims' }],

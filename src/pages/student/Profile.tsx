@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import type { TestAttempt, Exam } from '@/types';
 import { StudentNavbar } from '@/components/layout/StudentNavbar';
 import { StudentSupportModal } from '@/components/student/StudentSupportModal';
+import { Button } from '@/components/common/Button';
 import {
   Pencil,
   Camera,
@@ -42,6 +43,8 @@ import {
   AlertCircle,
   RefreshCw,
   Crown,
+  LifeBuoy,
+  MessageSquare,
 } from 'lucide-react';
 
 interface ProfileExtras {
@@ -177,6 +180,7 @@ export const Profile: React.FC = () => {
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportModalTab, setSupportModalTab] = useState<'create' | 'history'>('create');
 
   // Profile Edit Form State
   const [editName, setEditName] = useState('');
@@ -439,7 +443,7 @@ export const Profile: React.FC = () => {
     }> = [];
 
     // 1. Primary Exam: WBP Constable
-    const wbp = exams.find((e) => e.title.toLowerCase().includes('wbp') || e.slug.includes('wbp'));
+    const wbp = exams.find((e) => e?.title?.toLowerCase()?.includes('wbp') || e?.slug?.includes('wbp'));
     list.push({
       id: wbp?.id || 'wbp-constable',
       title: selectedExam?.title || 'WBP Constable',
@@ -451,7 +455,7 @@ export const Profile: React.FC = () => {
     });
 
     // 2. SSC GD
-    const ssc = exams.find((e) => e.title.toLowerCase().includes('ssc') || e.slug.includes('ssc'));
+    const ssc = exams.find((e) => e?.title?.toLowerCase()?.includes('ssc') || e?.slug?.includes('ssc'));
     list.push({
       id: ssc?.id || 'ssc-gd',
       title: ssc?.title || 'SSC GD',
@@ -463,7 +467,7 @@ export const Profile: React.FC = () => {
     });
 
     // 3. WBCS
-    const wbcs = exams.find((e) => e.title.toLowerCase().includes('wbcs') || e.slug.includes('wbcs'));
+    const wbcs = exams.find((e) => e?.title?.toLowerCase()?.includes('wbcs') || e?.slug?.includes('wbcs'));
     list.push({
       id: wbcs?.id || 'wbcs',
       title: wbcs?.title || 'WBCS',
@@ -475,7 +479,7 @@ export const Profile: React.FC = () => {
     });
 
     // 4. Primary TET
-    const tet = exams.find((e) => e.title.toLowerCase().includes('tet') || e.slug.includes('tet'));
+    const tet = exams.find((e) => e?.title?.toLowerCase()?.includes('tet') || e?.slug?.includes('tet'));
     list.push({
       id: tet?.id || 'primary-tet',
       title: tet?.title || 'Primary TET',
@@ -1242,6 +1246,54 @@ export const Profile: React.FC = () => {
               <span>Logout</span>
             </button>
           </div>
+
+          {/* Support & Help Desk Section */}
+          <div className="mt-4 p-4 sm:p-5 rounded-2xl border border-blue-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 dark:from-slate-850 dark:via-slate-800 dark:to-slate-850 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <LifeBuoy className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  Support & Help Desk
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  সাহায্য ও সাপোর্ট: Raise tickets & report issues
+                </p>
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mt-1">
+                  <span>সাপোর্ট ও অভিযোগ ডেস্ক (Direct Support Desk)</span>
+                </h4>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSupportModalTab('history');
+                  setIsSupportModalOpen(true);
+                }}
+                leftIcon={<MessageSquare className="w-3.5 h-3.5" />}
+                className="text-xs font-bold grow sm:grow-0"
+              >
+                টিকেট হিস্ট্রি
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setSupportModalTab('create');
+                  setIsSupportModalOpen(true);
+                }}
+                leftIcon={<LifeBuoy className="w-3.5 h-3.5" />}
+                className="text-xs font-bold grow sm:grow-0"
+              >
+                টিকেট তৈরি করুন
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1771,7 +1823,7 @@ export const Profile: React.FC = () => {
       <StudentSupportModal
         isOpen={isSupportModalOpen}
         onClose={() => setIsSupportModalOpen(false)}
-        initialTab="create"
+        initialTab={supportModalTab}
       />
     </div>
   );
