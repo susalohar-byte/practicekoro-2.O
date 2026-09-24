@@ -1171,7 +1171,7 @@ export const ExamDetail: React.FC = () => {
 
         {/* Subscription Lock Modal */}
         {showSubscriptionModal && selectedLockedTest && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-amber-200">
               <div className="flex items-start justify-between">
                 <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">

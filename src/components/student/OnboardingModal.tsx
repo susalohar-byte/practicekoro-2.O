@@ -43,7 +43,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 sm:p-6 animate-in fade-in duration-300">
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 transition-all flex flex-col min-h-[580px] max-h-[92vh] animate-in zoom-in-95 duration-300 ease-out">
         {/* Top Header Controls (for onboarding steps 1-3) */}
         {step > 0 && (
