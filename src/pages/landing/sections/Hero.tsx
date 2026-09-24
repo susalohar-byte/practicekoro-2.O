@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { SUPPORTED_EXAM_CATEGORIES } from '../data';
@@ -56,6 +57,7 @@ const PHONE_EXAMS = [
 
 export const Hero: React.FC = () => {
   const { user, isAdmin } = useAuth();
+  const { t } = useLanguage();
   const dashboardUrl = isAdmin ? '/admin' : '/dashboard';
   const navigate = useNavigate();
 
@@ -88,35 +90,35 @@ export const Hero: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-blue-200 dark:border-slate-800 text-[11px] font-extrabold tracking-wider text-slate-800 dark:text-slate-200 uppercase shadow-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span>West Bengal's #1 Govt Exam Practice Platform</span>
+              <span>{t('hero.eyebrow')}</span>
             </div>
 
             {/* Main Headline */}
             <h1
-              aria-label="আত্মবিশ্বাসের সাথে জয় করো স্বপ্নের সরকারি চাকরি।"
+              aria-label={`${t('hero.headlineLead')} ${t('hero.headlineHighlight')}${t('hero.headlineTail')}`}
               className="mt-5 text-4xl sm:text-5xl lg:text-[3.5rem] font-black text-slate-900 dark:text-white tracking-tight leading-[1.25]"
             >
-              আত্মবিশ্বাসের সাথে জয় করো{' '}
+              {t('hero.headlineLead')}{' '}
               <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">
-                স্বপ্নের সরকারি চাকরি
+                {t('hero.headlineHighlight')}
               </span>
-              ।
+              {t('hero.headlineTail')}
             </h1>
 
             {/* Subheadline */}
             <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-              আসল পরীক্ষার ধাঁচে মক টেস্ট, ১০+ বছরের সমাধানসহ PYQ ও টপিক-ভিত্তিক
-              প্র্যাকটিস{' '}
-              <span className="font-semibold text-slate-900 dark:text-white">WBP, WBPSC, WBSSC, Primary TET ও Railways</span>-এর
-              জন্য —{' '}
-              <span className="font-semibold text-blue-600 dark:text-blue-400">বাংলা ও English</span>-এ।
+              {t('hero.subLead')}{' '}
+              <span className="font-semibold text-slate-900 dark:text-white">{t('hero.subExams')}</span>
+              {t('hero.subMid')}{' '}
+              <span className="font-semibold text-blue-600 dark:text-blue-400">{t('hero.subBilingual')}</span>
+              {t('hero.subEnd')}
             </p>
 
             {/* Action Buttons */}
             <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-3.5">
               {user ? (
                 <InteractiveHoverButton
-                  text="Go to Dashboard"
+                  text={t('hero.ctaDashboard')}
                   onClick={() => navigate(dashboardUrl)}
                   className="w-48 h-12 text-sm sm:text-base border-blue-200 text-blue-600 shadow-md"
                 />
@@ -126,7 +128,7 @@ export const Hero: React.FC = () => {
                   onClick={() => navigate('/register')}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 text-sm sm:text-base gap-2 transition-all hover:-translate-y-0.5 cursor-pointer"
                 >
-                  <span>Start Free Practice</span>
+                  <span>{t('hero.ctaPrimary')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               )}
@@ -139,7 +141,7 @@ export const Hero: React.FC = () => {
                 }}
                 className="border-2 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold px-7 py-3.5 rounded-xl text-sm sm:text-base cursor-pointer"
               >
-                Explore Exams &amp; Tests
+                {t('hero.ctaSecondary')}
               </Button>
             </div>
 

@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
+import { LanguageToggle } from '@/components/common/LanguageToggle';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -76,6 +77,9 @@ export const Navbar: React.FC = () => {
           <div className="pointer-events-auto">
             <ThemeToggle />
           </div>
+          <div className="pointer-events-auto hidden sm:block">
+            <LanguageToggle />
+          </div>
           {user ? (
             <InteractiveHoverButton
               text="Dashboard"
@@ -121,6 +125,9 @@ export const Navbar: React.FC = () => {
       {!user && menuOpen && (
         <div className="sm:hidden absolute top-full mt-2 w-full max-w-6xl pointer-events-auto">
           <div className="mx-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl p-3 space-y-1">
+            <div className="px-4 py-2">
+              <LanguageToggle />
+            </div>
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}

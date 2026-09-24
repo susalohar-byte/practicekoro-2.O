@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import {
@@ -25,15 +26,8 @@ export const Settings: React.FC = () => {
 
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
-  // Language preference using existing bilingual system ('bn' | 'en')
-  const [language, setLanguageState] = useState<'bn' | 'en'>(() => {
-    return (localStorage.getItem('practicekoro_language') as 'bn' | 'en') || 'en';
-  });
-
-  const handleLanguageChange = (lang: 'bn' | 'en') => {
-    setLanguageState(lang);
-    localStorage.setItem('practicekoro_language', lang);
-  };
+  // Shared bilingual system: one language state for UI + question content.
+  const { lang: language, setLang: handleLanguageChange } = useLanguage();
 
   const handleLogout = async () => {
     await logout();

@@ -83,6 +83,7 @@ async function bootstrap(): Promise<void> {
       { ExamProvider },
       { ThemeProvider },
       { MaintenanceProvider },
+      { LanguageProvider },
       { ErrorBoundary },
       { App },
     ] = await Promise.all([
@@ -94,6 +95,7 @@ async function bootstrap(): Promise<void> {
       import('@/context/ExamContext'),
       import('@/context/ThemeContext'),
       import('@/context/MaintenanceContext'),
+      import('@/context/LanguageContext'),
       import('@/components/common/ErrorBoundary'),
       import('./App'),
     ]);
@@ -112,19 +114,21 @@ async function bootstrap(): Promise<void> {
     createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
         <ErrorBoundary area="PracticeKoro">
-          <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
-              <ThemeProvider>
-                <AuthProvider>
-                  <ExamProvider>
-                    <MaintenanceProvider>
-                      <App />
-                    </MaintenanceProvider>
-                  </ExamProvider>
-                </AuthProvider>
-              </ThemeProvider>
-            </BrowserRouter>
-          </QueryClientProvider>
+          <LanguageProvider>
+            <QueryClientProvider client={queryClient}>
+              <BrowserRouter>
+                <ThemeProvider>
+                  <AuthProvider>
+                    <ExamProvider>
+                      <MaintenanceProvider>
+                        <App />
+                      </MaintenanceProvider>
+                    </ExamProvider>
+                  </AuthProvider>
+                </ThemeProvider>
+              </BrowserRouter>
+            </QueryClientProvider>
+          </LanguageProvider>
         </ErrorBoundary>
       </React.StrictMode>
     );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { api } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import {
@@ -39,9 +40,8 @@ export const TestRunner: React.FC = () => {
   // Attempt State
   const [answers, setAnswers] = useState<Record<string, AttemptAnswerState>>({});
   const [visited, setVisited] = useState<Set<string>>(new Set());
-  const [language, setLanguage] = useState<'bn' | 'en'>(() => {
-    return (localStorage.getItem('practicekoro_language') as 'bn' | 'en') || 'en';
-  });
+  // Shared bilingual system: question language follows the global setting.
+  const { lang: language, setLang: setLanguage } = useLanguage();
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [timeSpent, setTimeSpent] = useState<number>(0);
 
@@ -333,12 +333,10 @@ export const TestRunner: React.FC = () => {
 
         {/* Right Tools: Language Toggle & Submit */}
         <div className="flex items-center gap-2">
-          {/* Bilingual Toggle */}
+          {/* Bilingual Toggle (global setting, persisted by LanguageProvider) */}
           <button
             onClick={() => {
-              const next = language === 'bn' ? 'en' : 'bn';
-              setLanguage(next);
-              localStorage.setItem('practicekoro_language', next);
+              setLanguage(language === 'bn' ? 'en' : 'bn');
             }}
             className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors active:scale-95"
             title="Toggle Question Language"
