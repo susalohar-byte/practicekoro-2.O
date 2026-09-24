@@ -890,11 +890,11 @@ export const Practice: React.FC = () => {
                             .getElementById('exam-subject-section')
                             ?.scrollIntoView({ behavior: 'smooth' });
                         }}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-xs hover:border-purple-300 dark:hover:border-purple-700 transition-all cursor-pointer group flex flex-col justify-between"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-md hover:border-purple-400/50 dark:hover:border-purple-500/50 transition-all cursor-pointer group flex flex-col justify-between"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-100/70 dark:border-purple-900/60 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-                            <BookOpen className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-100/70 dark:border-purple-900/60 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                            <BookOpen className="w-4.5 h-4.5" />
                           </div>
                           <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all mt-0.5" />
                         </div>
@@ -911,11 +911,11 @@ export const Practice: React.FC = () => {
                       {/* Card 2: Topic Practice */}
                       <div
                         onClick={() => handleTabChange('topics')}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-xs hover:border-emerald-300 dark:hover:border-emerald-700 transition-all cursor-pointer group flex flex-col justify-between"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-lg hover:border-emerald-300/50 dark:hover:border-emerald-500/50 transition-all cursor-pointer group flex flex-col justify-between"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100/70 dark:border-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                            <ListChecks className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100/70 dark:border-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                            <ListChecks className="w-4.5 h-4.5" />
                           </div>
                           <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all mt-0.5" />
                         </div>
@@ -932,11 +932,11 @@ export const Practice: React.FC = () => {
                       {/* Card 3: Previous Year Questions */}
                       <div
                         onClick={() => navigate('/exams')}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-xs hover:border-amber-300 dark:hover:border-amber-700 transition-all cursor-pointer group flex flex-col justify-between"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-sm hover:shadow-md hover:border-amber-300/50 dark:hover:border-amber-500/50 transition-all cursor-pointer group flex flex-col justify-between"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-100/70 dark:border-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                            <FileText className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-100/70 dark:border-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                            <FileText className="w-4.5 h-4.5" />
                           </div>
                           <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all mt-0.5" />
                         </div>
@@ -953,11 +953,11 @@ export const Practice: React.FC = () => {
                       {/* Card 4: Saved Questions */}
                       <div
                         onClick={() => handleTabChange('bookmarks')}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-xs hover:border-rose-300 dark:hover:border-rose-700 transition-all cursor-pointer group flex flex-col justify-between"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-sm hover:shadow-md hover:border-rose-300/50 dark:hover:border-rose-500/50 transition-all cursor-pointer group flex flex-col justify-between"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-100/70 dark:border-rose-900/60 flex items-center justify-center text-rose-500 dark:text-rose-400 shrink-0">
-                            <Bookmark className="w-4 h-4 fill-rose-500" />
+                          <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-100/70 dark:border-rose-900/60 flex items-center justify-center text-rose-500 dark:text-rose-400 shrink-0">
+                            <Bookmark className="w-4.5 h-4.5 fill-rose-500" />
                           </div>
                           <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all mt-0.5" />
                         </div>
@@ -974,11 +974,11 @@ export const Practice: React.FC = () => {
                       {/* Card 5: Incorrect Questions */}
                       <div
                         onClick={() => handleTabChange('mistakes')}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-xs hover:border-red-300 dark:hover:border-red-700 transition-all cursor-pointer group flex flex-col justify-between"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-sm hover:shadow-md hover:border-red-300/50 dark:hover:border-red-500/50 transition-all cursor-pointer group flex flex-col justify-between"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-100/70 dark:border-red-900/60 flex items-center justify-center text-red-500 dark:text-red-400 shrink-0">
-                            <XSquare className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-100/70 dark:border-red-900/60 flex items-center justify-center text-red-500 dark:text-red-400 shrink-0">
+                            <XSquare className="w-4.5 h-4.5" />
                           </div>
                           <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all mt-0.5" />
                         </div>
@@ -1102,12 +1102,12 @@ export const Practice: React.FC = () => {
                           <div
                             key={item.id}
                             onClick={() => handleTabChange('topics')}
-                            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-xs hover:border-blue-200 dark:hover:border-blue-800 transition-all cursor-pointer group flex flex-col justify-between"
+                            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-sm hover:shadow-lg hover:border-blue-200/50 dark:hover:border-blue-500/50 transition-all cursor-pointer group flex flex-col justify-between"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-3 min-w-0">
                                 <div
-                                  className={`w-9 h-9 rounded-xl ${item.iconBg} border ${item.iconBorder} flex items-center justify-center ${item.iconColor} shrink-0`}
+                                  className={`w-10 h-10 rounded-xl ${item.iconBg} border ${item.iconBorder} flex items-center justify-center ${item.iconColor} shrink-0`}
                                 >
                                   {item.isSigma ? (
                                     <span className="font-serif font-black text-base leading-none">
@@ -1118,7 +1118,7 @@ export const Practice: React.FC = () => {
                                       A
                                     </span>
                                   ) : (
-                                    <Icon className="w-4 h-4" />
+                                    <Icon className="w-4.5 h-4.5" />
                                   )}
                                 </div>
                                 <div className="min-w-0">
@@ -1135,7 +1135,7 @@ export const Practice: React.FC = () => {
 
                             {/* Progress Bar & Percentage */}
                             <div className="flex items-center gap-2.5 mt-3.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
-                              <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${item.progressColor}`}
                                   style={{ width: `${item.progress}%` }}
@@ -1178,18 +1178,18 @@ export const Practice: React.FC = () => {
                         return (
                           <div
                             key={cont.id}
-                            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
+                            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-left shadow-sm hover:shadow-lg hover:border-blue-200/50 dark:hover:border-blue-500/50 transition-all flex flex-col justify-between"
                           >
                             <div className="flex items-start gap-3">
                               <div
-                                className={`w-9 h-9 rounded-xl ${cont.iconBg} flex items-center justify-center ${cont.iconColor} shrink-0`}
+                                className={`w-10 h-10 rounded-xl ${cont.iconBg} flex items-center justify-center ${cont.iconColor} shrink-0`}
                               >
                                 {cont.isSigma ? (
                                   <span className="font-serif font-black text-base leading-none">
                                     Σ
                                   </span>
                                 ) : (
-                                  <Icon className="w-4 h-4" />
+                                  <Icon className="w-4.5 h-4.5" />
                                 )}
                               </div>
                               <div className="min-w-0">
@@ -1205,7 +1205,7 @@ export const Practice: React.FC = () => {
                             {/* Progress bar + Action Button */}
                             <div className="flex items-center justify-between gap-3 mt-4 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                               <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                   <div
                                     className="h-full rounded-full bg-[#0158FC]"
                                     style={{ width: `${cont.progress}%` }}
