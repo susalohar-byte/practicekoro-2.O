@@ -51,7 +51,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     { label: 'Practice', path: '/practice', icon: Zap },
     { label: 'Results', path: '/results', icon: BarChart3 },
     { label: 'Saved Questions', path: '/saved-questions', icon: Bookmark },
-    { label: 'Rank', path: '/rank', icon: Trophy },
+    { label: 'Leaderboard', path: '/rank', icon: Trophy },
     { label: 'Help & Support', path: '/support', icon: HelpCircle },
   ];
 

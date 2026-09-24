@@ -295,6 +295,14 @@ export const App: React.FC = () => {
             }
           />
           <Route
+            path="leaderboard"
+            element={
+              <ProtectedRoute>
+                <Rank />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="settings"
             element={
               <ProtectedRoute>
