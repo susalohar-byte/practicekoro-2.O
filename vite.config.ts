@@ -12,6 +12,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    allowedHosts: true,
   },
   define: {
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
