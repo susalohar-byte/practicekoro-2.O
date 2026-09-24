@@ -315,7 +315,7 @@ export const TestDetails: React.FC = () => {
 
       {/* Subscription Modal (PART A & G: NON-PUNITIVE PRO PASS LOCK UX) */}
       {showSubModal && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-150">
             <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3 border border-amber-200">
               <Lock className="w-6 h-6 text-amber-600" />

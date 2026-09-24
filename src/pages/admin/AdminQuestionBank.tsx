@@ -2197,7 +2197,7 @@ export const AdminQuestionBank: React.FC = () => {
 
       {/* SINGLE QUESTION MODAL (Section 6A) */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -2636,7 +2636,7 @@ export const AdminQuestionBank: React.FC = () => {
 
       {/* BULK TXT QUESTION UPLOAD MODAL (Section 7, 8, 9) */}
       {isBulkModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -3214,7 +3214,7 @@ export const AdminQuestionBank: React.FC = () => {
 
       {/* VIEW TXT FORMAT GUIDE MODAL (Section 8) */}
       {isFormatGuideOpen && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -3269,7 +3269,7 @@ export const AdminQuestionBank: React.FC = () => {
 
       {/* QUESTION EDIT MODAL */}
       {isEditModalOpen && editingQuestion && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -3490,7 +3490,7 @@ export const AdminQuestionBank: React.FC = () => {
 
       {/* Single Question Delete Confirmation Modal */}
       {questionToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/35 animate-fade-in">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">
@@ -3560,7 +3560,7 @@ export const AdminQuestionBank: React.FC = () => {
 
       {/* Bulk Delete Confirmation Modal */}
       {isBulkDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/35 animate-fade-in">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">

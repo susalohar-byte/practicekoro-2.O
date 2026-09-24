@@ -1010,7 +1010,7 @@ export const AdminTopicManage: React.FC = () => {
 
       {/* ── View Topic Details Modal ──────────────── */}
       {viewingTopic && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1109,7 +1109,7 @@ export const AdminTopicManage: React.FC = () => {
 
       {/* ── Create / Edit Topic Modal ──────────────── */}
       {isTopicModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1248,7 +1248,7 @@ export const AdminTopicManage: React.FC = () => {
 
       {/* ── Create / Edit Subject Modal ────────────── */}
       {isSubjectModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1372,7 +1372,7 @@ export const AdminTopicManage: React.FC = () => {
 
       {/* ── MANAGE SUBJECTS MODAL ────────────────── */}
       {isManageSubjectsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-[#0a1226] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl p-6 space-y-4 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-3 shrink-0">
               <div className="flex items-center gap-2.5">

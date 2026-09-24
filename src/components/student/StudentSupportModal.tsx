@@ -136,7 +136,7 @@ export const StudentSupportModal: React.FC<StudentSupportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-3 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/40">

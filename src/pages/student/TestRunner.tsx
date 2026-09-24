@@ -629,7 +629,7 @@ export const TestRunner: React.FC = () => {
 
       {/* 3. SUBMISSION CONFIRMATION MODAL */}
       {showSubmitModal && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200/80 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
             <div className="text-center space-y-2">
               <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-2 border border-blue-100 dark:border-blue-900/60">

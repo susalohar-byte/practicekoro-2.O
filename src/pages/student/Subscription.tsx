@@ -663,7 +663,7 @@ export const Subscription: React.FC = () => {
           PAYMENT RESULT MODALS: SUCCESS & FAILURE (PART D)
           ========================================================================= */}
       {paymentStatus === 'success' && successInfo && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-8 h-8" />
@@ -721,7 +721,7 @@ export const Subscription: React.FC = () => {
       )}
 
       {paymentStatus === 'failed' && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
               <AlertCircle className="w-8 h-8" />

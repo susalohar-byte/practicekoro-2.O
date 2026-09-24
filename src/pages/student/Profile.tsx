@@ -750,7 +750,7 @@ export const Profile: React.FC = () => {
 
       {/* Name Edit Modal */}
       {isEditingName && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="p-6 pb-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">

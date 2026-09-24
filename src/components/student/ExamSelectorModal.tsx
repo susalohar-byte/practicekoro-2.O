@@ -94,7 +94,7 @@ export const ExamSelectorModal: React.FC<ExamSelectorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 sm:p-6 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/35 p-4 sm:p-6 animate-in fade-in duration-150">
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col max-h-[90vh]">
         {/* =========================================================================
             SCREEN 5: CHOOSE YOUR EXAM
