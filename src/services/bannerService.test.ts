@@ -4,14 +4,13 @@ import { bannerService } from './bannerService';
 describe('bannerService Enterprise Architecture', () => {
   beforeEach(async () => {
     localStorage.clear();
-    await bannerService.resetToDefaults();
   });
 
-  it('initializes with default system hero banners', async () => {
+  it('starts empty with no demo banners injected', async () => {
     const banners = await bannerService.getBanners();
-    expect(banners.length).toBeGreaterThanOrEqual(3);
-    expect(banners[0].id).toBe('banner-wb-exam-series');
-    expect(banners[0].primaryCtaLink).toBe('/exams');
+    expect(banners).toEqual([]);
+    const active = await bannerService.getActiveBanners();
+    expect(active).toEqual([]);
   });
 
   describe('Audience Targeting', () => {
@@ -153,23 +152,41 @@ describe('bannerService Enterprise Architecture', () => {
     });
 
     it('reorders banners by given ID array', async () => {
-      const all = await bannerService.getBanners();
-      const firstId = all[0].id;
-      const secondId = all[1].id;
+      const first = await bannerService.createBanner({
+        title: 'First Banner',
+        primaryCtaLink: '/exams',
+        imageUrl: '/images/a.png',
+        isActive: true,
+        displayOrder: 1,
+      });
+      const second = await bannerService.createBanner({
+        title: 'Second Banner',
+        primaryCtaLink: '/exams',
+        imageUrl: '/images/b.png',
+        isActive: true,
+        displayOrder: 2,
+      });
 
-      await bannerService.reorderBanners([secondId, firstId]);
+      await bannerService.reorderBanners([second.id, first.id]);
       const reordered = await bannerService.getBanners();
 
-      expect(reordered[0].id).toBe(secondId);
+      expect(reordered[0].id).toBe(second.id);
       expect(reordered[0].displayOrder).toBe(1);
-      expect(reordered[1].id).toBe(firstId);
+      expect(reordered[1].id).toBe(first.id);
       expect(reordered[1].displayOrder).toBe(2);
     });
 
     it('supports syncToRemote explicitly', async () => {
+      await bannerService.createBanner({
+        title: 'Sync Probe Banner',
+        primaryCtaLink: '/exams',
+        imageUrl: '/images/sync.png',
+        isActive: true,
+        displayOrder: 1,
+      });
       const res = await bannerService.syncToRemote();
       expect(res.success).toBe(true);
-      expect(res.count).toBeGreaterThanOrEqual(3);
+      expect(res.count).toBe(1);
     });
 
     it('filters by placement properly and falls back to home_hero', async () => {

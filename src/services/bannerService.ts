@@ -3,92 +3,6 @@ import { supabaseRuntime, isSupabaseConfigured } from '@/lib/supabase';
 
 const STORAGE_KEY = 'pk_hero_banners';
 
-export const DEFAULT_HERO_BANNERS: HeroBanner[] = [
-  {
-    id: 'banner-wb-exam-series',
-    badgeText: 'TARGET 2026 🎯',
-    title: 'Ace WBPSC & WBP Exams with All-India Standard Mocks',
-    highlightWord: 'All-India Standard Mocks',
-    subtitle:
-      'Real exam simulation, detailed bilingual solutions & in-depth AI performance rank analysis.',
-    primaryCtaText: 'Attempt Free Mock',
-    primaryCtaLink: '/exams',
-    secondaryCtaText: 'View Test Series',
-    secondaryCtaLink: '/exams',
-    featurePills: [
-      'Real Exam Interface',
-      'Instant Rank',
-      'Bilingual (EN/BN)',
-      'Negative Marking',
-      'Full Solutions',
-    ],
-    imageUrl: '/images/exam_hero_banner.png',
-    bannerType: 'full_image',
-    themeGradient: 'blue',
-    targetAudience: 'all',
-    placement: 'home_hero',
-    clickCount: 0,
-    isActive: true,
-    displayOrder: 1,
-    createdAt: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'banner-pro-pass-special',
-    badgeText: 'UNLIMITED ACCESS 👑',
-    title: 'Upgrade to Pro Pass & Unlock 1,000+ Mock Tests & PYQs',
-    highlightWord: '1,000+ Mock Tests & PYQs',
-    subtitle:
-      'Get complete 1-year access to all West Bengal & Central government exam test series with detailed solutions.',
-    primaryCtaText: 'Get Pro Pass Now',
-    primaryCtaLink: '/subscription',
-    secondaryCtaText: 'Explore Features',
-    secondaryCtaLink: '/dashboard',
-    featurePills: [
-      'All Exams Unlocked',
-      'Chapter-wise Quizzes',
-      'Performance Tracking',
-      'Detailed Analytics',
-      'Ad-Free Experience',
-    ],
-    imageUrl: '/images/student_hero_banner.jpg',
-    bannerType: 'full_image',
-    themeGradient: 'amber',
-    targetAudience: 'free',
-    placement: 'home_hero',
-    clickCount: 0,
-    isActive: true,
-    displayOrder: 2,
-    createdAt: '2026-01-02T00:00:00.000Z',
-  },
-  {
-    id: 'banner-daily-10',
-    badgeText: 'DAILY QUIZ ⚡',
-    title: 'Daily 10 Challenge - Solve 10 Rapid MCQs Daily',
-    highlightWord: 'Daily 10 Challenge',
-    subtitle:
-      'Build daily consistency with fast topic-wise practice questions & explanations.',
-    primaryCtaText: 'Start Daily 10',
-    primaryCtaLink: '/practice',
-    secondaryCtaText: 'Practice Topics',
-    secondaryCtaLink: '/practice',
-    featurePills: [
-      'Daily Habit',
-      'Speed & Accuracy',
-      'Subject Revision',
-      'Streak Badges',
-    ],
-    imageUrl: '/images/daily_10_banner_exact.png',
-    bannerType: 'full_image',
-    themeGradient: 'indigo',
-    targetAudience: 'all',
-    placement: 'home_hero',
-    clickCount: 0,
-    isActive: true,
-    displayOrder: 3,
-    createdAt: '2026-01-03T00:00:00.000Z',
-  },
-];
-
 export interface OptimizedImageResult {
   file: File;
   dataUrl: string;
@@ -495,7 +409,7 @@ export const bannerService = {
    * 1. Supabase public.hero_banners table (if available)
    * 2. Supabase public.app_settings table (universal fallback readable by all visitors)
    * 3. localStorage cache ('pk_hero_banners')
-   * 4. DEFAULT_HERO_BANNERS
+   * Empty when nothing is configured — no demo banners are ever injected.
    */
   async getBanners(): Promise<HeroBanner[]> {
     if (isSupabaseConfigured) {
@@ -558,6 +472,26 @@ export const bannerService = {
     const all = await this.getBanners();
     const now = Date.now();
 
+    // Scheduling is non-negotiable: expired / not-yet-started campaigns are
+    // never shown, including by the fallback below.
+    const isCurrentlyLive = (b: HeroBanner): boolean => {
+      if (b.startsAt) {
+        const startTime = new Date(b.startsAt).getTime();
+        if (!isNaN(startTime) && startTime > now) return false;
+      }
+      if (b.expiresAt) {
+        const expiryTime = new Date(b.expiresAt).getTime();
+        if (!isNaN(expiryTime) && expiryTime < now) return false;
+      }
+      return true;
+    };
+
+    const placementOk = (b: HeroBanner): boolean => {
+      if (!options?.placement || options.placement === 'all') return true;
+      const bannerPlacement = b.placement || 'home_hero';
+      return bannerPlacement === 'all' || bannerPlacement === options.placement;
+    };
+
     const active = all
       .filter((b) => {
         if (!b.isActive) return false;
@@ -571,26 +505,8 @@ export const bannerService = {
           }
         }
 
-        // Placement filtering:
-        // Default to 'home_hero'. 'all' placement matches every location.
-        if (options?.placement && options.placement !== 'all') {
-          const bannerPlacement = b.placement || 'home_hero';
-          if (bannerPlacement !== 'all' && bannerPlacement !== options.placement) {
-            return false;
-          }
-        }
-
-        // Scheduling: startsAt check
-        if (b.startsAt) {
-          const startTime = new Date(b.startsAt).getTime();
-          if (!isNaN(startTime) && startTime > now) return false;
-        }
-
-        // Scheduling: expiresAt check
-        if (b.expiresAt) {
-          const expiryTime = new Date(b.expiresAt).getTime();
-          if (!isNaN(expiryTime) && expiryTime < now) return false;
-        }
+        if (!placementOk(b)) return false;
+        if (!isCurrentlyLive(b)) return false;
 
         return true;
       })
@@ -600,10 +516,11 @@ export const bannerService = {
       return active;
     }
 
-    // Resilient fallback: if audience or schedule eliminated everything,
-    // show any active banner configured by admin so the Home page reflects admin changes
+    // Resilient fallback: when audience targeting eliminates everything,
+    // still show live banners for the requested placement so Home never
+    // goes empty — but never resurrect scheduled-out campaigns.
     const fallbackActive = all
-      .filter((b) => b.isActive)
+      .filter((b) => b.isActive && placementOk(b) && isCurrentlyLive(b))
       .sort((a, b) => a.displayOrder - b.displayOrder);
 
     return fallbackActive;
@@ -722,14 +639,6 @@ export const bannerService = {
 
     updated.sort((a, b) => a.displayOrder - b.displayOrder);
     await syncBannersToRemote(updated);
-  },
-
-  /**
-   * Reset to default initial banners
-   */
-  async resetToDefaults(): Promise<HeroBanner[]> {
-    await syncBannersToRemote(DEFAULT_HERO_BANNERS);
-    return DEFAULT_HERO_BANNERS;
   },
 
   /**

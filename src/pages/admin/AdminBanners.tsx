@@ -9,7 +9,6 @@ import {
   ArrowDown,
   CheckCircle,
   XCircle,
-  RotateCcw,
   Layers,
   X,
   Upload,
@@ -24,7 +23,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { bannerService, DEFAULT_HERO_BANNERS } from '@/services/bannerService';
+import { bannerService } from '@/services/bannerService';
 import type { HeroBanner, BannerThemeColor, BannerAudience, BannerPlacement } from '@/types';
 import { getBannerTheme } from '@/utils/bannerTheme';
 
@@ -339,18 +338,10 @@ export const AdminBanners: React.FC = () => {
     showToast('success', 'Banner order updated.');
   };
 
-  const handleResetDefaults = async () => {
-    if (confirm('Reset all banners to default system presets? Custom changes will be overwritten.')) {
-      await bannerService.resetToDefaults();
-      await fetchBanners();
-      showToast('success', 'Reset to default hero banners.');
-    }
-  };
-
   const activeCount = banners.filter((b) => b.isActive).length;
   const totalClicks = banners.reduce((acc, b) => acc + (b.clickCount || 0), 0);
   const currentPreviewBanner =
-    banners.find((b) => b.id === previewBannerId) || banners[0] || DEFAULT_HERO_BANNERS[0];
+    banners.find((b) => b.id === previewBannerId) || banners[0];
 
   return (
     <div className="space-y-6 pb-12">
@@ -401,15 +392,6 @@ export const AdminBanners: React.FC = () => {
               <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
             )}
             <span>{isSyncing ? 'Syncing...' : 'Sync to Student Home'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleResetDefaults}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-            title="Reset to default banners"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Defaults</span>
           </button>
           <button
             type="button"
