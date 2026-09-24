@@ -1,4 +1,5 @@
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { notifyExamsUpdated } from '@/lib/dataSync';
 import { catalogApi } from '@/services/domains/catalog';
 import { getTestAssignedQuestions, saveTestQuestions } from './admin.testQuestions';
 import {
@@ -216,6 +217,7 @@ export async function createTest(
       isActive: testData.isActive ?? true,
     };
     localTests.unshift(newTest);
+    notifyExamsUpdated();
     return newTest;
   }
 
@@ -276,6 +278,7 @@ export async function createTest(
   }
 
   const row = data as any;
+  notifyExamsUpdated();
   return {
     id: row.id,
     examId: row.exam_id ?? undefined,
@@ -313,6 +316,7 @@ export async function updateTest(id: string, updates: Partial<MockTest>): Promis
     if (idx !== -1) {
       localTests[idx] = { ...localTests[idx], ...updates };
     }
+    notifyExamsUpdated();
     return localTests[idx] || (updates as MockTest);
   }
 
@@ -365,6 +369,7 @@ export async function updateTest(id: string, updates: Partial<MockTest>): Promis
   }
 
   const row = data as any;
+  notifyExamsUpdated();
   return {
     id: row.id,
     examId: row.exam_id ?? undefined,
@@ -400,6 +405,7 @@ export async function deleteTest(id: string): Promise<boolean> {
   if (!isSupabaseConfigured) {
     const idx = localTests.findIndex((t) => t.id === id);
     if (idx !== -1) localTests.splice(idx, 1);
+    notifyExamsUpdated();
     return true;
   }
 
@@ -412,6 +418,7 @@ export async function deleteTest(id: string): Promise<boolean> {
   if (error) {
     throw new Error(error.message);
   }
+  notifyExamsUpdated();
   return true;
 }
 

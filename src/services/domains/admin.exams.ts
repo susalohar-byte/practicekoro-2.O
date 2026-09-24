@@ -1,5 +1,6 @@
 import { supabaseRuntime as supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { localExams, localTests } from '@/services/domains/localStore';
+import { notifyExamsUpdated } from '@/lib/dataSync';
 import type { Exam } from '@/types';
 import type { ExamRow } from '@/services/domains/localStore';
 
@@ -196,6 +197,7 @@ export async function createExam(examData: Omit<Exam, 'id'>): Promise<Exam> {
       topicTestCount: 0,
     };
     localExams.push(newExam);
+    notifyExamsUpdated();
     return newExam;
   }
 
@@ -219,6 +221,7 @@ export async function createExam(examData: Omit<Exam, 'id'>): Promise<Exam> {
     throw new Error(error.message);
   }
 
+  notifyExamsUpdated();
   return {
     id: data.id,
     title: data.title,
@@ -242,6 +245,7 @@ export async function updateExam(id: string, updates: Partial<Exam>): Promise<Ex
     if (existingIndex !== -1) {
       localExams[existingIndex] = { ...localExams[existingIndex], ...updates };
     }
+    notifyExamsUpdated();
     return (
       localExams[existingIndex] || {
         id,
@@ -276,6 +280,7 @@ export async function updateExam(id: string, updates: Partial<Exam>): Promise<Ex
     throw new Error(error.message);
   }
 
+  notifyExamsUpdated();
   return {
     id: data.id,
     title: data.title,
@@ -293,6 +298,7 @@ export async function deleteExam(id: string): Promise<boolean> {
   if (!isSupabaseConfigured) {
     const idx = localExams.findIndex((e) => e.id === id);
     if (idx !== -1) localExams.splice(idx, 1);
+    notifyExamsUpdated();
     return true;
   }
 
@@ -304,6 +310,7 @@ export async function deleteExam(id: string): Promise<boolean> {
   if (error) {
     throw new Error(error.message);
   }
+  notifyExamsUpdated();
   return true;
 }
 
