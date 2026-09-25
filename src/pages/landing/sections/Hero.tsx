@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   BookOpen,
   ArrowRight,
-  Star,
   FileText,
   BarChart3,
   Target,
@@ -145,40 +144,9 @@ export const Hero: React.FC = () => {
               </div>
             </Reveal>
 
-            {/* Streamlined Social Proof Trust Row */}
-            <Reveal delay={300}>
-              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300">
-                <div className="flex items-center -space-x-1.5">
-                  <span className="w-5 h-5 rounded-full bg-slate-600 text-white text-[9px] font-bold flex items-center justify-center border border-slate-900 shadow-2xs">
-                    S
-                  </span>
-                  <span className="w-5 h-5 rounded-full bg-purple-600 text-white text-[9px] font-bold flex items-center justify-center border border-slate-900 shadow-2xs">
-                    A
-                  </span>
-                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center border border-slate-900 shadow-2xs">
-                    R
-                  </span>
-                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[9px] font-bold flex items-center justify-center border border-slate-900 shadow-2xs">
-                    P
-                  </span>
-                  <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-[8px] font-black flex items-center justify-center border border-slate-900 shadow-2xs">
-                    10K+
-                  </span>
-                </div>
-                <div className="flex items-center gap-0.5 text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <span className="font-semibold text-white">Loved by 10,000+ Aspirants</span>
-                <span className="hidden sm:inline text-slate-500">•</span>
-                <span className="hidden sm:inline text-slate-400 text-[11px]">Free forever to start</span>
-              </div>
-            </Reveal>
-
             {/* Three Compact, Elegant Feature Cards */}
-            <Reveal delay={360}>
-              <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 w-full max-w-2xl mx-auto">
+            <Reveal delay={300}>
+              <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 w-full max-w-2xl mx-auto">
                 <div className="rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 hover:border-slate-700 px-3.5 py-2.5 shadow-lg shadow-black/20 flex items-center gap-2.5 text-left transition-all hover:-translate-y-0.5">
                   <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4 text-blue-400" />
