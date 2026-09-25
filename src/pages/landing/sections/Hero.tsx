@@ -66,36 +66,29 @@ export const Hero: React.FC = () => {
             {/* Main Headline */}
             <Reveal delay={80}>
               <h1 className="mt-2.5 sm:mt-3 text-3xl sm:text-4xl lg:text-[3.15rem] font-extrabold text-white tracking-tight font-headline text-balance drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                <span className="block mb-0.5 sm:mb-1 leading-tight sm:leading-snug">
+                <span className="block leading-[1.15] sm:leading-[1.18] mb-0 sm:mb-0.5">
                   আত্মবিশ্বাসের সাথে জয়
                 </span>
-                <span className="block leading-tight sm:leading-snug">
+                <span className="block leading-[1.15] sm:leading-[1.18]">
                   করো{' '}
                   <span className="relative inline-block">
                     <span className="text-white">স্বপ্নের সরকারি </span>
                     <span className="text-blue-400 font-extrabold drop-shadow-[0_0_25px_rgba(96,165,250,0.6)]">
                       চাকরি।
                     </span>
-                    {/* Handcrafted Decorated Underline */}
+                    {/* Handcrafted Decorated Underline - Single Elegant Line */}
                     <svg
-                      className="absolute -bottom-1.5 sm:-bottom-2 left-0 w-full h-2.5 sm:h-3.5 pointer-events-none drop-shadow-[0_2px_8px_rgba(96,165,250,0.6)]"
-                      viewBox="0 0 280 14"
+                      className="absolute -bottom-1.5 sm:-bottom-2 left-0 w-full h-2.5 sm:h-3 pointer-events-none drop-shadow-[0_2px_8px_rgba(96,165,250,0.5)]"
+                      viewBox="0 0 280 12"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       preserveAspectRatio="none"
                     >
                       <path
-                        d="M3 9C45 3.5 105 2 150 5C195 8 235 7.5 277 5.5"
+                        d="M3 8C45 3 105 2 150 4.5C195 7 235 6.5 277 5"
                         stroke="url(#hero-underline-grad)"
                         strokeWidth="3.5"
                         strokeLinecap="round"
-                      />
-                      <path
-                        d="M12 12C60 7 125 5.5 175 8.5C215 11 250 10.5 268 9"
-                        stroke="url(#hero-underline-grad)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        opacity="0.5"
                       />
                       <defs>
                         <linearGradient id="hero-underline-grad" x1="0%" y1="0%" x2="100%" y2="0%">
