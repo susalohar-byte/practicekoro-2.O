@@ -5,6 +5,7 @@ import { PopularExams } from '@/pages/landing/sections/PopularExams';
 import { InsideTheApp } from '@/pages/landing/sections/InsideTheApp';
 import { ProPass } from '@/pages/landing/sections/ProPass';
 import { Testimonials } from '@/pages/landing/sections/Testimonials';
+import { AppInstall } from '@/pages/landing/sections/AppInstall';
 import { FaqSection } from '@/pages/landing/sections/FaqSection';
 import { Footer } from '@/pages/landing/sections/Footer';
 
@@ -24,6 +25,7 @@ export const Landing: React.FC = () => {
       <InsideTheApp />
       <ProPass />
       <Testimonials />
+      <AppInstall />
       <FaqSection />
       <Footer />
     </div>

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: 'Exams', href: '/#exams' },
   { label: 'App Features', href: '/#inside-app' },
   { label: 'Pro Pass', href: '/#pro-pass' },
+  { label: 'Install App', href: '/#app-install' },
   { label: 'FAQ', href: '/#faq' },
 ];
 
