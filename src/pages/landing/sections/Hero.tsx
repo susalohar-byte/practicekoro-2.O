@@ -23,13 +23,25 @@ export const Hero: React.FC = () => {
 
   return (
     <section className="relative overflow-hidden min-h-screen min-h-[100dvh] flex flex-col justify-between pt-24 pb-4 sm:pt-28 sm:pb-6 lg:pt-30 lg:pb-6">
-      {/* Background Lifestyle Image of Indian Aspirant Studying */}
+      {/* Background Lifestyle Video / Image of Indian Aspirant Studying */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <img
-          src="/images/hero_student_study_bg.jpg"
-          alt="Government Exam Aspirant Studying at Home"
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster="/images/hero_student_study_bg.jpg"
           className="w-full h-full object-cover object-[62%_center] sm:object-[72%_center] lg:object-[80%_center] opacity-95 dark:opacity-35 transition-opacity duration-300"
-        />
+        >
+          <source src="/videos/hero-background.mp4" type="video/mp4" />
+          <source src="/videos/hero-background.webm" type="video/webm" />
+          {/* Fallback image if video cannot be played */}
+          <img
+            src="/images/hero_student_study_bg.jpg"
+            alt="Government Exam Aspirant Studying at Home"
+            className="w-full h-full object-cover object-[62%_center] sm:object-[72%_center] lg:object-[80%_center]"
+          />
+        </video>
         {/* Responsive light/dark readability wash */}
         <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 to-white/35 lg:from-white/95 lg:via-white/75 lg:to-transparent dark:from-slate-950/95 dark:via-slate-950/90 dark:to-slate-950/50" />
         <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-transparent to-white dark:from-slate-950/80 dark:via-transparent dark:to-slate-950" />
