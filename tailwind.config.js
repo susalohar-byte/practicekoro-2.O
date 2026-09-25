@@ -64,6 +64,12 @@ export default {
           'Noto Sans Bengali',
           'sans-serif',
         ],
+        letterpress: [
+          '"Li Subha Letterpress Unicode"',
+          '"Subha Letterpress"',
+          '"Noto Sans Bengali"',
+          'sans-serif',
+        ],
       },
     },
   },

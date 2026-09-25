@@ -5,6 +5,24 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Li Subha Letterpress Unicode';
+  src: url('/fonts/Li-Subha-Letterpress-Unicode.woff') format('woff'),
+       url('/fonts/Li-Subha-Letterpress-Unicode.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Subha Letterpress';
+  src: url('/fonts/Li-Subha-Letterpress-Unicode.woff') format('woff'),
+       url('/fonts/Li-Subha-Letterpress-Unicode.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --font-sans:
