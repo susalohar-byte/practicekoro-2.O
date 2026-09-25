@@ -13,7 +13,6 @@ import {
   BarChart3,
   Target,
   CheckCircle2,
-  ChevronRight,
 } from 'lucide-react';
 
 export const Hero: React.FC = () => {
@@ -217,21 +216,6 @@ export const Hero: React.FC = () => {
                   </span>
                 ))}
               </div>
-            </div>
-
-            {/* Right arrow button */}
-            <div className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-10">
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('exams');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                aria-label="View more exams"
-                className="w-8 h-8 rounded-full bg-slate-800/90 border border-slate-700 shadow-md flex items-center justify-center text-white hover:bg-slate-700 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
