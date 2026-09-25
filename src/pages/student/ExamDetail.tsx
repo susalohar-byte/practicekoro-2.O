@@ -750,7 +750,7 @@ export const ExamDetail: React.FC = () => {
                 </h2>
                 <p className="text-xs text-slate-500">
                   Solve real past examination papers with instant timer, negative marking, and
-                  bilingual answer analysis.
+                  detailed answer analysis.
                 </p>
               </div>
 
@@ -1212,7 +1212,7 @@ export const ExamDetail: React.FC = () => {
                   </li>
                   <li className="flex items-center gap-1.5">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    Mistakes Notebook & detailed bilingual solutions
+                    Mistakes Notebook & detailed step-by-step solutions
                   </li>
                   <li className="flex items-center gap-1.5">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />

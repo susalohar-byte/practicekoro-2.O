@@ -1032,9 +1032,9 @@ export const Profile: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2">
                 <p className="font-bold text-slate-800 dark:text-slate-200">Portal Language</p>
-                <p className="text-slate-500">Bengali / English bilingual test explanations</p>
+                <p className="text-slate-500">Official standard exam format</p>
                 <span className="inline-block px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-blue-600 font-bold border border-slate-200 dark:border-slate-700">
-                  Bengali & English Enabled
+                  Standard Format
                 </span>
               </div>
               <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2">

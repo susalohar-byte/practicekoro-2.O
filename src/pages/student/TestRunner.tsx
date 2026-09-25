@@ -41,7 +41,7 @@ export const TestRunner: React.FC = () => {
   // Attempt State
   const [answers, setAnswers] = useState<Record<string, AttemptAnswerState>>({});
   const [visited, setVisited] = useState<Set<string>>(new Set());
-  // Shared bilingual system: question language follows the global setting.
+  // Question language follows the global setting.
   const { lang: language, setLang: setLanguage } = useLanguage();
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [timeSpent, setTimeSpent] = useState<number>(0);
@@ -334,7 +334,7 @@ export const TestRunner: React.FC = () => {
 
         {/* Right Tools: Language Toggle & Submit */}
         <div className="flex items-center gap-2">
-          {/* Bilingual Toggle (global setting, persisted by LanguageProvider) */}
+          {/* Language Toggle (global setting, persisted by LanguageProvider) */}
           <button
             onClick={() => {
               setLanguage(language === 'bn' ? 'en' : 'bn');
@@ -437,13 +437,6 @@ export const TestRunner: React.FC = () => {
                 alt={`Question ${currentIndex + 1} Diagram`}
                 priority={true}
               />
-
-              {/* Secondary language reference */}
-              {language === 'bn' && currentQ.questionBengaliText && currentQ.questionText && (
-                <p className="text-xs text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  {currentQ.questionText}
-                </p>
-              )}
             </div>
 
             {/* Options List (Screen 11: Rounded cards with letter radio) */}

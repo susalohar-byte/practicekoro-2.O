@@ -256,7 +256,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </span>
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                Practice with detailed bilingual solutions, performance analytics, and personalized recommendations.
+                Practice with detailed step-by-step solutions, performance analytics, and personalized recommendations.
               </p>
             </div>
 

@@ -26,7 +26,7 @@ export const Settings: React.FC = () => {
 
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
-  // Shared bilingual system: one language state for UI + question content.
+  // Language preference: state for UI and question content.
   const { lang: language, setLang: handleLanguageChange } = useLanguage();
 
   const handleLogout = async () => {

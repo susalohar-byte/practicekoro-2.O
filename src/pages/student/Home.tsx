@@ -252,7 +252,7 @@ export const Home: React.FC = () => {
       badgeType: 'orange',
       questions: '100 Questions',
       duration: '90 Minutes',
-      lang: 'Bilingual (EN/BN)',
+      lang: 'Online CBT',
       iconBg: 'bg-blue-50 text-blue-600 border-blue-100',
     },
     {
@@ -262,7 +262,7 @@ export const Home: React.FC = () => {
       badgeType: 'blue',
       questions: '100 Questions',
       duration: '90 Minutes',
-      lang: 'Bilingual (EN/BN)',
+      lang: 'Online CBT',
       iconBg: 'bg-amber-50 text-amber-600 border-amber-100',
     },
     {
@@ -272,7 +272,7 @@ export const Home: React.FC = () => {
       badgeType: 'rose',
       questions: '50 Questions',
       duration: '30 Minutes',
-      lang: 'Bilingual (EN/BN)',
+      lang: 'Online CBT',
       iconBg: 'bg-blue-50 text-blue-600 border-blue-100',
     },
   ];

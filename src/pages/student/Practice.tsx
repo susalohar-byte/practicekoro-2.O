@@ -100,7 +100,7 @@ export const Practice: React.FC = () => {
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState<boolean>(false);
   const [sessionAnswers, setSessionAnswers] = useState<PracticeAnswerRecord[]>([]);
   const [isSessionComplete, setIsSessionComplete] = useState<boolean>(false);
-  const [languageMode, setLanguageMode] = useState<'bilingual' | 'english' | 'bengali'>('bilingual');
+  const [languageMode, setLanguageMode] = useState<'bengali' | 'english'>('bengali');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   // Sync active tab with URL (?tab=mistakes|bookmarks|topics) and optional
@@ -409,19 +409,13 @@ export const Practice: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setLanguageMode((prev) =>
-                      prev === 'bilingual'
-                        ? 'english'
-                        : prev === 'english'
-                          ? 'bengali'
-                          : 'bilingual'
-                    );
+                    setLanguageMode((prev) => (prev === 'bengali' ? 'english' : 'bengali'));
                   }}
                   className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 transition-colors"
-                  title="Switch question language mode"
+                  title="Switch question language"
                 >
                   <Languages className="w-3.5 h-3.5 text-[#0158FC]" />
-                  <span className="capitalize">{languageMode}</span>
+                  <span>{languageMode === 'bengali' ? 'বাংলা' : 'English'}</span>
                 </button>
 
                 <Button
@@ -462,17 +456,11 @@ export const Practice: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              {(languageMode === 'bilingual' || languageMode === 'english') && (
-                <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-relaxed">
-                  {currentQuestion.questionText}
-                </p>
-              )}
-              {(languageMode === 'bilingual' || languageMode === 'bengali') &&
-                currentQuestion.questionBengaliText && (
-                  <p className="text-base sm:text-lg font-medium text-slate-800 dark:text-slate-200 font-sans leading-relaxed pt-1">
-                    {currentQuestion.questionBengaliText}
-                  </p>
-                )}
+              <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-relaxed">
+                {languageMode === 'bengali'
+                  ? (currentQuestion.questionBengaliText || currentQuestion.questionText)
+                  : (currentQuestion.questionText || currentQuestion.questionBengaliText)}
+              </p>
             </div>
 
             {/* Question Diagram / Image */}

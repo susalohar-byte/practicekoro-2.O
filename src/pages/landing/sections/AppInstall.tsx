@@ -159,7 +159,7 @@ export const AppInstall: React.FC = () => {
                     Real Exam Interface
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                    Simulates real CBT exam hall screens with bilingual Bengali & English questions.
+                    Simulates real CBT exam hall screens with timed test interfaces and instant ranking.
                   </p>
                 </div>
               </div>

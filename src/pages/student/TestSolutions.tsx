@@ -128,7 +128,7 @@ export const TestSolutions: React.FC = () => {
           Detailed Solutions & Explanations
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          Question-wise authoritative answer key, student selection comparison, and bilingual notes
+          Question-wise authoritative answer key, student selection comparison, and detailed notes
         </p>
       </div>
 

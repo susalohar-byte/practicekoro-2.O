@@ -1,5 +1,5 @@
 /**
- * Central bilingual dictionaries (Bengali-first platform).
+ * Central dictionaries (Bengali-first platform).
  *
  * Rules for growing this file:
  * - English (`en`) is the schema: `bn` must satisfy `typeof en`, so a
@@ -27,7 +27,7 @@ export const en = {
     subLead: 'Real exam-pattern mock tests, 10+ years solved PYQs & topic-wise practice for',
     subExams: 'WBP, WBPSC, WBSSC, Primary TET & Railways',
     subMid: '—',
-    subBilingual: 'The Complete Preparation Platform',
+    subPlatform: 'The Complete Preparation Platform',
     subEnd: '.',
     ctaPrimary: 'Start Free Practice',
     ctaDashboard: 'Go to Dashboard',
@@ -53,7 +53,7 @@ export const bn: Dictionary = {
     subLead: 'আসল পরীক্ষার ধাঁচে মক টেস্ট, ১০+ বছরের সমাধানসহ PYQ ও টপিক-ভিত্তিক প্র্যাকটিস।',
     subExams: 'WBP, WBPSC, WBSSC, Primary TET ও Railways',
     subMid: '-এর জন্য',
-    subBilingual: '',
+    subPlatform: '',
     subEnd: '।',
     ctaPrimary: 'Go to Dashboard',
     ctaDashboard: 'Go to Dashboard',
