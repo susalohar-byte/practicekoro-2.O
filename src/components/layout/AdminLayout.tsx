@@ -375,7 +375,7 @@ export const AdminLayout: React.FC = () => {
 
         {/* Active Maintenance Notice Banner */}
         {isMaintenanceMode && (
-          <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2.5 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold text-amber-300">
+          <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2.5 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold text-amber-900 dark:text-amber-300">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />

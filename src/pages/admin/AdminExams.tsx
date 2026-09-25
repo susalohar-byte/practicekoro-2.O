@@ -1965,7 +1965,7 @@ export const AdminExams: React.FC = () => {
                           <span className="font-bold text-slate-900 dark:text-white truncate">
                             {cat}
                           </span>
-                          <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 shrink-0">
+                          <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 shrink-0">
                             {examCount} {examCount === 1 ? 'exam' : 'exams'}
                           </span>
                         </div>

@@ -630,7 +630,7 @@ export const AdminTestSeries: React.FC = () => {
       {/* MANAGE TESTS MODAL */}
       {isManagingTests && manageSeriesTests && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-3 sm:p-5 bg-black/35 animate-in fade-in duration-200">
-          <div className="w-full max-w-6xl max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
+          <div className="w-full max-w-6xl max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden admin-dark-box">
             {/* Modal Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 border-b border-slate-800 bg-slate-950/80 shrink-0 gap-4">
               <div className="space-y-1">

@@ -487,7 +487,11 @@
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']).text-white,
 .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']).text-white,
 .admin-scope [class*='bg-black']:not([class*='dark:bg-black']).text-white,
-.admin-scope [class*='from-']:not([class*='dark:from-']).text-white,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']).text-white,
+.admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']).text-white,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']).text-white,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']).text-white,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']).text-white,
 html:not(.dark) .admin-scope .text-white,
 html:not(.dark) .admin-scope button.text-white,
 html:not(.dark) .admin-scope a.text-white,
@@ -515,7 +519,11 @@ html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']).text-white,
 html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']).text-white,
 html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']).text-white,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']).text-white {
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']).text-white,
+html:not(.dark) .admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']).text-white,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']).text-white,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']).text-white,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']).text-white {
   color: #ffffff !important;
 }
 
@@ -531,7 +539,14 @@ html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']).text-wh
 .admin-scope button[class*='bg-blue-7'],
 .admin-scope button[class*='bg-pk-primary'],
 .admin-scope button[class*='bg-brand-6'],
-.admin-scope button[class*='from-']:not([class*='dark:from-']),
+.admin-scope button[class*='from-indigo-'],
+.admin-scope button[class*='from-purple-'],
+.admin-scope button[class*='from-violet-'],
+.admin-scope button[class*='from-blue-'],
+.admin-scope button[class*='from-emerald-'],
+.admin-scope button[class*='from-rose-'],
+.admin-scope button[class*='from-cyan-'],
+.admin-scope button[class*='from-brand-'],
 .admin-scope a[class*='bg-indigo-6'],
 .admin-scope a[class*='bg-indigo-7'],
 .admin-scope a[class*='bg-purple-6'],
@@ -543,7 +558,14 @@ html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']).text-wh
 .admin-scope a[class*='bg-blue-7'],
 .admin-scope a[class*='bg-pk-primary'],
 .admin-scope a[class*='bg-brand-6'],
-.admin-scope a[class*='from-']:not([class*='dark:from-']),
+.admin-scope a[class*='from-indigo-'],
+.admin-scope a[class*='from-purple-'],
+.admin-scope a[class*='from-violet-'],
+.admin-scope a[class*='from-blue-'],
+.admin-scope a[class*='from-emerald-'],
+.admin-scope a[class*='from-rose-'],
+.admin-scope a[class*='from-cyan-'],
+.admin-scope a[class*='from-brand-'],
 html:not(.dark) .admin-scope button[class*='bg-indigo-6'],
 html:not(.dark) .admin-scope button[class*='bg-indigo-7'],
 html:not(.dark) .admin-scope button[class*='bg-purple-6'],
@@ -555,7 +577,14 @@ html:not(.dark) .admin-scope button[class*='bg-blue-6'],
 html:not(.dark) .admin-scope button[class*='bg-blue-7'],
 html:not(.dark) .admin-scope button[class*='bg-pk-primary'],
 html:not(.dark) .admin-scope button[class*='bg-brand-6'],
-html:not(.dark) .admin-scope button[class*='from-']:not([class*='dark:from-']),
+html:not(.dark) .admin-scope button[class*='from-indigo-'],
+html:not(.dark) .admin-scope button[class*='from-purple-'],
+html:not(.dark) .admin-scope button[class*='from-violet-'],
+html:not(.dark) .admin-scope button[class*='from-blue-'],
+html:not(.dark) .admin-scope button[class*='from-emerald-'],
+html:not(.dark) .admin-scope button[class*='from-rose-'],
+html:not(.dark) .admin-scope button[class*='from-cyan-'],
+html:not(.dark) .admin-scope button[class*='from-brand-'],
 html:not(.dark) .admin-scope a[class*='bg-indigo-6'],
 html:not(.dark) .admin-scope a[class*='bg-indigo-7'],
 html:not(.dark) .admin-scope a[class*='bg-purple-6'],
@@ -567,7 +596,14 @@ html:not(.dark) .admin-scope a[class*='bg-blue-6'],
 html:not(.dark) .admin-scope a[class*='bg-blue-7'],
 html:not(.dark) .admin-scope a[class*='bg-pk-primary'],
 html:not(.dark) .admin-scope a[class*='bg-brand-6'],
-html:not(.dark) .admin-scope a[class*='from-']:not([class*='dark:from-']) {
+html:not(.dark) .admin-scope a[class*='from-indigo-'],
+html:not(.dark) .admin-scope a[class*='from-purple-'],
+html:not(.dark) .admin-scope a[class*='from-violet-'],
+html:not(.dark) .admin-scope a[class*='from-blue-'],
+html:not(.dark) .admin-scope a[class*='from-emerald-'],
+html:not(.dark) .admin-scope a[class*='from-rose-'],
+html:not(.dark) .admin-scope a[class*='from-cyan-'],
+html:not(.dark) .admin-scope a[class*='from-brand-'] {
   color: #ffffff !important;
 }
 
@@ -577,14 +613,28 @@ html:not(.dark) .admin-scope a[class*='from-']:not([class*='dark:from-']) {
 .admin-scope button[class*='bg-rose-6'] *,
 .admin-scope button[class*='bg-amber-6'] *,
 .admin-scope button[class*='bg-pk-primary'] *,
-.admin-scope button[class*='from-']:not([class*='dark:from-']) *,
+.admin-scope button[class*='from-indigo-'] *,
+.admin-scope button[class*='from-purple-'] *,
+.admin-scope button[class*='from-violet-'] *,
+.admin-scope button[class*='from-blue-'] *,
+.admin-scope button[class*='from-emerald-'] *,
+.admin-scope button[class*='from-rose-'] *,
+.admin-scope button[class*='from-cyan-'] *,
+.admin-scope button[class*='from-brand-'] *,
 .admin-scope a[class*='bg-indigo-6'] *,
 .admin-scope a[class*='bg-purple-6'] *,
 .admin-scope a[class*='bg-emerald-6'] *,
 .admin-scope a[class*='bg-rose-6'] *,
 .admin-scope a[class*='bg-amber-6'] *,
 .admin-scope a[class*='bg-pk-primary'] *,
-.admin-scope a[class*='from-']:not([class*='dark:from-']) * {
+.admin-scope a[class*='from-indigo-'] *,
+.admin-scope a[class*='from-purple-'] *,
+.admin-scope a[class*='from-violet-'] *,
+.admin-scope a[class*='from-blue-'] *,
+.admin-scope a[class*='from-emerald-'] *,
+.admin-scope a[class*='from-rose-'] *,
+.admin-scope a[class*='from-cyan-'] *,
+.admin-scope a[class*='from-brand-'] * {
   color: inherit;
 }
 
@@ -598,7 +648,11 @@ html:not(.dark) .admin-scope a[class*='from-']:not([class*='dark:from-']) {
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-white,
 .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-white,
 .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-white,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-white,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-white,
+.admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-white,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-white,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-white,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-white,
 .admin-scope [role='tooltip'] .text-white,
 .admin-scope aside .text-white,
 .admin-scope .admin-dark-card .text-white,
@@ -612,7 +666,11 @@ html:not(.dark) .admin-scope [class*='bg-gray-950']:not([class*='dark:bg-gray-95
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-white,
 html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-white,
 html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-white,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-white,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-white,
+html:not(.dark) .admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-white,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-white,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-white,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-white,
 html:not(.dark) .admin-scope [role='tooltip'] .text-white,
 html:not(.dark) .admin-scope aside .text-white,
 html:not(.dark) .admin-scope .admin-dark-card .text-white,
@@ -626,7 +684,11 @@ html:not(.dark) .admin-scope .admin-dark-box .text-white {
 .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-100,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-100,
 .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-100,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-100,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-100,
+.admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-100,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-100,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-100,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-100,
 .admin-scope aside .text-slate-100,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-100,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-100,
@@ -634,7 +696,11 @@ html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-
 html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-100,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-100,
 html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-100,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-100,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-100,
+html:not(.dark) .admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-100,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-100,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-100,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-100,
 html:not(.dark) .admin-scope aside .text-slate-100 {
   color: #f8fafc !important;
 }
@@ -645,7 +711,11 @@ html:not(.dark) .admin-scope aside .text-slate-100 {
 .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-200,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-200,
 .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-200,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-200,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-200,
+.admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-200,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-200,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-200,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-200,
 .admin-scope aside .text-slate-200,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-200,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-200,
@@ -653,7 +723,11 @@ html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-
 html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-200,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-200,
 html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-200,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-200,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-200,
+html:not(.dark) .admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-200,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-200,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-200,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-200,
 html:not(.dark) .admin-scope aside .text-slate-200 {
   color: #e2e8f0 !important;
 }
@@ -664,7 +738,11 @@ html:not(.dark) .admin-scope aside .text-slate-200 {
 .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-300,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-300,
 .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-300,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-300,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-300,
+.admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-300,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-300,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-300,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-300,
 .admin-scope aside .text-slate-300,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-300,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-300,
@@ -672,7 +750,11 @@ html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-
 html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-300,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-300,
 html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-300,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-300,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-300,
+html:not(.dark) .admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-300,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-300,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-300,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-300,
 html:not(.dark) .admin-scope aside .text-slate-300 {
   color: #cbd5e1 !important;
 }
@@ -683,7 +765,11 @@ html:not(.dark) .admin-scope aside .text-slate-300 {
 .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-400,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-400,
 .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-400,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-400,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-400,
+.admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-400,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-400,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-400,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-400,
 .admin-scope aside .text-slate-400,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-400,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-400,
@@ -691,7 +777,11 @@ html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-
 html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-400,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-400,
 html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) .text-slate-400,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-400,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-400,
+html:not(.dark) .admin-scope [class*='from-[#1']:not([class*='dark:from-[#1']) .text-slate-400,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-400,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-400,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-400,
 html:not(.dark) .admin-scope aside .text-slate-400 {
   color: #94a3b8 !important;
 }
@@ -722,11 +812,36 @@ html:not(.dark) .admin-scope aside .text-slate-400 {
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) h3,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) h4,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) strong,
-.admin-scope [class*='from-']:not([class*='dark:from-']) h1,
-.admin-scope [class*='from-']:not([class*='dark:from-']) h2,
-.admin-scope [class*='from-']:not([class*='dark:from-']) h3,
-.admin-scope [class*='from-']:not([class*='dark:from-']) h4,
-.admin-scope [class*='from-']:not([class*='dark:from-']) strong,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h1,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h2,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h3,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h4,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) strong,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h1,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h2,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h3,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h4,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) strong,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h1,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h2,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h3,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h4,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) strong,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) h1,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) h2,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) h3,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) h4,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) strong,
+.admin-scope .admin-dark-card h1,
+.admin-scope .admin-dark-card h2,
+.admin-scope .admin-dark-card h3,
+.admin-scope .admin-dark-card h4,
+.admin-scope .admin-dark-card strong,
+.admin-scope .admin-dark-box h1,
+.admin-scope .admin-dark-box h2,
+.admin-scope .admin-dark-box h3,
+.admin-scope .admin-dark-box h4,
+.admin-scope .admin-dark-box strong,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) h1,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) h2,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) h3,
@@ -752,11 +867,36 @@ html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) h2,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) h3,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) h4,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) strong,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) h1,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) h2,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) h3,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) h4,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) strong {
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h1,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h2,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h3,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) h4,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) strong,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h1,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h2,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h3,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) h4,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) strong,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h1,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h2,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h3,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) h4,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) strong,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) h1,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) h2,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) h3,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) h4,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) strong,
+html:not(.dark) .admin-scope .admin-dark-card h1,
+html:not(.dark) .admin-scope .admin-dark-card h2,
+html:not(.dark) .admin-scope .admin-dark-card h3,
+html:not(.dark) .admin-scope .admin-dark-card h4,
+html:not(.dark) .admin-scope .admin-dark-card strong,
+html:not(.dark) .admin-scope .admin-dark-box h1,
+html:not(.dark) .admin-scope .admin-dark-box h2,
+html:not(.dark) .admin-scope .admin-dark-box h3,
+html:not(.dark) .admin-scope .admin-dark-box h4,
+html:not(.dark) .admin-scope .admin-dark-box strong {
   color: #ffffff !important;
 }
 
@@ -767,42 +907,72 @@ html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) strong 
 .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-900,
 .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-slate-900,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-900,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-900,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-900,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-900,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-900,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-900,
+.admin-scope .admin-dark-card .text-slate-900,
+.admin-scope .admin-dark-box .text-slate-900,
 .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-800,
 .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-800,
 .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) .text-slate-800,
 .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-800,
 .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-slate-800,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-800,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-800,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-800,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-800,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-800,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-800,
+.admin-scope .admin-dark-card .text-slate-800,
+.admin-scope .admin-dark-box .text-slate-800,
 .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-700,
 .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-700,
 .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) .text-slate-700,
 .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-700,
 .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-slate-700,
 .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-700,
-.admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-700,
+.admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-700,
+.admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-700,
+.admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-700,
+.admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-700,
+.admin-scope .admin-dark-card .text-slate-700,
+.admin-scope .admin-dark-box .text-slate-700,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-900,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-900,
 html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) .text-slate-900,
 html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-900,
 html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-slate-900,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-900,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-900,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-900,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-900,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-900,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-900,
+html:not(.dark) .admin-scope .admin-dark-card .text-slate-900,
+html:not(.dark) .admin-scope .admin-dark-box .text-slate-900,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-800,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-800,
 html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) .text-slate-800,
 html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-800,
 html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-slate-800,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-800,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-800,
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-800,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-800,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-800,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-800,
+html:not(.dark) .admin-scope .admin-dark-card .text-slate-800,
+html:not(.dark) .admin-scope .admin-dark-box .text-slate-800,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) .text-slate-700,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) .text-slate-700,
 html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) .text-slate-700,
 html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) .text-slate-700,
 html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) .text-slate-700,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) .text-slate-700,
-html:not(.dark) .admin-scope [class*='from-']:not([class*='dark:from-']) .text-slate-700 {
+html:not(.dark) .admin-scope [class*='from-[#0']:not([class*='dark:from-[#0']) .text-slate-700,
+html:not(.dark) .admin-scope [class*='from-slate-900']:not([class*='dark:from-slate-900']) .text-slate-700,
+html:not(.dark) .admin-scope [class*='from-slate-950']:not([class*='dark:from-slate-950']) .text-slate-700,
+html:not(.dark) .admin-scope [class*='from-black']:not([class*='dark:from-black']) .text-slate-700,
+html:not(.dark) .admin-scope .admin-dark-card .text-slate-700,
+html:not(.dark) .admin-scope .admin-dark-box .text-slate-700 {
   color: #f8fafc !important;
 }
 
@@ -852,17 +1022,35 @@ html:not(.dark) .admin-scope aside [role='radiogroup'] button[aria-checked='true
    DARK MODE COMPREHENSIVE TYPOGRAPHY & BOX FIXES
    When dark mode is active (html.dark), ensure 100% visible text everywhere.
    ========================================================================= */
-.dark .admin-scope .text-slate-900 {
+.dark .admin-scope .text-slate-900:not([class*='bg-amber']):not([class*='bg-yellow']):not([class*='bg-emerald']):not([class*='bg-rose']):not([class*='bg-slate-100']):not([class*='bg-slate-200']):not([class*='bg-gray-100']):not([class*='bg-gray-200']),
+.dark .admin-scope :not([class*='bg-amber-1']):not([class*='bg-amber-2']):not([class*='bg-amber-3']):not([class*='bg-amber-4']):not([class*='bg-yellow']):not([class*='bg-emerald-1']):not([class*='bg-emerald-2']):not([class*='bg-rose-1']):not([class*='bg-rose-2']):not([class*='bg-slate-1']):not([class*='bg-slate-2']) > .text-slate-900 {
   color: #f8fafc !important;
 }
-.dark .admin-scope .text-slate-800 {
+.dark .admin-scope .text-slate-800:not([class*='bg-amber']):not([class*='bg-yellow']):not([class*='bg-emerald']):not([class*='bg-rose']):not([class*='bg-slate-100']):not([class*='bg-slate-200']):not([class*='bg-gray-100']):not([class*='bg-gray-200']),
+.dark .admin-scope :not([class*='bg-amber-1']):not([class*='bg-amber-2']):not([class*='bg-amber-3']):not([class*='bg-amber-4']):not([class*='bg-yellow']):not([class*='bg-emerald-1']):not([class*='bg-emerald-2']):not([class*='bg-rose-1']):not([class*='bg-rose-2']):not([class*='bg-slate-1']):not([class*='bg-slate-2']) > .text-slate-800 {
   color: #f1f5f9 !important;
 }
-.dark .admin-scope .text-slate-700 {
+.dark .admin-scope .text-slate-700:not([class*='bg-amber']):not([class*='bg-yellow']):not([class*='bg-emerald']):not([class*='bg-rose']):not([class*='bg-slate-100']):not([class*='bg-slate-200']):not([class*='bg-gray-100']):not([class*='bg-gray-200']) {
   color: #e2e8f0 !important;
 }
 .dark .admin-scope .text-slate-600 {
   color: #cbd5e1 !important;
+}
+
+/* Light badge pills preserve readable dark text in dark mode */
+.dark .admin-scope [class*='bg-amber-100'],
+.dark .admin-scope [class*='bg-amber-200'],
+.dark .admin-scope [class*='bg-amber-300'],
+.dark .admin-scope [class*='bg-yellow-'],
+.dark .admin-scope [class*='bg-slate-200'] {
+  color: #0f172a;
+}
+.dark .admin-scope [class*='bg-amber-100'] *,
+.dark .admin-scope [class*='bg-amber-200'] *,
+.dark .admin-scope [class*='bg-amber-300'] *,
+.dark .admin-scope [class*='bg-yellow-'] *,
+.dark .admin-scope [class*='bg-slate-200'] * {
+  color: inherit;
 }
 
 /* Form Inputs, Selects, & Textareas in Both Modes */
@@ -883,18 +1071,51 @@ html:not(.dark) .admin-scope select option {
 }
 
 /* Form Inputs inside Dark Boxes (in Light mode) */
+html:not(.dark) .admin-scope .admin-dark-box input,
+html:not(.dark) .admin-scope .admin-dark-card input,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) input,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) input,
+html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) input,
+html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) input,
+html:not(.dark) .admin-scope [class*='bg-gray-900']:not([class*='dark:bg-gray-900']) input,
+html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) input,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) input,
+html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) input,
+html:not(.dark) .admin-scope .admin-dark-box textarea,
+html:not(.dark) .admin-scope .admin-dark-card textarea,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) textarea,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) textarea,
+html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) textarea,
+html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) textarea,
+html:not(.dark) .admin-scope [class*='bg-gray-900']:not([class*='dark:bg-gray-900']) textarea,
+html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) textarea,
 html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) textarea,
+html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) textarea,
+html:not(.dark) .admin-scope .admin-dark-box select,
+html:not(.dark) .admin-scope .admin-dark-card select,
 html:not(.dark) .admin-scope [class*='bg-slate-800']:not([class*='dark:bg-slate-800']) select,
 html:not(.dark) .admin-scope [class*='bg-slate-850']:not([class*='dark:bg-slate-850']) select,
-html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) select {
+html:not(.dark) .admin-scope [class*='bg-slate-900']:not([class*='dark:bg-slate-900']) select,
+html:not(.dark) .admin-scope [class*='bg-slate-950']:not([class*='dark:bg-slate-950']) select,
+html:not(.dark) .admin-scope [class*='bg-gray-900']:not([class*='dark:bg-gray-900']) select,
+html:not(.dark) .admin-scope [class*='bg-black']:not([class*='dark:bg-black']) select,
+html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) select,
+html:not(.dark) .admin-scope [class*='bg-[#1']:not([class*='dark:bg-[#1']) select {
   color: #f8fafc !important;
   background-color: #0b1329 !important;
   border-color: #1e293b !important;
+}
+html:not(.dark) .admin-scope .admin-dark-box input::placeholder,
+html:not(.dark) .admin-scope .admin-dark-card input::placeholder,
+html:not(.dark) .admin-scope [class*='bg-slate-800'] input::placeholder,
+html:not(.dark) .admin-scope [class*='bg-slate-900'] input::placeholder,
+html:not(.dark) .admin-scope [class*='bg-slate-950'] input::placeholder,
+html:not(.dark) .admin-scope .admin-dark-box textarea::placeholder,
+html:not(.dark) .admin-scope .admin-dark-card textarea::placeholder,
+html:not(.dark) .admin-scope [class*='bg-slate-800'] textarea::placeholder,
+html:not(.dark) .admin-scope [class*='bg-slate-900'] textarea::placeholder,
+html:not(.dark) .admin-scope [class*='bg-slate-950'] textarea::placeholder {
+  color: #64748b !important;
 }
 
 /* Form Inputs in Dark Mode */
@@ -902,6 +1123,12 @@ html:not(.dark) .admin-scope [class*='bg-[#0']:not([class*='dark:bg-[#0']) selec
 .dark .admin-scope select,
 .dark .admin-scope textarea {
   color: #f8fafc !important;
+  background-color: #0b1329 !important;
+  border-color: #1e293b !important;
+}
+.dark .admin-scope input::placeholder,
+.dark .admin-scope textarea::placeholder {
+  color: #64748b !important;
 }
 .dark .admin-scope select option {
   background-color: #0b1329 !important;

@@ -363,20 +363,20 @@ export const AdminBanners: React.FC = () => {
       )}
 
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-bold">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 text-xs font-bold">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Promotional Banners</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>Live Synced with Student Home</span>
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hero Banners</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Hero Banners</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Upload full promotional graphics, set click destination links, and control slides on the student dashboard.
           </p>
         </div>
@@ -386,13 +386,13 @@ export const AdminBanners: React.FC = () => {
             type="button"
             onClick={handleSyncLive}
             disabled={isSyncing}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
             title="Publish and sync all banners to live student homepage"
           >
             {isSyncing ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
+              <RefreshCw className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             )}
             <span>{isSyncing ? 'Syncing...' : 'Sync to Student Home'}</span>
           </button>
@@ -798,14 +798,14 @@ export const AdminBanners: React.FC = () => {
                               {badgeText.trim()}
                             </span>
                           )}
-                          <p className="text-sm font-black text-slate-900 mt-1.5 leading-snug">
+                          <p className="text-sm font-black text-slate-900 dark:text-white mt-1.5 leading-snug">
                             {title.trim() || 'Banner headline goes here'}{' '}
                             {highlightWord.trim() && (
                               <span className={theme.highlightText}>{highlightWord.trim()}</span>
                             )}
                           </p>
                           {subtitle.trim() && (
-                            <p className="text-[11px] text-slate-600 mt-1 line-clamp-2">
+                            <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
                               {subtitle.trim()}
                             </p>
                           )}
@@ -828,7 +828,7 @@ export const AdminBanners: React.FC = () => {
                               {pills.slice(0, 5).map((pill, i) => (
                                 <span
                                   key={i}
-                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/70 border border-slate-200 text-slate-600"
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
                                 >
                                   {pill}
                                 </span>
@@ -840,7 +840,7 @@ export const AdminBanners: React.FC = () => {
                     );
                   }
                   return imageUrl.trim() ? (
-                    <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900">
                       <img
                         src={imageUrl.trim()}
                         alt={title.trim() || 'Banner preview'}
@@ -858,7 +858,7 @@ export const AdminBanners: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center text-[11px] text-slate-400 font-semibold">
+                    <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 text-center text-[11px] text-slate-400 dark:text-slate-500 font-semibold">
                       Upload an image below or enter a link to preview the full graphic banner.
                     </div>
                   );
@@ -866,20 +866,20 @@ export const AdminBanners: React.FC = () => {
               </div>
 
               {/* 1. Full Banner Image (Upload or Link) */}
-              <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/90">
+              <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200/90 dark:border-slate-800">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                      <ImageIcon className="w-4 h-4 text-blue-600" />
+                    <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       <span>Full Promotional Banner Image *</span>
                     </label>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                       Upload your ready-made banner artwork or paste an image URL.
                     </p>
                   </div>
 
                   {/* Mode toggle (Upload file vs Link) */}
-                  <div className="flex items-center bg-white rounded-xl p-1 border border-slate-200 shadow-2xs self-start sm:self-auto">
+                  <div className="flex items-center bg-white dark:bg-slate-950 rounded-xl p-1 border border-slate-200 dark:border-slate-800 shadow-2xs self-start sm:self-auto">
                     <button
                       type="button"
                       onClick={() => setImageInputMode('upload')}
@@ -925,25 +925,25 @@ export const AdminBanners: React.FC = () => {
                     onDrop={handleDrop}
                     className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
                       isDragging
-                        ? 'border-blue-500 bg-blue-50/70'
-                        : 'border-slate-300 hover:border-blue-400 hover:bg-slate-100/60 bg-white'
+                        ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30'
+                        : 'border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 bg-white dark:bg-slate-900'
                     }`}
                   >
                     {isUploading ? (
                       <div className="flex flex-col items-center justify-center py-2">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
-                        <p className="text-xs font-bold text-slate-800">Uploading banner image...</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">Please wait a moment</p>
+                        <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin mb-2" />
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">Uploading banner image...</p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Please wait a moment</p>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2 shadow-2xs">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2 shadow-2xs">
                           <Upload className="w-6 h-6" />
                         </div>
-                        <p className="text-xs font-bold text-slate-800">
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">
                           Click to upload banner or drag & drop image here
                         </p>
-                        <p className="text-[11px] text-slate-400 mt-1">
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
                           PNG, JPG, WebP, SVG (Max 5MB)
                         </p>
                       </div>
@@ -959,41 +959,41 @@ export const AdminBanners: React.FC = () => {
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
                         placeholder="https://example.com/banner.png or /images/exam_hero_banner.png"
-                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                       />
                     </div>
                   </div>
                 )}
 
-                <p className="text-[11px] text-slate-500 flex items-center gap-1.5 pt-0.5">
-                  <span className="font-semibold text-slate-700">💡 Recommended banner size:</span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-0.5">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">💡 Recommended banner size:</span>
                   <span>1200 × 360 px (approx. 3:1 aspect ratio). PNG, JPG, WebP, SVG (Max 8MB).</span>
                 </p>
 
                 {optimizationInfo && (
-                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-[11px] font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>{optimizationInfo}</span>
                   </div>
                 )}
 
                 {/* Selected Banner Image Preview */}
                 {imageUrl && (
-                  <div className="mt-3 p-3 bg-white rounded-xl border border-slate-200">
+                  <div className="mt-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                        <Eye className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                         <span>Live Image Preview</span>
                       </span>
                       <button
                         type="button"
                         onClick={() => setImageUrl('')}
-                        className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                        className="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
                       >
                         Remove
                       </button>
                     </div>
-                    <div className="relative rounded-lg overflow-hidden border border-slate-200 max-h-36 bg-slate-900 flex items-center justify-center">
+                    <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 max-h-36 bg-slate-900 flex items-center justify-center">
                       <img
                         src={imageUrl}
                         alt="Banner preview"
@@ -1003,7 +1003,7 @@ export const AdminBanners: React.FC = () => {
                         className="w-full h-auto max-h-36 object-contain"
                       />
                     </div>
-                    <p className="text-[10.5px] text-slate-500 mt-2">
+                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-2">
                       💡 <b>Recommended Size:</b> 1200 × 360 px (approx. 3:1 ratio). Create your complete artwork with headline, discount, and illustrations directly inside the image.
                     </p>
                   </div>
@@ -1221,7 +1221,7 @@ export const AdminBanners: React.FC = () => {
                           value={highlightWord}
                           onChange={(e) => setHighlightWord(e.target.value)}
                           placeholder="e.g. All-India Standard Mocks"
-                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -1231,7 +1231,7 @@ export const AdminBanners: React.FC = () => {
                           value={subtitle}
                           onChange={(e) => setSubtitle(e.target.value)}
                           placeholder="Short description..."
-                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
@@ -1239,23 +1239,23 @@ export const AdminBanners: React.FC = () => {
                     {/* Primary button label */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-bold text-slate-700">Primary Button Text</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Primary Button Text</label>
                         <input
                           type="text"
                           value={primaryCtaText}
                           onChange={(e) => setPrimaryCtaText(e.target.value)}
                           placeholder="e.g. Start Now"
-                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-700">Feature Pills (Comma-separated)</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Feature Pills (Comma-separated)</label>
                         <input
                           type="text"
                           value={featurePillsRaw}
                           onChange={(e) => setFeaturePillsRaw(e.target.value)}
                           placeholder="Mock Tests, PYQ, Full Solutions"
-                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
@@ -1263,7 +1263,7 @@ export const AdminBanners: React.FC = () => {
                     {/* Secondary button (optional second CTA shown next to primary) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-bold text-slate-700">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
                           Secondary Button Text <span className="font-medium text-slate-400">(optional)</span>
                         </label>
                         <input
@@ -1271,11 +1271,11 @@ export const AdminBanners: React.FC = () => {
                           value={secondaryCtaText}
                           onChange={(e) => setSecondaryCtaText(e.target.value)}
                           placeholder="e.g. View Test Series"
-                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-700">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
                           Secondary Button Link <span className="font-medium text-slate-400">(optional)</span>
                         </label>
                         <input
@@ -1283,14 +1283,14 @@ export const AdminBanners: React.FC = () => {
                           value={secondaryCtaLink}
                           onChange={(e) => setSecondaryCtaLink(e.target.value)}
                           placeholder="e.g. /exams or /dashboard"
-                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="mt-1 w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
 
                     {/* Theme selector */}
                     <div>
-                      <label className="text-xs font-bold text-slate-700">Color Gradient Theme</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Color Gradient Theme</label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
                         {THEME_OPTIONS.map((theme) => (
                           <button
@@ -1299,12 +1299,12 @@ export const AdminBanners: React.FC = () => {
                             onClick={() => setThemeGradient(theme.id)}
                             className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
                               themeGradient === theme.id
-                                ? 'border-blue-600 bg-blue-50 text-blue-800 ring-2 ring-blue-500/20'
-                                : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                                ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 ring-2 ring-blue-500/20'
+                                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                             }`}
                           >
                             <span className={theme.textClass}>{theme.label}</span>
-                            {themeGradient === theme.id && <CheckCircle className="w-3.5 h-3.5 text-blue-600" />}
+                            {themeGradient === theme.id && <CheckCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
                           </button>
                         ))}
                       </div>

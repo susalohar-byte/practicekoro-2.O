@@ -148,11 +148,11 @@ export const AdminNotifications: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-white flex items-center gap-2.5">
-            <Bell className="w-6 h-6 text-indigo-400" />
+          <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Bell className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
             Notifications & Broadcasts
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Broadcast test releases, exam alerts, subscription offers, and push updates to
             aspirants.
           </p>
@@ -162,10 +162,10 @@ export const AdminNotifications: React.FC = () => {
           <button
             onClick={loadNotifications}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-400' : ''}`}
+              className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-500 dark:text-indigo-400' : ''}`}
             />
             Refresh
           </button>
@@ -180,7 +180,7 @@ export const AdminNotifications: React.FC = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-850 w-fit">
+      <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-850 w-fit">
         {[
           { id: 'all', label: `All (${notifications.length})` },
           {
@@ -202,7 +202,7 @@ export const AdminNotifications: React.FC = () => {
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               statusFilter === tab.id
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             {tab.label}
@@ -213,13 +213,13 @@ export const AdminNotifications: React.FC = () => {
       {/* Notifications List */}
       <div className="space-y-3">
         {isLoading ? (
-          <div className="p-12 text-center text-slate-400 bg-slate-950 rounded-2xl border border-slate-850">
-            <RefreshCw className="w-6 h-6 animate-spin text-indigo-400 mx-auto mb-2" />
+          <div className="p-12 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-850">
+            <RefreshCw className="w-6 h-6 animate-spin text-indigo-500 dark:text-indigo-400 mx-auto mb-2" />
             Loading notifications...
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 bg-slate-950 rounded-2xl border border-slate-850">
-            <Bell className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
+          <div className="p-12 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-850">
+            <Bell className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
             No broadcast notifications found in this category.
           </div>
         ) : (
@@ -229,42 +229,42 @@ export const AdminNotifications: React.FC = () => {
             return (
               <div
                 key={notif.id}
-                className="p-4 rounded-2xl bg-slate-950 border border-slate-850 hover:border-slate-800 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 hover:border-slate-300 dark:hover:border-slate-800 shadow-2xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-white text-sm">{notif.title}</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-sm">{notif.title}</span>
 
                     {/* Audience Badge */}
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-900 border border-slate-800 text-slate-300">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                       {notif.targetAudience === 'pro' || notif.targetAudience === 'pro_users' ? (
                         <>
-                          <Crown className="w-3 h-3 text-amber-400" /> Pro Members
+                          <Crown className="w-3 h-3 text-amber-500 dark:text-amber-400" /> Pro Members
                         </>
                       ) : notif.targetAudience === 'free' ||
                         notif.targetAudience === 'free_users' ? (
                         <>
-                          <Sparkles className="w-3 h-3 text-indigo-400" /> Free Tier
+                          <Sparkles className="w-3 h-3 text-indigo-500 dark:text-indigo-400" /> Free Tier
                         </>
                       ) : notif.targetAudience === 'all' ? (
                         <>
-                          <Users className="w-3 h-3 text-emerald-400" /> All Students
+                          <Users className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> All Students
                         </>
                       ) : notif.targetAudience.startsWith('exam:') ? (
                         <>
-                          <Layers className="w-3 h-3 text-cyan-400" />
+                          <Layers className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
                           {exams.find((e) => `exam:${e.id}` === notif.targetAudience)?.title ||
                             'Target Exam'}
                         </>
                       ) : (
                         <>
-                          <Layers className="w-3 h-3 text-cyan-400" /> {notif.targetAudience}
+                          <Layers className="w-3 h-3 text-cyan-600 dark:text-cyan-400" /> {notif.targetAudience}
                         </>
                       )}
                     </span>
 
                     {/* Channel Badge */}
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20">
                       <Smartphone className="w-3 h-3" />
                       {notif.channel === 'both' ? 'In-App + Push' : notif.channel}
                     </span>
@@ -273,10 +273,10 @@ export const AdminNotifications: React.FC = () => {
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         isSent
-                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                           : notif.status === 'scheduled'
-                            ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                            : 'bg-slate-900 text-slate-400 border border-slate-800'
+                            ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
                       }`}
                     >
                       {isSent ? (
@@ -288,9 +288,9 @@ export const AdminNotifications: React.FC = () => {
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">{notif.message}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{notif.message}</p>
 
-                  <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1">
+                  <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-slate-500 pt-1">
                     <span>
                       Created:{' '}
                       {new Date(notif.createdAt).toLocaleDateString('en-IN', {
@@ -301,7 +301,7 @@ export const AdminNotifications: React.FC = () => {
                       })}
                     </span>
                     {notif.scheduledAt && notif.status === 'scheduled' && (
-                      <span className="text-amber-400 font-semibold flex items-center gap-1">
+                      <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         Scheduled for:{' '}
                         {new Date(notif.scheduledAt).toLocaleDateString('en-IN', {
@@ -319,7 +319,7 @@ export const AdminNotifications: React.FC = () => {
                   {notif.status !== 'sent' && (
                     <button
                       onClick={() => handleSendNow(notif.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 transition-colors"
                       title="Dispatch this broadcast immediately"
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export const AdminNotifications: React.FC = () => {
                   )}
                   <button
                     onClick={() => handleDelete(notif.id)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/20 transition-colors"
+                    className="p-2 rounded-xl text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-slate-200 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-500/20 transition-colors"
                     title="Delete Notification"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -342,16 +342,16 @@ export const AdminNotifications: React.FC = () => {
 
       {/* Broadcast Creation Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/35">
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Send className="w-4 h-4 text-indigo-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/40">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Send className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                 Compose Broadcast Notification
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -359,13 +359,13 @@ export const AdminNotifications: React.FC = () => {
 
             <form onSubmit={handleCreate} className="space-y-4">
               {formError && (
-                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">
+                <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs text-rose-700 dark:text-rose-400 font-semibold">
                   {formError}
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
                   Notification Title *
                 </label>
                 <input
@@ -374,12 +374,12 @@ export const AdminNotifications: React.FC = () => {
                   placeholder="e.g. New WBP Constable Full Mock Test 05 is Live!"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
                   Message Body *
                 </label>
                 <textarea
@@ -388,19 +388,19 @@ export const AdminNotifications: React.FC = () => {
                   placeholder="Enter clear announcement details for students..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
                     Target Audience
                   </label>
                   <select
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-200"
                   >
                     <option value="all">All Registered Students</option>
                     <option value="pro">Pro Members Only</option>
@@ -418,13 +418,13 @@ export const AdminNotifications: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
                     Delivery Channel
                   </label>
                   <select
                     value={channel}
                     onChange={(e) => setChannel(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-200"
                   >
                     <option value="both">In-App + Push Notification</option>
                     <option value="in_app">In-App Notice Only</option>
@@ -434,14 +434,14 @@ export const AdminNotifications: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
                   Dispatch Mode
                 </label>
                 <select
                   aria-label="Dispatch Mode"
                   value={status}
                   onChange={(e) => setStatus(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-200"
                 >
                   <option value="sent">Send Immediately</option>
                   <option value="scheduled">Schedule for Later</option>
@@ -450,8 +450,8 @@ export const AdminNotifications: React.FC = () => {
               </div>
 
               {status === 'scheduled' && (
-                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
-                  <label className="block text-[11px] font-bold text-amber-300 uppercase flex items-center gap-1.5">
+                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 space-y-2">
+                  <label className="block text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
                     Scheduled Dispatch Date & Time *
                   </label>
@@ -461,20 +461,20 @@ export const AdminNotifications: React.FC = () => {
                     min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
                     value={scheduledAt}
                     onChange={(e) => setScheduledAt(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-500/40 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-amber-300 dark:border-amber-500/40 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500"
                   />
-                  <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                  <p className="text-[11px] text-amber-800 dark:text-amber-200/80 leading-relaxed">
                     ⏰ At this specified time, the notification will automatically transition to
                     "SENT" and be delivered to candidate notification bells.
                   </p>
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
