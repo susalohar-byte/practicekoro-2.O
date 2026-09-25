@@ -7,6 +7,12 @@ import type { TestSeries } from '@/types';
 // TEST SERIES API
 // --------------------------------------------------------------------------
 export async function getTestSeries(examId?: string): Promise<TestSeries[]> {
+  let cachedIcons: Record<string, string> = {};
+  try {
+    const raw = localStorage.getItem('practicekoro_series_icons');
+    if (raw) cachedIcons = JSON.parse(raw);
+  } catch {}
+
   if (!isSupabaseConfigured) {
     return localTestSeries
       .filter((s) => !examId || s.examId === examId)
@@ -24,6 +30,7 @@ export async function getTestSeries(examId?: string): Promise<TestSeries[]> {
         ).length;
         return {
           ...s,
+          iconUrl: s.iconUrl || cachedIcons[s.id] || undefined,
           examTitle: exam?.title,
           testCount: count,
           testsCount: count,
@@ -66,6 +73,7 @@ export async function getTestSeries(examId?: string): Promise<TestSeries[]> {
       title: item.title,
       slug: item.slug,
       description: item.description ?? undefined,
+      iconUrl: item.icon_url || cachedIcons[item.id] || item.iconUrl || undefined,
       isPremium: item.is_premium,
       orderIndex: item.order_index,
       isActive: item.is_active,
@@ -95,30 +103,64 @@ export async function createTestSeries(seriesData: Omit<TestSeries, 'id'>): Prom
       id,
       ...seriesData,
       slug,
+      iconUrl: seriesData.iconUrl,
       examTitle: exam?.title,
       createdAt: new Date().toISOString(),
     };
     localTestSeries.push(newSeries);
+    if (seriesData.iconUrl) {
+      try {
+        const raw = localStorage.getItem('practicekoro_series_icons');
+        const icons = raw ? JSON.parse(raw) : {};
+        icons[id] = seriesData.iconUrl;
+        localStorage.setItem('practicekoro_series_icons', JSON.stringify(icons));
+      } catch {}
+    }
     return newSeries;
   }
 
-  const { data, error } = await supabase
+  const insertPayload: Record<string, unknown> = {
+    id,
+    exam_id: seriesData.examId,
+    title: seriesData.title,
+    slug,
+    description: seriesData.description || null,
+    is_premium: seriesData.isPremium ?? false,
+    order_index: seriesData.orderIndex || 0,
+    is_active: seriesData.isActive ?? true,
+  };
+  if (seriesData.iconUrl) {
+    insertPayload.icon_url = seriesData.iconUrl;
+  }
+
+  let { data, error } = await supabase
     .from('test_series')
-    .insert({
-      id,
-      exam_id: seriesData.examId,
-      title: seriesData.title,
-      slug,
-      description: seriesData.description || null,
-      is_premium: seriesData.isPremium ?? false,
-      order_index: seriesData.orderIndex || 0,
-      is_active: seriesData.isActive ?? true,
-    })
+    .insert(insertPayload)
     .select('*, exams:exam_id(title)')
     .single();
 
+  if (error && (error.message?.includes('icon_url') || error.code === 'PGRST204')) {
+    delete insertPayload.icon_url;
+    const retry = await supabase
+      .from('test_series')
+      .insert(insertPayload)
+      .select('*, exams:exam_id(title)')
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
+
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (seriesData.iconUrl) {
+    try {
+      const raw = localStorage.getItem('practicekoro_series_icons');
+      const icons = raw ? JSON.parse(raw) : {};
+      icons[data.id] = seriesData.iconUrl;
+      localStorage.setItem('practicekoro_series_icons', JSON.stringify(icons));
+    } catch {}
   }
 
   return {
@@ -130,6 +172,7 @@ export async function createTestSeries(seriesData: Omit<TestSeries, 'id'>): Prom
     isPremium: data.is_premium,
     orderIndex: data.order_index,
     isActive: data.is_active,
+    iconUrl: seriesData.iconUrl || (data as any)?.icon_url || undefined,
     createdAt: data.created_at,
     examTitle: (data as any).exams?.title || undefined,
     testCount: 0,
@@ -141,13 +184,30 @@ export async function updateTestSeries(
   id: string,
   updates: Partial<TestSeries>
 ): Promise<TestSeries> {
-  if (!isSupabaseConfigured) {
-    const idx = localTestSeries.findIndex((s) => s.id === id);
-    if (idx !== -1) {
-      localTestSeries[idx] = { ...localTestSeries[idx], ...updates };
+  // Always update in-memory store and local icon cache
+  const localIdx = localTestSeries.findIndex((s) => s.id === id);
+  if (localIdx !== -1) {
+    localTestSeries[localIdx] = { ...localTestSeries[localIdx], ...updates };
+  }
+
+  if (updates.iconUrl !== undefined) {
+    try {
+      const raw = localStorage.getItem('practicekoro_series_icons');
+      const icons = raw ? JSON.parse(raw) : {};
+      if (updates.iconUrl) {
+        icons[id] = updates.iconUrl;
+      } else {
+        delete icons[id];
+      }
+      localStorage.setItem('practicekoro_series_icons', JSON.stringify(icons));
+    } catch (e) {
+      console.warn('Could not cache series icon in localStorage:', e);
     }
+  }
+
+  if (!isSupabaseConfigured) {
     return (
-      localTestSeries[idx] || {
+      localTestSeries[localIdx] || {
         id,
         examId: '',
         title: '',
@@ -155,6 +215,7 @@ export async function updateTestSeries(
         isPremium: false,
         orderIndex: 0,
         isActive: true,
+        iconUrl: updates.iconUrl,
       }
     );
   }
@@ -167,13 +228,26 @@ export async function updateTestSeries(
   if (updates.orderIndex !== undefined) payload.order_index = updates.orderIndex;
   if (updates.isActive !== undefined) payload.is_active = updates.isActive;
   if (updates.examId !== undefined) payload.exam_id = updates.examId;
+  if (updates.iconUrl !== undefined) payload.icon_url = updates.iconUrl || null;
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('test_series')
     .update(payload)
     .eq('id', id)
     .select('*, exams:exam_id(title)')
     .single();
+
+  if (error && (error.message?.includes('icon_url') || error.code === 'PGRST204')) {
+    delete payload.icon_url;
+    const retry = await supabase
+      .from('test_series')
+      .update(payload)
+      .eq('id', id)
+      .select('*, exams:exam_id(title)')
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     throw new Error(error.message);

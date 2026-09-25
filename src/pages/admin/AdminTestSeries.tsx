@@ -25,8 +25,10 @@ import {
   AlertCircle,
   FolderPlus,
   HelpCircle,
+  Upload,
 } from 'lucide-react';
 import type { TestSeries, Exam, MockTest } from '@/types';
+import { PRESET_SERIES_ICONS } from '@/components/testSeries/UploadSeriesIconModal';
 
 export type SeriesCategoryType = 'all' | 'full_mock' | 'topic' | 'pyq';
 
@@ -53,6 +55,7 @@ export const AdminTestSeries: React.FC = () => {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
+  const [iconUrl, setIconUrl] = useState('');
   const [isPremium, setIsPremium] = useState(false);
   const [orderIndex, setOrderIndex] = useState(1);
   const [isActive, setIsActive] = useState(true);
@@ -97,6 +100,7 @@ export const AdminTestSeries: React.FC = () => {
     setTitle('');
     setSlug('');
     setDescription('');
+    setIconUrl('');
     setIsPremium(false);
     setOrderIndex(seriesList.length + 1);
     setIsActive(true);
@@ -110,6 +114,7 @@ export const AdminTestSeries: React.FC = () => {
     setTitle(series.title);
     setSlug(series.slug);
     setDescription(series.description || '');
+    setIconUrl(series.iconUrl || '');
     setIsPremium(series.isPremium);
     setOrderIndex(series.orderIndex);
     setIsActive(series.isActive);
@@ -145,6 +150,7 @@ export const AdminTestSeries: React.FC = () => {
           title: title.trim(),
           slug: slug.trim() || undefined,
           description: description.trim() || undefined,
+          iconUrl: iconUrl.trim() || undefined,
           isPremium,
           orderIndex: Number(orderIndex),
           isActive,
@@ -161,6 +167,7 @@ export const AdminTestSeries: React.FC = () => {
               .replace(/[^a-z0-9]+/g, '-')
               .replace(/(^-|-$)/g, ''),
           description: description.trim() || undefined,
+          iconUrl: iconUrl.trim() || undefined,
           isPremium,
           orderIndex: Number(orderIndex),
           isActive,
@@ -1410,6 +1417,81 @@ export const AdminTestSeries: React.FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  Series Icon / Emblem
+                </label>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
+                  <div className="w-12 h-12 rounded-xl bg-[#FFF4F0] dark:bg-slate-800 border border-[#FDE2D7] dark:border-slate-700 p-2 flex items-center justify-center shrink-0">
+                    <img
+                      src={iconUrl || '/images/exams/emblem_wbp.png'}
+                      alt="Icon Preview"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/logo-icon.png';
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Icon URL or pick preset below"
+                        value={iconUrl}
+                        onChange={(e) => setIconUrl(e.target.value)}
+                        className="flex-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400"
+                      />
+                      <label className="cursor-pointer px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold flex items-center gap-1 shrink-0">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                setIconUrl(ev.target?.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                      {iconUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setIconUrl('')}
+                          className="text-xs text-rose-500 hover:text-rose-600 font-bold px-1"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {/* Presets */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
+                      {PRESET_SERIES_ICONS.slice(0, 8).map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          title={p.name}
+                          onClick={() => setIconUrl(p.url)}
+                          className={`w-7 h-7 rounded-lg border p-1 shrink-0 bg-white dark:bg-slate-900 transition-all ${
+                            iconUrl === p.url
+                              ? 'border-indigo-500 ring-2 ring-indigo-500/20'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                          }`}
+                        >
+                          <img src={p.url} alt={p.name} className="w-full h-full object-contain" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

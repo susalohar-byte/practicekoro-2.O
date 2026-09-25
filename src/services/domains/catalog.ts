@@ -1448,6 +1448,14 @@ export const catalogApi = {
    * fullMockCount, topicTestCount, pyqTestCount, and total testCount.
    */
   async getStudentTestSeries(examId?: string): Promise<TestSeries[]> {
+    let cachedIcons: Record<string, string> = {};
+    try {
+      const raw = localStorage.getItem('practicekoro_series_icons');
+      if (raw) cachedIcons = JSON.parse(raw);
+    } catch {
+      // Ignore storage errors
+    }
+
     if (!isSupabaseConfigured) {
       return localTestSeries
         .filter((s) => s.isActive && (!examId || s.examId === examId))
@@ -1470,6 +1478,7 @@ export const catalogApi = {
           ).length;
           return {
             ...s,
+            iconUrl: s.iconUrl || cachedIcons[s.id] || undefined,
             examTitle: exam?.title,
             testCount: count,
             testsCount: count,
@@ -1509,6 +1518,7 @@ export const catalogApi = {
             );
             return {
               ...s,
+              iconUrl: s.iconUrl || cachedIcons[s.id] || undefined,
               examTitle: exam?.title,
               testCount: sTests.length,
               testsCount: sTests.length,
@@ -1545,6 +1555,7 @@ export const catalogApi = {
           title: item.title,
           slug: item.slug,
           description: item.description ?? undefined,
+          iconUrl: item.icon_url || cachedIcons[item.id] || item.iconUrl || undefined,
           isPremium: Boolean(item.is_premium),
           orderIndex: Number(item.order_index || 0),
           isActive: Boolean(item.is_active),
@@ -1559,7 +1570,12 @@ export const catalogApi = {
         };
       });
     } catch {
-      return localTestSeries.filter((s) => s.isActive && (!examId || s.examId === examId));
+      return localTestSeries
+        .filter((s) => s.isActive && (!examId || s.examId === examId))
+        .map((s) => ({
+          ...s,
+          iconUrl: s.iconUrl || cachedIcons[s.id] || undefined,
+        }));
     }
   },
 

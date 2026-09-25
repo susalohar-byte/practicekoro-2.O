@@ -69,6 +69,7 @@ export interface UserProfile {
   email: string;
   phone?: string;
   avatarUrl?: string;
+  district?: string;
   targetExamId?: string;
   role: UserRole;
   adminRole?: AdminRole;
@@ -152,6 +153,7 @@ export interface TestSeries {
   isPremium: boolean;
   orderIndex: number;
   isActive: boolean;
+  iconUrl?: string;
   createdAt?: string;
   examTitle?: string;
   examCategory?: string;

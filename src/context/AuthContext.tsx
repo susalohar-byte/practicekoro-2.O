@@ -11,6 +11,7 @@ import { getAdminPermissions } from '@/types';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'] & {
   admin_role?: string | null;
+  district?: string | null;
 };
 
 /**
@@ -69,11 +70,13 @@ const resolveUserProfile = async (supabaseUser: {
     // Create profile if it doesn't exist yet (e.g. first Google sign-in)
     if (!profile) {
       const initialName = metaFullName || supabaseUser.email?.split('@')[0] || 'Candidate';
+      const initialDistrict = ((meta.district || '') as string).trim() || null;
       const newProfile = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         full_name: initialName,
         avatar_url: metaAvatar || null,
+        district: initialDistrict,
         role: effectiveRole,
       };
       try {
@@ -115,6 +118,7 @@ const resolveUserProfile = async (supabaseUser: {
       email: profile?.email || supabaseUser.email || '',
       phone: profile?.phone ?? undefined,
       avatarUrl: profile?.avatar_url || metaAvatar || undefined,
+      district: profile?.district || ((meta.district || '') as string).trim() || undefined,
       targetExamId: profile?.target_exam_id ?? undefined,
       role: effectiveRole,
       adminRole: effectiveRole === 'admin' ? adminSubRole : undefined,
@@ -153,13 +157,15 @@ interface AuthContextType {
   register: (
     fullName: string,
     email: string,
-    password: string
+    password: string,
+    district?: string
   ) => Promise<{ error: Error | null; role?: UserRole; needsConfirmation?: boolean }>;
   logout: () => Promise<void>;
   updateProfile: (updates: {
     fullName?: string;
     phone?: string;
     avatarUrl?: string;
+    district?: string;
   }) => Promise<{ error: Error | null; user?: UserProfile }>;
   refreshProStatus: () => Promise<boolean>;
 }
@@ -351,7 +357,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (
     fullName: string,
     email: string,
-    password: string
+    password: string,
+    district?: string
   ): Promise<{ error: Error | null; role?: UserRole; needsConfirmation?: boolean }> => {
     // NOTE: same as login() — do not toggle global `loading` (see above).
     try {
@@ -363,11 +370,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const cleanEmail = email.trim();
       const cleanName = fullName.trim();
+      const cleanDistrict = district?.trim() || null;
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
-          data: { full_name: cleanName },
+          data: {
+            full_name: cleanName,
+            ...(cleanDistrict ? { district: cleanDistrict } : {}),
+          },
         },
       });
 
@@ -389,6 +400,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           fullName: cleanName,
           email: cleanEmail,
+          district: cleanDistrict || undefined,
           role: registeredRole,
           createdAt: new Date().toISOString(),
         };
@@ -419,6 +431,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName?: string;
     phone?: string;
     avatarUrl?: string;
+    district?: string;
   }): Promise<{ error: Error | null; user?: UserProfile }> => {
     if (!user) return { error: new Error('User is not logged in') };
 
@@ -427,6 +440,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatedPhone = updates.phone !== undefined ? updates.phone.trim() : user.phone;
     const updatedAvatarUrl =
       updates.avatarUrl !== undefined ? updates.avatarUrl.trim() : user.avatarUrl;
+    const updatedDistrict =
+      updates.district !== undefined ? updates.district.trim() : user.district;
 
     if (!updatedFullName) {
       return { error: new Error('Full Name cannot be empty') };
@@ -436,15 +451,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       if (isSupabaseConfigured && isUuid) {
-        const { error: profileError } = await supabase
+        let { error: profileError } = await supabase
           .from('profiles')
           .update({
             full_name: updatedFullName,
             phone: updatedPhone || null,
             avatar_url: updatedAvatarUrl || null,
+            district: updatedDistrict || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id);
+
+        // Resilient fallback if 'district' column has not yet been added to Supabase profiles schema
+        if (
+          profileError &&
+          (profileError.message?.includes("'district'") ||
+            profileError.message?.toLowerCase().includes('schema cache') ||
+            profileError.code === 'PGRST204')
+        ) {
+          console.warn(
+            "Notice: 'district' column not yet in profiles schema cache. Saving district to auth metadata and retrying profile update without column."
+          );
+          const { error: retryError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: updatedFullName,
+              phone: updatedPhone || null,
+              avatar_url: updatedAvatarUrl || null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
+
+          profileError = retryError;
+        }
 
         if (profileError) {
           return { error: profileError };
@@ -455,6 +494,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             data: {
               full_name: updatedFullName,
               avatar_url: updatedAvatarUrl || null,
+              district: updatedDistrict || null,
             },
           });
         } catch (authErr) {
@@ -467,6 +507,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fullName: updatedFullName,
         phone: updatedPhone,
         avatarUrl: updatedAvatarUrl,
+        district: updatedDistrict || undefined,
       };
 
       setUser(updatedUser);

@@ -5,6 +5,7 @@ import { BottomNav } from './BottomNav';
 import { useMaintenance } from '@/context/MaintenanceContext';
 import { useAuth } from '@/context/AuthContext';
 import { MaintenanceScreen } from '@/components/common/MaintenanceScreen';
+import { MandatoryDistrictModal } from '@/components/student/MandatoryDistrictModal';
 
 export const AppLayout: React.FC = () => {
   const { isMaintenanceMode, loading: maintLoading } = useMaintenance();
@@ -59,6 +60,9 @@ export const AppLayout: React.FC = () => {
         </main>
         <BottomNav />
       </div>
+
+      {/* Mandatory District Selection Modal for all students missing district */}
+      <MandatoryDistrictModal />
     </div>
   );
 };

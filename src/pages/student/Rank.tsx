@@ -3,6 +3,7 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import {
   Flame,
   Globe,
+  MapPin,
   Calendar,
   ChevronDown,
   ChevronRight,
@@ -14,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import type { TestAttempt } from '@/types';
 import { StudentNavbar } from '@/components/layout/StudentNavbar';
+import { WEST_BENGAL_DISTRICTS } from '@/data/districts';
 
 interface LeaderboardUser {
   rank: number;
@@ -27,6 +29,7 @@ interface LeaderboardUser {
   streak: number;
   tag?: string;
   exam?: string;
+  district?: string;
   isCurrentUser?: boolean;
 }
 
@@ -53,7 +56,7 @@ const GoldenLaurelWreath: React.FC = () => (
   </svg>
 );
 
-// Dataset matching the reference mockup for WBP Constable & other exams
+// Dataset matching the reference mockup for WBP Constable & other exams with West Bengal districts
 const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
   'WBP Constable': [
     {
@@ -68,6 +71,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 18,
       tag: 'Topper',
       exam: 'WBP Constable',
+      district: 'Hooghly',
     },
     {
       rank: 2,
@@ -81,6 +85,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 14,
       tag: 'Achiever',
       exam: 'WBP Constable',
+      district: 'North 24 Parganas',
     },
     {
       rank: 3,
@@ -94,6 +99,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 11,
       tag: 'Star Performer',
       exam: 'WBP Constable',
+      district: 'Howrah',
     },
     {
       rank: 4,
@@ -106,6 +112,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 5820,
       streak: 12,
       exam: 'WBP Constable',
+      district: 'Purulia',
     },
     {
       rank: 5,
@@ -118,6 +125,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 5610,
       streak: 10,
       exam: 'WBP Constable',
+      district: 'Kolkata',
     },
     {
       rank: 6,
@@ -130,6 +138,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 5420,
       streak: 9,
       exam: 'WBP Constable',
+      district: 'Bankura',
     },
     {
       rank: 7,
@@ -142,6 +151,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 5210,
       streak: 8,
       exam: 'WBP Constable',
+      district: 'Purba Medinipur',
     },
     {
       rank: 8,
@@ -154,6 +164,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 5040,
       streak: 7,
       exam: 'WBP Constable',
+      district: 'Murshidabad',
     },
     {
       rank: 9,
@@ -166,6 +177,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 4880,
       streak: 6,
       exam: 'WBP Constable',
+      district: 'Paschim Bardhaman',
     },
     {
       rank: 10,
@@ -178,6 +190,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 4620,
       streak: 5,
       exam: 'WBP Constable',
+      district: 'Nadia',
     },
   ],
   'KP SI': [
@@ -193,6 +206,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 15,
       tag: 'Topper',
       exam: 'KP SI',
+      district: 'Kolkata',
     },
     {
       rank: 2,
@@ -206,6 +220,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 12,
       tag: 'Achiever',
       exam: 'KP SI',
+      district: 'South 24 Parganas',
     },
     {
       rank: 3,
@@ -219,6 +234,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 9,
       tag: 'Star Performer',
       exam: 'KP SI',
+      district: 'Howrah',
     },
     {
       rank: 4,
@@ -231,6 +247,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 4959,
       streak: 8,
       exam: 'KP SI',
+      district: 'Purulia',
     },
     {
       rank: 5,
@@ -243,6 +260,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       totalMarks: 4531,
       streak: 7,
       exam: 'KP SI',
+      district: 'Paschim Medinipur',
     },
   ],
   'WBPSC Clerkship': [
@@ -258,6 +276,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 16,
       tag: 'Topper',
       exam: 'WBPSC Clerkship',
+      district: 'Kolkata',
     },
     {
       rank: 2,
@@ -271,6 +290,7 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 13,
       tag: 'Achiever',
       exam: 'WBPSC Clerkship',
+      district: 'Jalpaiguri',
     },
     {
       rank: 3,
@@ -284,8 +304,71 @@ const LEADERBOARD_DATA: Record<string, LeaderboardUser[]> = {
       streak: 10,
       tag: 'Star Performer',
       exam: 'WBPSC Clerkship',
+      district: 'Hooghly',
     },
   ],
+};
+
+// Helper to generate a realistic, high-quality leaderboard when filtered by any West Bengal District
+const getDistrictLeaderboard = (
+  baseList: LeaderboardUser[],
+  targetDistrict: string
+): LeaderboardUser[] => {
+  const directMatches = baseList.filter((u) => u.district === targetDistrict);
+  const pool: LeaderboardUser[] = [...directMatches];
+
+  // Specific seeds for districts to guarantee all 23 districts look authentic & active
+  const districtSeedNames = [
+    { name: 'Arindam Das', score: 87.2, tests: 76, acc: 91, streak: 14 },
+    { name: 'Sourav Mahato', score: 85.0, tests: 72, acc: 89, streak: 12 },
+    { name: 'Payel Banerjee', score: 83.4, tests: 68, acc: 87, streak: 10 },
+    { name: 'Debolina Mukherjee', score: 81.8, tests: 64, acc: 85, streak: 9 },
+    { name: 'Subham Ghosh', score: 80.2, tests: 61, acc: 84, streak: 8 },
+    { name: 'Puja Bauri', score: 78.6, tests: 58, acc: 82, streak: 7 },
+    { name: 'Sandip Hansda', score: 77.1, tests: 55, acc: 80, streak: 6 },
+    { name: 'Barnali Dey', score: 75.8, tests: 52, acc: 79, streak: 5 },
+    { name: 'Amitava Sen', score: 74.5, tests: 50, acc: 78, streak: 5 },
+    { name: 'Bikash Kalindi', score: 73.2, tests: 48, acc: 76, streak: 4 },
+  ];
+
+  for (let i = 0; i < districtSeedNames.length && pool.length < 10; i++) {
+    const seed = districtSeedNames[i];
+    if (!pool.some((p) => p.name === seed.name)) {
+      pool.push({
+        rank: pool.length + 1,
+        name: seed.name,
+        avatarUrl: `/images/avatar_${(i % 5) + 1}.jpg`,
+        fallbackText: seed.name
+          .split(' ')
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase(),
+        tests: seed.tests,
+        avgScore: seed.score,
+        accuracy: seed.acc,
+        totalMarks: Math.round(seed.score * seed.tests),
+        streak: seed.streak,
+        district: targetDistrict,
+      });
+    }
+  }
+
+  // Sort descending by average score and re-rank
+  pool.sort((a, b) => b.avgScore - a.avgScore);
+  return pool.map((item, idx) => ({
+    ...item,
+    rank: idx + 1,
+    district: targetDistrict,
+    tag:
+      idx === 0
+        ? 'District Topper'
+        : idx === 1
+          ? 'Achiever'
+          : idx === 2
+            ? 'Star Performer'
+            : item.tag,
+  }));
 };
 
 // Top performers across exams list
@@ -330,9 +413,19 @@ export const Rank: React.FC = () => {
   const { onToggleMobileSidebar } = useOutletContext<{ onToggleMobileSidebar?: () => void }>() || {};
 
   const [selectedExam, setSelectedExam] = useState<string>('WBP Constable');
-  const [selectedScope, setSelectedScope] = useState<string>('All India');
+  const [selectedScope, setSelectedScope] = useState<string>('West Bengal');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(
+    user?.district || 'Purulia'
+  );
   const [selectedPeriod, setSelectedPeriod] = useState<string>('This Month');
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
+
+  // Keep selectedDistrict in sync when user profile district is loaded
+  useEffect(() => {
+    if (user?.district) {
+      setSelectedDistrict(user.district);
+    }
+  }, [user?.district]);
 
   // Load genuine student test attempts
   useEffect(() => {
@@ -370,20 +463,41 @@ export const Rank: React.FC = () => {
       ? Math.round(completedAttempts.reduce((s, a) => s + (a.score || 0), 0))
       : 2980;
 
-  // Active exam list
+  // Active exam list - filtered by district if District scope is selected
   const currentLeaderboard = useMemo(() => {
-    return LEADERBOARD_DATA[selectedExam] || LEADERBOARD_DATA['WBP Constable'];
-  }, [selectedExam]);
+    const base = LEADERBOARD_DATA[selectedExam] || LEADERBOARD_DATA['WBP Constable'];
+    if (selectedScope === 'District') {
+      return getDistrictLeaderboard(base, selectedDistrict);
+    }
+    return base;
+  }, [selectedExam, selectedScope, selectedDistrict]);
 
   const top1 = currentLeaderboard.find((u) => u.rank === 1);
   const top2 = currentLeaderboard.find((u) => u.rank === 2);
   const top3 = currentLeaderboard.find((u) => u.rank === 3);
   const restRanks = currentLeaderboard.filter((u) => u.rank > 3);
 
+  // Student's effective district
+  const userDistrict = user?.district || 'Purulia';
+
+  // Live calculation of user's district rank
+  const userDistrictRank = useMemo(() => {
+    const targetDist = selectedScope === 'District' ? selectedDistrict : userDistrict;
+    const base = LEADERBOARD_DATA[selectedExam] || LEADERBOARD_DATA['WBP Constable'];
+    const distBoard = getDistrictLeaderboard(base, targetDist);
+    let countAbove = 0;
+    distBoard.forEach((c) => {
+      if (c.avgScore > userAvgScore) {
+        countAbove++;
+      }
+    });
+    return Math.max(1, countAbove + 1);
+  }, [selectedScope, selectedDistrict, userDistrict, selectedExam, userAvgScore]);
+
   // Current user row
   const displayName = user?.fullName || 'Susanta Lohar';
   const currentUserRow: LeaderboardUser = {
-    rank: 147,
+    rank: selectedScope === 'District' ? userDistrictRank : 147,
     name: displayName,
     avatarUrl: user?.avatarUrl || '/images/profile_user_avatar.jpg',
     fallbackText: displayName
@@ -397,6 +511,7 @@ export const Rank: React.FC = () => {
     accuracy: userAccuracy,
     totalMarks: userTotalMarks,
     streak: 4,
+    district: userDistrict,
     isCurrentUser: true,
   };
 
@@ -460,13 +575,33 @@ export const Rank: React.FC = () => {
                   aria-label="Filter by region scope"
                   className="appearance-none rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-9 pr-9 py-2 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs cursor-pointer"
                 >
+                  <option value="West Bengal">Statewide (West Bengal)</option>
+                  <option value="District">District Wise</option>
                   <option value="All India">All India</option>
-                  <option value="West Bengal">West Bengal</option>
-                  <option value="District">My District</option>
                 </select>
                 <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1e60f2]" />
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               </div>
+
+              {/* District Selector (visible when District is selected) */}
+              {selectedScope === 'District' && (
+                <div className="relative animate-in fade-in zoom-in-95 duration-150">
+                  <select
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value)}
+                    aria-label="Select West Bengal District"
+                    className="appearance-none rounded-2xl border-2 border-[#1e60f2] bg-blue-50/80 dark:bg-blue-950/60 pl-9 pr-9 py-2 text-xs sm:text-sm font-black text-[#1e60f2] dark:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-xs cursor-pointer"
+                  >
+                    {WEST_BENGAL_DISTRICTS.map((dist) => (
+                      <option key={dist} value={dist}>
+                        {dist} {userDistrict === dist ? '📍 (My District)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1e60f2]" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1e60f2]" />
+                </div>
+              )}
 
               {/* Period Selector */}
               <div className="relative">
@@ -495,6 +630,50 @@ export const Rank: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* District Active Filter Bar */}
+        {selectedScope === 'District' && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900 text-xs text-blue-950 dark:text-blue-200 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#1e60f2] shrink-0" />
+              <span>
+                District Leaderboard:{' '}
+                <strong className="text-slate-900 dark:text-white font-extrabold text-sm">{selectedDistrict}</strong>
+                {userDistrict === selectedDistrict ? ' (Your District)' : ''}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                Your District Rank: <strong className="text-[#1e60f2] font-black text-sm">#{userDistrictRank}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedScope('West Bengal')}
+                className="text-[11px] font-bold text-[#1e60f2] hover:underline cursor-pointer"
+              >
+                Switch to Statewide
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Prompt to add District if user has none */}
+        {!user?.district && (
+          <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-medium shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📍</span>
+              <span>
+                <strong>District not selected yet!</strong> Select your West Bengal district in your profile to officially compete in your district leaderboard.
+              </span>
+            </div>
+            <Link
+              to="/profile"
+              className="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors shadow-xs"
+            >
+              Set District
+            </Link>
+          </div>
+        )}
 
         {/* 3. Top 3 Spotlight Podium Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 items-end pt-3">
@@ -529,11 +708,17 @@ export const Rank: React.FC = () => {
               <h3 className="mt-2 text-base font-extrabold text-slate-900 dark:text-white truncate">
                 {top2.name}
               </h3>
-              <div className="mt-1 flex items-center justify-center">
+              <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                   <span>✦</span>
                   <span>{top2.tag || 'Achiever'}</span>
                 </span>
+                {top2.district && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    <MapPin className="w-2.5 h-2.5 text-slate-400" />
+                    <span>{top2.district}</span>
+                  </span>
+                )}
               </div>
 
               {/* Stats Footer */}
@@ -586,11 +771,17 @@ export const Rank: React.FC = () => {
               <h3 className="mt-2 text-lg font-black text-slate-900 dark:text-white truncate">
                 {top1.name}
               </h3>
-              <div className="mt-1 flex items-center justify-center">
+              <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
                 <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
                   <span>★</span>
                   <span>{top1.tag || 'Topper'}</span>
                 </span>
+                {top1.district && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100/70 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-300/70 dark:border-amber-800">
+                    <MapPin className="w-2.5 h-2.5 text-amber-600" />
+                    <span>{top1.district}</span>
+                  </span>
+                )}
               </div>
 
               {/* Stats Footer */}
@@ -642,11 +833,17 @@ export const Rank: React.FC = () => {
               <h3 className="mt-2 text-base font-extrabold text-slate-900 dark:text-white truncate">
                 {top3.name}
               </h3>
-              <div className="mt-1 flex items-center justify-center">
+              <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800">
                   <span>★</span>
                   <span>{top3.tag || 'Star Performer'}</span>
                 </span>
+                {top3.district && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    <MapPin className="w-2.5 h-2.5 text-slate-400" />
+                    <span>{top3.district}</span>
+                  </span>
+                )}
               </div>
 
               {/* Stats Footer */}
@@ -704,9 +901,15 @@ export const Rank: React.FC = () => {
                               e.currentTarget.src = '/images/profile_user_avatar.jpg';
                             }}
                           />
-                          <span className="font-bold text-slate-900 dark:text-white truncate">
-                            {student.name}
-                          </span>
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-900 dark:text-white truncate block">
+                              {student.name}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                              <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                              <span>{student.district || 'West Bengal'}</span>
+                            </span>
+                          </div>
                         </div>
                       </td>
                       <td className="py-3 px-3 text-center text-slate-600 dark:text-slate-300">
@@ -745,13 +948,21 @@ export const Rank: React.FC = () => {
                             e.currentTarget.src = '/images/profile_user_avatar.jpg';
                           }}
                         />
-                        <div>
+                        <div className="min-w-0">
                           <p className="font-black text-slate-900 dark:text-white leading-tight">
                             {currentUserRow.name}
                           </p>
-                          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                            Keep going! You can do better! 💪
-                          </p>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-100 dark:bg-blue-900/60 text-[#1e60f2] dark:text-blue-300 px-2 py-0.5 rounded-full">
+                              <MapPin className="w-2.5 h-2.5 shrink-0" />
+                              <span>{currentUserRow.district || userDistrict}</span>
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                              {selectedScope === 'District'
+                                ? `District Rank #${userDistrictRank}`
+                                : `Statewide Rank #${currentUserRow.rank}`}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -787,6 +998,15 @@ export const Rank: React.FC = () => {
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                   Your Rank
                 </h3>
+                {selectedScope === 'District' ? (
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800">
+                    District Mode
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                    Statewide (WB)
+                  </span>
+                )}
               </div>
 
               {/* Big Rank Number & Improvement Badge */}
@@ -795,16 +1015,36 @@ export const Rank: React.FC = () => {
                   <div className="flex items-baseline gap-1">
                     <span className="text-slate-400 text-2xl font-bold">#</span>
                     <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                      147
+                      {selectedScope === 'District' ? userDistrictRank : 147}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium mt-0.5">
-                    out of 2,843 students
+                    {selectedScope === 'District'
+                      ? `out of 184 aspirants in ${selectedDistrict}`
+                      : 'out of 2,843 aspirants in West Bengal'}
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200/80">
                   <TrendingUp className="w-3.5 h-3.5" />
                   <span>23</span>
+                </div>
+              </div>
+
+              {/* Rank Comparison: Statewide vs District */}
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-[#1e60f2]" />
+                    <span>Statewide (WB):</span>
+                  </span>
+                  <span className="font-extrabold text-slate-900 dark:text-white">#147</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                    <span>District ({userDistrict}):</span>
+                  </span>
+                  <span className="font-black text-[#1e60f2]">#{userDistrictRank}</span>
                 </div>
               </div>
 

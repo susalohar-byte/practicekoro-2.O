@@ -4,8 +4,9 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { GoogleIcon } from '@/components/common/GoogleIcon';
-import { Lock, Mail, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, Loader2, CheckCircle2, MapPin, ChevronDown } from 'lucide-react';
 import { mapAuthError } from '@/lib/errors';
+import { WEST_BENGAL_DISTRICTS } from '@/data/districts';
 
 export const Register: React.FC = () => {
   const { register, loginWithGoogle } = useAuth();
@@ -14,6 +15,7 @@ export const Register: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [district, setDistrict] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +37,8 @@ export const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !password) {
-      setError('Please fill in all required fields.');
+    if (!fullName.trim() || !email.trim() || !password || !district) {
+      setError('Please fill in all required fields including your district.');
       return;
     }
 
@@ -48,7 +50,7 @@ export const Register: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    const res = await register(fullName.trim(), email.trim(), password);
+    const res = await register(fullName.trim(), email.trim(), password, district);
     setIsLoading(false);
 
     if (res.error) {
@@ -159,6 +161,40 @@ export const Register: React.FC = () => {
               leftIcon={<Lock className="w-4 h-4" />}
               required
             />
+
+            {/* Mandatory West Bengal District Selection */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">
+                District (West Bengal) <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  required
+                  aria-label="Select your district in West Bengal"
+                  className="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-9 text-xs sm:text-sm font-medium text-slate-800 focus:border-[#0158FC] focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
+                >
+                  <option value="" disabled>
+                    Select your District (Mandatory)
+                  </option>
+                  {WEST_BENGAL_DISTRICTS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Required for district-wise rank &amp; leaderboard standing
+              </p>
+            </div>
 
             <Button
               type="submit"

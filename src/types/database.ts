@@ -17,6 +17,7 @@ export interface Database {
           email: string | null;
           phone: string | null;
           avatar_url: string | null;
+          district: string | null;
           target_exam_id: string | null;
           role: UserRole;
           created_at: string;
@@ -28,6 +29,7 @@ export interface Database {
           email?: string | null;
           phone?: string | null;
           avatar_url?: string | null;
+          district?: string | null;
           target_exam_id?: string | null;
           role?: UserRole;
           created_at?: string;
