@@ -585,6 +585,9 @@ export const catalogApi = {
 
     // Local / Demo Fallback: Sanitize MOCK_QUESTIONS without answers
     const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
+    const allSubjects = Object.values(MOCK_SUBJECTS).flat();
+    const allChapters = Object.values(MOCK_CHAPTERS).flat();
+
     return questions.map((q, idx) => ({
       id: q.id,
       questionOrder: idx + 1,
@@ -592,9 +595,9 @@ export const catalogApi = {
       questionBengaliText: q.questionBengaliText,
       imageUrl: q.imageUrl,
       subjectId: q.subjectId,
-      subjectName: q.subjectName,
+      subjectName: q.subjectName || (q.subjectId ? allSubjects.find((s) => s.id === q.subjectId)?.name : undefined),
       chapterId: q.chapterId,
-      chapterName: q.chapterName,
+      chapterName: q.chapterName || (q.chapterId ? allChapters.find((c) => c.id === q.chapterId)?.name : undefined),
       optionA: q.optionA,
       optionB: q.optionB,
       optionC: q.optionC,
@@ -1080,6 +1083,8 @@ export const catalogApi = {
     // Local / Demo fallback
     const questions = MOCK_QUESTIONS[testId] || MOCK_QUESTIONS['test-indus-01'] || [];
     const answersMap = localAttemptsStore[attemptId]?.answers || {};
+    const allSubjects = Object.values(MOCK_SUBJECTS).flat();
+    const allChapters = Object.values(MOCK_CHAPTERS).flat();
 
     return questions.map((q, idx) => {
       const ans = answersMap[q.id];
@@ -1094,9 +1099,9 @@ export const catalogApi = {
         questionBengaliText: q.questionBengaliText,
         imageUrl: q.imageUrl,
         subjectId: q.subjectId,
-        subjectName: q.subjectName,
+        subjectName: q.subjectName || (q.subjectId ? allSubjects.find((s) => s.id === q.subjectId)?.name : undefined),
         chapterId: q.chapterId,
-        chapterName: q.chapterName,
+        chapterName: q.chapterName || (q.chapterId ? allChapters.find((c) => c.id === q.chapterId)?.name : undefined),
         optionA: q.optionA,
         optionB: q.optionB,
         optionC: q.optionC,

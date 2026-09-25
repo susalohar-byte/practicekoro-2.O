@@ -6,7 +6,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
-import { isMathematicsSubject } from '@/utils/shortNotes';
+import { isMathematicsSubject, isMathematicsQuestion } from '@/utils/shortNotes';
 import {
   CheckCircle2,
   XCircle,
@@ -219,6 +219,11 @@ export const TestSolutions: React.FC = () => {
                       <MinusCircle className="w-3.5 h-3.5 text-slate-400" /> Skipped (0)
                     </Badge>
                   )}
+                  {sol.subjectName && (
+                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                      {sol.subjectName}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -309,13 +314,18 @@ export const TestSolutions: React.FC = () => {
               </div>
 
               {/* Short Notes (non-Math) / Explanation (Math) */}
-              <ShortNotesBox
-                explanation={sol.explanationBengali || sol.explanation}
-                isMathematics={isMathTest}
-                title={isMathTest ? undefined : 'শর্ট নোটস (Short Notes)'}
-                defaultExpanded={true}
-                collapsible={false}
-              />
+              {(() => {
+                const isSolMath = isMathTest || isMathematicsQuestion(sol);
+                return (
+                  <ShortNotesBox
+                    explanation={sol.explanationBengali || sol.explanation}
+                    isMathematics={isSolMath}
+                    title={isSolMath ? undefined : 'শর্ট নোটস (Short Notes)'}
+                    defaultExpanded={true}
+                    collapsible={false}
+                  />
+                );
+              })()}
             </Card>
           );
         })}

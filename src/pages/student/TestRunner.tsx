@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -20,6 +20,7 @@ import type { MockTest, StudentTestQuestion, AttemptAnswerState } from '@/types'
 import { MaintenanceScreen } from '@/components/common/MaintenanceScreen';
 import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 import { QuestionImage } from '@/components/common/QuestionImage';
+import { isMathematicsQuestion } from '@/utils/shortNotes';
 
 export const TestRunner: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -197,6 +198,38 @@ export const TestRunner: React.FC = () => {
   }, [answers, attemptId, timeSpent, loading]);
 
   const currentQ = questions[currentIndex];
+
+  // Resolve accurate subject name for question badge (never false Mathematics)
+  const currentSubjectName = useMemo(() => {
+    if (!currentQ) return 'General Awareness';
+    if (currentQ.subjectName && currentQ.subjectName.trim()) {
+      return currentQ.subjectName.trim();
+    }
+    if (test?.subjectName && test.subjectName.trim()) {
+      return test.subjectName.trim();
+    }
+    if (isMathematicsQuestion(currentQ)) {
+      return 'Mathematics';
+    }
+    return 'General Awareness';
+  }, [currentQ, test]);
+
+  const subjectBadgeClass = useMemo(() => {
+    const sub = currentSubjectName.toLowerCase();
+    if (sub.includes('math') || sub.includes('গণিত')) {
+      return 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800';
+    }
+    if (sub.includes('reason') || sub.includes('যুক্তি')) {
+      return 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800';
+    }
+    if (sub.includes('science') || sub.includes('বিজ্ঞান')) {
+      return 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800';
+    }
+    if (sub.includes('history') || sub.includes('ইতিহাস') || sub.includes('bengali') || sub.includes('বাংলা')) {
+      return 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-800';
+    }
+    return 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800';
+  }, [currentSubjectName]);
 
   // Mark question as visited when changing questions
   const goToQuestion = (index: number) => {
@@ -411,10 +444,10 @@ export const TestRunner: React.FC = () => {
         {/* LEFT / CENTER: QUESTION AREA */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-between max-w-4xl mx-auto w-full">
           <div className="space-y-4">
-            {/* Subject Pill (Screen 11: [ Mathematics ]) */}
+            {/* Subject Pill */}
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
-                {currentQ.subjectName || 'Mathematics'}
+              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold border transition-colors ${subjectBadgeClass}`}>
+                {currentSubjectName}
               </span>
 
               {isCurrentMarked && (

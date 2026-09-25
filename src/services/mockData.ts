@@ -780,6 +780,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
   'test-wbp-mock-01': [
     {
       id: 'q-wbp-mock-01',
+      subjectId: 'wbp-science',
+      subjectName: 'General Awareness',
+      chapterName: 'Solar System & Astronomy',
       questionText: "আমাদের সৌরজগতের কোন গ্রহকে 'লাল গ্রহ' বলা হয়?",
       questionBengaliText: "আমাদের সৌরজগতের কোন গ্রহকে 'লাল গ্রহ' বলা হয়?",
       optionA: 'শুক্র',
@@ -801,6 +804,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
     },
     {
       id: 'q-wbp-mock-02',
+      subjectId: 'wbp-polity',
+      subjectName: 'General Awareness',
+      chapterName: 'Indian Constitution',
       questionText: 'ভারতের সংবিধানের জনক ও প্রধান রূপকার কাকে বলা হয়?',
       questionBengaliText: 'ভারতের সংবিধানের জনক ও প্রধান রূপকার কাকে বলা হয়?',
       optionA: 'ড. বি. আর. আম্বেদকর',
@@ -822,6 +828,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
     },
     {
       id: 'q-wbp-mock-03',
+      subjectId: 'wbp-science',
+      subjectName: 'General Awareness',
+      chapterName: 'Human Physiology',
       questionText: 'মানবদেহের স্বাভাবিক রক্তচাপ (Blood Pressure) কত?',
       questionBengaliText: 'মানবদেহের স্বাভাবিক রক্তচাপ (Blood Pressure) কত?',
       optionA: '১২০/৮০ মিমি পারদ স্তম্ভ',
@@ -843,6 +852,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
     },
     {
       id: 'q-wbp-mock-04',
+      subjectId: 'wbp-science',
+      subjectName: 'General Awareness',
+      chapterName: 'Cell Biology',
       questionText: "কোষের 'শক্তিঘর' (Powerhouse of the Cell) কাকে বলা হয়?",
       questionBengaliText: "কোষের 'শক্তিঘর' (Powerhouse of the Cell) কাকে বলা হয়?",
       optionA: 'রাইবোজোম',
@@ -864,6 +876,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
     },
     {
       id: 'q-wbp-mock-05',
+      subjectId: 'wbp-polity',
+      subjectName: 'General Awareness',
+      chapterName: 'West Bengal GK',
       questionText: 'পশ্চিমবঙ্গের সরকারি রাজ্য পশু (State Animal) কোনটি?',
       questionBengaliText: 'পশ্চিমবঙ্গের সরকারি রাজ্য পশু (State Animal) কোনটি?',
       optionA: 'রয়্যাল বেঙ্গল টাইগার',
@@ -887,6 +902,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
   'test-wbp-pyq-2024': [
     {
       id: 'q-wbp-pyq-01',
+      subjectId: 'wbp-polity',
+      subjectName: 'General Awareness',
+      chapterName: 'Geography of Bengal & India',
       questionText: "কোন নদীকে ঐতিহাসিকভাবে 'বাংলার দুঃখ' বলা হতো?",
       questionBengaliText: "কোন নদীকে ঐতিহাসিকভাবে 'বাংলার দুঃখ' বলা হতো?",
       optionA: 'গঙ্গা নদী',
@@ -910,6 +928,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
     },
     {
       id: 'q-wbp-pyq-02',
+      subjectId: 'wbp-polity',
+      subjectName: 'General Awareness',
+      chapterName: 'Geography of West Bengal',
       questionText: 'পশ্চিমবঙ্গের বর্তমান সর্বোচ্চ পর্বতশৃঙ্গ কোনটি?',
       questionBengaliText: 'পশ্চিমবঙ্গের বর্তমান সর্বোচ্চ পর্বতশৃঙ্গ কোনটি?',
       optionA: 'সান্দাকফু',
@@ -933,6 +954,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
     },
     {
       id: 'q-wbp-pyq-03',
+      subjectId: 'wbp-history',
+      subjectName: 'General Awareness',
+      chapterName: 'Modern Indian History & Polity',
       questionText: 'স্বাধীন ভারতে প্রথম সাধারণ নির্বাচন কোন সালে অনুষ্ঠিত হয়েছিল?',
       questionBengaliText: 'স্বাধীন ভারতে প্রথম সাধারণ নির্বাচন কোন সালে অনুষ্ঠিত হয়েছিল?',
       optionA: '১৯৪৭-৪৮ সালে',
@@ -956,6 +980,9 @@ export const MOCK_QUESTIONS: Record<string, Question[]> = {
     },
     {
       id: 'q-wbp-pyq-04',
+      subjectId: 'wbp-science',
+      subjectName: 'General Awareness',
+      chapterName: 'Physical Geography & Atmosphere',
       questionText:
         'বায়ুমণ্ডলের কোন স্তরে মেঘ, বৃষ্টি, কুয়াশা ইত্যাদি যাবতীয় আবহাওয়ার ঘটনা ঘটে?',
       questionBengaliText:
