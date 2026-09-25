@@ -9,6 +9,7 @@ import type { TestAttempt, Exam } from '@/types';
 import { StudentNavbar } from '@/components/layout/StudentNavbar';
 import { StudentSupportModal } from '@/components/student/StudentSupportModal';
 import { Button } from '@/components/common/Button';
+import { WEST_BENGAL_DISTRICTS } from '@/data/districts';
 import {
   Pencil,
   Camera,
@@ -186,7 +187,7 @@ export const Profile: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editHeadline, setEditHeadline] = useState('');
-  const [editLocation, setEditLocation] = useState('');
+  const [editDistrict, setEditDistrict] = useState('');
   const [editAvatarUrl, setEditAvatarUrl] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileEditError, setProfileEditError] = useState<string | null>(null);
@@ -268,7 +269,8 @@ export const Profile: React.FC = () => {
     setEditName(user?.fullName || 'Susanta Lohar');
     setEditPhone(user?.phone || extras.phone || '9547771118');
     setEditHeadline(extras.headline || 'Aspirant | Keep Learning Keep Growing 🌱');
-    setEditLocation(extras.location || 'Purulia, West Bengal');
+    const userDist = user?.district || (extras.location?.includes(',') ? extras.location.split(',')[0].trim() : '');
+    setEditDistrict(userDist);
     setEditAvatarUrl(user?.avatarUrl || '');
     setProfileEditError(null);
     setIsEditProfileModalOpen(true);
@@ -283,6 +285,11 @@ export const Profile: React.FC = () => {
       return;
     }
 
+    if (!editDistrict) {
+      setProfileEditError('Please select your District. District is mandatory for statewide and district-wise rank.');
+      return;
+    }
+
     setIsSavingProfile(true);
     setProfileEditError(null);
 
@@ -291,6 +298,7 @@ export const Profile: React.FC = () => {
         fullName: trimmedName,
         phone: editPhone.trim() || undefined,
         avatarUrl: editAvatarUrl.trim() || undefined,
+        district: editDistrict,
       });
 
       if (res.error) {
@@ -300,7 +308,7 @@ export const Profile: React.FC = () => {
           ...extras,
           phone: editPhone.trim(),
           headline: editHeadline.trim() || DEFAULT_EXTRAS.headline,
-          location: editLocation.trim() || DEFAULT_EXTRAS.location,
+          location: `${editDistrict}, West Bengal`,
         });
         setIsEditProfileModalOpen(false);
         showToast('Profile updated successfully!');
@@ -599,7 +607,7 @@ export const Profile: React.FC = () => {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>{extras.location || 'Purulia, West Bengal'}</span>
+                    <span>{user?.district ? `${user.district}, West Bengal` : (extras.location || 'Purulia, West Bengal')}</span>
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -1393,18 +1401,36 @@ export const Profile: React.FC = () => {
                 />
               </div>
 
-              {/* Location */}
+              {/* District Selection (Mandatory) */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  District / Location
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                  <span>
+                    District (West Bengal) <span className="text-red-500">*</span>
+                  </span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
+                    Mandatory for District Rank
+                  </span>
                 </label>
-                <input
-                  type="text"
-                  value={editLocation}
-                  onChange={(e) => setEditLocation(e.target.value)}
-                  placeholder="e.g. Purulia, West Bengal"
-                  className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1e60f2]"
-                />
+                <div className="relative">
+                  <select
+                    value={editDistrict}
+                    onChange={(e) => {
+                      setEditDistrict(e.target.value);
+                    }}
+                    required
+                    className="w-full text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1e60f2] appearance-none cursor-pointer pr-10"
+                  >
+                    <option value="" disabled>
+                      -- Select your District --
+                    </option>
+                    {WEST_BENGAL_DISTRICTS.map((dist) => (
+                      <option key={dist} value={dist}>
+                        {dist}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                </div>
               </div>
 
               {/* Avatar URL */}
