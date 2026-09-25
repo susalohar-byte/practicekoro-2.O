@@ -357,112 +357,111 @@ export const TestSeriesCatalog: React.FC = () => {
                   onClick={() => navigate(`/test-series/${series.slug || series.id}`)}
                   className="group cursor-pointer bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850 rounded-[28px] border border-slate-200/90 dark:border-slate-800 hover:border-blue-400/60 dark:hover:border-blue-600/60 p-6 sm:p-7 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_rgba(1,88,252,0.08)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
-                  {/* Top Header */}
+                  {/* Top Row: Emblem + Access Badge */}
                   <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        {/* Emblem without upload button */}
-                        <div
-                          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${bgColor} p-2.5 flex items-center justify-center border shadow-2xs shrink-0 group-hover:scale-105 transition-transform duration-200`}
-                        >
-                          <img
-                            src={emblem}
-                            alt={series.examTitle || series.title}
-                            className="w-full h-full object-contain drop-shadow-2xs"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/logo-icon.png';
-                            }}
-                          />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <span className="block text-[11px] font-black tracking-wider uppercase text-[#0158FC] dark:text-blue-400 mb-0.5 truncate">
-                            {series.examTitle || 'WBP CONSTABLE'}
-                          </span>
-                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug tracking-tight group-hover:text-[#0158FC] dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                            {series.title}
-                          </h3>
-                        </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div
+                        className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl ${bgColor} p-2.5 flex items-center justify-center border shadow-2xs shrink-0 group-hover:scale-105 transition-transform duration-200`}
+                      >
+                        <img
+                          src={emblem}
+                          alt={series.title}
+                          className="w-full h-full object-contain drop-shadow-2xs"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/logo-icon.png';
+                          }}
+                        />
                       </div>
 
-                      {/* Access Badge */}
                       {series.isPremium ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-700/80 text-amber-700 dark:text-amber-300 font-black text-xs uppercase tracking-wider shrink-0 shadow-2xs">
-                          <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-600 dark:text-amber-400" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/25 dark:border-amber-400/20 text-amber-700 dark:text-amber-300 font-black text-xs uppercase tracking-wider shrink-0 shadow-2xs">
+                          <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                           <span>PRO</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-700/80 text-emerald-700 dark:text-emerald-400 font-black text-xs uppercase tracking-wider shrink-0 shadow-2xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 border border-emerald-500/25 dark:border-emerald-400/20 text-emerald-700 dark:text-emerald-300 font-black text-xs uppercase tracking-wider shrink-0 shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                           <span>FREE</span>
                         </span>
                       )}
                     </div>
 
+                    {/* Series Title (Small redundant label removed) */}
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-snug tracking-tight group-hover:text-[#0158FC] dark:group-hover:text-blue-400 transition-colors mt-3.5 line-clamp-2">
+                      {series.title}
+                    </h3>
+
                     {/* Description preview */}
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed mt-4 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed mt-1.5 line-clamp-2">
                       {series.description || 'Official pattern 85-question full mocks and chapter drills.'}
                     </p>
 
-                    {/* Categorized Test Breakdown Chips (3-column dock) */}
-                    <div className="bg-[#F8FAFC] dark:bg-slate-800/50 rounded-2xl p-3.5 sm:p-4 border border-slate-100 dark:border-slate-800/80 mt-5">
+                    {/* Categorized Test Breakdown Chips (Simplified 3-column dock) */}
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 sm:p-3.5 border border-slate-100 dark:border-slate-800/80 my-4">
                       <div className="grid grid-cols-3 divide-x divide-slate-200/80 dark:divide-slate-700/80 text-center">
                         <div className="px-1">
-                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
                             {fullMocks}
                           </p>
-                          <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1.5">
                             Full Mocks
                           </p>
                         </div>
                         <div className="px-1">
-                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
                             {topicTests}
                           </p>
-                          <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1.5">
                             Topic Drills
                           </p>
                         </div>
                         <div className="px-1">
-                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
                             {pyqs}
                           </p>
-                          <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1.5">
                             Official PYQ
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Feature tags */}
-                    <div className="flex flex-wrap items-center gap-2 mt-4">
-                      <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-semibold inline-flex items-center gap-1.5">
+                    {/* Feature highlights (Single tidy line) */}
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 pt-0.5 pb-1">
+                      <span className="inline-flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                        100% Exam Pattern
+                        Exam Pattern
                       </span>
-                      <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-semibold inline-flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                         Instant AIR
                       </span>
-                      <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-semibold inline-flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-blue-500" />
-                        Real Exam Timer
+                        Live Timer
                       </span>
                     </div>
                   </div>
 
                   {/* Card Bottom / CTA */}
-                  <div className="pt-4 mt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <div className="pt-4 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#0158FC] dark:text-blue-400" />
-                      <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                        {totalTests} {totalTests === 1 ? 'Total Test' : 'Total Tests'}
-                      </span>
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#0158FC] dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block leading-tight">
+                          {totalTests} {totalTests === 1 ? 'Test' : 'Tests'}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Full Package
+                        </span>
+                      </div>
                     </div>
 
                     <button
                       type="button"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0158FC] hover:bg-[#0047D4] active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-500/25 group-hover:translate-x-0.5 transition-all"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0158FC] hover:bg-[#0047cc] active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-500/25 group-hover:translate-x-0.5 transition-all cursor-pointer"
                     >
                       <span>{isLocked ? 'View Series' : 'Explore Series'}</span>
                       <ArrowRight className="w-4 h-4 stroke-[2.5]" />
