@@ -4,7 +4,7 @@ import { Hero } from '@/pages/landing/sections/Hero';
 import { PopularExams } from '@/pages/landing/sections/PopularExams';
 import { HowItWorks } from '@/pages/landing/sections/HowItWorks';
 import { Features } from '@/pages/landing/sections/Features';
-import { Pricing } from '@/pages/landing/sections/Pricing';
+import { ProPass } from '@/pages/landing/sections/ProPass';
 import { Testimonials } from '@/pages/landing/sections/Testimonials';
 import { BottomCta } from '@/pages/landing/sections/BottomCta';
 import { FaqSection } from '@/pages/landing/sections/FaqSection';
@@ -25,7 +25,7 @@ export const Landing: React.FC = () => {
       <PopularExams />
       <HowItWorks />
       <Features />
-      <Pricing />
+      <ProPass />
       <Testimonials />
       <BottomCta />
       <FaqSection />

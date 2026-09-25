@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { label: 'Exams', href: '/#exams' },
   { label: 'How it works', href: '/#how-it-works' },
   { label: 'Features', href: '/#features' },
-  { label: 'Pricing', href: '/#pricing' },
+  { label: 'Pro Pass', href: '/#pro-pass' },
   { label: 'FAQ', href: '/#faq' },
 ];
 
