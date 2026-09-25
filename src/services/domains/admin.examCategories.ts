@@ -6,6 +6,72 @@ import type { ExamCategory } from '@/types';
 // --------------------------------------------------------------------------
 // EXAM CATEGORIES (DATABASE BACKED WITH LOCAL FALLBACK & ORDER PERSISTENCE)
 // --------------------------------------------------------------------------
+export const LEGACY_EXAM_CATEGORY_NAMES = new Set([
+  'police exams',
+  'civil services',
+  'teaching exams',
+  'ssc & staff selection',
+  'railways',
+  'defence',
+  'banking',
+  'state govt.',
+  'state civil services',
+  'west bengal',
+  'central',
+  'teaching',
+  'railway',
+  'other',
+]);
+
+export function normalizeLegacyExamCategory(category?: string | null): string {
+  if (!category || !category.trim()) return 'WB Police (WBP / KP)';
+  const trimmed = category.trim();
+  const lower = trimmed.toLowerCase();
+
+  // If already matches one of the standard categories, keep it
+  for (const standard of localExamCategories) {
+    if (standard.name.toLowerCase() === lower) {
+      return standard.name;
+    }
+  }
+
+  if (lower.includes('police') || lower.includes('wbp') || lower.includes('kp') || lower.includes('constable')) {
+    return 'WB Police (WBP / KP)';
+  }
+  if (
+    lower.includes('wbpsc') ||
+    lower.includes('clerk') ||
+    lower.includes('wbcs') ||
+    lower.includes('civil') ||
+    lower === 'other'
+  ) {
+    return 'WBPSC (Clerkship / WBCS)';
+  }
+  if (
+    lower.includes('teach') ||
+    lower.includes('tet') ||
+    lower.includes('slst') ||
+    lower.includes('wbssc') ||
+    lower.includes('primary')
+  ) {
+    return 'Teaching (TET / SLST)';
+  }
+  if (
+    lower.includes('ssc') ||
+    lower.includes('cgl') ||
+    lower.includes('mts') ||
+    lower.includes('gd') ||
+    lower.includes('central')
+  ) {
+    return 'SSC & Central Govt.';
+  }
+  if (lower.includes('rail') || lower.includes('rrb') || lower.includes('ntpc')) {
+    return 'Railways (RRB)';
+  }
+
+  return trimmed;
+}
+
 export function getLocalExamCategoriesWithPersistence(): ExamCategory[] {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -14,6 +80,17 @@ export function getLocalExamCategoriesWithPersistence(): ExamCategory[] {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           if (parsed.length === 0) return [];
+          const hasLegacy = parsed.some((item: any) => {
+            const name = typeof item === 'string' ? item : item?.name;
+            return name && LEGACY_EXAM_CATEGORY_NAMES.has(name.toLowerCase());
+          });
+          if (hasLegacy) {
+            window.localStorage.setItem(
+              'practicekoro_exam_categories',
+              JSON.stringify(localExamCategories.map((c) => c.name))
+            );
+            return [...localExamCategories].sort((a, b) => a.orderIndex - b.orderIndex);
+          }
           return parsed.map((item: any, index: number) => {
             if (typeof item === 'string') {
               const existing = localExamCategories.find(
@@ -363,4 +440,6 @@ export const adminExamCategoriesApi = {
   updateExamCategory,
   deleteExamCategory,
   reorderExamCategories,
+  normalizeLegacyExamCategory,
 };
+

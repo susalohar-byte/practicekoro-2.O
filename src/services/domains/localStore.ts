@@ -50,14 +50,11 @@ export const localTests: MockTest[] = Object.values(MOCK_TESTS).flat();
 export const localQuestions: Question[] = Object.values(MOCK_QUESTIONS).flat();
 
 export const localExamCategories: ExamCategory[] = [
-  { id: 'cat_police', name: 'Police Exams', orderIndex: 1, isActive: true },
-  { id: 'cat_teaching', name: 'Teaching Exams', orderIndex: 2, isActive: true },
-  { id: 'cat_civil', name: 'Civil Services', orderIndex: 3, isActive: true },
-  { id: 'cat_ssc', name: 'SSC & Staff Selection', orderIndex: 4, isActive: true },
-  { id: 'cat_railways', name: 'Railways', orderIndex: 5, isActive: true },
-  { id: 'cat_defence', name: 'Defence', orderIndex: 6, isActive: true },
-  { id: 'cat_banking', name: 'Banking', orderIndex: 7, isActive: true },
-  { id: 'cat_state_govt', name: 'State Govt.', orderIndex: 8, isActive: true },
+  { id: 'cat_wb_police', name: 'WB Police (WBP / KP)', orderIndex: 1, isActive: true },
+  { id: 'cat_wbpsc', name: 'WBPSC (Clerkship / WBCS)', orderIndex: 2, isActive: true },
+  { id: 'cat_teaching', name: 'Teaching (TET / SLST)', orderIndex: 3, isActive: true },
+  { id: 'cat_ssc', name: 'SSC & Central Govt.', orderIndex: 4, isActive: true },
+  { id: 'cat_railways', name: 'Railways (RRB)', orderIndex: 5, isActive: true },
 ];
 
 // Local test-question assignments store for offline demo

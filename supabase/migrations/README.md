@@ -49,6 +49,11 @@ This directory contains the canonical historical Supabase migration files for Pr
 | `038_submit_attempt_covering_indexes.sql`       | Covering indexes for `submit_test_attempt` rank/count hot paths       |    **PENDING**    |
 | `039_verify_payment_require_signature.sql`      | `verify_razorpay_payment` rejects empty signatures (no-proof activation hole closed) | **PENDING** |
 | `040_pyq_question_images_in_rpcs.sql`           | Expose `image_url` in runner + solutions RPCs for PYQ diagrams       |    **PENDING**    |
+| `040_sync_hero_banners_app_settings.sql`        | Sync hero banners with app_settings fallback                         |    **PENDING**    |
+| `041_add_district_to_profiles.sql`              | Add district field to user profiles                                 |    **PENDING**    |
+| `042_expose_subjects_in_student_rpcs.sql`       | Restore subject and chapter metadata in student RPCs                 |    **PENDING**    |
+| `043_update_exam_categories.sql`                | Standardize exam categories to 5 curated categories and purge legacy |    **PENDING**    |
+
 
 ---
 

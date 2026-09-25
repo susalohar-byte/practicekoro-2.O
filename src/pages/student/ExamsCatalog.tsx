@@ -38,7 +38,7 @@ interface EnrichedExam {
 function enrichExam(exam: Exam): EnrichedExam {
   const id = (exam.id || '').toLowerCase();
   const title = (exam.title || '').toLowerCase();
-  const category = (exam.category || 'State Govt.').trim();
+  const category = (exam.category || 'WB Police (WBP / KP)').trim();
   const catLower = category.toLowerCase();
 
   // 1. Department Emblem & Background Color
@@ -96,8 +96,8 @@ function enrichExam(exam: Exam): EnrichedExam {
   const slugKey = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const sectionId = slugKey;
 
-  // Title formatting: if category is 'West Bengal' -> 'West Bengal Government Exams', etc.
-  let sectionTitle = `${category} Exams`;
+  // Title formatting: clean display for standardized categories
+  let sectionTitle = category;
   if (catLower === 'west bengal' || catLower === 'state govt' || catLower === 'state government') {
     sectionTitle = 'West Bengal Government Exams';
   } else if (catLower === 'central' || catLower === 'central govt' || catLower === 'central government') {
@@ -108,37 +108,41 @@ function enrichExam(exam: Exam): EnrichedExam {
     sectionTitle = 'Railway Exams';
   } else if (catLower === 'police') {
     sectionTitle = 'Police Recruitment Exams';
-  } else if (catLower.endsWith('exams')) {
-    sectionTitle = category;
+  } else if (!catLower.includes('(') && !catLower.endsWith('exams')) {
+    sectionTitle = `${category} Exams`;
   }
 
   // Contextual Subtitles for Admin Categories
   let sectionSubtitle = `Curated mock tests and syllabus practice for ${category}.`;
   let sectionIcon: EnrichedExam['meta']['sectionIcon'] = 'generic';
 
-  if (
+  if (catLower.includes('police') || catLower.includes('wbp') || catLower.includes('kp')) {
+    sectionSubtitle = 'West Bengal Police, Kolkata Police & law enforcement recruitment tests.';
+    sectionIcon = 'police';
+  } else if (
+    catLower.includes('wbpsc') ||
+    catLower.includes('clerk') ||
+    catLower.includes('wbcs') ||
+    catLower.includes('civil')
+  ) {
+    sectionSubtitle = 'West Bengal Civil Service (Executive) & state administrative examinations.';
+    sectionIcon = 'civil';
+  } else if (catLower.includes('teach') || catLower.includes('tet') || catLower.includes('slst')) {
+    sectionSubtitle = 'For a career in teaching and school education.';
+    sectionIcon = 'teaching';
+  } else if (catLower.includes('ssc') || catLower.includes('central')) {
+    sectionSubtitle = 'Prepare for major central government competitive exams.';
+    sectionIcon = 'central';
+  } else if (catLower.includes('rail') || catLower.includes('rrb')) {
+    sectionSubtitle = 'Railway Recruitment Board (NTPC, Group D, ALP) examinations.';
+    sectionIcon = 'railway';
+  } else if (
     catLower.includes('west bengal') ||
     catLower.includes('state govt') ||
     catLower.includes('state government') ||
     catLower.includes('wb')
   ) {
     sectionSubtitle = 'Popular exams for West Bengal state government jobs.';
-    sectionIcon = 'wb';
-  } else if (catLower.includes('police')) {
-    sectionSubtitle = 'West Bengal Police, Kolkata Police & law enforcement recruitment tests.';
-    sectionIcon = 'police';
-  } else if (catLower.includes('teaching')) {
-    sectionSubtitle = 'For a career in teaching and education.';
-    sectionIcon = 'teaching';
-  } else if (catLower.includes('civil')) {
-    sectionSubtitle = 'West Bengal Civil Service (Executive) & state administrative examinations.';
-    sectionIcon = 'civil';
-  } else if (catLower.includes('ssc') || catLower.includes('staff selection') || catLower.includes('central')) {
-    sectionSubtitle = 'Prepare for major central government competitive exams.';
-    sectionIcon = 'central';
-  } else if (catLower.includes('rail')) {
-    sectionSubtitle = 'Railway Recruitment Board (NTPC, Group D, ALP) examinations.';
-    sectionIcon = 'railway';
   } else if (catLower.includes('defence')) {
     sectionSubtitle = 'Armed forces and defence recruitment examination series.';
     sectionIcon = 'police';

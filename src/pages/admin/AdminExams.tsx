@@ -33,6 +33,10 @@ import {
 } from 'lucide-react';
 import type { Exam, MockTest } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
+import {
+  normalizeLegacyExamCategory,
+  LEGACY_EXAM_CATEGORY_NAMES,
+} from '@/services/domains/admin.examCategories';
 
 export const AdminExams: React.FC = () => {
   // Data States
@@ -60,27 +64,30 @@ export const AdminExams: React.FC = () => {
 
   // Category Management States
   const STORAGE_KEY_CATEGORIES = 'practicekoro_exam_categories';
+  const DEFAULT_EXAM_CATEGORIES = [
+    'WB Police (WBP / KP)',
+    'WBPSC (Clerkship / WBCS)',
+    'Teaching (TET / SLST)',
+    'SSC & Central Govt.',
+    'Railways (RRB)',
+  ];
 
   const [categories, setCategories] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CATEGORIES);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const hasLegacy = parsed.some((c: string) =>
+            typeof c === 'string' && LEGACY_EXAM_CATEGORY_NAMES.has(c.toLowerCase())
+          );
+          if (!hasLegacy) return parsed;
+        }
       }
     } catch (e) {
       console.error('Error reading categories:', e);
     }
-    return [
-      'Police Exams',
-      'Teaching Exams',
-      'Civil Services',
-      'SSC & Staff Selection',
-      'Railways',
-      'Defence',
-      'Banking',
-      'State Govt.',
-    ];
+    return DEFAULT_EXAM_CATEGORIES;
   });
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryModalInput, setCategoryModalInput] = useState('');
@@ -128,18 +135,25 @@ export const AdminExams: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [allExams, allTests, dbCats] = await Promise.all([
+      const [rawExams, allTests, dbCats] = await Promise.all([
         api.getAllAdminExams(),
         api.getAllAdminTests(),
         api.getExamCategories().catch(() => []),
       ]);
+      const allExams = (rawExams || []).map((e) => ({
+        ...e,
+        category: normalizeLegacyExamCategory(e.category),
+      }));
       setExams(allExams);
       setTests(allTests);
       if (dbCats && dbCats.length > 0) {
-        const catNames = dbCats.map((c) => c.name);
-        setCategories(catNames);
+        const catNames = dbCats
+          .map((c) => c.name)
+          .filter((name) => !LEGACY_EXAM_CATEGORY_NAMES.has(name.toLowerCase()));
+        const finalCats = catNames.length > 0 ? catNames : DEFAULT_EXAM_CATEGORIES;
+        setCategories(finalCats);
         try {
-          localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(catNames));
+          localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(finalCats));
         } catch (e) {
           console.error('Error saving categories:', e);
         }
@@ -173,9 +187,10 @@ export const AdminExams: React.FC = () => {
         const set = new Set<string>(prev);
         const newCats: string[] = [];
         exams.forEach((e) => {
-          if (e.category && e.category.trim() && !set.has(e.category.trim())) {
-            set.add(e.category.trim());
-            newCats.push(e.category.trim());
+          const cat = e.category?.trim();
+          if (cat && !set.has(cat) && !LEGACY_EXAM_CATEGORY_NAMES.has(cat.toLowerCase())) {
+            set.add(cat);
+            newCats.push(cat);
           }
         });
         if (newCats.length > 0) {
