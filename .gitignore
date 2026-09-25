@@ -47,3 +47,4 @@ test-results/
 # Scratch and build binaries
 scratch_*
 *.apk
+/Hero video.mp4

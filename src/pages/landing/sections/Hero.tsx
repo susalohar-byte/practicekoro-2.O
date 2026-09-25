@@ -34,7 +34,8 @@ export const Hero: React.FC = () => {
           className="w-full h-full object-cover object-[62%_center] sm:object-[72%_center] lg:object-[80%_center] opacity-95 dark:opacity-35 transition-opacity duration-300"
         >
           <source src="/videos/hero-background.mp4" type="video/mp4" />
-          <source src="/videos/hero-background.webm" type="video/webm" />
+          <source src="/Hero video.mp4" type="video/mp4" />
+          <source src="/Hero%20video.mp4" type="video/mp4" />
           {/* Fallback image if video cannot be played */}
           <img
             src="/images/hero_student_study_bg.jpg"
