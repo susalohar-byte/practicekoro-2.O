@@ -14,6 +14,9 @@ import {
   Shield,
   Zap,
   TrendingUp,
+  Languages,
+  Clock,
+  FileText,
 } from 'lucide-react';
 import type { TestSeries } from '@/types';
 
@@ -31,36 +34,43 @@ type AccessFilter = 'all' | 'free' | 'pro';
 
 // Emblem mapping based on exam title or category
 function getSeriesEmblem(series: TestSeries): { emblem: string; bgColor: string } {
+  if (series.iconUrl) {
+    return {
+      emblem: series.iconUrl,
+      bgColor: 'bg-[#FFF4F0] dark:bg-slate-800/80 border-[#FDE2D7] dark:border-slate-700/60',
+    };
+  }
+
   const title = (series.title || '').toLowerCase();
   const exam = (series.examTitle || '').toLowerCase();
   const combined = `${title} ${exam}`;
 
   if (combined.includes('wbp') || combined.includes('constable') || combined.includes('police')) {
     if (combined.includes('kolkata') || combined.includes('kp')) {
-      return { emblem: '/images/exams/icon_kolkata_police.png', bgColor: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' };
+      return { emblem: '/images/exams/icon_kolkata_police.png', bgColor: 'bg-[#EFF6FF] dark:bg-blue-950/40 border-[#DBEAFE] dark:border-blue-900/60' };
     }
-    return { emblem: '/images/exams/emblem_wbp.png', bgColor: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400' };
+    return { emblem: '/images/exams/emblem_wbp.png', bgColor: 'bg-[#FFF4F0] dark:bg-slate-800/80 border-[#FDE2D7] dark:border-slate-700/60' };
   }
   if (combined.includes('wbcs')) {
-    return { emblem: '/images/exams/wbcs_emblem.png', bgColor: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' };
+    return { emblem: '/images/exams/wbcs_emblem.png', bgColor: 'bg-[#EEF2FF] dark:bg-indigo-950/40 border-[#E0E7FF] dark:border-indigo-900/60' };
   }
   if (combined.includes('clerk') || combined.includes('wbpsc') || combined.includes('misc')) {
-    return { emblem: '/images/exams/emblem_wbpsc.png', bgColor: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' };
+    return { emblem: '/images/exams/emblem_wbpsc.png', bgColor: 'bg-[#FFFBEB] dark:bg-amber-950/40 border-[#FEF3C7] dark:border-amber-900/60' };
   }
   if (combined.includes('slst') || combined.includes('wbssc') || combined.includes('group d')) {
-    return { emblem: '/images/exams/emblem_wbssc.png', bgColor: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' };
+    return { emblem: '/images/exams/emblem_wbssc.png', bgColor: 'bg-[#ECFDF5] dark:bg-emerald-950/40 border-[#D1FAE5] dark:border-emerald-900/60' };
   }
   if (combined.includes('tet') || combined.includes('teach')) {
-    return { emblem: '/images/exams/emblem_tet.png', bgColor: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400' };
+    return { emblem: '/images/exams/emblem_tet.png', bgColor: 'bg-[#FAF5FF] dark:bg-purple-950/40 border-[#F3E8FF] dark:border-purple-900/60' };
   }
   if (combined.includes('rail') || combined.includes('ntpc') || combined.includes('rrb')) {
-    return { emblem: '/images/exams/emblem_railway.png', bgColor: 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400' };
+    return { emblem: '/images/exams/emblem_railway.png', bgColor: 'bg-[#F0F9FF] dark:bg-sky-950/40 border-[#E0F2FE] dark:border-sky-900/60' };
   }
   if (combined.includes('ssc') || combined.includes('cgl') || combined.includes('gd') || combined.includes('mts')) {
-    return { emblem: '/images/exams/emblem_ssc.png', bgColor: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' };
+    return { emblem: '/images/exams/emblem_ssc.png', bgColor: 'bg-[#FFFBEB] dark:bg-amber-950/40 border-[#FEF3C7] dark:border-amber-900/60' };
   }
 
-  return { emblem: '/logo-icon.png', bgColor: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' };
+  return { emblem: '/images/exams/emblem_wbp.png', bgColor: 'bg-[#FFF4F0] dark:bg-slate-800/80 border-[#FDE2D7] dark:border-slate-700/60' };
 }
 
 export const TestSeriesCatalog: React.FC = () => {
@@ -346,29 +356,31 @@ export const TestSeriesCatalog: React.FC = () => {
                 <div
                   key={series.id}
                   onClick={() => navigate(`/test-series/${series.slug || series.id}`)}
-                  className="group cursor-pointer bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850 rounded-3xl border border-slate-200/80 dark:border-slate-800 hover:border-blue-400/60 dark:hover:border-blue-600/60 p-6 flex flex-col justify-between shadow-sm hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-200 relative overflow-hidden"
+                  className="group cursor-pointer bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850 rounded-[28px] border border-slate-200/90 dark:border-slate-800 hover:border-blue-400/60 dark:hover:border-blue-600/60 p-6 sm:p-7 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_rgba(1,88,252,0.08)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
                   {/* Top Header */}
-                  <div className="space-y-4">
+                  <div>
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Emblem without upload button */}
                         <div
-                          className={`w-12 h-12 rounded-2xl ${bgColor} flex items-center justify-center p-2 shrink-0 border border-slate-200/60 dark:border-slate-700/60 shadow-xs`}
+                          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${bgColor} p-2.5 flex items-center justify-center border shadow-2xs shrink-0 group-hover:scale-105 transition-transform duration-200`}
                         >
                           <img
                             src={emblem}
-                            alt={series.examTitle || 'Exam'}
-                            className="w-full h-full object-contain"
+                            alt={series.examTitle || series.title}
+                            className="w-full h-full object-contain drop-shadow-2xs"
                             onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
+                              (e.target as HTMLImageElement).src = '/logo-icon.png';
                             }}
                           />
                         </div>
-                        <div>
-                          <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider text-[#0158FC] dark:text-blue-400">
-                            {series.examTitle || 'Government Exam'}
+
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-[11px] font-black tracking-wider uppercase text-[#0158FC] dark:text-blue-400 mb-0.5 truncate">
+                            {series.examTitle || 'WBP CONSTABLE'}
                           </span>
-                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug group-hover:text-[#0158FC] dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug tracking-tight group-hover:text-[#0158FC] dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                             {series.title}
                           </h3>
                         </div>
@@ -376,81 +388,85 @@ export const TestSeriesCatalog: React.FC = () => {
 
                       {/* Access Badge */}
                       {series.isPremium ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[10px] font-black uppercase tracking-wider shrink-0 shadow-xs">
-                          <Crown className="w-3 h-3 text-amber-500" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-700/80 text-amber-700 dark:text-amber-300 font-black text-xs uppercase tracking-wider shrink-0 shadow-2xs">
+                          <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-600 dark:text-amber-400" />
                           <span>PRO</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black uppercase tracking-wider shrink-0 shadow-xs">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-700/80 text-emerald-700 dark:text-emerald-400 font-black text-xs uppercase tracking-wider shrink-0 shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>FREE</span>
                         </span>
                       )}
                     </div>
 
                     {/* Description preview */}
-                    {series.description && (
-                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 font-medium leading-relaxed">
-                        {series.description}
-                      </p>
-                    )}
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal leading-relaxed mt-4 line-clamp-2">
+                      {series.description || 'Official pattern 85-question full mocks and chapter drills.'}
+                    </p>
 
-                    {/* Categorized Test Breakdown Chips */}
-                    <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                      <div className="text-center">
-                        <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                          {fullMocks}
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
-                          Full Mocks
-                        </p>
-                      </div>
-                      <div className="text-center border-x border-slate-200/80 dark:border-slate-700/80">
-                        <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                          {topicTests}
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
-                          Topic Drills
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                          {pyqs}
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
-                          Official PYQ
-                        </p>
+                    {/* Categorized Test Breakdown Chips (3-column dock) */}
+                    <div className="bg-[#F8FAFC] dark:bg-slate-800/50 rounded-2xl p-3.5 sm:p-4 border border-slate-100 dark:border-slate-800/80 mt-5">
+                      <div className="grid grid-cols-3 divide-x divide-slate-200/80 dark:divide-slate-700/80 text-center">
+                        <div className="px-1">
+                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                            {fullMocks}
+                          </p>
+                          <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                            Full Mocks
+                          </p>
+                        </div>
+                        <div className="px-1">
+                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                            {topicTests}
+                          </p>
+                          <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                            Topic Drills
+                          </p>
+                        </div>
+                        <div className="px-1">
+                          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                            {pyqs}
+                          </p>
+                          <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                            Official PYQ
+                          </p>
+                        </div>
                       </div>
                     </div>
 
                     {/* Feature tags */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800">
-                        🌐 বাংলা & English
+                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-semibold inline-flex items-center gap-1.5">
+                        <Languages className="w-3.5 h-3.5 text-blue-500" />
+                        বাংলা & English
                       </span>
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800">
-                        ⚡ Instant AIR
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-semibold inline-flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                        Instant AIR
                       </span>
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800">
-                        ⏱️ Real Exam Timer
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-semibold inline-flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-blue-500" />
+                        Real Exam Timer
                       </span>
                     </div>
                   </div>
 
                   {/* Card Bottom / CTA */}
-                  <div className="pt-5 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                  <div className="pt-4 mt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#0158FC] dark:text-blue-400" />
+                      <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                         {totalTests} {totalTests === 1 ? 'Total Test' : 'Total Tests'}
                       </span>
                     </div>
 
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0158FC] hover:bg-[#0047D4] text-white font-extrabold text-xs shadow-md shadow-blue-500/20 group-hover:translate-x-0.5 transition-all"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0158FC] hover:bg-[#0047D4] active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-500/25 group-hover:translate-x-0.5 transition-all"
                     >
                       <span>{isLocked ? 'View Series' : 'Explore Series'}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                     </button>
                   </div>
                 </div>
