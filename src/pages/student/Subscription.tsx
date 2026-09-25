@@ -1,6 +1,7 @@
 import { getErrorMessage } from '@/lib/errors';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { api } from '@/services/api';
@@ -142,8 +143,6 @@ export const Subscription: React.FC = () => {
       setPaymentStatus('processing');
 
       // 2. Build Razorpay checkout options
-      // Note: Only attach order_id if this is a verified real order created through Razorpay Orders API.
-      // Providing a dummy or non-existent order_id will crash Razorpay checkout SDK with BAD_REQUEST_ERROR.
       const checkoutOptions: Parameters<typeof openRazorpayCheckout>[0] = {
         key: order.keyId.trim(),
         amount: Math.round(order.amount * 100), // in paise
@@ -156,7 +155,7 @@ export const Subscription: React.FC = () => {
           contact: user.phone || '',
         },
         theme: {
-          color: '#4f46e5', // Brand Indigo
+          color: '#0158FC', // Brand Royal Blue
         },
         handler: async (response) => {
           // 3. Verify Razorpay response server-side (HMAC signature, idempotency, renewal)
@@ -198,7 +197,7 @@ export const Subscription: React.FC = () => {
         },
       };
 
-      // Only attach order_id if verified real Razorpay order (created via Razorpay Orders API)
+      // Only attach order_id if verified real Razorpay order
       if (order.isRealRazorpayOrder && order.orderId && !order.orderId.startsWith('pk_local_')) {
         checkoutOptions.order_id = order.orderId;
       }
@@ -256,95 +255,138 @@ export const Subscription: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pk-student-page">
       {/* =========================================================================
-          HERO SECTION (PART B)
+          HERO SECTION
           ========================================================================= */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
-          <Crown className="w-4 h-4 fill-amber-500 text-amber-600" />
+      <div className="text-center max-w-3xl mx-auto space-y-3 pt-2">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/25 dark:border-amber-400/20 text-amber-700 dark:text-amber-300 text-xs font-black tracking-wider uppercase shadow-2xs"
+        >
+          <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
           <span>ONE PRO PASS • ALL PREMIUM MOCK TESTS</span>
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-          Practice More. Improve Faster.
+        </motion.div>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+          Practice More. <span className="text-[#0158FC] dark:text-blue-400">Rank Higher.</span>
         </h1>
-        <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Unlock every premium mock test and practice without limits across WBP Constable, Kolkata
-          Police SI, WBCS, and WBPSC Clerkship.
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          Unlock every official-pattern mock test, chapter drill, and PYQ paper with detailed
+          step-by-step solutions and instant All-Bengal rank prediction.
         </p>
       </div>
 
       {/* =========================================================================
-          ACTIVE SUBSCRIPTION STATUS CARD (PART E)
+          ACTIVE SUBSCRIPTION STATUS CARD (ROYAL NAVY & GOLD AESTHETIC)
           ========================================================================= */}
       {activeSub && (
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="premium"
-                  className="bg-white/20 text-white border-white/30 gap-1 font-bold"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="relative rounded-3xl bg-gradient-to-br from-slate-950 via-[#0a193b] to-[#0158FC]/90 text-white shadow-2xl border border-white/10 p-6 sm:p-8 overflow-hidden"
+        >
+          {/* Decorative ambient lighting */}
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-xl">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-black tracking-wider uppercase">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  </span>
                   PRO PASS ACTIVE
-                </Badge>
-                <span className="text-xs text-amber-100 font-semibold">
-                  {daysLeft} Days Remaining
+                </span>
+                <span className="px-3 py-1 rounded-full bg-amber-400/15 text-amber-200 border border-amber-400/25 text-xs font-bold">
+                  ⚡ {daysLeft} Days Remaining
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black">
-                {subscriptionDetails?.planTitle || 'PracticeKoro All-Access Pro Pass'}
-              </h2>
-              <p className="text-xs text-amber-100 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                Valid until:{' '}
-                {subscriptionDetails?.expiresAt
-                  ? new Date(subscriptionDetails.expiresAt).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })
-                  : 'Active'}
+
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
+                  <span>
+                    {subscriptionDetails?.planTitle || 'PracticeKoro All-Access Pro Pass'}
+                  </span>
+                  <Crown className="w-6 h-6 fill-amber-400 text-amber-400 shrink-0" />
+                </h2>
+                <p className="text-xs sm:text-sm text-blue-100/90 flex items-center gap-1.5 mt-1 font-medium">
+                  <Calendar className="w-4 h-4 text-blue-300 shrink-0" />
+                  <span>
+                    Valid until:{' '}
+                    <strong className="text-white font-black">
+                      {subscriptionDetails?.expiresAt
+                        ? new Date(subscriptionDetails.expiresAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })
+                        : 'Active'}
+                    </strong>
+                  </span>
+                </p>
+              </div>
+
+              <p className="text-xs text-blue-200/80 leading-relaxed">
+                Universal all-exam access is active. All premium full mocks, topic tests, PYQs, and
+                solutions are unlocked on web and mobile.
               </p>
-              <p className="text-xs text-amber-100/90 pt-1">
-                Universal access is active. All premium mock tests and test series are unlocked.
-              </p>
+
+              {/* 3 Quick Benefit Chips */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-semibold text-blue-100">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 border border-white/10">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> All WB & Central Exams
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 border border-white/10">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Unlimited Re-attempts
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 border border-white/10">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Statewide AIR Rank
+                </span>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:items-end gap-2.5 shrink-0">
+            <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
               <Button
                 variant="primary"
-                size="md"
-                className="bg-white text-slate-900 hover:bg-slate-100 font-black text-xs shadow-md"
-                onClick={() => navigate('/exams')}
-                rightIcon={<ArrowRight className="w-4 h-4" />}
+                size="lg"
+                className="bg-white text-slate-950 hover:bg-blue-50 font-black text-sm shadow-xl shadow-black/25 hover:scale-[1.02] active:scale-[0.98] transition-all px-6"
+                onClick={() => navigate('/test-series')}
+                rightIcon={<ArrowRight className="w-4 h-4 text-[#0158FC]" />}
               >
                 Start Practicing
               </Button>
+
               <Button
                 variant="outline"
-                size="sm"
-                className="bg-white/10 text-white hover:bg-white/20 border-white/40 font-bold text-xs"
+                size="md"
+                className="bg-white/10 text-white hover:bg-white/20 border-white/25 font-bold text-xs shadow-xs"
                 disabled={paymentStatus === 'preparing' || paymentStatus === 'processing'}
                 onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
-                leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                leftIcon={<RotateCcw className="w-3.5 h-3.5 text-amber-300" />}
               >
                 {paymentStatus === 'preparing'
                   ? 'Preparing checkout…'
                   : `Extend Pass (+365 Days) — ₹${activePlan.price}`}
               </Button>
-              <span className="text-[11px] text-amber-100/80">
+              <span className="text-[11px] text-blue-200/70 text-center lg:text-right">
                 Seamless renewal: adds 365 days to your existing expiry date.
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* =========================================================================
-          EXPIRED SUBSCRIPTION STATUS CARD (PART E)
+          EXPIRED SUBSCRIPTION STATUS CARD
           ========================================================================= */}
       {isExpired && !activeSub && (
-        <div className="p-5 sm:p-6 rounded-2xl bg-amber-50 border border-amber-300 text-slate-900 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-5 sm:p-6 rounded-3xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700/60 text-slate-900 dark:text-white shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="warning" className="gap-1 font-bold">
@@ -352,10 +394,10 @@ export const Subscription: React.FC = () => {
                 PRO PASS EXPIRED
               </Badge>
             </div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
               Renew your Pro Pass to unlock premium mock tests.
             </h3>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Your previous Pro Pass has expired. Re-activate your 365-day universal access to all
               premium tests.
             </p>
@@ -372,14 +414,14 @@ export const Subscription: React.FC = () => {
               ? 'Preparing secure checkout…'
               : `Renew Pro Pass — ₹${activePlan.price}`}
           </Button>
-        </div>
+        </motion.div>
       )}
 
       {/* =========================================================================
-          FEEDBACK ALERTS: CANCELLED & DELAYED STATES (PART D)
+          FEEDBACK ALERTS: CANCELLED & DELAYED STATES
           ========================================================================= */}
       {paymentStatus === 'cancelled' && (
-        <div className="p-4 rounded-xl bg-slate-100 border border-slate-300 text-slate-800 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-150">
+        <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-150">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-slate-500 shrink-0" />
             <span>
@@ -389,7 +431,7 @@ export const Subscription: React.FC = () => {
           </div>
           <button
             onClick={() => setPaymentStatus('idle')}
-            className="font-bold text-brand-600 hover:text-brand-800 text-xs shrink-0"
+            className="font-bold text-[#0158FC] hover:underline text-xs shrink-0 cursor-pointer"
           >
             Dismiss
           </button>
@@ -397,9 +439,9 @@ export const Subscription: React.FC = () => {
       )}
 
       {paymentStatus === 'delayed' && (
-        <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-150">
+        <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-150">
           <div className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4 text-indigo-600 shrink-0 animate-spin" />
+            <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 animate-spin" />
             <span>
               Payment received. We're confirming your Pro Pass with the server. This usually takes
               just a few seconds.
@@ -418,34 +460,44 @@ export const Subscription: React.FC = () => {
       )}
 
       {/* =========================================================================
-          PRIMARY PRO PASS PRICING & BENEFIT SHOWCASE (PART B)
+          PRIMARY PRO PASS PRICING & BENEFIT SHOWCASE (REDESIGNED CARD)
           ========================================================================= */}
       <div className="max-w-2xl mx-auto">
-        <Card className="p-6 sm:p-8 border-2 border-brand-600 shadow-xl ring-4 ring-brand-500/10 rounded-2xl relative overflow-hidden">
-          <div className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+          className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl relative overflow-hidden"
+        >
+          {/* Top accent gradient bar */}
+          <div className="h-1.5 w-full bg-gradient-to-r from-[#0158FC] via-indigo-500 to-amber-500" />
+
+          <div className="p-6 sm:p-8 space-y-6">
             {/* Header / Badge */}
             <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold shrink-0 border border-brand-100">
-                  <Crown className="w-6 h-6 fill-brand-500 text-brand-600" />
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0158FC] to-blue-700 text-white flex items-center justify-center font-bold shrink-0 shadow-md shadow-blue-500/25">
+                  <Crown className="w-6 h-6 fill-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">{activePlan.title}</h3>
-                  <p className="text-xs text-slate-500">
-                    Validity: {activePlan.durationDays} Days (1 Full Year)
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {activePlan.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    Validity: {activePlan.durationDays} Days (1 Full Year of Complete Access)
                   </p>
                 </div>
               </div>
-              <Badge variant="premium" className="font-bold text-xs shrink-0">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/60 font-black text-xs uppercase tracking-wider shrink-0 shadow-2xs">
                 ALL-ACCESS PASS
-              </Badge>
+              </span>
             </div>
 
-            {/* Pricing Callout (NO DARK PATTERNS, NO CROSSED-OUT FAKE PRICES) */}
-            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-baseline justify-between">
+            {/* Pricing Showcase */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                     ₹{appliedCoupon ? appliedCoupon.finalPrice : activePlan.price}
                   </span>
                   {appliedCoupon && (
@@ -453,85 +505,83 @@ export const Subscription: React.FC = () => {
                       ₹{activePlan.price}
                     </span>
                   )}
-                  <span className="text-xs font-bold text-slate-500">/ 365 Days</span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    / 365 Days
+                  </span>
                 </div>
+
                 {appliedCoupon ? (
-                  <p className="text-xs font-bold text-emerald-700 mt-1 flex items-center gap-1">
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5" />
                     Coupon {appliedCoupon.code} applied: ₹{appliedCoupon.discountAmount} saved!
                   </p>
                 ) : (
-                  <p className="text-xs font-semibold text-emerald-700 mt-1">
-                    Transparent All-Inclusive Pricing • Single One-Time Payment
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                    ⚡ Equivalent to just ₹0.81 / day • Single One-Time Payment
                   </p>
                 )}
               </div>
-              <span className="text-xs font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border border-brand-100">
-                Universal Access
-              </span>
+
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 text-[#0158FC] dark:text-blue-400 border border-blue-500/20 text-xs font-black uppercase tracking-wider self-start sm:self-auto">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Universal Access</span>
+              </div>
             </div>
 
-            {/* Value Proposition Box */}
-            <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/80 text-xs text-slate-800 space-y-1">
-              <p className="font-bold text-amber-900">One Pass. Everything Premium.</p>
-              <p className="text-slate-600 leading-relaxed">
-                Instead of selling individual tests, one ₹299 Pro Pass unlocks the entire premium
-                mock-test library for 365 days.
+            {/* Value Proposition Callout */}
+            <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-slate-800 dark:text-slate-200 space-y-1">
+              <p className="font-extrabold text-[#0158FC] dark:text-blue-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" />
+                One Pass. Everything Premium.
+              </p>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px] sm:text-xs">
+                Instead of selling individual tests or separate exam packages, one ₹299 Pro Pass
+                unlocks the entire mock-test library, chapter drills, and PYQs for 365 days.
               </p>
             </div>
 
-            {/* Real Benefits List (PART B) */}
-            <div className="space-y-3 pt-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            {/* Included Benefits List */}
+            <div className="space-y-3 pt-1">
+              <p className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Included in Your Pro Pass:
               </p>
-              <ul className="space-y-2.5 text-xs text-slate-700">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">Unlock all premium mock tests</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">
-                    Access every premium test series
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">
-                    Practice across supported exams (WBP Constable, KP SI, WBCS, WBPSC)
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">
-                    Re-attempt tests whenever available
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">
-                    Review detailed solutions and analysis
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight font-medium">
-                    Automated Mistakes Notebook for targeted error correction
-                  </span>
-                </li>
-              </ul>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-semibold">Unlock all premium mock tests</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-semibold">Access every premium test series</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-semibold">All West Bengal &amp; Central exams</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-semibold">Unlimited test re-attempts</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-semibold">Detailed step-by-step solutions</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-semibold">Automated Mistakes Notebook</span>
+                </div>
+              </div>
             </div>
 
             {/* Coupon Code Redemption Box */}
             <div className="pt-2">
               {appliedCoupon ? (
-                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-950">
+                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs text-emerald-950 dark:text-emerald-200">
                   <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-emerald-600" />
+                    <Tag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <div>
                       <span className="font-mono font-black">{appliedCoupon.code}</span> applied:
-                      <span className="font-bold ml-1 text-emerald-700">
+                      <span className="font-bold ml-1 text-emerald-700 dark:text-emerald-300">
                         ₹{appliedCoupon.discountAmount} Off
                       </span>
                     </div>
@@ -539,7 +589,7 @@ export const Subscription: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setAppliedCoupon(null)}
-                    className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
+                    className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
                   >
                     Remove
                   </button>
@@ -557,7 +607,7 @@ export const Subscription: React.FC = () => {
                           setCouponInput(e.target.value.toUpperCase());
                           setCouponError('');
                         }}
-                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-bold uppercase placeholder:normal-case placeholder:font-normal text-slate-900 focus:outline-none focus:border-indigo-500"
+                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold uppercase placeholder:normal-case placeholder:font-normal text-slate-900 dark:text-white focus:outline-none focus:border-[#0158FC]"
                       />
                     </div>
                     <Button
@@ -566,7 +616,7 @@ export const Subscription: React.FC = () => {
                       size="sm"
                       onClick={handleApplyCoupon}
                       disabled={isValidatingCoupon || !couponInput.trim()}
-                      className="text-xs font-bold shrink-0"
+                      className="text-xs font-bold shrink-0 cursor-pointer"
                     >
                       {isValidatingCoupon ? 'Checking…' : 'Apply'}
                     </Button>
@@ -578,12 +628,12 @@ export const Subscription: React.FC = () => {
               )}
             </div>
 
-            {/* Primary CTA & Duplicate Click Protection (PART D) */}
+            {/* Primary CTA Button */}
             <div className="pt-2 space-y-2.5">
               <Button
-                variant="pro"
+                variant="primary"
                 size="lg"
-                className="w-full font-black text-sm shadow-md py-3.5"
+                className="w-full font-black text-sm shadow-lg shadow-blue-500/25 py-3.5 rounded-2xl bg-[#0158FC] hover:bg-[#0047cc] text-white hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
                 disabled={paymentStatus === 'preparing' || paymentStatus === 'processing'}
                 isLoading={paymentStatus === 'preparing' || paymentStatus === 'processing'}
                 onClick={() => handleInitiateCheckout(activePlan as SubscriptionPlan)}
@@ -591,7 +641,7 @@ export const Subscription: React.FC = () => {
                   activeSub ? (
                     <RotateCcw className="w-4 h-4" />
                   ) : (
-                    <Zap className="w-4 h-4 fill-current" />
+                    <Zap className="w-4 h-4 fill-current text-amber-300" />
                   )
                 }
               >
@@ -599,101 +649,125 @@ export const Subscription: React.FC = () => {
                   ? 'Preparing secure checkout…'
                   : activeSub
                     ? `Extend Pass (+365 Days) — ₹${appliedCoupon ? appliedCoupon.finalPrice : activePlan.price}`
-                    : `Get Pro Pass — ₹${appliedCoupon ? appliedCoupon.finalPrice : activePlan.price}`}
+                    : `Get All-Access Pro Pass — ₹${appliedCoupon ? appliedCoupon.finalPrice : activePlan.price}`}
               </Button>
+
+              <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400 dark:text-slate-500 pt-1">
+                <span className="flex items-center gap-1">
+                  <Shield className="w-3.5 h-3.5 text-emerald-500" /> Razorpay 256-Bit SSL
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" /> Instant Activation
+                </span>
+              </div>
             </div>
           </div>
-        </Card>
+        </motion.div>
       </div>
 
       {/* =========================================================================
-          LIGHTWEIGHT TRUST SECTION (PART B)
+          LIGHTWEIGHT TRUST SECTION
           ========================================================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-            <Shield className="w-5 h-5 text-emerald-600" />
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs flex items-start gap-3"
+        >
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="space-y-0.5">
-            <h4 className="text-xs font-bold text-slate-900">Secure Payment</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white">Secure Payment</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
               256-bit encrypted checkout via Razorpay.
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center shrink-0">
-            <Zap className="w-5 h-5 text-brand-600 fill-brand-600" />
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs flex items-start gap-3"
+        >
+          <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#0158FC] dark:text-blue-400 flex items-center justify-center shrink-0">
+            <Zap className="w-5 h-5 text-[#0158FC] dark:text-blue-400 fill-[#0158FC] dark:fill-blue-400" />
           </div>
           <div className="space-y-0.5">
-            <h4 className="text-xs font-bold text-slate-900">Instant Access</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white">Instant Access</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
               Immediate server-side verification and activation.
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
-            <Calendar className="w-5 h-5 text-amber-600" />
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs flex items-start gap-3"
+        >
+          <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
           </div>
           <div className="space-y-0.5">
-            <h4 className="text-xs font-bold text-slate-900">365-Day Access</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white">365-Day Access</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
               Full 1-year coverage from purchase date.
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
-            <Crown className="w-5 h-5 text-indigo-600" />
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs flex items-start gap-3"
+        >
+          <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 flex items-center justify-center shrink-0">
+            <Crown className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="space-y-0.5">
-            <h4 className="text-xs font-bold text-slate-900">No Per-Test Fees</h4>
-            <p className="text-[11px] text-slate-500 leading-tight">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white">No Per-Test Fees</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
               Zero individual test purchases required.
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* =========================================================================
-          PAYMENT RESULT MODALS: SUCCESS & FAILURE (PART D)
+          PAYMENT RESULT MODALS: SUCCESS & FAILURE
           ========================================================================= */}
       {paymentStatus === 'success' && successInfo && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8" />
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center overflow-y-auto p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm shadow-emerald-500/20">
+              <CheckCircle2 className="w-9 h-9" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-xl font-black text-slate-900">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">
                 {successInfo.isRenewal ? 'Pass Extended Successfully!' : 'Pro Pass Activated 🎉'}
               </h3>
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Your payment was verified by the server. All premium tests are now fully unlocked.
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left text-xs space-y-2">
               <div className="flex justify-between">
-                <span className="text-slate-500">Plan:</span>
-                <span className="font-bold text-slate-900">{successInfo.planTitle}</span>
+                <span className="text-slate-500 dark:text-slate-400">Plan:</span>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {successInfo.planTitle}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Status:</span>
+                <span className="text-slate-500 dark:text-slate-400">Status:</span>
                 <Badge variant="success">Active</Badge>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Access Period:</span>
-                <span className="font-bold text-slate-900">365 Days</span>
+                <span className="text-slate-500 dark:text-slate-400">Access Period:</span>
+                <span className="font-bold text-slate-900 dark:text-white">365 Days</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">New Expiry:</span>
-                <span className="font-bold text-slate-900">
+                <span className="text-slate-500 dark:text-slate-400">New Expiry:</span>
+                <span className="font-bold text-slate-900 dark:text-white">
                   {new Date(successInfo.expiresAt).toLocaleDateString('en-IN', {
                     day: 'numeric',
                     month: 'short',
@@ -706,10 +780,10 @@ export const Subscription: React.FC = () => {
             <div className="pt-2 space-y-2">
               <Button
                 variant="primary"
-                className="w-full font-bold"
+                className="w-full font-bold bg-[#0158FC] hover:bg-[#0047cc] text-white py-2.5 rounded-xl cursor-pointer"
                 onClick={() => {
                   setPaymentStatus('idle');
-                  navigate('/exams');
+                  navigate('/test-series');
                 }}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
@@ -721,15 +795,17 @@ export const Subscription: React.FC = () => {
       )}
 
       {paymentStatus === 'failed' && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center overflow-y-auto p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-8 h-8" />
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center overflow-y-auto p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-sm shadow-rose-500/20">
+              <AlertCircle className="w-9 h-9" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-slate-900">Payment Not Completed</h3>
-              <p className="text-xs text-slate-600">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                Payment Not Completed
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 {errorMessage || 'Your subscription was not activated. You can try again.'}
               </p>
             </div>
@@ -737,7 +813,7 @@ export const Subscription: React.FC = () => {
             <div className="pt-2 space-y-2">
               <Button
                 variant="primary"
-                className="w-full font-bold"
+                className="w-full font-bold bg-[#0158FC] hover:bg-[#0047cc] text-white py-2.5 rounded-xl cursor-pointer"
                 onClick={() => setPaymentStatus('idle')}
               >
                 Try Again
@@ -745,7 +821,7 @@ export const Subscription: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full text-slate-700 font-semibold"
+                className="w-full text-slate-700 dark:text-slate-300 font-semibold cursor-pointer"
                 onClick={() => {
                   setSupportCategory('Payment Issue');
                   setSupportSubject(`Payment Failed: ${selectedPlan?.title || 'Pro Pass'}`);
@@ -761,7 +837,7 @@ export const Subscription: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-slate-500"
+                className="w-full text-slate-500 cursor-pointer"
                 onClick={() => setPaymentStatus('idle')}
               >
                 Dismiss
@@ -772,19 +848,19 @@ export const Subscription: React.FC = () => {
       )}
 
       {/* Support & Billing Assistance Card */}
-      <Card className="p-5 border-blue-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50">
+      <div className="rounded-3xl p-5 sm:p-6 border border-blue-200/80 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-slate-50 dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-white border border-blue-200 text-blue-600 shadow-xs shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-blue-200 dark:border-slate-700 text-[#0158FC] dark:text-blue-400 shadow-xs shrink-0">
               <LifeBuoy className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 পেমেন্ট বা সাবস্ক্রিপশন সংক্রান্ত সহায়তা দরকার? (Need Billing Assistance?)
               </h3>
-              <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 max-w-xl">
                 টাকা কেটে নেওয়া কিন্তু প্রো পাস চালু না হওয়া, ইউপিআই বিলম্ব বা কুপন সংক্রান্ত যেকোনো
-                বিষয়ে আমাদের অ্যাডমিন ডেস্কে সরাসরি টিকেট তৈরি করুন।
+                বিষয়ে আমাদের সাপোর্ট ডেস্কে সরাসরি টিকেট তৈরি করুন।
               </p>
             </div>
           </div>
@@ -800,40 +876,40 @@ export const Subscription: React.FC = () => {
                 );
                 setIsSupportModalOpen(true);
               }}
-              leftIcon={<LifeBuoy className="w-3.5 h-3.5 text-blue-600" />}
-              className="w-full sm:w-auto text-xs font-bold border-blue-300 text-blue-700 hover:bg-blue-100/50 cursor-pointer"
+              leftIcon={<LifeBuoy className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
+              className="w-full sm:w-auto text-xs font-bold border-blue-300 dark:border-blue-800 text-[#0158FC] dark:text-blue-400 hover:bg-blue-100/50 dark:hover:bg-blue-950/40 cursor-pointer"
             >
               সাপোর্ট টিকেট সাবমিট করুন
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* =========================================================================
           PAYMENT HISTORY SECTION
           ========================================================================= */}
-      <div className="pt-6 border-t border-slate-200 space-y-4">
+      <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-brand-600" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-[#0158FC]" />
               Payment & Transaction History
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Receipts and authoritative records for all your Pro Pass purchases
             </p>
           </div>
         </div>
 
         {payments.length === 0 ? (
-          <Card className="p-6 text-center text-xs text-slate-500 border-dashed">
+          <Card className="p-6 text-center text-xs text-slate-500 dark:text-slate-400 border-dashed">
             No payment records found. Your completed transactions will appear here.
           </Card>
         ) : (
-          <Card className="overflow-hidden border-slate-200">
+          <Card className="overflow-hidden border-slate-200 dark:border-slate-800 rounded-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
                   <tr>
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3">Plan</th>
@@ -842,21 +918,26 @@ export const Subscription: React.FC = () => {
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                   {payments.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-500 font-medium">
+                    <tr
+                      key={p.id}
+                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium">
                         {new Date(p.createdAt).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
                         })}
                       </td>
-                      <td className="px-4 py-3 font-semibold text-slate-900">
+                      <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
                         {p.planTitle || 'Pro Pass'}
                       </td>
-                      <td className="px-4 py-3 font-bold text-slate-900">₹{p.amount.toFixed(2)}</td>
-                      <td className="px-4 py-3 font-mono text-[11px] text-slate-500 truncate max-w-[140px]">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">
+                        ₹{p.amount.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
                         {p.transactionId || p.orderId || p.id.substring(0, 8)}
                       </td>
                       <td className="px-4 py-3">
@@ -869,7 +950,9 @@ export const Subscription: React.FC = () => {
                                 : 'outline'
                           }
                           className={
-                            p.status === 'failed' ? 'text-rose-600 border-rose-200 bg-rose-50' : ''
+                            p.status === 'failed'
+                              ? 'text-rose-600 border-rose-200 bg-rose-50 dark:bg-rose-950/40'
+                              : ''
                           }
                         >
                           {p.status}
