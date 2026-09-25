@@ -4,8 +4,7 @@ import { MapPin } from 'lucide-react';
 
 const QUICK_LINKS = [
   { label: 'Exams', href: '#exams' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'Features', href: '#features' },
+  { label: 'App Features', href: '#inside-app' },
   { label: 'Pro Pass', href: '#pro-pass' },
   { label: 'FAQ', href: '#faq' },
 ];

@@ -2,8 +2,7 @@ import React from 'react';
 import { Navbar } from '@/pages/landing/sections/Navbar';
 import { Hero } from '@/pages/landing/sections/Hero';
 import { PopularExams } from '@/pages/landing/sections/PopularExams';
-import { HowItWorks } from '@/pages/landing/sections/HowItWorks';
-import { Features } from '@/pages/landing/sections/Features';
+import { InsideTheApp } from '@/pages/landing/sections/InsideTheApp';
 import { ProPass } from '@/pages/landing/sections/ProPass';
 import { Testimonials } from '@/pages/landing/sections/Testimonials';
 import { BottomCta } from '@/pages/landing/sections/BottomCta';
@@ -23,8 +22,7 @@ export const Landing: React.FC = () => {
       <Navbar />
       <Hero />
       <PopularExams />
-      <HowItWorks />
-      <Features />
+      <InsideTheApp />
       <ProPass />
       <Testimonials />
       <BottomCta />
