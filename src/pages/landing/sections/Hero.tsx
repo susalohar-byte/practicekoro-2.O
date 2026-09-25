@@ -23,7 +23,7 @@ export const Hero: React.FC = () => {
 
   return (
     <section className="relative overflow-hidden min-h-screen min-h-[100dvh] flex flex-col justify-between pt-24 pb-4 sm:pt-28 sm:pb-6 lg:pt-30 lg:pb-6">
-      {/* Background Lifestyle Video / Image of Indian Aspirant Studying */}
+      {/* Background Lifestyle Video of Indian Aspirant Studying */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <video
           autoPlay
@@ -31,7 +31,7 @@ export const Hero: React.FC = () => {
           muted
           playsInline
           poster="/images/hero_student_study_bg.jpg"
-          className="w-full h-full object-cover scale-110 sm:scale-120 sm:translate-x-[16%] lg:scale-125 lg:translate-x-[20%] opacity-100 dark:opacity-60 transition-transform duration-500"
+          className="w-full h-full object-cover object-center opacity-100 dark:opacity-85"
         >
           <source src="/videos/hero-background.mp4" type="video/mp4" />
           <source src="/Hero video.mp4" type="video/mp4" />
@@ -40,12 +40,11 @@ export const Hero: React.FC = () => {
           <img
             src="/images/hero_student_study_bg.jpg"
             alt="Government Exam Aspirant Studying at Home"
-            className="w-full h-full object-cover scale-110 sm:scale-120 sm:translate-x-[16%] lg:scale-125 lg:translate-x-[20%]"
+            className="w-full h-full object-cover object-center"
           />
         </video>
-        {/* Soft, low-blur readability wash - clearer video display */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/45 to-transparent sm:from-white/75 sm:via-white/30 sm:to-transparent dark:from-slate-950/80 dark:via-slate-950/45 dark:to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/60 dark:from-slate-950/40 dark:via-transparent dark:to-slate-950/70" />
+        {/* Minimal, clear gradient - completely removes foggy blurness */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/10 to-transparent dark:from-slate-950/75 dark:via-slate-950/25 dark:to-transparent" />
       </div>
 
       {/* Main Content Column */}
@@ -56,7 +55,7 @@ export const Hero: React.FC = () => {
             <Reveal>
               <div className="inline-flex items-center justify-center gap-2">
                 <span className="text-blue-500 font-bold select-none text-xs sm:text-sm">✨</span>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-xs border border-blue-200 dark:border-blue-500/40 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 shadow-xs">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/90 shadow-sm border border-blue-200 dark:border-blue-500/40 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 shadow-xs">
                   <GraduationCap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span>For Government Job Exam Aspirants</span>
                 </div>
@@ -108,7 +107,7 @@ export const Hero: React.FC = () => {
 
             {/* Rating / Social Proof Pill */}
             <Reveal delay={320}>
-              <div className="mt-5 sm:mt-6 inline-flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-5 py-2.5 sm:py-3 shadow-xs mx-auto">
+              <div className="mt-5 sm:mt-6 inline-flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 shadow-sm border border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-5 py-2.5 sm:py-3 shadow-xs mx-auto">
                 <div className="flex items-center -space-x-2">
                   <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-600 text-white text-[11px] sm:text-xs font-bold flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-2xs">
                     S
@@ -147,7 +146,7 @@ export const Hero: React.FC = () => {
             {/* Three Glassmorphic Feature Cards */}
             <Reveal delay={400}>
               <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl mx-auto">
-                <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200/80 dark:border-slate-800/80 p-3 sm:p-3.5 shadow-xs flex items-center gap-3 text-left hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:-translate-y-0.5">
+                <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-3 sm:p-3.5 shadow-xs flex items-center gap-3 text-left hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:-translate-y-0.5">
                   <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900 flex items-center justify-center shrink-0">
                     <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
@@ -161,7 +160,7 @@ export const Hero: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200/80 dark:border-slate-800/80 p-3 sm:p-3.5 shadow-xs flex items-center gap-3 text-left hover:border-purple-300 dark:hover:border-purple-700 transition-all hover:-translate-y-0.5">
+                <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-3 sm:p-3.5 shadow-xs flex items-center gap-3 text-left hover:border-purple-300 dark:hover:border-purple-700 transition-all hover:-translate-y-0.5">
                   <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-100 dark:border-purple-900 flex items-center justify-center shrink-0">
                     <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
@@ -175,7 +174,7 @@ export const Hero: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200/80 dark:border-slate-800/80 p-3 sm:p-3.5 shadow-xs flex items-center gap-3 text-left hover:border-emerald-300 dark:hover:border-emerald-700 transition-all hover:-translate-y-0.5">
+                <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-3 sm:p-3.5 shadow-xs flex items-center gap-3 text-left hover:border-emerald-300 dark:hover:border-emerald-700 transition-all hover:-translate-y-0.5">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900 flex items-center justify-center shrink-0">
                     <Target className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
@@ -213,7 +212,7 @@ export const Hero: React.FC = () => {
                   <span
                     key={`${exam}-${i}`}
                     aria-hidden={i >= SUPPORTED_EXAM_CATEGORIES.length}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap shadow-xs"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-900/90 shadow-sm border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap shadow-xs"
                   >
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                     <span>{exam}</span>
