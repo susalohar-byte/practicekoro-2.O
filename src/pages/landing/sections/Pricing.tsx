@@ -222,70 +222,72 @@ export const Pricing: React.FC = () => {
                 RIGHT COLUMN: Mobile Phone Mockup & Orbit Floating Icons
                 ============================================================== */}
             <div className="lg:col-span-5 flex justify-center items-center relative py-6 select-none">
-              {/* Orbiting dotted lines */}
+              {/* Orbiting dotted elliptical lines for tall phone */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <svg
-                  className="w-[360px] h-[360px] sm:w-[440px] sm:h-[440px] text-blue-300 dark:text-blue-900"
-                  viewBox="0 0 400 400"
+                  className="w-[380px] h-[500px] sm:w-[420px] sm:h-[560px] text-blue-300 dark:text-blue-900"
+                  viewBox="0 0 420 560"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <circle
-                    cx="200"
-                    cy="200"
-                    r="170"
+                  <ellipse
+                    cx="210"
+                    cy="280"
+                    rx="170"
+                    ry="230"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeDasharray="6 8"
                     opacity="0.45"
                   />
-                  <circle
-                    cx="200"
-                    cy="200"
-                    r="195"
+                  <ellipse
+                    cx="210"
+                    cy="280"
+                    rx="195"
+                    ry="260"
                     stroke="currentColor"
                     strokeWidth="1"
                     strokeDasharray="4 8"
-                    opacity="0.3"
+                    opacity="0.25"
                   />
                 </svg>
               </div>
 
               {/* Floating Orbit Badges */}
               {/* 1. Purple Chart Badge - Mid-Left */}
-              <div className="absolute top-[28%] -left-2 sm:-left-4 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
+              <div className="absolute top-[24%] -left-3 sm:-left-6 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
                 <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
 
               {/* 2. Emerald Target Badge - Lower-Left */}
-              <div className="absolute bottom-[24%] -left-1 sm:left-2 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
+              <div className="absolute bottom-[20%] -left-2 sm:-left-5 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
                 <Target className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
 
               {/* 3. Amber Zap Badge - Top-Right */}
-              <div className="absolute top-[20%] -right-2 sm:right-2 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
+              <div className="absolute top-[16%] -right-2 sm:-right-5 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
                 <Zap className="w-6 h-6 text-amber-500 fill-amber-500" />
               </div>
 
               {/* 4. Blue File Badge - Lower-Right */}
-              <div className="absolute bottom-[28%] -right-2 sm:-right-4 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
+              <div className="absolute bottom-[22%] -right-2 sm:-right-5 w-12 h-12 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-xl border border-white/60 dark:border-slate-700 flex items-center justify-center z-20 transition-transform hover:scale-110">
                 <FileText className="w-6 h-6 text-[#0062FF] dark:text-blue-400" />
               </div>
 
-              {/* The Realistic Mobile Phone Frame */}
-              <div className="relative w-[285px] sm:w-[315px] rounded-[3.2rem] p-3 bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 border-[3px] border-slate-600/80 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35),0_0_0_1px_rgba(255,255,255,0.15)_inset] z-10">
+              {/* The Realistic Mobile Phone Frame - Slim Width & Tall Proportional Height */}
+              <div className="relative w-[255px] sm:w-[272px] h-[535px] sm:h-[570px] rounded-[3.2rem] p-3 bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 border-[3.5px] border-slate-600/80 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.15)_inset] z-10 transform -rotate-[2.5deg] hover:rotate-0 transition-transform duration-500">
                 {/* Top Dynamic Island */}
-                <div className="absolute top-5 left-1/2 -translate-x-1/2 w-24 h-5 bg-black rounded-full z-30 flex items-center justify-end px-2 shadow-inner">
+                <div className="absolute top-5 left-1/2 -translate-x-1/2 w-22 h-5 bg-black rounded-full z-30 flex items-center justify-end px-2 shadow-inner">
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800/60" />
                 </div>
 
                 {/* Side Buttons */}
-                <div className="absolute -left-[4.5px] top-24 w-[2.5px] h-10 bg-slate-600 rounded-l-xs" />
-                <div className="absolute -left-[4.5px] top-38 w-[2.5px] h-10 bg-slate-600 rounded-l-xs" />
-                <div className="absolute -right-[4.5px] top-28 w-[2.5px] h-14 bg-slate-600 rounded-r-xs" />
+                <div className="absolute -left-[5px] top-24 w-[2.5px] h-10 bg-slate-600 rounded-l-xs" />
+                <div className="absolute -left-[5px] top-38 w-[2.5px] h-10 bg-slate-600 rounded-l-xs" />
+                <div className="absolute -right-[5px] top-28 w-[2.5px] h-14 bg-slate-600 rounded-r-xs" />
 
                 {/* Inner Screen */}
-                <div className="rounded-[2.6rem] overflow-hidden bg-white text-slate-900 flex flex-col pt-7 pb-4 px-3.5 space-y-3 shadow-inner">
+                <div className="w-full h-full rounded-[2.6rem] overflow-hidden bg-white text-slate-900 flex flex-col justify-between pt-7 pb-4 px-3 shadow-inner">
                   {/* Phone Header */}
                   <div className="flex items-center justify-between px-1">
                     <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-[#0062FF]">
@@ -300,20 +302,20 @@ export const Pricing: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Student Photo Card */}
-                  <div className="rounded-xl overflow-hidden h-28 relative shadow-xs border border-slate-100">
+                  {/* Student Photo Card - Taller & Clearer */}
+                  <div className="rounded-xl overflow-hidden h-32 sm:h-36 relative shadow-xs border border-slate-100 shrink-0">
                     <img
                       src="/images/hero_student_study_bg.jpg"
                       alt="Student studying with PracticeKoro"
-                      className="w-full h-full object-cover object-[center_35%]"
+                      className="w-full h-full object-cover object-[center_30%]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   </div>
 
                   {/* 4 Feature List Rows with Chevrons */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 sm:space-y-2">
                     {/* Item 1 */}
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
+                    <div className="flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
                       <div className="flex items-center gap-2">
                         <FileText className="w-3.5 h-3.5 text-[#0062FF] shrink-0" />
                         <span>Unlimited mock tests</span>
@@ -322,7 +324,7 @@ export const Pricing: React.FC = () => {
                     </div>
 
                     {/* Item 2 */}
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
+                    <div className="flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                         <span>Detailed analytics &amp; rank</span>
@@ -331,7 +333,7 @@ export const Pricing: React.FC = () => {
                     </div>
 
                     {/* Item 3 */}
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
+                    <div className="flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
                       <div className="flex items-center gap-2">
                         <Target className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span>Topic-wise &amp; PYQ tests</span>
@@ -340,7 +342,7 @@ export const Pricing: React.FC = () => {
                     </div>
 
                     {/* Item 4 */}
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
+                    <div className="flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-800">
                       <div className="flex items-center gap-2">
                         <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
                         <span>Priority support</span>
@@ -350,7 +352,7 @@ export const Pricing: React.FC = () => {
                   </div>
 
                   {/* Phone Bottom Price & CTA */}
-                  <div className="pt-1 space-y-2">
+                  <div className="pt-1.5 space-y-2 mt-auto">
                     <div className="flex items-center justify-between px-1">
                       <div className="flex items-baseline gap-1">
                         <span className="text-xl font-black text-slate-900">₹199</span>
