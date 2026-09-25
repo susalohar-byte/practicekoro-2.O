@@ -8,7 +8,7 @@ export const Features: React.FC = () => {
   return (
     <section
       id="features"
-      className="relative py-16 sm:py-24 bg-slate-50/50 border-t border-b border-slate-100 scroll-mt-24 overflow-hidden"
+      className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-slate-50/50 dark:bg-slate-900/30 border-t border-b border-slate-100 dark:border-slate-800/80 scroll-mt-24 overflow-hidden"
     >
       <div
         aria-hidden="true"
@@ -35,22 +35,22 @@ export const Features: React.FC = () => {
               const IconComponent = tool.icon;
               return (
                 <Reveal key={tool.title} delay={(index % 2) * 90} className="h-full">
-                  <div className="group h-full rounded-2xl bg-white border border-slate-200/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 space-y-3">
+                  <div className="group h-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 dark:hover:border-blue-700 hover:-translate-y-1 transition-all duration-300 space-y-3">
                     <div className="flex items-start justify-between">
                       <div
                         className={`w-11 h-11 rounded-xl flex items-center justify-center border shadow-xs group-hover:scale-105 transition-transform ${tool.color}`}
                       >
                         <IconComponent className="w-5 h-5" />
                       </div>
-                      <span className="px-2 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500">
+                      <span className="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[10px] font-bold text-slate-500 dark:text-slate-400">
                         {tool.bengaliTag}
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {tool.title}
                       </h3>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                         {tool.description}
                       </p>
                     </div>

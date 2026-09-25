@@ -26,7 +26,7 @@ export const Pricing: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="pricing" className="relative py-16 sm:py-24 bg-white scroll-mt-24 overflow-hidden">
+    <section id="pricing" className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-white dark:bg-slate-950 scroll-mt-24 overflow-hidden">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Pro Pass"

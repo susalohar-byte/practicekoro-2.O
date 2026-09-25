@@ -57,11 +57,18 @@ export default {
       fontFamily: {
         sans: [
           'Inter',
+          '"Hind Siliguri"',
           '-apple-system',
           'BlinkMacSystemFont',
           'Segoe UI',
           'Roboto',
           'Noto Sans Bengali',
+          'sans-serif',
+        ],
+        headline: [
+          '"Hind Siliguri"',
+          '"Anek Bangla"',
+          '"Noto Sans Bengali"',
           'sans-serif',
         ],
         letterpress: [

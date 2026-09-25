@@ -15,7 +15,7 @@ export const FaqSection: React.FC = () => {
   return (
     <section
       id="faq"
-      className="relative py-14 sm:py-20 bg-slate-50/50 border-t border-slate-100 scroll-mt-24"
+      className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-slate-50/50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80 scroll-mt-24"
     >
       <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
         <SectionHeading
@@ -31,17 +31,17 @@ export const FaqSection: React.FC = () => {
               <Reveal key={faq.q} delay={index * 60}>
                 <div
                   className={cn(
-                    'rounded-2xl border bg-white overflow-hidden shadow-xs transition-all duration-300',
+                    'rounded-2xl border bg-white dark:bg-slate-900 overflow-hidden shadow-xs transition-all duration-300',
                     isOpen
-                      ? 'border-blue-300 shadow-md shadow-blue-500/10'
-                      : 'border-slate-200/80 hover:border-blue-200'
+                      ? 'border-blue-300 dark:border-blue-700 shadow-md shadow-blue-500/10'
+                      : 'border-slate-200/80 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800'
                   )}
                 >
                   <button
                     type="button"
                     aria-expanded={isOpen}
                     onClick={() => toggleFaq(index)}
-                    className="w-full px-5 py-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-slate-900 hover:text-blue-700 transition-colors"
+                    className="w-full px-5 py-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                   >
                     <span>{faq.q}</span>
                     <span
@@ -49,7 +49,7 @@ export const FaqSection: React.FC = () => {
                         'w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300',
                         isOpen
                           ? 'bg-blue-600 text-white rotate-45'
-                          : 'bg-blue-50 text-blue-600 border border-blue-100'
+                          : 'bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-slate-700'
                       )}
                     >
                       <Plus className="w-4 h-4" />
@@ -62,7 +62,7 @@ export const FaqSection: React.FC = () => {
                     )}
                   >
                     <div className="overflow-hidden">
-                      <p className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3.5 mt-0.5 mx-0">
+                      <p className="px-5 pb-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3.5 mt-0.5 mx-0">
                         {faq.a}
                       </p>
                     </div>

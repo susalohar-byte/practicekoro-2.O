@@ -33,7 +33,7 @@ const STEPS = [
     icon: PenLine,
     title: 'Practice & Test',
     bengali: 'Timed Practice',
-    description: 'Take full mock tests, PYQs and topic quizzes in Bengali & English.',
+    description: 'Take full mock tests, PYQs and topic quizzes with instant solutions.',
     graphic: (
       <div className="w-full space-y-2 text-left">
         <div className="h-2 bg-slate-200 rounded-full w-full" />
@@ -110,7 +110,7 @@ export const HowItWorks: React.FC = () => {
   return (
     <section
       id="how-it-works"
-      className="relative py-16 sm:py-24 bg-white scroll-mt-24 overflow-hidden"
+      className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-white dark:bg-slate-950 scroll-mt-24 overflow-hidden"
     >
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
@@ -134,16 +134,16 @@ export const HowItWorks: React.FC = () => {
           {/* Connector line (desktop) */}
           <div
             aria-hidden="true"
-            className="hidden md:block absolute top-16 left-[18%] right-[18%] border-t-2 border-dashed border-blue-200"
+            className="hidden md:block absolute top-16 left-[18%] right-[18%] border-t-2 border-dashed border-blue-200 dark:border-slate-800"
           />
           {STEPS.map((step, i) => (
             <Reveal key={step.number} delay={i * 120}>
-              <div className="group relative h-full rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.06)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 text-center flex flex-col items-center overflow-hidden">
+              <div className="group relative h-full rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-7 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.06)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 dark:hover:border-blue-800 hover:-translate-y-1 transition-all duration-300 text-center flex flex-col items-center overflow-hidden">
                 <span
                   aria-hidden="true"
                   className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
                 />
-                <span className="absolute top-4 right-4 text-4xl font-black text-slate-100 select-none group-hover:text-blue-100 transition-colors">
+                <span className="absolute top-4 right-4 text-4xl font-black text-slate-100 dark:text-slate-800 select-none group-hover:text-blue-100 dark:group-hover:text-blue-900/40 transition-colors">
                   {step.number}
                 </span>
 
@@ -151,13 +151,13 @@ export const HowItWorks: React.FC = () => {
                   <step.icon className="w-6 h-6" />
                 </div>
 
-                <div className="w-full min-h-[7.5rem] bg-blue-50/50 rounded-2xl border border-blue-100/60 flex items-center justify-center p-4 mb-5">
+                <div className="w-full min-h-[7.5rem] bg-blue-50/50 dark:bg-slate-800/60 rounded-2xl border border-blue-100/60 dark:border-slate-700/60 flex items-center justify-center p-4 mb-5">
                   {step.graphic}
                 </div>
 
-                <h3 className="text-base sm:text-lg font-black text-slate-900">{step.title}</h3>
-                <p className="text-[11px] font-semibold text-blue-600 mt-0.5">{step.bengali}</p>
-                <p className="text-xs text-slate-500 mt-2 max-w-xs leading-relaxed">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{step.title}</h3>
+                <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5">{step.bengali}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-xs leading-relaxed">
                   {step.description}
                 </p>
               </div>

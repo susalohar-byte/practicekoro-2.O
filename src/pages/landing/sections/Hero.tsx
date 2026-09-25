@@ -25,7 +25,7 @@ export const Hero: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-[#eaf2fe] via-[#f7faff] to-white dark:from-slate-950 dark:via-[#0a1230] dark:to-slate-950 pt-16 pb-14 sm:pt-20 sm:pb-16 lg:pt-24 lg:pb-20">
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#eaf2fe] via-[#f7faff] to-white dark:from-slate-950 dark:via-[#0a1230] dark:to-slate-950 min-h-screen min-h-[100dvh] flex flex-col justify-between pt-24 pb-4 sm:pt-28 sm:pb-6 lg:pt-32 lg:pb-8">
       {/* Mesh gradient orbs */}
       <div
         aria-hidden="true"
@@ -49,7 +49,7 @@ export const Hero: React.FC = () => {
         className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(100,116,139,0.22)_1px,transparent_0)] bg-[size:26px_26px] [mask-image:radial-gradient(ellipse_75%_65%_at_50%_35%,black,transparent)] pointer-events-none"
       />
 
-      <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center my-auto py-4">
         <div className="flex flex-col items-center">
           {/* Centered Content Column */}
           <div className="w-full max-w-3xl text-center">
@@ -68,7 +68,7 @@ export const Hero: React.FC = () => {
             <Reveal delay={90}>
               <h1
                 aria-label={`${t('hero.headlineLead')} ${t('hero.headlineHighlight')}${t('hero.headlineTail')}`}
-                className="mt-5 text-4xl sm:text-5xl lg:text-[3.5rem] font-black text-slate-900 dark:text-white tracking-tight leading-[1.18] text-balance font-letterpress"
+                className="mt-5 text-4xl sm:text-5xl lg:text-[3.5rem] font-bold sm:font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.22] text-balance font-headline"
               >
                 {t('hero.headlineLead')}{' '}
                 <span className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">
@@ -193,17 +193,18 @@ export const Hero: React.FC = () => {
           </div>
 
         </div>
+      </div>
 
-        {/* Exam marquee strip */}
-        <Reveal delay={150}>
-        <div className="relative mt-12 sm:mt-16 -mx-4 sm:mx-0">
+      {/* Exam marquee strip */}
+      <Reveal delay={150}>
+        <div className="relative w-full pb-4 sm:pb-6 mt-auto">
           <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
             <div className="flex w-max animate-marquee gap-3 pr-3">
               {[...SUPPORTED_EXAM_CATEGORIES, ...SUPPORTED_EXAM_CATEGORIES].map((exam, i) => (
                 <span
                   key={`${exam}-${i}`}
                   aria-hidden={i >= SUPPORTED_EXAM_CATEGORIES.length}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur border border-slate-200 text-xs font-bold text-slate-600 whitespace-nowrap shadow-xs"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap shadow-xs"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                   {exam}
@@ -212,8 +213,7 @@ export const Hero: React.FC = () => {
             </div>
           </div>
         </div>
-        </Reveal>
-      </div>
+      </Reveal>
     </section>
   );
 };
