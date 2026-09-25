@@ -21,7 +21,7 @@ export const Hero: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden min-h-screen min-h-[100dvh] flex flex-col justify-between pt-20 pb-2 sm:pt-24 sm:pb-3 lg:pt-24 lg:pb-4 bg-slate-950 text-white">
+    <section className="relative overflow-hidden min-h-screen min-h-[100dvh] flex flex-col justify-between pt-16 sm:pt-20 lg:pt-20 pb-2 sm:pb-3 lg:pb-4 bg-slate-950 text-white">
       {/* Background Lifestyle Video of Indian Aspirant Studying */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <video
@@ -54,7 +54,7 @@ export const Hero: React.FC = () => {
           <div className="w-full max-w-3xl text-center">
             {/* Top Eyebrow Badge */}
             <Reveal>
-              <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2">
+              <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 -mt-1 sm:-mt-2 mb-2 sm:mb-2.5">
                 <span className="text-amber-400 font-bold select-none text-xs">✨</span>
                 <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700/80 text-xs sm:text-sm font-semibold text-slate-100 shadow-md">
                   <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
@@ -66,11 +66,15 @@ export const Hero: React.FC = () => {
 
             {/* Main Headline */}
             <Reveal delay={80}>
-              <h1 className="mt-3 sm:mt-4 text-3xl sm:text-4xl lg:text-[3.15rem] font-extrabold text-white tracking-tight leading-[1.2] font-headline text-balance drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                আত্মবিশ্বাসের সাথে জয় <br className="hidden sm:inline" />
-                করো স্বপ্নের সরকারি{' '}
-                <span className="text-blue-400 font-extrabold drop-shadow-[0_0_25px_rgba(96,165,250,0.6)]">
-                  চাকরি।
+              <h1 className="mt-2.5 sm:mt-3 text-3xl sm:text-4xl lg:text-[3.15rem] font-extrabold text-white tracking-tight font-headline text-balance drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                <span className="block mb-2 sm:mb-2.5 leading-snug sm:leading-tight">
+                  আত্মবিশ্বাসের সাথে জয়
+                </span>
+                <span className="block leading-snug sm:leading-tight">
+                  করো স্বপ্নের সরকারি{' '}
+                  <span className="text-blue-400 font-extrabold drop-shadow-[0_0_25px_rgba(96,165,250,0.6)]">
+                    চাকরি।
+                  </span>
                 </span>
               </h1>
             </Reveal>
@@ -190,18 +194,18 @@ export const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Exam marquee strip with generous top breathing space */}
+      {/* Exam marquee strip with elevated positioning */}
       <Reveal delay={150}>
-        <div className="relative w-full pb-3 sm:pb-4 mt-auto pt-3">
-          {/* Centered Floating Badge */}
-          <div className="flex justify-center -mb-3 relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/95 border border-slate-700 shadow-md text-[11px] font-extrabold tracking-wider text-amber-400 uppercase">
+        <div className="relative w-full pb-6 sm:pb-8 lg:pb-10 mt-auto pt-2 sm:pt-3">
+          {/* Centered Floating Badge - lifted above marquee */}
+          <div className="flex justify-center mb-2 sm:mb-2.5 relative z-10">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-800/95 border border-slate-700 shadow-md text-[11px] font-extrabold tracking-wider text-amber-400 uppercase">
               <span>🔥</span>
               <span>POPULAR EXAMS</span>
             </div>
           </div>
 
-          {/* Marquee row with right arrow navigation button */}
+          {/* Marquee row */}
           <div className="relative flex items-center">
             <div className="w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_6%,black_92%,transparent)] py-2">
               <div className="flex w-max animate-marquee gap-3 pr-3">
