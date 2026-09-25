@@ -106,4 +106,53 @@ describe('AuthContext global loading (regression)', () => {
       expect.not.arrayContaining([true])
     );
   });
+
+  it('register() without a session returns needsConfirmation and never logs in', async () => {
+    const signUp = vi.fn().mockResolvedValue({
+      data: {
+        // Email confirmation ON: user exists but no session issued.
+        user: { id: 'new-user-1', email: 'new@example.com' },
+        session: null,
+      },
+      error: null,
+    });
+    const { supabaseRuntime } = await import('@/lib/supabase');
+    (supabaseRuntime as unknown as { auth: { signUp: unknown } }).auth.signUp = signUp;
+
+    let probe!: React.MutableRefObject<{
+      register: (
+        e: string,
+        p: string,
+        q: string
+      ) => Promise<{ error: Error | null; needsConfirmation?: boolean }>;
+      user: unknown;
+    }>;
+
+    function Probe() {
+      const { register: reg, user } = useAuth();
+      probe = React.useRef({ register: reg, user });
+      probe.current = { register: reg, user };
+      return null;
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+
+    let result!: { error: Error | null; needsConfirmation?: boolean };
+    await act(async () => {
+      result = await probe.current.register('New User', 'new@example.com', 'secret123');
+    });
+
+    expect(result.error).toBeNull();
+    expect(result.needsConfirmation).toBe(true);
+    // No fake logged-in state without a session.
+    expect(probe.current.user).toBeNull();
+  });
 });

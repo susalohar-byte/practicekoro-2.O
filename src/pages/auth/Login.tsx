@@ -5,6 +5,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { GoogleIcon } from '@/components/common/GoogleIcon';
 import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { mapAuthError } from '@/lib/errors';
 
 export const Login: React.FC = () => {
   const { login, loginWithGoogle } = useAuth();
@@ -41,7 +42,7 @@ export const Login: React.FC = () => {
     setIsGoogleLoading(false);
 
     if (res.error) {
-      setError(res.error.message);
+      setError(mapAuthError(res.error, 'Google sign-in failed. Please try again.'));
     } else {
       // In demo mode or if session was resolved synchronously without page reload
       const dest = from && from !== '/' ? from : '/dashboard';
@@ -63,7 +64,7 @@ export const Login: React.FC = () => {
     setIsLoading(false);
 
     if (res.error) {
-      setError(res.error.message);
+      setError(mapAuthError(res.error, 'Sign-in failed. Please try again.'));
     } else {
       // Admin role is determined exclusively from the database
       if (res.role === 'admin') {

@@ -154,7 +154,7 @@ interface AuthContextType {
     fullName: string,
     email: string,
     password: string
-  ) => Promise<{ error: Error | null; role?: UserRole }>;
+  ) => Promise<{ error: Error | null; role?: UserRole; needsConfirmation?: boolean }>;
   logout: () => Promise<void>;
   updateProfile: (updates: {
     fullName?: string;
@@ -294,7 +294,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
       if (error) return { error };
 
       let authenticatedRole: UserRole = 'student';
@@ -349,7 +352,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string,
     email: string,
     password: string
-  ): Promise<{ error: Error | null; role?: UserRole }> => {
+  ): Promise<{ error: Error | null; role?: UserRole; needsConfirmation?: boolean }> => {
     // NOTE: same as login() — do not toggle global `loading` (see above).
     try {
       if (!isSupabaseConfigured) {
@@ -358,11 +361,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
+      const cleanEmail = email.trim();
+      const cleanName = fullName.trim();
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
-          data: { full_name: fullName },
+          data: { full_name: cleanName },
         },
       });
 
@@ -372,11 +377,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Admin role can only be assigned through direct database operations.
       const registeredRole: UserRole = 'student';
 
-      if (data.user) {
+      // Email confirmation ON (production default): Supabase returns a user
+      // but NO session. Never mark the visitor logged in without a session —
+      // that fake state breaks every authenticated call afterwards.
+      if (data.user && !data.session) {
+        return { error: null, role: registeredRole, needsConfirmation: true };
+      }
+
+      if (data.user && data.session) {
         const newUser: UserProfile = {
           id: data.user.id,
-          fullName,
-          email,
+          fullName: cleanName,
+          email: cleanEmail,
           role: registeredRole,
           createdAt: new Date().toISOString(),
         };

@@ -32,7 +32,7 @@ export const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <header className="sticky top-3 sm:top-4 z-50 w-full px-4 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
+    <header className="fixed top-3 sm:top-4 left-0 right-0 z-50 w-full px-4 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
       <div
         className={cn(
           'w-full max-w-6xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border rounded-2xl sm:rounded-full px-4 sm:px-6 flex items-center justify-between pointer-events-auto transition-all duration-300',

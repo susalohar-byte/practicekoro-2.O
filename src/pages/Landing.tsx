@@ -19,7 +19,7 @@ export { SUPPORTED_EXAM_CATEGORIES } from '@/pages/landing/data';
  */
 export const Landing: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       <Navbar />
       <Hero />
       <PopularExams />

@@ -15,7 +15,6 @@ import {
   FileText,
   Sparkles,
   Star,
-  Languages,
   Flame,
   Trophy,
   Wifi,
@@ -217,7 +216,6 @@ export const Hero: React.FC = () => {
                 { icon: FileText, label: 'Full-Length Mocks' },
                 { icon: CheckCircle2, label: '10+ Yrs Solved PYQs' },
                 { icon: Target, label: 'Topic Practice' },
-                { icon: Languages, label: 'বাংলা ও English' },
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}
@@ -344,7 +342,7 @@ export const Hero: React.FC = () => {
                         WBP Constable Prelims #01
                       </p>
                       <p className="text-[8.5px] text-blue-100/90 font-medium mt-0.5">
-                        85 Questions • 60 Mins • বাংলা ও English
+                        85 Questions • 60 Mins • Detailed Solutions
                       </p>
                       <div className="mt-1.5 flex items-center justify-between pt-1 border-t border-white/15">
                         <span className="text-[8.5px] font-bold text-white/90">Free Test</span>

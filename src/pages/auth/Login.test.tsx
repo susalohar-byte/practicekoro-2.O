@@ -82,8 +82,9 @@ describe('Login (auth regression)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
 
     // The exact regression: the form used to unmount mid-submit (global
-    // loading spinner) and swallow this error. It must now be visible…
-    const err = await screen.findByText('Invalid login credentials');
+    // loading spinner) and swallow this error. It must now be visible
+    // (as friendly copy) …
+    const err = await screen.findByText(/Incorrect email or password/);
     expect(err).toBeVisible();
     // …and the form must still be mounted.
     expect(screen.getByRole('heading', { name: /sign in to your account/i })).toBeVisible();

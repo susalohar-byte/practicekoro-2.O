@@ -4,7 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { GoogleIcon } from '@/components/common/GoogleIcon';
-import { Lock, Mail, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { mapAuthError } from '@/lib/errors';
 
 export const Register: React.FC = () => {
   const { register, loginWithGoogle } = useAuth();
@@ -16,6 +17,7 @@ export const Register: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   const handleGoogleRegister = async () => {
     setIsGoogleLoading(true);
@@ -33,19 +35,27 @@ export const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !email || !password) {
+    if (!fullName.trim() || !email.trim() || !password) {
       setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
       return;
     }
 
     setIsLoading(true);
     setError(null);
 
-    const res = await register(fullName, email, password);
+    const res = await register(fullName.trim(), email.trim(), password);
     setIsLoading(false);
 
     if (res.error) {
-      setError(res.error.message);
+      setError(mapAuthError(res.error, 'Registration failed. Please try again.'));
+    } else if (res.needsConfirmation) {
+      // Email confirmation required: do NOT navigate — show inbox guidance.
+      setRegisteredEmail(email.trim());
     } else {
       // Registration always creates student accounts; admin is DB-only
       if (res.role === 'admin') {
@@ -72,6 +82,22 @@ export const Register: React.FC = () => {
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">
         <div className="bg-white py-8 px-6 shadow-xs rounded-2xl border border-slate-200 sm:px-10">
+          {registeredEmail ? (
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-bold text-pk-navy">Verify your email</h3>
+              <p className="text-xs text-slate-500 mt-2 mb-6 leading-relaxed">
+                We sent a verification link to <strong>{registeredEmail}</strong>. Click the
+                link in your inbox, then sign in to start practicing.
+              </p>
+              <Button onClick={() => navigate('/login')} className="w-full">
+                Go to Sign In
+              </Button>
+            </div>
+          ) : (
+            <>
           {error && (
             <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
               {error}
@@ -153,6 +179,8 @@ export const Register: React.FC = () => {
               Sign In
             </Link>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>
