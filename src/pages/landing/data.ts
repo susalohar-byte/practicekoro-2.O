@@ -3,12 +3,13 @@ import { FileText, CheckCircle2, Target, BarChart3, Bookmark, Clock } from 'luci
 
 // West Bengal & Central Competitive Exams Coverage
 export const SUPPORTED_EXAM_CATEGORIES = [
-  'WBP Constable',
-  'Kolkata Police',
-  'WBCS Prelims',
   'WBPSC Clerkship',
   'Railway Group D',
   'Primary & Upper Primary TET',
+  'WBP Constable',
+  'Kolkata Police',
+  'WBCS Prelims',
+  'WBPSC Misc',
 ];
 
 export const examCategories = [
