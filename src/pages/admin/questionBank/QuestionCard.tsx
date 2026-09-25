@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Edit2, Lock, Trash2, Image as ImageIcon } from 'lucide-react';
+import { BookOpen, Check, Edit2, Lock, Trash2, Image as ImageIcon } from 'lucide-react';
 import { ShortNotesBox } from '@/components/common/ShortNotesBox';
 import { QuestionImage } from '@/components/common/QuestionImage';
 import { isMathematicsQuestion } from '@/utils/shortNotes';
@@ -43,18 +43,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       {/* Top Row: Selection circle, Question text, Action Icons */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3.5 flex-1 min-w-0">
-          {/* Selection Circle */}
+          {/* Selection Checkbox */}
           <button
             type="button"
             onClick={onToggleSelect}
             title={isSelected ? 'Deselect question' : 'Select question'}
-            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+            className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer ${
               isSelected
                 ? 'border-sky-500 bg-sky-500 text-white shadow-xs'
-                : 'border-sky-400 dark:border-sky-500 bg-white dark:bg-slate-950 hover:border-sky-600'
+                : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 hover:border-sky-400 dark:hover:border-sky-500'
             }`}
           >
-            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+            {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
           </button>
 
           {/* Question Number & Text */}
@@ -62,13 +62,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             <h3 className="text-[15px] sm:text-base font-bold text-slate-900 dark:text-white leading-relaxed">
               {questionNumber}. {q.questionBengaliText || q.questionText}
             </h3>
-            {q.questionBengaliText &&
-              q.questionText &&
-              q.questionBengaliText !== q.questionText && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 italic">
-                  {q.questionText}
-                </p>
-              )}
             <QuestionImage
               src={q.imageUrl}
               alt="Question figure"
@@ -275,7 +268,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               Diagram
             </span>
           )}
-          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">bn</span>
           <Lock className="w-3.5 h-3.5 text-slate-400" />
         </div>
 

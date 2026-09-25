@@ -1,11 +1,13 @@
 import React from 'react';
-import { Archive, Edit2, Eye, Trash2 } from 'lucide-react';
+import { Archive, Check, Edit2, Eye, Trash2 } from 'lucide-react';
 import type { Question } from '@/types';
 
 export interface QuestionTableRowProps {
   q: Question;
   questionNumber: number;
   examTitle?: string;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
   onPreview: () => void;
   onOpenEdit: () => void;
   onArchive: () => void;
@@ -17,6 +19,8 @@ export const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
   q,
   questionNumber,
   examTitle,
+  isSelected = false,
+  onToggleSelect,
   onPreview,
   onOpenEdit,
   onArchive,
@@ -26,10 +30,25 @@ export const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
   const isExam = q.sourceType === 'other' || Boolean(q.sourceExam);
   const isPyq = q.sourceType === 'pyq';
   return (
-    <tr key={q.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
-      {/* Question Index */}
-      <td className="px-3 py-3.5 text-center font-bold text-slate-400 dark:text-slate-500 text-[11px]">
-        {questionNumber}
+    <tr key={q.id} className={`hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors ${isSelected ? 'bg-sky-50/50 dark:bg-sky-950/20' : ''}`}>
+      {/* Checkbox + Question Index */}
+      <td className="px-3 py-3.5 text-center">
+        <div className="flex items-center justify-center gap-2">
+          {onToggleSelect && (
+            <button
+              type="button"
+              onClick={onToggleSelect}
+              className={`w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                isSelected
+                  ? 'border-sky-500 bg-sky-500 text-white'
+                  : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 hover:border-sky-400'
+              }`}
+            >
+              {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+            </button>
+          )}
+          <span className="font-bold text-slate-400 dark:text-slate-500 text-[11px]">{questionNumber}</span>
+        </div>
       </td>
 
       {/* Question Text */}
@@ -38,11 +57,6 @@ export const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
           <p className="font-bold text-slate-900 dark:text-white line-clamp-2 leading-relaxed">
             {q.questionBengaliText || q.questionText}
           </p>
-          {q.questionBengaliText && q.questionText && q.questionBengaliText !== q.questionText && (
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 italic">
-              {q.questionText}
-            </p>
-          )}
           <div className="flex items-center gap-2 pt-0.5">
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500">
               {q.defaultMarks} Mark
