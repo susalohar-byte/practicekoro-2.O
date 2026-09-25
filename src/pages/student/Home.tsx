@@ -1206,56 +1206,58 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* 9. PRO UPGRADE BANNER (Bottom Banner) */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#dbebfe] dark:from-slate-900 dark:via-slate-850 dark:to-indigo-950/60 border border-blue-200/80 dark:border-slate-800 p-6 sm:p-8 overflow-hidden shadow-xs">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2 max-w-xl">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl bg-[#0158FC] text-white flex items-center justify-center shadow-xs">
-                <Sparkles className="w-4 h-4" />
+      {/* 9. PRO UPGRADE BANNER (Bottom Banner) - Only shown to free students */}
+      {!isPro && (
+        <div className="relative rounded-3xl bg-gradient-to-r from-[#eef6ff] via-[#e6f2fe] to-[#dbebfe] dark:from-slate-900 dark:via-slate-850 dark:to-indigo-950/60 border border-blue-200/80 dark:border-slate-800 p-6 sm:p-8 overflow-hidden shadow-xs">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2 max-w-xl">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-[#0158FC] text-white flex items-center justify-center shadow-xs">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                  Upgrade to <span className="text-[#0158FC] dark:text-blue-400">PracticeKoro Pro</span>
+                </h3>
               </div>
-              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                Upgrade to <span className="text-[#0158FC] dark:text-blue-400">PracticeKoro Pro</span>
-              </h3>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-              Get unlimited access to all exams, mock tests, PYQ, topic practice and detailed solutions.
-            </p>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                Get unlimited access to all exams, mock tests, PYQ, topic practice and detailed solutions.
+              </p>
 
-            {/* Checklist */}
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> All Exams
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Unlimited Tests
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Detailed Solutions
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Smartphone className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Web + Mobile App
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Headphones className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Priority Support
+              {/* Checklist */}
+              <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> All Exams
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Unlimited Tests
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Detailed Solutions
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Web + Mobile App
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Headphones className="w-4 h-4 text-[#0158FC] dark:text-blue-400" /> Priority Support
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center sm:items-end gap-2 shrink-0 w-full sm:w-auto">
+              <Link
+                to="/subscription"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#0158FC] hover:bg-[#0047cc] text-white text-sm font-bold shadow-md shadow-blue-500/25 transition-all"
+              >
+                <span>Upgrade Now</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Start your success journey today!
               </span>
             </div>
-          </div>
-
-          <div className="flex flex-col items-center sm:items-end gap-2 shrink-0 w-full sm:w-auto">
-            <Link
-              to="/subscription"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#0158FC] hover:bg-[#0047cc] text-white text-sm font-bold shadow-md shadow-blue-500/25 transition-all"
-            >
-              <span>Upgrade Now</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <span className="text-[11px] text-slate-500 font-medium">
-              Start your success journey today!
-            </span>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Interactive Animated Onboarding Tour Modal */}
       <OnboardingModal

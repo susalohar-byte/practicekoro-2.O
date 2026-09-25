@@ -184,55 +184,57 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
             })}
           </nav>
 
-          {/* PRO PASS Card (hidden when collapsed) */}
-          <div className={cn('px-3', isCollapsed && 'lg:hidden')}>
-            <div className="rounded-2xl bg-gradient-to-b from-[#f0f7ff] to-[#e4f0fe] dark:from-slate-800/90 dark:to-slate-850/90 border border-blue-100/90 dark:border-slate-700/80 p-4 text-center relative overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-500 flex items-center justify-center mx-auto mb-2 shadow-2xs">
-                <Crown className="w-4 h-4 fill-amber-500" />
-              </div>
-              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide mb-0.5">
-                PRO PASS
-              </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mb-3">
-                Unlock Your Full Potential
-              </p>
+          {/* PRO PASS Card (hidden when collapsed or when already subscribed to Pro Pass) */}
+          {!isPro && (
+            <div className={cn('px-3', isCollapsed && 'lg:hidden')}>
+              <div className="rounded-2xl bg-gradient-to-b from-[#f0f7ff] to-[#e4f0fe] dark:from-slate-800/90 dark:to-slate-850/90 border border-blue-100/90 dark:border-slate-700/80 p-4 text-center relative overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-500 flex items-center justify-center mx-auto mb-2 shadow-2xs">
+                  <Crown className="w-4 h-4 fill-amber-500" />
+                </div>
+                <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide mb-0.5">
+                  PRO PASS
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mb-3">
+                  Unlock Your Full Potential
+                </p>
 
-              <div className="space-y-1.5 text-left text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-4 px-1">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
-                  <span>All Exams</span>
+                <div className="space-y-1.5 text-left text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-4 px-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
+                    <span>All Exams</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
+                    <span>Mock Tests</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
+                    <span>PYQ &amp; Topic Practice</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
+                    <span>Detailed Solutions</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
+                    <span>Web + Mobile Access</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
-                  <span>Mock Tests</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
-                  <span>PYQ &amp; Topic Practice</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
-                  <span>Detailed Solutions</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0158FC] dark:text-blue-400 shrink-0" />
-                  <span>Web + Mobile Access</span>
-                </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  navigate('/subscription');
-                }}
-                className="w-full py-2 rounded-xl bg-[#0158FC] hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-[0.98]"
-              >
-                <span>Upgrade Now</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    navigate('/subscription');
+                  }}
+                  className="w-full py-2 rounded-xl bg-[#0158FC] hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-[0.98]"
+                >
+                  <span>Upgrade Now</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Pinned Bottom Profile Section (Replaces Bengal Skyline) */}
