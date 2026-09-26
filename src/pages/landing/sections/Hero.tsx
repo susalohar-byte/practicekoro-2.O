@@ -12,6 +12,7 @@ import {
   BarChart3,
   Target,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 export const Hero: React.FC = () => {
@@ -118,8 +119,12 @@ export const Hero: React.FC = () => {
                   onClick={() => navigate(user ? dashboardUrl : '/register')}
                   className="inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/35 hover:shadow-blue-500/50 transition-all cursor-pointer hover:-translate-y-0.5"
                 >
-                  <LayoutGrid className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                  <span>Go to Dashboard</span>
+                  {user ? (
+                    <LayoutGrid className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-blue-200" />
+                  )}
+                  <span>{user ? 'Go to Dashboard' : 'Get Started'}</span>
                   <ArrowRight className="w-4 h-4 ml-0.5" />
                 </button>
 

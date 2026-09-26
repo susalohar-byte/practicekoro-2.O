@@ -1,11 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Reveal } from './Reveal';
 import { ArrowRight, BadgeCheck } from 'lucide-react';
 
 export const BottomCta: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
+  const dashboardUrl = isAdmin ? '/admin' : '/dashboard';
 
   return (
     <section className="relative py-14 sm:py-20 bg-white overflow-hidden">
@@ -73,13 +76,15 @@ export const BottomCta: React.FC = () => {
             <div className="relative flex flex-col items-center gap-2.5 shrink-0 w-full md:w-auto">
               <Button
                 size="lg"
-                onClick={() => navigate('/register')}
+                onClick={() => navigate(user ? dashboardUrl : '/register')}
                 className="bg-white hover:bg-pk-blue-light text-pk-primary font-bold px-8 py-3.5 rounded-xl shadow-xl text-sm gap-2 transition-all hover:-translate-y-0.5 w-full md:w-auto"
               >
-                <span>Get Started Free</span>
+                <span>{user ? 'Go to Dashboard' : 'Get Started Free'}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
-              <p className="text-[11px] font-medium text-pk-blue-light/90">No card required</p>
+              <p className="text-[11px] font-medium text-pk-blue-light/90">
+                {user ? 'Practice anytime, anywhere' : 'No card required'}
+              </p>
             </div>
           </div>
         </Reveal>
