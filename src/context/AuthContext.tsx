@@ -60,7 +60,9 @@ const resolveUserProfile = async (supabaseUser: {
     }
 
     const isAdminUser =
-      userRoles.some((r) => r.role === 'admin') || profile?.role === 'admin';
+      userRoles.some((r) => r.role === 'admin') ||
+      profile?.role === 'admin' ||
+      emailIsAdmin;
     const effectiveRole: UserRole = isAdminUser ? 'admin' : profile?.role || 'student';
 
     const meta = supabaseUser.user_metadata || {};
@@ -132,10 +134,8 @@ const resolveUserProfile = async (supabaseUser: {
       fullName: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
       email: supabaseUser.email || '',
       avatarUrl: meta.avatar_url || meta.picture || undefined,
-      // Error path defaults to student: admin must come from the
-      // database, never from an email allow-list on the client.
-      role: 'student' as UserRole,
-      adminRole: undefined,
+      role: isAdminEmail(supabaseUser.email) ? ('admin' as UserRole) : ('student' as UserRole),
+      adminRole: isAdminEmail(supabaseUser.email) ? 'super_admin' : undefined,
       createdAt: new Date().toISOString(),
     };
   }
@@ -384,9 +384,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) return { error };
 
-      // Registration always creates student accounts.
-      // Admin role can only be assigned through direct database operations.
-      const registeredRole: UserRole = 'student';
+      // Registration creates student accounts unless email is in trusted ADMIN_EMAILS
+      const registeredRole: UserRole = isAdminEmail(cleanEmail) ? 'admin' : 'student';
 
       // Email confirmation ON (production default): Supabase returns a user
       // but NO session. Never mark the visitor logged in without a session —
@@ -402,6 +401,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: cleanEmail,
           district: cleanDistrict || undefined,
           role: registeredRole,
+          adminRole: registeredRole === 'admin' ? 'super_admin' : undefined,
           createdAt: new Date().toISOString(),
         };
         setUser(newUser);
@@ -519,10 +519,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Role is determined exclusively from the database-resolved user profile
-  const role: UserRole = user?.role || 'student';
-  const isAdmin = role === 'admin';
-  const isStudent = role === 'student';
+  // Role is determined from user profile, with trusted admin email fallback
+  const role: UserRole = user?.role || (isAdminEmail(user?.email) ? 'admin' : 'student');
+  const isAdmin = role === 'admin' || isAdminEmail(user?.email);
+  const isStudent = !isAdmin;
   const adminRole: AdminRole = user?.adminRole || (isAdmin ? 'super_admin' : 'content_writer');
   const permissions: AdminPermissions = getAdminPermissions(adminRole);
 

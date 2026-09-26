@@ -19,6 +19,7 @@ export const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const from = (location.state as { from?: { pathname?: string } })?.from?.pathname;
+  const isFromAdmin = Boolean(from && from.startsWith('/admin'));
 
   // Catch any OAuth redirect error parameters
   useEffect(() => {
@@ -34,7 +35,7 @@ export const Login: React.FC = () => {
     setError(null);
 
     const redirectDest =
-      from && from !== '/' && from !== '/login'
+      from && from !== '/' && from !== '/login' && !isFromAdmin
         ? `${window.location.origin}${from}`
         : `${window.location.origin}/dashboard`;
 
@@ -45,7 +46,7 @@ export const Login: React.FC = () => {
       setError(mapAuthError(res.error, 'Google sign-in failed. Please try again.'));
     } else {
       // In demo mode or if session was resolved synchronously without page reload
-      const dest = from && from !== '/' ? from : '/dashboard';
+      const dest = from && from !== '/' && !isFromAdmin ? from : '/dashboard';
       navigate(dest, { replace: true });
     }
   };
@@ -68,9 +69,10 @@ export const Login: React.FC = () => {
     } else {
       // Admin role is determined exclusively from the database
       if (res.role === 'admin') {
-        navigate('/admin', { replace: true });
+        const adminDest = from && from !== '/' && from !== '/login' ? from : '/admin';
+        navigate(adminDest, { replace: true });
       } else {
-        const dest = from && from !== '/' ? from : '/dashboard';
+        const dest = from && from !== '/' && !isFromAdmin ? from : '/dashboard';
         navigate(dest, { replace: true });
       }
     }
