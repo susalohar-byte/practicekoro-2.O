@@ -21,7 +21,7 @@ export const Hero: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden min-h-screen min-h-[100dvh] flex flex-col justify-between pt-16 sm:pt-20 lg:pt-20 pb-2 sm:pb-3 lg:pb-4 bg-slate-950 text-white">
+    <section className="relative overflow-hidden min-h-screen min-h-[100dvh] flex flex-col justify-between pt-16 sm:pt-20 lg:pt-20 pb-0 bg-slate-950 text-white">
       {/* Background Lifestyle Video of Indian Aspirant Studying */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <video
@@ -194,7 +194,7 @@ export const Hero: React.FC = () => {
 
       {/* Exam marquee strip with elevated positioning */}
       <Reveal delay={150}>
-        <div className="relative w-full pb-6 sm:pb-8 lg:pb-10 mt-auto pt-2 sm:pt-3">
+        <div className="relative z-20 w-full pb-10 sm:pb-14 lg:pb-16 mt-auto pt-2 sm:pt-3">
           {/* Centered Floating Badge - lifted above marquee */}
           <div className="flex justify-center mb-2 sm:mb-2.5 relative z-10">
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-800/95 border border-slate-700 shadow-md text-[11px] font-extrabold tracking-wider text-amber-400 uppercase">
@@ -222,6 +222,17 @@ export const Hero: React.FC = () => {
           </div>
         </div>
       </Reveal>
+
+      {/* Seamless blurred gradient blend into the next section */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-px left-0 right-0 h-28 sm:h-40 z-10 overflow-hidden"
+      >
+        {/* Layer 1: Frosted progressive backdrop blur */}
+        <div className="absolute inset-0 backdrop-blur-xl [mask-image:linear-gradient(to_bottom,transparent_0%,black_65%,black_100%)]" />
+        {/* Layer 2: Smooth color gradient seamlessly merging dark hero into next section */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/60 via-35% to-slate-50 dark:to-slate-950" />
+      </div>
     </section>
   );
 };
