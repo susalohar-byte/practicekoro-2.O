@@ -25,7 +25,7 @@ export const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -35,10 +35,10 @@ export const Navbar: React.FC = () => {
     <header className="fixed top-3 sm:top-4 left-0 right-0 z-50 w-full px-4 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
       <div
         className={cn(
-          'w-full max-w-6xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border rounded-2xl sm:rounded-full px-4 sm:px-6 flex items-center justify-between pointer-events-auto transition-all duration-300',
+          'w-full max-w-6xl rounded-2xl sm:rounded-full px-4 sm:px-6 flex items-center justify-between pointer-events-auto transition-all duration-300',
           scrolled
-            ? 'border-slate-200 dark:border-slate-800 shadow-[0_12px_40px_-8px_rgba(37,99,235,0.18)] h-[4.25rem]'
-            : 'border-slate-200/80 dark:border-slate-800/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-16 sm:h-18'
+            ? 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-[0_12px_40px_-8px_rgba(37,99,235,0.18)] h-[4.25rem]'
+            : 'bg-transparent border border-transparent shadow-none h-16 sm:h-18'
         )}
       >
         {/* Logo */}
@@ -54,18 +54,33 @@ export const Navbar: React.FC = () => {
               className="w-6 h-6 object-contain"
             />
           </span>
-          <span className="font-black text-xl sm:text-2xl text-pk-navy dark:text-white tracking-tight flex items-center">
-            Practice<span className="text-pk-primary">Koro</span>
+          <span
+            className={cn(
+              'font-black text-xl sm:text-2xl tracking-tight flex items-center transition-colors',
+              scrolled ? 'text-pk-navy dark:text-white' : 'text-white'
+            )}
+          >
+            Practice<span className={scrolled ? 'text-pk-primary' : 'text-blue-400'}>Koro</span>
           </span>
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600 dark:text-slate-300">
+        <nav
+          className={cn(
+            'hidden md:flex items-center gap-7 text-sm font-semibold transition-colors',
+            scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-200'
+          )}
+        >
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="hover:text-pk-primary transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:rounded-full after:bg-pk-primary hover:after:w-full after:transition-all"
+              className={cn(
+                'transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:rounded-full after:transition-all',
+                scrolled
+                  ? 'hover:text-pk-primary after:bg-pk-primary hover:after:w-full'
+                  : 'hover:text-white after:bg-blue-400 hover:after:w-full'
+              )}
             >
               {link.label}
             </a>
@@ -75,14 +90,25 @@ export const Navbar: React.FC = () => {
         {/* Auth / Dashboard CTA */}
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="pointer-events-auto">
-            <ThemeToggle />
+            <ThemeToggle
+              className={cn(
+                'transition-all',
+                !scrolled &&
+                  'bg-white/10 hover:bg-white/20 border-white/20 text-white dark:text-white shadow-none'
+              )}
+            />
           </div>
 
           {user ? (
             <InteractiveHoverButton
               text="Dashboard"
               onClick={() => navigate(dashboardUrl)}
-              className="w-32 sm:w-36 text-xs sm:text-sm h-9 sm:h-10 border-pk-blue-soft text-pk-primary shadow-xs"
+              className={cn(
+                'w-32 sm:w-36 text-xs sm:text-sm h-9 sm:h-10 shadow-xs transition-all',
+                scrolled
+                  ? 'border-pk-blue-soft text-pk-primary'
+                  : 'bg-white/15 hover:bg-white/25 border-white/30 text-white backdrop-blur-xs'
+              )}
             />
           ) : (
             <div className="hidden sm:flex items-center gap-2.5">
@@ -90,14 +116,24 @@ export const Navbar: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate('/login')}
-                className="text-sm font-semibold text-pk-primary border-slate-200 hover:bg-pk-blue-light hover:border-pk-blue-soft px-5 py-2 rounded-xl"
+                className={cn(
+                  'text-sm font-semibold px-5 py-2 rounded-xl transition-all',
+                  scrolled
+                    ? 'text-pk-primary border-slate-200 hover:bg-pk-blue-light hover:border-pk-blue-soft'
+                    : 'text-white border-white/30 hover:border-white/50 bg-white/10 hover:bg-white/20 backdrop-blur-xs'
+                )}
               >
                 Login
               </Button>
               <Button
                 size="sm"
                 onClick={() => navigate('/register')}
-                className="text-sm font-bold bg-gradient-to-r from-pk-primary to-pk-primary-bright hover:from-pk-primary-interactive hover:to-pk-primary text-white px-5 py-2 rounded-xl shadow-md shadow-pk-primary/25"
+                className={cn(
+                  'text-sm font-bold px-5 py-2 rounded-xl shadow-md transition-all text-white',
+                  scrolled
+                    ? 'bg-gradient-to-r from-pk-primary to-pk-primary-bright hover:from-pk-primary-interactive hover:to-pk-primary shadow-pk-primary/25'
+                    : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/35'
+                )}
               >
                 Get Started
               </Button>
@@ -111,7 +147,12 @@ export const Navbar: React.FC = () => {
               onClick={() => setMenuOpen((v) => !v)}
               aria-expanded={menuOpen}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="sm:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className={cn(
+                'sm:hidden p-2 rounded-xl transition-colors',
+                scrolled
+                  ? 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'text-white hover:bg-white/15'
+              )}
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
