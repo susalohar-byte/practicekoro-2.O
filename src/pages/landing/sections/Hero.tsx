@@ -66,7 +66,7 @@ export const Hero: React.FC = () => {
 
             {/* Main Headline */}
             <Reveal delay={80}>
-              <h1 className="mt-2.5 sm:mt-3 text-3xl sm:text-4xl lg:text-[3.15rem] font-extrabold text-white tracking-tight font-headline text-balance drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+              <h1 className="mt-2 sm:mt-3 text-2xl xs:text-3xl sm:text-4xl lg:text-[3.15rem] font-extrabold text-white tracking-tight font-headline text-balance drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
                 <span className="block leading-[1.15] sm:leading-[1.18] mb-0 sm:mb-0.5">
                   আত্মবিশ্বাসের সাথে জয়
                 </span>
@@ -106,18 +106,18 @@ export const Hero: React.FC = () => {
 
             {/* Subheadline - Streamlined & uncluttered */}
             <Reveal delay={160}>
-              <p className="mt-3 sm:mt-3.5 text-sm sm:text-base text-slate-200 max-w-xl mx-auto leading-relaxed font-normal text-balance drop-shadow-sm">
+              <p className="mt-2.5 sm:mt-3.5 text-xs sm:text-base text-slate-200 max-w-xl mx-auto leading-relaxed font-normal text-balance drop-shadow-sm px-2 sm:px-0">
                 আসল পরীক্ষার ধাঁচে পূর্ণাঙ্গ প্রস্তুতি — WBP, WBPSC, WBSSC, TET ও Railways পরীক্ষার জন্য।
               </p>
             </Reveal>
 
             {/* Action Buttons */}
             <Reveal delay={240}>
-              <div className="mt-4 sm:mt-5 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-3.5 sm:mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 w-full max-w-xs sm:max-w-none mx-auto">
                 <button
                   type="button"
                   onClick={() => navigate(user ? dashboardUrl : '/register')}
-                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/35 hover:shadow-blue-500/50 transition-all cursor-pointer hover:-translate-y-0.5"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/35 hover:shadow-blue-500/50 transition-all cursor-pointer hover:-translate-y-0.5"
                 >
                   {user ? (
                     <LayoutGrid className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
@@ -134,7 +134,7 @@ export const Hero: React.FC = () => {
                     const el = document.getElementById('exams');
                     el?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/25 hover:border-white/40 backdrop-blur-md shadow-md font-bold text-sm sm:text-base transition-all cursor-pointer hover:-translate-y-0.5"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/25 hover:border-white/40 backdrop-blur-md shadow-md font-bold text-sm sm:text-base transition-all cursor-pointer hover:-translate-y-0.5"
                 >
                   <BookOpen className="w-4 h-4 text-blue-400" />
                   <span>Explore Exams &amp; Tests</span>
@@ -144,44 +144,44 @@ export const Hero: React.FC = () => {
 
             {/* Three Compact, Elegant Feature Cards */}
             <Reveal delay={300}>
-              <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 w-full max-w-2xl mx-auto">
-                <div className="rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 hover:border-slate-700 px-3.5 py-2.5 shadow-lg shadow-black/20 flex items-center gap-2.5 text-left transition-all hover:-translate-y-0.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4 text-blue-400" />
+              <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-1.5 sm:gap-2.5 w-full max-w-2xl mx-auto">
+                <div className="rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 hover:border-slate-700 p-2 sm:px-3.5 sm:py-2.5 shadow-lg shadow-black/20 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center sm:text-left transition-all hover:-translate-y-0.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0">
+                    <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-xs sm:text-[13px] font-bold text-white leading-tight truncate">
-                      Full-Length Mocks
+                    <h3 className="text-[11px] sm:text-[13px] font-bold text-white leading-tight truncate">
+                      Full Mocks
                     </h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                    <p className="hidden sm:block text-[11px] text-slate-400 mt-0.5 truncate">
                       Exam pattern based
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 hover:border-slate-700 px-3.5 py-2.5 shadow-lg shadow-black/20 flex items-center gap-2.5 text-left transition-all hover:-translate-y-0.5">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center shrink-0">
-                    <BarChart3 className="w-4 h-4 text-purple-400" />
+                <div className="rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 hover:border-slate-700 p-2 sm:px-3.5 sm:py-2.5 shadow-lg shadow-black/20 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center sm:text-left transition-all hover:-translate-y-0.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center shrink-0">
+                    <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-xs sm:text-[13px] font-bold text-white leading-tight truncate">
-                      10+ Years PYQs
+                    <h3 className="text-[11px] sm:text-[13px] font-bold text-white leading-tight truncate">
+                      10+ Yrs PYQs
                     </h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                    <p className="hidden sm:block text-[11px] text-slate-400 mt-0.5 truncate">
                       With detailed solutions
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 hover:border-slate-700 px-3.5 py-2.5 shadow-lg shadow-black/20 flex items-center gap-2.5 text-left transition-all hover:-translate-y-0.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                    <Target className="w-4 h-4 text-emerald-400" />
+                <div className="rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 hover:border-slate-700 p-2 sm:px-3.5 sm:py-2.5 shadow-lg shadow-black/20 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center sm:text-left transition-all hover:-translate-y-0.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-xs sm:text-[13px] font-bold text-white leading-tight truncate">
-                      Topic Practice
+                    <h3 className="text-[11px] sm:text-[13px] font-bold text-white leading-tight truncate">
+                      Topic Tests
                     </h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                    <p className="hidden sm:block text-[11px] text-slate-400 mt-0.5 truncate">
                       Strengthen weak areas
                     </p>
                   </div>

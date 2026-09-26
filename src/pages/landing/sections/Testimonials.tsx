@@ -6,7 +6,7 @@ import { Star, Quote } from 'lucide-react';
 
 export const Testimonials: React.FC = () => {
   return (
-    <section className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800/80 overflow-hidden">
+    <section className="relative py-14 sm:py-20 lg:py-24 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800/80 overflow-hidden">
       <div
         aria-hidden="true"
         className="absolute top-0 right-0 w-[380px] h-[380px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none"
@@ -26,10 +26,10 @@ export const Testimonials: React.FC = () => {
           description="Real feedback from students preparing with PracticeKoro every day."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {testimonials.map((t, index) => (
             <Reveal key={t.name} delay={index * 110} className="h-full">
-              <figure className="group relative h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 dark:hover:border-blue-700 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
+              <figure className="group relative h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 sm:p-7 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 dark:hover:border-blue-700 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
                 <span
                   aria-hidden="true"
                   className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"

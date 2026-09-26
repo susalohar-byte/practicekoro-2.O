@@ -24,7 +24,7 @@ export const PopularExams: React.FC = () => {
   return (
     <section
       id="exams"
-      className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/80 scroll-mt-24"
+      className="relative py-14 sm:py-20 lg:py-24 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/80 scroll-mt-24"
     >
       <div
         aria-hidden="true"
@@ -45,8 +45,8 @@ export const PopularExams: React.FC = () => {
         />
 
         {/* Filter Tabs & Search Row */}
-        <Reveal className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+        <Reveal className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 sm:gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap pb-1.5 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
             {examCategories.map((cat) => {
               const isActive = selectedCategory === cat.id;
               return (
@@ -56,7 +56,7 @@ export const PopularExams: React.FC = () => {
                   onClick={() => setSelectedCategory(cat.id)}
                   aria-pressed={isActive}
                   className={cn(
-                    'px-4 py-2 rounded-full text-xs font-bold transition-all',
+                    'px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-all shrink-0',
                     isActive
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]'
                       : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/80 dark:border-slate-800 shadow-xs'
@@ -68,7 +68,7 @@ export const PopularExams: React.FC = () => {
             })}
           </div>
 
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-64 shrink-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
@@ -82,7 +82,7 @@ export const PopularExams: React.FC = () => {
 
         {/* Exam Cards Grid */}
         {filteredPopularExams.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
             {filteredPopularExams.map((exam, index) => (
               <Reveal key={exam.title} delay={Math.min(index, 7) * 60} className="h-full">
                 <div
@@ -90,24 +90,24 @@ export const PopularExams: React.FC = () => {
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && navigate(exam.route)}
-                  className="group relative h-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-700 hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 cursor-pointer flex items-center justify-between gap-3 overflow-hidden"
+                  className="group relative h-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-700 hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 cursor-pointer flex items-center justify-between gap-3 overflow-hidden"
                 >
                   <span
                     aria-hidden="true"
                     className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
                   />
-                  <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     {exam.isCustomIcon ? (
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
-                        <Layers className="w-6 h-6" />
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
+                        <Layers className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-blue-300 group-hover:bg-blue-50/50 group-hover:scale-105 transition-all">
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-blue-300 group-hover:bg-blue-50/50 group-hover:scale-105 transition-all">
                         <img
                           src={exam.icon}
                           alt={exam.title}
                           loading="lazy"
-                          className="w-9 h-9 object-contain"
+                          className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
                         />
                       </div>
                     )}
@@ -146,11 +146,11 @@ export const PopularExams: React.FC = () => {
         )}
 
         {/* Bottom "View All Exams" Button */}
-        <Reveal className="text-center mt-10">
+        <Reveal className="text-center mt-8 sm:mt-10">
           <Button
             size="lg"
             onClick={() => navigate('/exams')}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 text-sm gap-2 transition-all hover:-translate-y-0.5"
+            className="w-full sm:w-auto inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-blue-500/25 text-sm gap-2 transition-all hover:-translate-y-0.5"
           >
             <span>View All Exams</span>
             <ArrowRight className="w-4 h-4" />

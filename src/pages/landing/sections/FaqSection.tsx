@@ -15,7 +15,7 @@ export const FaqSection: React.FC = () => {
   return (
     <section
       id="faq"
-      className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-slate-50/50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80 scroll-mt-24"
+      className="relative py-14 sm:py-20 lg:py-24 bg-slate-50/50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80 scroll-mt-24"
     >
       <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
         <SectionHeading
@@ -41,7 +41,7 @@ export const FaqSection: React.FC = () => {
                     type="button"
                     aria-expanded={isOpen}
                     onClick={() => toggleFaq(index)}
-                    className="w-full px-5 py-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                    className="w-full px-4 sm:px-5 py-3.5 sm:py-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                   >
                     <span>{faq.q}</span>
                     <span
@@ -62,7 +62,7 @@ export const FaqSection: React.FC = () => {
                     )}
                   >
                     <div className="overflow-hidden">
-                      <p className="px-5 pb-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3.5 mt-0.5 mx-0">
+                      <p className="px-4 sm:px-5 pb-4 sm:pb-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3 sm:pt-3.5 mt-0.5 mx-0">
                         {faq.a}
                       </p>
                     </div>

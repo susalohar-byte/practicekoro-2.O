@@ -128,7 +128,7 @@ export const InsideTheApp: React.FC = () => {
   return (
     <section
       id="inside-app"
-      className="relative py-20 sm:py-24 lg:py-28 bg-white dark:bg-slate-950 scroll-mt-24 overflow-hidden border-t border-slate-100 dark:border-slate-800/80"
+      className="relative py-14 sm:py-20 lg:py-24 bg-white dark:bg-slate-950 scroll-mt-24 overflow-hidden border-t border-slate-100 dark:border-slate-800/80"
     >
       {/* Anchor for backward compatibility with #how-it-works and #features */}
       <span id="how-it-works" className="absolute -top-24 pointer-events-none" aria-hidden="true" />
@@ -160,12 +160,12 @@ export const InsideTheApp: React.FC = () => {
         />
 
         {/* 8 Feature Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 mt-8 sm:mt-10">
           {APP_FEATURES.map((item, index) => {
             const Icon = item.icon;
             return (
               <Reveal key={item.title} delay={index * 50} className="h-full">
-                <div className="h-full rounded-2xl bg-slate-50/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-5 sm:p-5.5 shadow-xs hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-700/80 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                <div className="h-full rounded-2xl bg-slate-50/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5.5 shadow-xs hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-700/80 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
                   <div className="space-y-3.5">
                     {/* Card Top: Icon & Category Badge */}
                     <div className="flex items-center justify-between gap-2">
@@ -216,13 +216,13 @@ export const InsideTheApp: React.FC = () => {
 
         {/* Bottom Interactive CTA Bar */}
         <Reveal delay={200}>
-          <div className="mt-12 rounded-2xl bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 p-6 sm:p-8 border border-blue-800/40 shadow-xl text-white flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="mt-10 sm:mt-12 rounded-2xl bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 p-5 sm:p-8 border border-blue-800/40 shadow-xl text-white flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6">
             <div className="space-y-1.5 text-center sm:text-left">
               <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-blue-400">
                 <Smartphone className="w-4 h-4" />
                 <span>Mobile &amp; Web Optimized</span>
               </div>
-              <h3 className="text-lg sm:text-xl font-black text-white">
+              <h3 className="text-base sm:text-xl font-black text-white">
                 এখনই অ্যাপের সমস্ত ফিচারের অভিজ্ঞতা নিন
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 font-normal">

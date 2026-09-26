@@ -32,31 +32,31 @@ export const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <header className="fixed top-3 sm:top-4 left-0 right-0 z-50 w-full px-4 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
+    <header className="fixed top-2.5 sm:top-4 left-0 right-0 z-50 w-full px-3 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
       <div
         className={cn(
-          'w-full max-w-6xl rounded-2xl sm:rounded-full px-4 sm:px-6 flex items-center justify-between pointer-events-auto transition-all duration-300',
+          'w-full max-w-6xl rounded-2xl sm:rounded-full px-3.5 sm:px-6 flex items-center justify-between pointer-events-auto transition-all duration-300',
           scrolled
-            ? 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-[0_12px_40px_-8px_rgba(37,99,235,0.18)] h-[4.25rem]'
-            : 'bg-transparent border border-transparent shadow-none h-16 sm:h-18'
+            ? 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-[0_12px_40px_-8px_rgba(37,99,235,0.18)] h-15 sm:h-[4.25rem]'
+            : 'bg-transparent border border-transparent shadow-none h-14 sm:h-18'
         )}
       >
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 group shrink-0"
+          className="flex items-center gap-2 sm:gap-2.5 group shrink-0"
           aria-label="PracticeKoro home"
         >
-          <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-pk-primary to-pk-primary-bright flex items-center justify-center shadow-md shadow-pk-primary/25 group-hover:scale-105 transition-transform">
+          <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-pk-primary to-pk-primary-bright flex items-center justify-center shadow-md shadow-pk-primary/25 group-hover:scale-105 transition-transform">
             <img
               src="/logo-icon-transparent.png"
               alt="PracticeKoro"
-              className="w-6 h-6 object-contain"
+              className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
             />
           </span>
           <span
             className={cn(
-              'font-black text-xl sm:text-2xl tracking-tight flex items-center transition-colors',
+              'font-black text-lg sm:text-2xl tracking-tight flex items-center transition-colors',
               scrolled ? 'text-pk-navy dark:text-white' : 'text-white'
             )}
           >
@@ -104,7 +104,7 @@ export const Navbar: React.FC = () => {
               text="Dashboard"
               onClick={() => navigate(dashboardUrl)}
               className={cn(
-                'w-32 sm:w-36 text-xs sm:text-sm h-9 sm:h-10 shadow-xs transition-all',
+                'w-26 sm:w-36 text-xs sm:text-sm h-8.5 sm:h-10 shadow-xs transition-all',
                 scrolled
                   ? 'border-pk-blue-soft text-pk-primary'
                   : 'bg-white/15 hover:bg-white/25 border-white/30 text-white backdrop-blur-xs'
@@ -163,7 +163,7 @@ export const Navbar: React.FC = () => {
       {/* Mobile dropdown panel */}
       {!user && menuOpen && (
         <div className="sm:hidden absolute top-full mt-2 w-full max-w-6xl pointer-events-auto">
-          <div className="mx-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl p-3 space-y-1">
+          <div className="mx-2 sm:mx-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl p-3 space-y-1">
 
             {NAV_LINKS.map((link) => (
               <a

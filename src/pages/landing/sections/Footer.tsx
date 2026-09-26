@@ -39,14 +39,14 @@ export const Footer: React.FC = () => {
   return (
     <footer
       id="about"
-      className="relative bg-white border-t border-slate-200 pt-14 pb-8 overflow-hidden"
+      className="relative bg-white border-t border-slate-200 pt-10 sm:pt-14 pb-8 overflow-hidden"
     >
       <div
         aria-hidden="true"
         className="absolute -top-24 left-1/2 -translate-x-1/2 w-[560px] h-[200px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none"
       />
       <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-12 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-6 sm:gap-8 mb-8 sm:mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-5 space-y-4">
             <Link to="/" className="inline-flex items-center gap-2.5 group">
@@ -123,7 +123,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Follow Us */}
-          <div className="md:col-span-3 space-y-3">
+          <div className="col-span-2 md:col-span-3 space-y-3 pt-2 md:pt-0">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
               Follow Us
             </h4>
@@ -149,7 +149,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-7 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+        <div className="pt-6 sm:pt-7 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 text-center sm:text-left">
           <p>© {year} PracticeKoro. All rights reserved.</p>
           <p>Designed for serious West Bengal &amp; Central competitive exam preparation.</p>
         </div>

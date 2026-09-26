@@ -72,7 +72,7 @@ export const AppInstall: React.FC = () => {
   return (
     <section
       id="app-install"
-      className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center py-20 sm:py-24 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80 scroll-mt-24 overflow-hidden"
+      className="relative py-14 sm:py-20 lg:py-24 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80 scroll-mt-24 overflow-hidden"
     >
       {/* Background Glows */}
       <div
@@ -98,11 +98,11 @@ export const AppInstall: React.FC = () => {
           description="Install PracticeKoro directly on your mobile device for lightning-fast mock tests, instant test alerts, and seamless practice without storage hassle."
         />
 
-        <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto">
+        <div className="space-y-5 sm:space-y-8 max-w-4xl mx-auto">
           {/* 4 Feature Highlights in 2x2 Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Reveal delay={100}>
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+              <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                   <Zap className="w-5 h-5" />
                 </div>
@@ -118,7 +118,7 @@ export const AppInstall: React.FC = () => {
             </Reveal>
 
             <Reveal delay={150}>
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+              <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <Bell className="w-5 h-5" />
                 </div>
@@ -134,7 +134,7 @@ export const AppInstall: React.FC = () => {
             </Reveal>
 
             <Reveal delay={200}>
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+              <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <WifiOff className="w-5 h-5" />
                 </div>
@@ -150,7 +150,7 @@ export const AppInstall: React.FC = () => {
             </Reveal>
 
             <Reveal delay={250}>
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+              <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
@@ -168,7 +168,7 @@ export const AppInstall: React.FC = () => {
 
           {/* Centered Install Action Card */}
           <Reveal delay={300}>
-            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl shadow-blue-500/20 relative overflow-hidden">
+            <div className="p-5 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl shadow-blue-500/20 relative overflow-hidden">
               {/* Background Pattern */}
               <div
                 aria-hidden="true"
@@ -181,7 +181,7 @@ export const AppInstall: React.FC = () => {
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                     <span>OFFICIAL MOBILE WEB APP</span>
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white">
+                  <h3 className="text-xl sm:text-3xl font-black text-white">
                     Install On Your Phone Today
                   </h3>
                   <p className="text-xs sm:text-sm text-blue-100/90 max-w-md mx-auto sm:mx-0">
