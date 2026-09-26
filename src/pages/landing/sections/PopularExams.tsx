@@ -24,7 +24,7 @@ export const PopularExams: React.FC = () => {
   return (
     <section
       id="exams"
-      className="relative py-14 sm:py-20 lg:py-24 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/80 scroll-mt-24"
+      className="relative py-14 sm:py-20 lg:py-24 bg-slate-50 dark:bg-slate-950 border-t border-b border-slate-100 dark:border-slate-800/80 scroll-mt-24"
     >
       <div
         aria-hidden="true"
